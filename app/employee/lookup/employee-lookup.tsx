@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, Search, User, CreditCard, DollarSign, Calendar } from "lucide-react"
+import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 
 interface PayrollResult {
@@ -28,6 +28,7 @@ interface PayrollResult {
 export function EmployeeLookup() {
   const [employeeId, setEmployeeId] = useState("")
   const [cccd, setCccd] = useState("")
+  const [showCccd, setShowCccd] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<PayrollResult | null>(null)
   const [error, setError] = useState("")
@@ -99,14 +100,29 @@ export function EmployeeLookup() {
 
               <div className="space-y-2">
                 <Label htmlFor="cccd">Số CCCD</Label>
-                <Input
-                  id="cccd"
-                  type="text"
-                  value={cccd}
-                  onChange={(e) => setCccd(e.target.value)}
-                  placeholder="Nhập số CCCD"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="cccd"
+                    type={showCccd ? "text" : "password"}
+                    value={cccd}
+                    onChange={(e) => setCccd(e.target.value)}
+                    placeholder="Nhập số CCCD"
+                    className="pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCccd(!showCccd)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    aria-label={showCccd ? "Ẩn số CCCD" : "Hiển thị số CCCD"}
+                  >
+                    {showCccd ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 

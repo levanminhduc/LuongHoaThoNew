@@ -18,13 +18,9 @@ import {
   DollarSign,
   TrendingUp,
   Settings,
+  ArrowUpDown,
 } from "lucide-react"
 import { EmployeeImportSection } from "@/components/employee-import-section"
-// Replace this import
-// import { AdvancedSalaryImport } from "@/components/advanced-salary-import"
-// With this import
-import { DualFileImportSection } from "@/components/dual-file-import-section"
-import type { ImportResult } from "@/lib/advanced-excel-parser"
 
 interface PayrollRecord {
   id: number
@@ -128,11 +124,7 @@ export function AdminDashboard() {
     }
   }
 
-  const handleImportComplete = (result: ImportResult) => {
-    // Refresh dashboard data after successful import
-    fetchDashboardData()
-    setMessage(`Import hoàn tất! Xử lý ${result.successCount}/${result.totalRows} bản ghi thành công`)
-  }
+
 
   const handleLogout = () => {
     localStorage.removeItem("admin_token")
@@ -169,6 +161,14 @@ export function AdminDashboard() {
               <p className="text-sm text-gray-600">MAY HÒA THỌ ĐIỆN BÀN - Hệ thống quản lý lương nâng cao</p>
             </div>
             <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/payroll-import-export")}
+                className="flex items-center gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              >
+                <ArrowUpDown className="h-4 w-4" />
+                Import/Export Lương
+              </Button>
               <Button
                 variant="outline"
                 onClick={handleDownloadSyncTemplate}
@@ -252,12 +252,8 @@ export function AdminDashboard() {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="advanced-import" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="advanced-import" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Import Nâng Cao
-            </TabsTrigger>
+        <Tabs defaultValue="employee-import" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="employee-import" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Import Nhân Viên
@@ -272,10 +268,7 @@ export function AdminDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Advanced Import Tab */}
-          <TabsContent value="advanced-import" className="space-y-6">
-            <DualFileImportSection />
-          </TabsContent>
+
 
           {/* Employee Import Tab */}
           <TabsContent value="employee-import" className="space-y-6">
@@ -384,8 +377,8 @@ export function AdminDashboard() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <Settings className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm">Import Nâng Cao: Cấu hình ánh xạ cột linh hoạt</span>
+                      <ArrowUpDown className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm">Import/Export Lương: Hệ thống import/export lương hoàn chỉnh</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Users className="h-4 w-4 text-green-600" />
@@ -404,6 +397,8 @@ export function AdminDashboard() {
               </Card>
             </div>
           </TabsContent>
+
+
         </Tabs>
       </div>
     </div>

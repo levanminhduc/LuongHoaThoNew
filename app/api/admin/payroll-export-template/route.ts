@@ -1,0 +1,221 @@
+import { NextRequest, NextResponse } from "next/server"
+import { createServiceClient } from "@/utils/supabase/server"
+import * as XLSX from "xlsx"
+import jwt from "jsonwebtoken"
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+
+// Verify admin token
+function verifyAdminToken(request: NextRequest) {
+  const authHeader = request.headers.get("authorization")
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null
+  }
+
+  const token = authHeader.substring(7)
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any
+    return decoded.role === "admin" ? decoded : null
+  } catch {
+    return null
+  }
+}
+
+// Mapping database fields to user-friendly Vietnamese headers
+const FIELD_HEADERS: Record<string, string> = {
+  employee_id: "Mã Nhân Viên",
+  salary_month: "Tháng Lương",
+  
+  // Hệ số và thông số cơ bản
+  he_so_lam_viec: "Hệ Số Làm Việc",
+  he_so_phu_cap_ket_qua: "Hệ Số Phụ Cấp Kết Quả",
+  he_so_luong_co_ban: "Hệ Số Lương Cơ Bản",
+  luong_toi_thieu_cty: "Lương Tối Thiểu Công Ty",
+  
+  // Thời gian làm việc
+  ngay_cong_trong_gio: "Ngày Công Trong Giờ",
+  gio_cong_tang_ca: "Giờ Công Tăng Ca",
+  gio_an_ca: "Giờ Ăn Ca",
+  tong_gio_lam_viec: "Tổng Giờ Làm Việc",
+  tong_he_so_quy_doi: "Tổng Hệ Số Quy Đổi",
+  
+  // Lương sản phẩm và đơn giá
+  tong_luong_san_pham_cong_doan: "Tổng Lương Sản Phẩm Công Đoạn",
+  don_gia_tien_luong_tren_gio: "Đơn Giá Tiền Lương Trên Giờ",
+  tien_luong_san_pham_trong_gio: "Tiền Lương Sản Phẩm Trong Giờ",
+  tien_luong_tang_ca: "Tiền Lương Tăng Ca",
+  tien_luong_30p_an_ca: "Tiền Lương 30p Ăn Ca",
+  
+  // Thưởng và phụ cấp
+  tien_khen_thuong_chuyen_can: "Tiền Khen Thưởng Chuyên Cần",
+  luong_hoc_viec_pc_luong: "Lương Học Việc PC Lương",
+  tong_cong_tien_luong_san_pham: "Tổng Cộng Tiền Lương Sản Phẩm",
+  ho_tro_thoi_tiet_nong: "Hỗ Trợ Thời Tiết Nóng",
+  bo_sung_luong: "Bổ Sung Lương",
+  
+  // Bảo hiểm và phúc lợi
+  bhxh_21_5_percent: "BHXH 21.5%",
+  pc_cdcs_pccc_atvsv: "PC CDCS PCCC ATVSV",
+  luong_phu_nu_hanh_kinh: "Lương Phụ Nữ Hành Kinh",
+  tien_con_bu_thai_7_thang: "Tiền Con Bú Thai 7 Tháng",
+  ho_tro_gui_con_nha_tre: "Hỗ Trợ Gửi Con Nhà Trẻ",
+  
+  // Phép và lễ
+  ngay_cong_phep_le: "Ngày Công Phép Lễ",
+  tien_phep_le: "Tiền Phép Lễ",
+  
+  // Tổng lương và phụ cấp khác
+  tong_cong_tien_luong: "Tổng Cộng Tiền Lương",
+  tien_boc_vac: "Tiền Bốc Vác",
+  ho_tro_xang_xe: "Hỗ Trợ Xăng Xe",
+  
+  // Thuế và khấu trừ
+  thue_tncn_nam_2024: "Thuế TNCN Năm 2024",
+  tam_ung: "Tạm Ứng",
+  thue_tncn: "Thuế TNCN",
+  bhxh_bhtn_bhyt_total: "BHXH BHTN BHYT Total",
+  truy_thu_the_bhyt: "Truy Thu Thẻ BHYT",
+  
+  // Lương thực nhận
+  tien_luong_thuc_nhan_cuoi_ky: "Tiền Lương Thực Nhận Cuối Kỳ"
+}
+
+// Get all payroll fields (excluding metadata)
+const PAYROLL_FIELDS = [
+  "employee_id", "salary_month",
+  "he_so_lam_viec", "he_so_phu_cap_ket_qua", "he_so_luong_co_ban", "luong_toi_thieu_cty",
+  "ngay_cong_trong_gio", "gio_cong_tang_ca", "gio_an_ca", "tong_gio_lam_viec", "tong_he_so_quy_doi",
+  "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio", "tien_luong_san_pham_trong_gio", 
+  "tien_luong_tang_ca", "tien_luong_30p_an_ca",
+  "tien_khen_thuong_chuyen_can", "luong_hoc_viec_pc_luong", "tong_cong_tien_luong_san_pham", 
+  "ho_tro_thoi_tiet_nong", "bo_sung_luong",
+  "bhxh_21_5_percent", "pc_cdcs_pccc_atvsv", "luong_phu_nu_hanh_kinh", "tien_con_bu_thai_7_thang", 
+  "ho_tro_gui_con_nha_tre",
+  "ngay_cong_phep_le", "tien_phep_le",
+  "tong_cong_tien_luong", "tien_boc_vac", "ho_tro_xang_xe",
+  "thue_tncn_nam_2024", "tam_ung", "thue_tncn", "bhxh_bhtn_bhyt_total", "truy_thu_the_bhyt",
+  "tien_luong_thuc_nhan_cuoi_ky"
+]
+
+export async function GET(request: NextRequest) {
+  try {
+    // Verify admin authentication
+    const admin = verifyAdminToken(request)
+    if (!admin) {
+      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
+    }
+
+    const supabase = createServiceClient()
+
+    // Get URL parameters
+    const { searchParams } = new URL(request.url)
+    const includeData = searchParams.get("includeData") === "true"
+    const salaryMonth = searchParams.get("salaryMonth")
+
+    // Analyze which columns have data (non-null, non-zero values)
+    const { data: columnAnalysis, error: analysisError } = await supabase
+      .rpc('analyze_payroll_columns')
+
+    let activeFields = PAYROLL_FIELDS
+    
+    if (!analysisError && columnAnalysis) {
+      // Filter out columns that are completely empty
+      activeFields = PAYROLL_FIELDS.filter(field => {
+        if (field === "employee_id" || field === "salary_month") return true // Always include required fields
+        const analysis = columnAnalysis.find((col: any) => col.column_name === field)
+        return analysis && (analysis.non_null_count > 0 || analysis.non_zero_count > 0)
+      })
+    }
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new()
+
+    // Prepare headers
+    const headers = activeFields.map(field => FIELD_HEADERS[field] || field)
+    
+    // Prepare data rows
+    let dataRows: any[][] = []
+    
+    if (includeData) {
+      // Get sample data or specific month data
+      let query = supabase
+        .from("payrolls")
+        .select(activeFields.join(","))
+        .order("created_at", { ascending: false })
+
+      if (salaryMonth) {
+        query = query.eq("salary_month", salaryMonth)
+      } else {
+        query = query.limit(100) // Limit to 100 records for template
+      }
+
+      const { data: payrollData, error: dataError } = await query
+
+      if (!dataError && payrollData) {
+        dataRows = payrollData.map(record => 
+          activeFields.map(field => record[field] || "")
+        )
+      }
+    } else {
+      // Add sample rows for template
+      const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
+      const sampleRow1 = activeFields.map(field => {
+        if (field === "employee_id") return "NV001"
+        if (field === "salary_month") return currentMonth
+        if (field === "tien_luong_thuc_nhan_cuoi_ky") return 15000000
+        if (field.includes("he_so")) return 1.0
+        if (field.includes("luong") || field.includes("tien")) return 5000000
+        return ""
+      })
+      
+      const sampleRow2 = activeFields.map(field => {
+        if (field === "employee_id") return "NV002"
+        if (field === "salary_month") return currentMonth
+        if (field === "tien_luong_thuc_nhan_cuoi_ky") return 12000000
+        if (field.includes("he_so")) return 1.0
+        if (field.includes("luong") || field.includes("tien")) return 4000000
+        return ""
+      })
+      
+      dataRows = [sampleRow1, sampleRow2]
+    }
+
+    // Create worksheet data
+    const worksheetData = [headers, ...dataRows]
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
+
+    // Set column widths
+    const columnWidths = headers.map(() => ({ width: 20 }))
+    worksheet['!cols'] = columnWidths
+
+    // Add worksheet to workbook
+    const sheetName = includeData ? `Lương ${salaryMonth || 'Tất cả'}` : "Template Lương"
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
+
+    // Generate Excel buffer
+    const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
+
+    // Create filename
+    const timestamp = new Date().toISOString().slice(0, 10)
+    const filename = includeData 
+      ? `luong-export-${salaryMonth || 'all'}-${timestamp}.xlsx`
+      : `template-luong-${timestamp}.xlsx`
+
+    // Return Excel file
+    return new NextResponse(excelBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Length": excelBuffer.length.toString(),
+      },
+    })
+
+  } catch (error) {
+    console.error("Export template error:", error)
+    return NextResponse.json(
+      { error: "Lỗi khi tạo template export" },
+      { status: 500 }
+    )
+  }
+}
