@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Settings,
   ArrowUpDown,
+  UserCheck,
 } from "lucide-react"
 import { EmployeeImportSection } from "@/components/employee-import-section"
 
@@ -158,7 +159,7 @@ export function AdminDashboard() {
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard Quản Trị</h1>
-              <p className="text-sm text-gray-600">MAY HÒA THỌ ĐIỆN BÀN - Hệ thống quản lý lương nâng cao</p>
+              <p className="text-sm text-gray-600">MAY HÒA THỌ ĐIỆN BÀN - Hệ thống quản lý lương</p>
             </div>
             <div className="flex items-center gap-3">
               <Button
@@ -168,6 +169,14 @@ export function AdminDashboard() {
               >
                 <ArrowUpDown className="h-4 w-4" />
                 Import/Export Lương
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/dashboard/update-cccd")}
+                className="flex items-center gap-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+              >
+                <UserCheck className="h-4 w-4" />
+                Quản Lý CCCD
               </Button>
               <Button
                 variant="outline"
@@ -183,7 +192,7 @@ export function AdminDashboard() {
                 ) : (
                   <>
                     <Database className="h-4 w-4" />
-                    Template Đồng Bộ
+                    Template Mẫu Lương
                   </>
                 )}
               </Button>
@@ -383,6 +392,10 @@ export function AdminDashboard() {
                     <div className="flex items-center gap-3">
                       <Users className="h-4 w-4 text-green-600" />
                       <span className="text-sm">Import Nhân Viên: Quản lý danh sách nhân viên</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <UserCheck className="h-4 w-4 text-emerald-600" />
+                      <span className="text-sm">Quản Lý CCCD: Cập nhật số CCCD cho nhân viên</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Database className="h-4 w-4 text-purple-600" />

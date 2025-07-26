@@ -15,6 +15,7 @@
 ### Dành cho Nhân Viên:
 - **Tra cứu lương** bằng mã nhân viên + số CCCD
 - **Xem chi tiết thông tin lương** cá nhân
+- **Ký nhận lương điện tử** với tracking đầy đủ
 - **Giao diện thân thiện**, dễ sử dụng
 
 ## Cài Đặt
@@ -69,12 +70,14 @@ Truy cập: http://localhost:3000
 │   │   ├── login/          # Trang đăng nhập admin
 │   │   └── dashboard/      # Dashboard quản trị (có import nhân viên)
 │   ├── employee/
-│   │   └── lookup/         # Trang tra cứu nhân viên
+│   │   └── lookup/         # Trang tra cứu và ký nhận lương
 │   ├── api/
 │   │   ├── admin/          # API routes cho admin
 │   │   │   ├── import-employees/     # API import nhân viên
 │   │   │   └── download-employee-template/  # API tải template
 │   │   └── employee/       # API routes cho nhân viên
+│   │       ├── lookup/     # API tra cứu lương
+│   │       └── sign-salary/ # API ký nhận lương
 │   └── page.tsx            # Trang chủ
 ├── components/
 │   └── employee-import-section.tsx  # Component import nhân viên
@@ -99,7 +102,8 @@ Truy cập: http://localhost:3000
 ### Nhân Viên:
 1. Truy cập `/employee/lookup`
 2. Nhập mã nhân viên và số CCCD
-3. Xem thông tin lương
+3. Xem thông tin lương chi tiết
+4. **Ký nhận lương** nếu chưa ký
 
 ## 📋 Tính Năng Import Nhân Viên
 
@@ -248,6 +252,214 @@ Nếu gặp vấn đề, vui lòng:
 - **Lỗi authentication**: Đăng nhập lại admin
 - **Dữ liệu không hợp lệ**: Xem chi tiết lỗi trong báo cáo
 - **Import chậm**: File quá lớn, chia nhỏ file
+
+## 🖊️ Tính Năng Ký Nhận Lương Điện Tử
+
+### 🎯 Mô Tả Tính Năng
+Hệ thống cho phép nhân viên ký nhận lương điện tử một cách an toàn và có thể tracking đầy đủ.
+
+### 🔐 Bảo Mật & Xác Thực
+- **Xác thực 2 lớp**: Mã nhân viên + Số CCCD (được hash bằng bcrypt)
+- **IP Tracking**: Ghi lại địa chỉ IP khi ký
+- **Device Info**: Lưu thông tin thiết bị và trình duyệt
+- **Timestamp**: Ghi chính xác thời gian ký nhận
+- **One-time signing**: Mỗi tháng lương chỉ ký được 1 lần
+
+### 📋 Quy Trình Ký Nhận
+
+#### Bước 1: Tra Cứu Lương
+1. Nhân viên truy cập `/employee/lookup`
+2. Nhập **Mã Nhân Viên** và **Số CCCD**
+3. Hệ thống xác thực và hiển thị thông tin lương
+
+#### Bước 2: Xem Chi Tiết Lương
+- **Thông tin cá nhân**: Họ tên, ngày công trong giờ, chức vụ
+- **Chi tiết lương**: 6 thông số quan trọng (hệ số, phụ cấp, BHXH, lương thực nhận)
+- **Tháng lương**: Hiển thị rõ kỳ lương
+- **Trạng thái ký**: Đã ký hoặc chưa ký
+
+#### Bước 3: Ký Nhận Lương
+- **Nếu chưa ký**: Hiển thị nút "Ký Nhận Lương Tháng X"
+- **Nếu đã ký**: Hiển thị thông tin người ký và thời gian
+- **Xác nhận**: Click nút ký → Hệ thống xử lý → Thông báo thành công
+
+### 🗂️ Database & Logging
+
+#### Bảng `signature_logs`:
+```sql
+- id: UUID primary key
+- employee_id: Mã nhân viên
+- salary_month: Tháng lương (YYYY-MM)
+- signed_at: Thời gian ký (timestamp)
+- signed_by_name: Tên người ký
+- ip_address: Địa chỉ IP
+- device_info: Thông tin thiết bị
+```
+
+#### Database Function `auto_sign_salary`:
+- **Input**: employee_id, salary_month, ip_address, device_info
+- **Process**: Kiểm tra duplicate, insert log, update payroll
+- **Output**: Success status, signed info, error messages
+
+### 🔧 API Endpoints
+
+#### `/api/employee/lookup` (POST)
+```json
+{
+  "employee_id": "NV001",
+  "cccd": "001234567890"
+}
+```
+**Response**: Thông tin lương chi tiết (6 fields) + ngày công + trạng thái ký
+
+#### `/api/employee/sign-salary` (POST)
+```json
+{
+  "employee_id": "NV001",
+  "cccd": "001234567890",
+  "salary_month": "2024-01"
+}
+```
+**Response**: Kết quả ký nhận + thông tin tracking
+
+### ⚠️ Validation & Error Handling
+
+#### Validation Rules:
+- **Employee exists**: Kiểm tra mã nhân viên tồn tại
+- **CCCD match**: So sánh hash CCCD với database
+- **Payroll exists**: Đảm bảo có dữ liệu lương tháng đó
+- **Not signed yet**: Chỉ ký được 1 lần/tháng
+
+#### Error Messages:
+- `"Không tìm thấy nhân viên với mã nhân viên đã nhập"`
+- `"Số CCCD không đúng"`
+- `"Không tìm thấy thông tin lương cho tháng này"`
+- `"Bạn đã ký nhận lương tháng này rồi"`
+
+### 📊 Tracking & Reporting
+
+#### Thông Tin Được Tracking:
+- **Thời gian ký**: Chính xác đến giây (timezone VN)
+- **IP Address**: Từ headers x-forwarded-for hoặc x-real-ip
+- **Device Info**: User-Agent string
+- **Employee Info**: Mã NV, tên, tháng lương
+
+#### Hiển Thị Cho Nhân Viên:
+- **Thông tin cá nhân**: Họ tên, ngày công trong giờ, chức vụ, tháng lương
+- **Chi tiết lương**: 6 cards với màu sắc khác nhau (hệ số, phụ cấp, BHXH, lương thực nhận)
+- **Trạng thái ký**: "Đã ký nhận lương" (màu xanh) hoặc "Chưa ký nhận lương" (màu vàng)
+- **Thông tin ký**: Tên người ký + thời gian (format Việt Nam)
+- **Thông báo**: Success message sau khi ký thành công
+
+### 🎨 UI/UX Features
+
+#### Visual Indicators:
+- **🟢 Đã ký**: Card màu xanh với icon CheckCircle
+- **🟡 Chưa ký**: Card màu vàng với icon Clock
+- **✅ Success**: Alert màu xanh với animation
+- **🔄 Loading**: Spinner khi đang xử lý
+
+#### Responsive Design:
+- **Mobile-friendly**: Hoạt động tốt trên điện thoại
+- **Touch-optimized**: Nút bấm dễ chạm
+- **Clear typography**: Font size và contrast phù hợp
+
+## 📊 Chi Tiết Hiển Thị Lương Nhân Viên
+
+### 🎯 Thông Tin Cá Nhân
+Khi nhân viên tra cứu lương thành công, hệ thống hiển thị:
+
+#### **Thông Tin Cơ Bản:**
+- **Họ và Tên**: Từ bảng `employees.full_name`
+- **Ngày công trong giờ**: Từ `payrolls.ngay_cong_trong_gio` (format: "X ngày")
+- **Chức vụ**: Từ `employees.chuc_vu`
+- **Tháng lương**: Từ `payrolls.salary_month` (format: YYYY-MM)
+
+### 💰 Chi Tiết Lương (6 Cards)
+
+Hệ thống hiển thị 6 thông số quan trọng trong layout grid 2 cột (desktop) / 1 cột (mobile):
+
+#### **1. Hệ Số Làm Việc** (Card màu xanh dương)
+- **Field**: `payrolls.he_so_lam_viec`
+- **Format**: Số thập phân 2 chữ số (VD: 1.25)
+- **Ý nghĩa**: Hệ số làm việc của nhân viên
+
+#### **2. Hệ Số Phụ Cấp KQ** (Card màu xanh lá)
+- **Field**: `payrolls.he_so_phu_cap_ket_qua`
+- **Format**: Số thập phân 2 chữ số (VD: 0.75)
+- **Ý nghĩa**: Hệ số phụ cấp kết quả công việc
+
+#### **3. Tiền Khen Thưởng Chuyên Cần** (Card màu tím)
+- **Field**: `payrolls.tien_khen_thuong_chuyen_can`
+- **Format**: Tiền tệ VND (VD: 500.000 ₫)
+- **Ý nghĩa**: Tiền thưởng chuyên cần hàng tháng
+
+#### **4. Lương Học Việc PC** (Card màu cam)
+- **Field**: `payrolls.luong_hoc_viec_pc_luong`
+- **Format**: Tiền tệ VND (VD: 1.200.000 ₫)
+- **Ý nghĩa**: Lương học việc và phụ cấp lương
+
+#### **5. BHXH BHTN BHYT** (Card màu đỏ)
+- **Field**: `payrolls.bhxh_bhtn_bhyt_total`
+- **Format**: Tiền tệ VND (VD: 850.000 ₫)
+- **Ý nghĩa**: Tổng bảo hiểm xã hội, thất nghiệp, y tế
+
+#### **6. Lương Thực Nhận Cuối Kỳ** (Card màu xanh ngọc)
+- **Field**: `payrolls.tien_luong_thuc_nhan_cuoi_ky`
+- **Format**: Tiền tệ VND (VD: 8.500.000 ₫)
+- **Ý nghĩa**: Số tiền lương thực tế nhận được
+
+### 🎨 UI/UX Design
+
+#### **Responsive Layout:**
+```css
+/* Mobile: 1 cột */
+grid-cols-1
+
+/* Desktop: 2 cột */
+md:grid-cols-2
+```
+
+#### **Color Scheme:**
+- **Blue**: Hệ số làm việc (bg-blue-50, border-blue-200, text-blue-600/700)
+- **Green**: Hệ số phụ cấp (bg-green-50, border-green-200, text-green-600/700)
+- **Purple**: Tiền khen thưởng (bg-purple-50, border-purple-200, text-purple-600/700)
+- **Orange**: Lương học việc (bg-orange-50, border-orange-200, text-orange-600/700)
+- **Red**: BHXH (bg-red-50, border-red-200, text-red-600/700)
+- **Emerald**: Lương thực nhận (bg-emerald-50, border-emerald-200, text-emerald-600/700)
+
+#### **Format Functions:**
+```typescript
+// Cho hệ số (2 chữ số thập phân)
+const formatNumber = (value: number) => value.toFixed(2)
+
+// Cho tiền tệ (VND format)
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND"
+  }).format(amount)
+```
+
+### 📱 Trải Nghiệm Người Dùng
+
+#### **Workflow Hoàn Chỉnh:**
+1. **Input**: Nhập mã NV + CCCD
+2. **Validation**: Xác thực thông tin
+3. **Display**: Hiển thị 6 cards chi tiết lương
+4. **Action**: Ký nhận lương (nếu chưa ký)
+5. **Confirmation**: Thông báo thành công
+
+#### **Visual Hierarchy:**
+- **Header**: Thông tin cá nhân (tên, ngày công, chức vụ)
+- **Main Content**: 6 cards lương (grid layout)
+- **Footer**: Trạng thái ký nhận + action button
+
+#### **Accessibility:**
+- **Icons**: Mỗi card có icon phù hợp
+- **Colors**: Contrast ratio đảm bảo readability
+- **Typography**: Font size và weight phân cấp rõ ràng
+- **Mobile**: Touch-friendly button sizes
 
 ## License
 

@@ -1,7 +1,7 @@
 ---
-type: "always_apply"
+type: "agent_requested"
+description: "Example description"
 ---
-
 # 💬 **RULE SET 5: GIAO TIẾP HIỆU QUẢ**
 
 ## 📋 **OVERVIEW**

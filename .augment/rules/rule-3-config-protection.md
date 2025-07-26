@@ -1,7 +1,7 @@
 ---
-type: "always_apply"
+type: "agent_requested"
+description: "Example description"
 ---
-
 # 🛡️ **RULE SET 3: BẢO VỆ CÁC FILE CẤU HÌNH QUAN TRỌNG**
 
 ## 📋 **OVERVIEW**

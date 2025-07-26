@@ -16,7 +16,7 @@ Bộ quy tắc này đảm bảo AI Assistant hoạt động:
 
 ## 📚 **CẤU TRÚC BỘ QUY TẮC**
 
-### **5 Rule Sets Chính:**
+### **6 Rule Sets Chính:**
 
 1. **[Rule Set 1: Hiểu Rõ Yêu Cầu Người Dùng](rule-1-requirements.md)**
    - Phân tích yêu cầu bắt buộc
@@ -47,6 +47,13 @@ Bộ quy tắc này đảm bảo AI Assistant hoạt động:
    - Templates giải thích
    - Protocols cảnh báo
    - Standards documentation
+
+6. **[Rule Set 6: Domain Knowledge & Business Context](rule-6-domain-knowledge.md)**
+   - Hiểu business domain MAY HÒA THỌ ĐIỆN BÀN
+   - User personas và use cases
+   - Data sensitivity awareness
+   - Vietnamese business context
+   - Technical domain knowledge
 
 ### **Tài Liệu Tham Khảo:**
 

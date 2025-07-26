@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff } from "lucide-react"
+import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, PenTool, CheckCircle, Clock, Timer, FileText } from "lucide-react"
 import Link from "next/link"
+import { PayrollDetailModal } from "./payroll-detail-modal"
+
 
 interface PayrollResult {
   employee_id: string
@@ -23,6 +25,64 @@ interface PayrollResult {
   deductions: number
   net_salary: number
   source_file: string
+
+  // Hệ số và thông số cơ bản
+  he_so_lam_viec?: number
+  he_so_phu_cap_ket_qua?: number
+  he_so_luong_co_ban?: number
+  luong_toi_thieu_cty?: number
+
+  // Thời gian làm việc
+  ngay_cong_trong_gio?: number
+  gio_cong_tang_ca?: number
+  gio_an_ca?: number
+  tong_gio_lam_viec?: number
+  tong_he_so_quy_doi?: number
+
+  // Lương sản phẩm và đơn giá
+  tong_luong_san_pham_cong_doan?: number
+  don_gia_tien_luong_tren_gio?: number
+  tien_luong_san_pham_trong_gio?: number
+  tien_luong_tang_ca?: number
+  tien_luong_30p_an_ca?: number
+
+  // Thưởng và phụ cấp
+  tien_khen_thuong_chuyen_can?: number
+  luong_hoc_viec_pc_luong?: number
+  tong_cong_tien_luong_san_pham?: number
+  ho_tro_thoi_tiet_nong?: number
+  bo_sung_luong?: number
+
+  // Bảo hiểm và phúc lợi
+  bhxh_21_5_percent?: number
+  pc_cdcs_pccc_atvsv?: number
+  luong_phu_nu_hanh_kinh?: number
+  tien_con_bu_thai_7_thang?: number
+  ho_tro_gui_con_nha_tre?: number
+
+  // Phép và lễ
+  ngay_cong_phep_le?: number
+  tien_phep_le?: number
+
+  // Tổng lương và phụ cấp khác
+  tong_cong_tien_luong?: number
+  tien_boc_vac?: number
+  ho_tro_xang_xe?: number
+
+  // Thuế và khấu trừ
+  thue_tncn_nam_2024?: number
+  tam_ung?: number
+  thue_tncn?: number
+  bhxh_bhtn_bhyt_total?: number
+  truy_thu_the_bhyt?: number
+
+  // Lương thực nhận
+  tien_luong_thuc_nhan_cuoi_ky?: number
+
+  // Thông tin ký nhận
+  is_signed?: boolean
+  signed_at?: string
+  signed_by_name?: string
 }
 
 export function EmployeeLookup() {
@@ -32,6 +92,9 @@ export function EmployeeLookup() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<PayrollResult | null>(null)
   const [error, setError] = useState("")
+  const [signingLoading, setSigningLoading] = useState(false)
+  const [signSuccess, setSignSuccess] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,12 +128,85 @@ export function EmployeeLookup() {
     }
   }
 
+  const handleSignSalary = async () => {
+    if (!result || !employeeId || !cccd) return
+
+    setSigningLoading(true)
+    setError("")
+
+    try {
+      // Lấy timestamp hiện tại của thiết bị client
+      const clientTimestamp = new Date().toISOString()
+
+      const response = await fetch("/api/employee/sign-salary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employee_id: employeeId.trim(),
+          cccd: cccd.trim(),
+          salary_month: result.salary_month,
+          client_timestamp: clientTimestamp, // Gửi thời gian client
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSignSuccess(true)
+        // Cập nhật result với thông tin ký
+        setResult({
+          ...result,
+          is_signed: true,
+          signed_at: data.data.signed_at,
+          signed_by_name: data.data.employee_name
+        })
+        setTimeout(() => setSignSuccess(false), 5000) // Ẩn thông báo sau 5s
+      } else {
+        setError(data.error || "Không thể ký nhận lương")
+      }
+    } catch (error) {
+      setError("Có lỗi xảy ra khi ký nhận lương")
+    } finally {
+      setSigningLoading(false)
+    }
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(amount)
   }
+
+  const formatNumber = (value: number) => {
+    return value.toFixed(2)
+  }
+
+  const formatDateTime = (dateString: string) => {
+    // Comment múi giờ để test hydration mismatch
+    // return new Date(dateString).toLocaleString("vi-VN", {
+    //   year: "numeric",
+    //   month: "2-digit",
+    //   day: "2-digit",
+    //   hour: "2-digit",
+    //   minute: "2-digit",
+    //   timeZone: "Asia/Ho_Chi_Minh"
+    // })
+
+    // Sử dụng format đơn giản không có timezone
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`
+  }
+
+
 
   return (
     <div className="space-y-6">
@@ -147,9 +283,9 @@ export function EmployeeLookup() {
                 )}
               </Button>
 
-              <Link href="/">
-                <Button variant="outline">Quay Lại</Button>
-              </Link>
+              <Button variant="outline" asChild>
+                <Link href="/">Quay Lại</Link>
+              </Button>
             </div>
           </CardContent>
         </form>
@@ -176,9 +312,9 @@ export function EmployeeLookup() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-gray-500" />
-                  <span className="font-medium">Số CCCD:</span>
-                  <span>{result.cccd}</span>
+                  <Timer className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Ngày công trong giờ:</span>
+                  <span>{result.ngay_cong_trong_gio || 0} ngày</span>
                 </div>
               </div>
 
@@ -200,26 +336,28 @@ export function EmployeeLookup() {
 
             {/* Salary Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Chi Tiết Lương
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Chi Tiết Lương
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDetailModal(true)}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+                >
+                  <FileText className="w-4 h-4" />
+                  Xem Chi Tiết Đầy Đủ
+                </Button>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-blue-600">Tổng Thu Nhập</p>
-                      <p className="text-2xl font-bold text-blue-700">{formatCurrency(result.total_income)}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-red-50 border-red-200">
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-red-600">Khấu Trừ</p>
-                      <p className="text-2xl font-bold text-red-700">{formatCurrency(result.deductions)}</p>
+                      <p className="text-sm font-medium text-blue-600">Hệ Số Làm Việc</p>
+                      <p className="text-lg md:text-2xl font-bold text-blue-700">{formatNumber(result.he_so_lam_viec || 0)}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -227,12 +365,122 @@ export function EmployeeLookup() {
                 <Card className="bg-green-50 border-green-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-green-600">Thực Lĩnh</p>
-                      <p className="text-2xl font-bold text-green-700">{formatCurrency(result.net_salary)}</p>
+                      <p className="text-sm font-medium text-green-600">Hệ Số Phụ Cấp KQ</p>
+                      <p className="text-lg md:text-2xl font-bold text-green-700">{formatNumber(result.he_so_phu_cap_ket_qua || 0)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-purple-50 border-purple-200">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-purple-600">Tiền Khen Thưởng Chuyên Cần</p>
+                      <p className="text-lg md:text-2xl font-bold text-purple-700">{formatCurrency(result.tien_khen_thuong_chuyen_can || 0)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-orange-50 border-orange-200">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-orange-600">Lương Học Việc PC</p>
+                      <p className="text-lg md:text-2xl font-bold text-orange-700">{formatCurrency(result.luong_hoc_viec_pc_luong || 0)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-red-50 border-red-200">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-red-600">BHXH BHTN BHYT</p>
+                      <p className="text-lg md:text-2xl font-bold text-red-700">{formatCurrency(result.bhxh_bhtn_bhyt_total || 0)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-emerald-50 border-emerald-200">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-emerald-600">Lương Thực Nhận Cuối Kỳ</p>
+                      <p className="text-lg md:text-2xl font-bold text-emerald-700">{formatCurrency(result.tien_luong_thuc_nhan_cuoi_ky || 0)}</p>
                     </div>
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Signature Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <PenTool className="w-5 h-5" />
+                Ký Nhận Lương
+              </h3>
+
+              {signSuccess && (
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-700">
+                    Đã ký nhận lương thành công! Cảm ơn bạn đã xác nhận.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {result.is_signed ? (
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                      <div>
+                        <p className="font-medium text-green-800">Đã ký nhận lương</p>
+                        <p className="text-sm text-green-600">
+                          Người ký: {result.signed_by_name}
+                        </p>
+                        {result.signed_at && (
+                          <p className="text-sm text-green-600">
+                            Thời gian: {formatDateTime(result.signed_at)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="bg-amber-50 border-amber-200">
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-6 h-6 text-amber-600" />
+                        <div>
+                          <p className="font-medium text-amber-800">Chưa ký nhận lương</p>
+                          <p className="text-sm text-amber-600">
+                            Vui lòng ký nhận để xác nhận bạn đã nhận thông tin lương tháng {result.salary_month}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        onClick={handleSignSalary} 
+                        disabled={signingLoading}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        {signingLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Đang ký nhận...
+                          </>
+                        ) : (
+                          <>
+                            <PenTool className="mr-2 h-4 w-4" />
+                            Ký Nhận Lương Tháng {result.salary_month}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <Separator />
@@ -246,6 +494,15 @@ export function EmployeeLookup() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Payroll Detail Modal */}
+      {result && (
+        <PayrollDetailModal
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          payrollData={result}
+        />
       )}
     </div>
   )

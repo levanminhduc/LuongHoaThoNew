@@ -56,7 +56,7 @@ export function AdminLoginForm() {
           <Shield className="w-6 h-6 text-blue-600" />
         </div>
         <CardTitle>Đăng Nhập Quản Trị</CardTitle>
-        <CardDescription>Tài khoản mặc định: admin / admin123</CardDescription>
+        {/* <CardDescription>Tài khoản mặc định: admin / admin123</CardDescription> */}
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">

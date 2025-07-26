@@ -1,18 +1,26 @@
--- STEP 5: CREATE AUTO SIGNATURE FUNCTION
--- Function ký tên tự động
+-- SCRIPT: UPDATE AUTO SIGNATURE FUNCTION TO USE CLIENT TIMESTAMP
+-- Cập nhật function để sử dụng thời gian từ client device
+
 CREATE OR REPLACE FUNCTION auto_sign_salary(
   p_employee_id VARCHAR(50),
   p_salary_month VARCHAR(20),
   p_ip_address VARCHAR(45) DEFAULT NULL,
-  p_device_info TEXT DEFAULT NULL
+  p_device_info TEXT DEFAULT NULL,
+  p_client_timestamp VARCHAR(50) DEFAULT NULL  -- Thêm parameter client timestamp
 ) RETURNS JSONB AS $$
 DECLARE
   v_employee_name VARCHAR(255);
   v_current_time TIMESTAMP;
   result JSONB;
 BEGIN
-  -- Lấy thời gian hiện tại theo múi giờ Việt Nam (+7)
-  v_current_time := (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh');
+  -- Sử dụng client timestamp nếu có, nếu không thì dùng server time
+  IF p_client_timestamp IS NOT NULL THEN
+    -- Parse client timestamp (ISO format từ JavaScript)
+    v_current_time := p_client_timestamp::TIMESTAMP;
+  ELSE
+    -- Fallback: Lấy thời gian server theo múi giờ Việt Nam (+7)
+    v_current_time := (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh');
+  END IF;
   
   -- Lấy tên nhân viên
   SELECT full_name INTO v_employee_name 
@@ -46,7 +54,7 @@ BEGIN
   END IF;
   
   BEGIN
-    -- Cập nhật payrolls với thông tin ký tự động
+    -- Cập nhật payrolls với thông tin ký (sử dụng client timestamp)
     UPDATE payrolls SET 
       is_signed = true,
       signed_at = v_current_time,
@@ -57,7 +65,7 @@ BEGIN
       updated_at = v_current_time
     WHERE employee_id = p_employee_id AND salary_month = p_salary_month;
     
-    -- Lưu log chi tiết
+    -- Lưu log chi tiết (cũng sử dụng client timestamp)
     INSERT INTO signature_logs (
       employee_id, salary_month, signed_by_name, signed_at,
       signature_ip, signature_device
@@ -72,7 +80,11 @@ BEGIN
       'signed_by', v_employee_name,
       'signed_at', v_current_time,
       'employee_id', p_employee_id,
-      'salary_month', p_salary_month
+      'salary_month', p_salary_month,
+      'timestamp_source', CASE 
+        WHEN p_client_timestamp IS NOT NULL THEN 'client_device'
+        ELSE 'server'
+      END
     );
     
   EXCEPTION WHEN OTHERS THEN
@@ -86,4 +98,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Comment
-COMMENT ON FUNCTION auto_sign_salary IS 'Function ký tên tự động - lấy tên từ employees + timestamp theo múi giờ Việt Nam (+7)';
+COMMENT ON FUNCTION auto_sign_salary IS 'Function ký tên tự động - sử dụng timestamp từ client device hoặc server time làm fallback';
+
+-- Test function
+SELECT auto_sign_salary(
+  'TEST001', 
+  '2024-07', 
+  '192.168.1.1', 
+  'Test Browser',
+  '2024-07-25T10:30:00.000Z'  -- Test với client timestamp
+) as test_result;
