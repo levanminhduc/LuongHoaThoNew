@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, PenTool, CheckCircle, Clock, Timer, FileText } from "lucide-react"
 import Link from "next/link"
 import { PayrollDetailModal } from "./payroll-detail-modal"
+import { formatSalaryMonth, formatSignatureTime, formatCurrency, formatNumber } from "@/lib/utils/date-formatter"
 
 
 interface PayrollResult {
@@ -21,6 +22,7 @@ interface PayrollResult {
   cccd: string
   position: string
   salary_month: string
+  salary_month_display?: string // Optional formatted display
   total_income: number
   deductions: number
   net_salary: number
@@ -82,6 +84,7 @@ interface PayrollResult {
   // Thông tin ký nhận
   is_signed?: boolean
   signed_at?: string
+  signed_at_display?: string // Formatted display timestamp
   signed_by_name?: string
 }
 
@@ -160,6 +163,7 @@ export function EmployeeLookup() {
           ...result,
           is_signed: true,
           signed_at: data.data.signed_at,
+          signed_at_display: data.data.signed_at_display, // Use formatted display from API
           signed_by_name: data.data.employee_name
         })
         setTimeout(() => setSignSuccess(false), 5000) // Ẩn thông báo sau 5s
@@ -173,38 +177,7 @@ export function EmployeeLookup() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount)
-  }
-
-  const formatNumber = (value: number) => {
-    return value.toFixed(2)
-  }
-
-  const formatDateTime = (dateString: string) => {
-    // Comment múi giờ để test hydration mismatch
-    // return new Date(dateString).toLocaleString("vi-VN", {
-    //   year: "numeric",
-    //   month: "2-digit",
-    //   day: "2-digit",
-    //   hour: "2-digit",
-    //   minute: "2-digit",
-    //   timeZone: "Asia/Ho_Chi_Minh"
-    // })
-
-    // Sử dụng format đơn giản không có timezone
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-
-    return `${day}/${month}/${year} ${hours}:${minutes}`
-  }
+  // Using utility functions from date-formatter
 
 
 
@@ -439,7 +412,7 @@ export function EmployeeLookup() {
                         </p>
                         {result.signed_at && (
                           <p className="text-sm text-green-600">
-                            Thời gian: {formatDateTime(result.signed_at)}
+                            Thời gian: {result.signed_at_display || formatSignatureTime(result.signed_at)}
                           </p>
                         )}
                       </div>
@@ -473,7 +446,7 @@ export function EmployeeLookup() {
                         ) : (
                           <>
                             <PenTool className="mr-2 h-4 w-4" />
-                            Ký Nhận Lương Tháng {result.salary_month}
+                            Ký Nhận Lương {result.salary_month_display || formatSalaryMonth(result.salary_month)}
                           </>
                         )}
                       </Button>

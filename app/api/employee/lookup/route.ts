@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
 import bcrypt from "bcryptjs"
+import { formatSalaryMonth, formatSignatureTime } from "@/lib/utils/date-formatter"
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,7 +60,8 @@ export async function POST(request: NextRequest) {
       cccd: cccd.trim(), // Trả về CCCD gốc (không hash)
       position: employee.chuc_vu,
       department: employee.department,
-      salary_month: payroll.salary_month,
+      salary_month: payroll.salary_month, // Keep original for processing
+      salary_month_display: formatSalaryMonth(payroll.salary_month), // Formatted for display
       total_income: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
       deductions: (payroll.bhxh_bhtn_bhyt_total || 0) + (payroll.thue_tncn || 0),
       net_salary: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
@@ -121,6 +123,7 @@ export async function POST(request: NextRequest) {
       // Thông tin ký nhận
       is_signed: payroll.is_signed || false,
       signed_at: payroll.signed_at || null,
+      signed_at_display: payroll.signed_at ? formatSignatureTime(payroll.signed_at) : null,
       signed_by_name: payroll.signed_by_name || null,
     }
 

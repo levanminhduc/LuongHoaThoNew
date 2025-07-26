@@ -40,7 +40,7 @@ export function AdminLoginForm() {
         localStorage.setItem("admin_token", data.token)
         router.push("/admin/dashboard")
       } else {
-        setError(data.error || "Đăng nhập thất bại")
+        setError(data.error || "Đăng nhập thất bại, liên hệ ban Chuyển Đổi Số để được hỗ trợ.")
       }
     } catch (error) {
       setError("Có lỗi xảy ra khi đăng nhập")

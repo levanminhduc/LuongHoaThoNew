@@ -95,9 +95,11 @@ Truy cập: http://localhost:3000
 ### Admin:
 1. Truy cập `/admin/login`
 2. Đăng nhập với: `admin` / `admin123`
-3. **Trong dashboard, sử dụng tính năng Import Nhân Viên**
-4. Upload file Excel chứa dữ liệu lương
-5. Xem và quản lý dữ liệu
+3. **Trong dashboard, sử dụng các tính năng quản lý:**
+   - **Import Nhân Viên**: Upload file Excel chứa dữ liệu lương
+   - **Quản Lý CCCD**: Cập nhật số CCCD cho nhân viên
+   - **Import/Export Lương**: Quản lý dữ liệu lương
+4. Xem và quản lý dữ liệu
 
 ### Nhân Viên:
 1. Truy cập `/employee/lookup`
@@ -191,6 +193,53 @@ NV003        | Lê Văn Cường | 001234567892 | Phòng QC       | truong_phong
 - **Chi tiết lỗi**: Từng dòng lỗi với lý do cụ thể
 - **Scroll view**: Xem được nhiều kết quả trong không gian hạn chế
 
+## 🆔 Tính Năng Quản Lý CCCD
+
+### 🔐 Bảo Mật & Quyền Truy Cập
+- **Chỉ Admin được phép cập nhật**: Tính năng chỉ khả dụng trong admin dashboard
+- **JWT Authentication**: Xác thực token trước mỗi request
+- **CCCD được hash**: Số CCCD mới được mã hóa bằng bcrypt trước khi lưu database
+- **Validation nghiêm ngặt**: Kiểm tra định dạng CCCD (12 chữ số)
+
+### 🎯 Cách Sử Dụng Quản Lý CCCD
+
+#### Bước 1: Truy Cập Tính Năng
+1. Đăng nhập admin tại `/admin/login`
+2. Vào Dashboard - click button **"Quản Lý CCCD"** (màu xanh lá)
+3. Hoặc truy cập trực tiếp: `/admin/dashboard/update-cccd`
+
+#### Bước 2: Tìm Kiếm Nhân Viên
+1. **Nhập từ khóa tìm kiếm** (ít nhất 2 ký tự):
+   - Mã nhân viên (VD: NV001)
+   - Tên nhân viên (VD: Nguyễn Văn A)
+2. **Hệ thống tự động tìm kiếm** với debouncing
+3. **Chọn nhân viên** từ danh sách kết quả
+
+#### Bước 3: Cập Nhật CCCD
+1. **Xem thông tin nhân viên** đã chọn
+2. **Nhập số CCCD mới** (12 chữ số)
+3. **Xác nhận số CCCD** (nhập lại để đảm bảo chính xác)
+4. **Click "Cập nhật CCCD"** để thực hiện
+
+### ✅ Validation & Bảo Mật
+- **Định dạng CCCD**: Phải có đúng 12 chữ số
+- **Chỉ chứa số**: Không chấp nhận chữ cái hoặc ký tự đặc biệt
+- **Xác nhận kép**: Phải nhập CCCD 2 lần để tránh nhầm lẫn
+- **Mã hóa bcrypt**: CCCD được hash trước khi lưu database
+- **Thông báo rõ ràng**: Success/error messages chi tiết
+
+### 🔄 Quy Trình Sau Cập Nhật
+1. **Thông báo thành công**: Hiển thị message xác nhận
+2. **Tự động reset form**: Quay về trang tìm kiếm sau 3 giây
+3. **Nhân viên cần biết**: Thông báo cho nhân viên về CCCD mới
+4. **Login mới**: Nhân viên dùng CCCD mới để tra cứu lương
+
+### ⚠️ Lưu Ý Quan Trọng
+- **Không thể hoàn tác**: Việc cập nhật CCCD sẽ thay thế hoàn toàn số cũ
+- **Ảnh hưởng đăng nhập**: Nhân viên phải dùng CCCD mới để tra cứu
+- **Bảo mật cao**: CCCD được mã hóa, không thể xem lại số gốc
+- **Audit trail**: Mọi thay đổi được ghi log với timestamp
+
 ## Format File Excel Lương
 
 File Excel lương cần có các cột (tên cột có thể tiếng Việt):
@@ -219,9 +268,11 @@ File Excel lương cần có các cột (tên cột có thể tiếng Việt):
 - **Frontend**: Next.js 15, React 19, Tailwind CSS, shadcn/ui
 - **Backend**: Next.js API Routes
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: JWT, bcryptjs
+- **Authentication**: JWT, bcryptjs (admin_token key)
 - **File Processing**: xlsx library
 - **Security**: bcrypt for CCCD hashing
+- **UI Components**: Lucide React icons, responsive design
+- **State Management**: React hooks, localStorage
 - **Deployment**: Vercel (recommended)
 
 ## Triển Khai
@@ -252,6 +303,27 @@ Nếu gặp vấn đề, vui lòng:
 - **Lỗi authentication**: Đăng nhập lại admin
 - **Dữ liệu không hợp lệ**: Xem chi tiết lỗi trong báo cáo
 - **Import chậm**: File quá lớn, chia nhỏ file
+
+### Troubleshooting Quản Lý CCCD:
+- **Không tìm thấy nhân viên**: Kiểm tra mã NV hoặc tên chính xác
+- **CCCD không hợp lệ**: Phải đúng 12 chữ số, không có ký tự khác
+- **Lỗi cập nhật**: Kiểm tra kết nối database và quyền admin
+- **Nhân viên không đăng nhập được**: Thông báo CCCD mới cho nhân viên
+
+## 📡 API Endpoints
+
+### Admin Authentication:
+- `POST /api/admin/login` - Đăng nhập admin
+- `GET /api/admin/dashboard-stats` - Thống kê dashboard
+
+### Employee Management:
+- `POST /api/admin/import-employees` - Import danh sách nhân viên
+- `GET /api/employees/update-cccd?q={query}` - Tìm kiếm nhân viên
+- `POST /api/employees/update-cccd` - Cập nhật CCCD nhân viên
+
+### Employee Lookup:
+- `POST /api/employee/lookup` - Tra cứu thông tin lương
+- `POST /api/employee/sign-salary` - Ký nhận lương điện tử
 
 ## 🖊️ Tính Năng Ký Nhận Lương Điện Tử
 

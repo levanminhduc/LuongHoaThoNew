@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
 import bcrypt from "bcryptjs"
+import { formatSalaryMonth, formatSignatureTime } from "@/lib/utils/date-formatter"
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
         p_salary_month: salary_month.trim(),
         p_ip_address: clientIP,
         p_device_info: userAgent,
-        p_client_timestamp: client_timestamp // Truyền timestamp từ client
+        // p_client_timestamp: client_timestamp // TEMPORARY FIX: Comment out until DB function updated
       })
 
     if (signError) {
@@ -74,9 +75,11 @@ export async function POST(request: NextRequest) {
       message: "Ký nhận lương thành công!",
       data: {
         employee_name: signResult.signed_by,
-        signed_at: signResult.signed_at,
+        signed_at: signResult.signed_at, // Raw timestamp for processing
+        signed_at_display: formatSignatureTime(signResult.signed_at), // Formatted for display
         employee_id: signResult.employee_id,
-        salary_month: signResult.salary_month
+        salary_month: signResult.salary_month,
+        salary_month_display: formatSalaryMonth(signResult.salary_month)
       }
     })
 

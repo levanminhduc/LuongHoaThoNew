@@ -158,7 +158,22 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
+    if (!dateString) return ''
+
+    try {
+      const date = new Date(dateString)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+
+      // Format: "HH:MM DD/MM/YYYY" (time first, then date)
+      return `${hours}:${minutes} ${day}/${month}/${year}`
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return dateString
+    }
   }
 
   // Mock data for demonstration since we don't have the table yet

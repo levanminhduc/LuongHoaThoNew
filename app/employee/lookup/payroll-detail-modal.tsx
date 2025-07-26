@@ -17,6 +17,7 @@ import {
   Minus,
   Banknote
 } from "lucide-react"
+import { formatSalaryMonth, formatCurrency, formatNumber } from "@/lib/utils/date-formatter"
 
 interface PayrollResult {
   employee_id: string
@@ -24,6 +25,7 @@ interface PayrollResult {
   cccd: string
   position: string
   salary_month: string
+  salary_month_display?: string // Optional formatted display
   total_income: number
   deductions: number
   net_salary: number
@@ -95,17 +97,15 @@ interface PayrollDetailModalProps {
 }
 
 export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDetailModalProps) {
-  const formatCurrency = (amount: number | undefined) => {
+  // Using utility functions from date-formatter
+  const formatCurrencyLocal = (amount: number | undefined) => {
     if (amount === undefined || amount === null) return "0 ₫"
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount)
+    return formatCurrency(amount)
   }
 
-  const formatNumber = (value: number | undefined) => {
+  const formatNumberLocal = (value: number | undefined) => {
     if (value === undefined || value === null) return "0"
-    return value.toFixed(2)
+    return formatNumber(value)
   }
 
   const DetailRow = ({ label, value, isNumber = false, isCurrency = false }: {
@@ -117,8 +117,8 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
     <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
       <span className="text-sm text-gray-600 font-medium">{label}:</span>
       <span className="text-sm font-semibold text-gray-900">
-        {isCurrency ? formatCurrency(value as number) : 
-         isNumber ? formatNumber(value as number) : 
+        {isCurrency ? formatCurrencyLocal(value as number) :
+         isNumber ? formatNumberLocal(value as number) :
          value || "Không có"}
       </span>
     </div>
@@ -137,7 +137,7 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
           </DialogDescription>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-sm text-muted-foreground">Tháng lương:</span>
-            <Badge variant="outline">{payrollData.salary_month}</Badge>
+            <Badge variant="outline">{payrollData.salary_month_display || formatSalaryMonth(payrollData.salary_month)}</Badge>
             <span className="text-sm text-muted-foreground">|</span>
             <span className="text-sm text-muted-foreground">Mã NV:</span>
             <Badge>{payrollData.employee_id}</Badge>
@@ -188,7 +188,7 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-1">
-                <DetailRow label="Tổng Lương Sản Phẩm Công Đoàn" value={payrollData.tong_luong_san_pham_cong_doan} isCurrency />
+                <DetailRow label="Tổng Lương Sản Phẩm Công Đoạn" value={payrollData.tong_luong_san_pham_cong_doan} isCurrency />
                 <DetailRow label="Đơn Giá Tiền Lương Trên Giờ" value={payrollData.don_gia_tien_luong_tren_gio} isCurrency />
                 <DetailRow label="Tiền Lương Sản Phẩm Trong Giờ" value={payrollData.tien_luong_san_pham_trong_gio} isCurrency />
                 <DetailRow label="Tiền Lương Tăng Ca" value={payrollData.tien_luong_tang_ca} isCurrency />
@@ -288,7 +288,7 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
                 <div className="text-center p-4 bg-white rounded-lg border border-green-200">
                   <p className="text-sm text-green-600 font-medium mb-2">Tiền Lương Thực Nhận Cuối Kỳ</p>
                   <p className="text-2xl font-bold text-green-700">
-                    {formatCurrency(payrollData.tien_luong_thuc_nhan_cuoi_ky)}
+                    {formatCurrencyLocal(payrollData.tien_luong_thuc_nhan_cuoi_ky)}
                   </p>
                 </div>
               </CardContent>

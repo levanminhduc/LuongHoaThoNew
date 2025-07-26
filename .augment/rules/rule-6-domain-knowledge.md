@@ -144,6 +144,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 🔒 CCCD Hashing: Always use bcrypt, never store plain text
 🔒 API Authentication: JWT tokens cho admin, CCCD verification cho employees
+🔒 Token Key: ALWAYS use "admin_token" (not "adminToken") for localStorage
 🔒 RLS Policies: Supabase Row Level Security cho data isolation
 🔒 Audit Logging: Track all signature actions với IP + device info
 🔒 Input Validation: Strict validation cho all user inputs
@@ -208,6 +209,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 🗄️ Indexing: Optimized queries cho lookups
 🗄️ Audit Trail: Complete signature logging
 🗄️ Scalability: Support cho large employee counts
+🗄️ Authentication: Use "admin_token" key consistently across all components
 ```
 
 ### **Performance Considerations:**
