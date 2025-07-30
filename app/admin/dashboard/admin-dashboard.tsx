@@ -20,8 +20,11 @@ import {
   Settings,
   ArrowUpDown,
   UserCheck,
+  Edit,
+  Filter,
 } from "lucide-react"
 import { EmployeeImportSection } from "@/components/employee-import-section"
+import { MonthSelector } from "../payroll-management/components/MonthSelector"
 
 interface PayrollRecord {
   id: number
@@ -56,6 +59,8 @@ export function AdminDashboard() {
   })
   const [downloadingSyncTemplate, setDownloadingSyncTemplate] = useState(false)
   const [message, setMessage] = useState("")
+  const [selectedMonth, setSelectedMonth] = useState<string>("")
+  const [filteredPayrolls, setFilteredPayrolls] = useState<PayrollRecord[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -68,6 +73,16 @@ export function AdminDashboard() {
 
     fetchDashboardData()
   }, [router])
+
+  // Filter payrolls when selectedMonth changes
+  useEffect(() => {
+    if (!selectedMonth) {
+      setFilteredPayrolls([])
+    } else {
+      const filtered = payrolls.filter(payroll => payroll.salary_month === selectedMonth)
+      setFilteredPayrolls(filtered)
+    }
+  }, [selectedMonth, payrolls])
 
   const fetchDashboardData = async () => {
     try {
@@ -132,6 +147,14 @@ export function AdminDashboard() {
     router.push("/")
   }
 
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month)
+  }
+
+  const handlePayrollManagement = () => {
+    router.push("/admin/payroll-management")
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -177,6 +200,14 @@ export function AdminDashboard() {
               >
                 <UserCheck className="h-4 w-4" />
                 Quản Lý CCCD
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/column-mapping-config")}
+                className="flex items-center gap-2 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+              >
+                <Settings className="h-4 w-4" />
+                Column Mapping Config
               </Button>
               <Button
                 variant="outline"
@@ -289,16 +320,50 @@ export function AdminDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Dữ Liệu Lương Gần Đây</CardTitle>
-                  <CardDescription>Danh sách bản ghi lương được import gần đây</CardDescription>
+                  <CardTitle>Dữ Liệu Lương Theo Tháng</CardTitle>
+                  <CardDescription>
+                    {selectedMonth
+                      ? `Hiển thị dữ liệu tháng ${selectedMonth}`
+                      : "Chọn tháng để xem dữ liệu lương cụ thể"
+                    }
+                  </CardDescription>
                 </div>
-                <Button variant="outline" onClick={fetchDashboardData}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Làm Mới
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handlePayrollManagement}
+                    className="flex items-center gap-2 bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Quản Lý Lương Chi Tiết
+                  </Button>
+                  <Button variant="outline" onClick={fetchDashboardData}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Làm Mới
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                {/* Month Filter */}
+                <div className="mb-6">
+                  <MonthSelector
+                    value={selectedMonth}
+                    onValueChange={handleMonthChange}
+                    placeholder="Chọn tháng để xem dữ liệu"
+                    label="Lọc Theo Tháng Lương"
+                    allowEmpty={true}
+                  />
+                </div>
+
+                {/* Data Display */}
+                {!selectedMonth ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Filter className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-medium mb-2">Chọn Tháng Để Xem Dữ Liệu</h3>
+                    <p>Vui lòng chọn tháng lương từ dropdown phía trên để hiển thị dữ liệu chi tiết.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -312,7 +377,7 @@ export function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {payrolls.map((record) => (
+                      {filteredPayrolls.map((record) => (
                         <TableRow key={record.id}>
                           <TableCell className="font-medium">{record.employee_id}</TableCell>
                           <TableCell>
@@ -338,12 +403,13 @@ export function AdminDashboard() {
                     </TableBody>
                   </Table>
 
-                  {payrolls.length === 0 && (
+                  {filteredPayrolls.length === 0 && selectedMonth && (
                     <div className="text-center py-8 text-gray-500">
-                      Chưa có dữ liệu lương nào. Hãy sử dụng tính năng import để bắt đầu.
+                      Không có dữ liệu lương cho tháng {selectedMonth}.
                     </div>
                   )}
-                </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

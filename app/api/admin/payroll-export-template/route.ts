@@ -38,6 +38,7 @@ const FIELD_HEADERS: Record<string, string> = {
   gio_an_ca: "Giờ Ăn Ca",
   tong_gio_lam_viec: "Tổng Giờ Làm Việc",
   tong_he_so_quy_doi: "Tổng Hệ Số Quy Đổi",
+  ngay_cong_chu_nhat: "Ngày Công Chủ Nhật",
   
   // Lương sản phẩm và đơn giá
   tong_luong_san_pham_cong_doan: "Tổng Lương Sản Phẩm Công Đoạn",
@@ -52,6 +53,9 @@ const FIELD_HEADERS: Record<string, string> = {
   tong_cong_tien_luong_san_pham: "Tổng Cộng Tiền Lương Sản Phẩm",
   ho_tro_thoi_tiet_nong: "Hỗ Trợ Thời Tiết Nóng",
   bo_sung_luong: "Bổ Sung Lương",
+  tien_luong_chu_nhat: "Tiền Lương Chủ Nhật",
+  luong_cnkcp_vuot: "Lương CNKCP Vượt",
+  tien_tang_ca_vuot: "Tiền Tăng Ca Vượt",
   
   // Bảo hiểm và phúc lợi
   bhxh_21_5_percent: "BHXH 21.5%",
@@ -85,11 +89,13 @@ const PAYROLL_FIELDS = [
   "employee_id", "salary_month",
   "he_so_lam_viec", "he_so_phu_cap_ket_qua", "he_so_luong_co_ban", "luong_toi_thieu_cty",
   "ngay_cong_trong_gio", "gio_cong_tang_ca", "gio_an_ca", "tong_gio_lam_viec", "tong_he_so_quy_doi",
-  "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio", "tien_luong_san_pham_trong_gio", 
+  "ngay_cong_chu_nhat", // Bổ sung cột mới
+  "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio", "tien_luong_san_pham_trong_gio",
   "tien_luong_tang_ca", "tien_luong_30p_an_ca",
-  "tien_khen_thuong_chuyen_can", "luong_hoc_viec_pc_luong", "tong_cong_tien_luong_san_pham", 
+  "tien_khen_thuong_chuyen_can", "luong_hoc_viec_pc_luong", "tong_cong_tien_luong_san_pham",
   "ho_tro_thoi_tiet_nong", "bo_sung_luong",
-  "bhxh_21_5_percent", "pc_cdcs_pccc_atvsv", "luong_phu_nu_hanh_kinh", "tien_con_bu_thai_7_thang", 
+  "tien_luong_chu_nhat", "luong_cnkcp_vuot", "tien_tang_ca_vuot", // Bổ sung 3 cột mới
+  "bhxh_21_5_percent", "pc_cdcs_pccc_atvsv", "luong_phu_nu_hanh_kinh", "tien_con_bu_thai_7_thang",
   "ho_tro_gui_con_nha_tre",
   "ngay_cong_phep_le", "tien_phep_le",
   "tong_cong_tien_luong", "tien_boc_vac", "ho_tro_xang_xe",

@@ -533,6 +533,266 @@ const formatCurrency = (amount: number) =>
 - **Typography**: Font size và weight phân cấp rõ ràng
 - **Mobile**: Touch-friendly button sizes
 
+## 📊 Quản Lý Lương Chi Tiết (Admin)
+
+### 🎯 Tổng Quan Tính Năng
+Hệ thống quản lý lương chi tiết cho phép admin tìm kiếm, xem và theo dõi thông tin lương của tất cả nhân viên với giao diện chuyên nghiệp và audit trail đầy đủ.
+
+### 🔍 Tính Năng Tìm Kiếm Nhân Viên
+
+#### **Truy Cập:**
+- **URL**: `/admin/payroll-management`
+- **Yêu cầu**: Đăng nhập admin với JWT token
+- **Navigation**: Admin Dashboard → "Quản Lý Lương Chi Tiết"
+
+#### **Chức Năng Tìm Kiếm:**
+- **Tìm theo Mã NV**: Nhập mã nhân viên (VD: NV001, EMP001)
+- **Tìm theo Tên**: Nhập họ tên nhân viên (VD: Nguyễn Văn An)
+- **Filter theo Tháng**: Chọn tháng lương cụ thể hoặc "Tất cả tháng"
+- **Real-time Search**: Tự động tìm kiếm khi nhập (debouncing 300ms)
+- **Minimum Query**: Yêu cầu ít nhất 2 ký tự để tìm kiếm
+
+#### **Kết Quả Hiển Thị:**
+```typescript
+interface SearchResult {
+  payroll_id: number;           // ID bản ghi lương
+  employee_id: string;          // Mã nhân viên
+  full_name: string;            // Họ tên đầy đủ
+  department: string;           // Phòng ban
+  position: string;             // Chức vụ
+  salary_month: string;         // Tháng lương (YYYY-MM)
+  net_salary: number;           // Lương thực nhận
+  source_file: string;          // File Excel gốc
+  created_at: string;           // Ngày tạo
+}
+```
+
+### 📋 Giao Diện Kết Quả Tìm Kiếm
+
+#### **Table Layout:**
+| Cột | Mô Tả | Format |
+|-----|-------|--------|
+| **Mã NV** | employee_id | Text, bold |
+| **Họ Tên** | full_name | Text |
+| **Phòng Ban** | department | Badge màu xanh |
+| **Chức Vụ** | position | Badge màu tím |
+| **Tháng Lương** | salary_month | YYYY-MM |
+| **Lương Thực Nhận** | net_salary | VND format |
+| **Thao Tác** | Actions | Buttons |
+
+#### **Action Buttons:**
+- **👁️ Xem Chi Tiết**: Mở modal với 39 cột dữ liệu lương đầy đủ
+- **📝 Lịch Sử Thay Đổi**: Xem audit trail của bản ghi lương
+- **✏️ Chỉnh Sửa**: Sửa đổi thông tin lương (future feature)
+
+### 🔍 Modal Xem Chi Tiết Lương
+
+#### **Cấu Trúc Hiển Thị:**
+```typescript
+// 39 cột dữ liệu được nhóm thành 6 categories
+interface PayrollDetail {
+  // 1. THÔNG TIN CƠ BẢN
+  employee_info: {
+    employee_id: string;
+    full_name: string;
+    department: string;
+    position: string;
+    salary_month: string;
+  };
+
+  // 2. HỆ SỐ VÀ THÔNG SỐ
+  coefficients: {
+    he_so_lam_viec: number;
+    he_so_phu_cap_ket_qua: number;
+    he_so_luong_co_ban: number;
+    luong_toi_thieu_cty: number;
+  };
+
+  // 3. THỜI GIAN LÀM VIỆC
+  working_time: {
+    ngay_cong_trong_gio: number;
+    gio_cong_tang_ca: number;
+    gio_an_ca: number;
+    tong_gio_lam_viec: number;
+    tong_he_so_quy_doi: number;
+  };
+
+  // 4. LƯƠNG SẢN PHẨM
+  product_salary: {
+    tong_luong_san_pham_cong_doan: number;
+    don_gia_tien_luong_tren_gio: number;
+    tien_luong_san_pham_trong_gio: number;
+    tien_luong_tang_ca: number;
+    tien_luong_30p_an_ca: number;
+  };
+
+  // 5. PHỤ CẤP VÀ THƯỞNG
+  allowances: {
+    tien_khen_thuong_chuyen_can: number;
+    luong_hoc_viec_pc_luong: number;
+    phu_cap_tien_an: number;
+    phu_cap_xang_xe: number;
+    phu_cap_dien_thoai: number;
+    phu_cap_khac: number;
+  };
+
+  // 6. KHẤU TRỪ VÀ THỰC NHẬN
+  deductions_final: {
+    thue_tncn_nam_2024: number;
+    tam_ung: number;
+    thue_tncn: number;
+    bhxh_bhtn_bhyt_total: number;
+    truy_thu_the_bhyt: number;
+    tien_luong_thuc_nhan_cuoi_ky: number; // FINAL AMOUNT
+  };
+}
+```
+
+#### **UI/UX Design:**
+- **Responsive Modal**: Fullscreen trên mobile, large modal trên desktop
+- **Collapsible Sections**: Mỗi category có thể thu gọn/mở rộng
+- **Color Coding**: Mỗi section có màu sắc riêng biệt
+- **Typography**: Font size và weight phân cấp rõ ràng
+- **Currency Format**: Tất cả số tiền đều format VND
+- **Number Format**: Hệ số hiển thị 2 chữ số thập phân
+
+### 📜 Audit Trail (Lịch Sử Thay Đổi)
+
+#### **Database Schema:**
+```sql
+-- Table: payroll_audit_logs
+CREATE TABLE payroll_audit_logs (
+  id SERIAL PRIMARY KEY,
+  payroll_id INTEGER NOT NULL,           -- FK to payrolls.id
+  employee_id VARCHAR(50) NOT NULL,      -- For filtering
+  salary_month VARCHAR(20) NOT NULL,     -- For filtering
+  changed_by VARCHAR(255) NOT NULL,      -- Admin username
+  changed_at TIMESTAMP DEFAULT NOW(),    -- When changed
+  change_ip VARCHAR(45),                 -- IP address
+  change_reason TEXT NOT NULL,           -- Reason for change
+  field_name VARCHAR(100) NOT NULL,      -- Which field changed
+  old_value TEXT,                        -- Previous value
+  new_value TEXT                         -- New value
+);
+```
+
+#### **Audit Trail Features:**
+- **Complete History**: Mọi thay đổi đều được ghi log
+- **Field-Level Tracking**: Theo dõi từng field riêng biệt
+- **Admin Attribution**: Biết admin nào thực hiện thay đổi
+- **IP Tracking**: Ghi lại địa chỉ IP khi thay đổi
+- **Reason Required**: Bắt buộc nhập lý do thay đổi
+- **Grouped Display**: Nhóm các thay đổi cùng lúc
+- **Chronological Order**: Sắp xếp theo thời gian mới nhất
+
+#### **Audit Trail UI:**
+```typescript
+interface AuditEntry {
+  id: number;
+  changed_by: string;           // "admin"
+  changed_at: string;           // "2024-01-15 14:30:25"
+  change_ip: string;            // "192.168.1.100"
+  change_reason: string;        // "Điều chỉnh lương theo quyết định"
+  changes: Array<{
+    field_name: string;         // "tien_luong_thuc_nhan_cuoi_ky"
+    old_value: string;          // "8500000"
+    new_value: string;          // "9000000"
+  }>;
+}
+```
+
+### 🔧 API Endpoints
+
+#### **Search API:**
+```typescript
+// GET /api/admin/payroll/search?q={query}&salary_month={month}
+interface SearchRequest {
+  q: string;                    // Min 2 characters
+  salary_month?: string;        // Optional filter
+}
+
+interface SearchResponse {
+  success: boolean;
+  results: SearchResult[];
+  total: number;
+  message?: string;
+}
+```
+
+#### **Detail API:**
+```typescript
+// GET /api/admin/payroll/{id}
+interface DetailResponse {
+  success: boolean;
+  payroll: PayrollDetail;
+  employee: EmployeeInfo;
+}
+```
+
+#### **Audit API:**
+```typescript
+// GET /api/admin/payroll/audit/{id}
+interface AuditResponse {
+  success: boolean;
+  auditTrail: AuditEntry[];
+  totalChanges: number;
+}
+```
+
+### 🛡️ Security & Permissions
+
+#### **Authentication:**
+- **JWT Required**: Tất cả API đều yêu cầu admin token
+- **Token Validation**: Verify JWT signature và expiry
+- **Role Check**: Chỉ role "admin" mới được truy cập
+
+#### **RLS Policies:**
+```sql
+-- Service client có thể truy cập tất cả data
+CREATE POLICY "payrolls_service_client_access" ON payrolls
+  FOR ALL USING (
+    auth.jwt() IS NULL OR
+    auth.jwt() ->> 'role' = 'admin'
+  );
+
+-- Audit logs cũng áp dụng tương tự
+CREATE POLICY "audit_logs_service_client_access" ON payroll_audit_logs
+  FOR ALL USING (
+    auth.jwt() IS NULL OR
+    auth.jwt() ->> 'role' = 'admin'
+  );
+```
+
+### 🐛 Troubleshooting
+
+#### **Common Issues:**
+
+| Lỗi | Nguyên Nhân | Giải Pháp |
+|-----|-------------|-----------|
+| "Lỗi khi tìm kiếm dữ liệu lương" | RLS policy block | Chạy `scripts/fix-audit-trail-rls.sql` |
+| "Lỗi khi lấy lịch sử thay đổi" | Audit table missing | Chạy `scripts/supabase-setup/14-create-payroll-audit-table.sql` |
+| "Không có quyền truy cập" | Token expired/invalid | Đăng nhập lại admin |
+| "Chưa có dữ liệu lương" | Empty database | Import dữ liệu lương trước |
+
+#### **Debug Scripts:**
+- `scripts/debug-database-access.sql` - Kiểm tra database access
+- `scripts/fix-audit-trail-rls.sql` - Fix RLS policies
+- `scripts/test-audit-trail.sql` - Test audit functionality
+
+### 📈 Performance Considerations
+
+#### **Database Optimization:**
+- **Indexes**: Tạo index cho employee_id, salary_month, created_at
+- **Query Limit**: Giới hạn 20 kết quả mỗi lần search
+- **Debouncing**: 300ms delay cho search input
+- **Pagination**: Future feature cho large datasets
+
+#### **Frontend Optimization:**
+- **Lazy Loading**: Modal content chỉ load khi cần
+- **Memoization**: Cache search results
+- **Responsive Images**: Optimize cho mobile
+- **Bundle Splitting**: Separate admin chunks
+
 ## License
 
 MIT License - xem file LICENSE để biết thêm chi tiết.

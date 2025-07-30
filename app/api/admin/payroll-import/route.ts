@@ -60,7 +60,13 @@ const HEADER_TO_FIELD: Record<string, string> = {
   "Thuế TNCN": "thue_tncn",
   "BHXH BHTN BHYT Total": "bhxh_bhtn_bhyt_total",
   "Truy Thu Thẻ BHYT": "truy_thu_the_bhyt",
-  "Tiền Lương Thực Nhận Cuối Kỳ": "tien_luong_thuc_nhan_cuoi_ky"
+  "Tiền Lương Thực Nhận Cuối Kỳ": "tien_luong_thuc_nhan_cuoi_ky",
+
+  // Bổ sung 4 cột mới
+  "Ngày Công Chủ Nhật": "ngay_cong_chu_nhat",
+  "Tiền Lương Chủ Nhật": "tien_luong_chu_nhat",
+  "Lương CNKCP Vượt": "luong_cnkcp_vuot",
+  "Tiền Tăng Ca Vượt": "tien_tang_ca_vuot"
 }
 
 interface ImportError {

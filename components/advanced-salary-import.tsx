@@ -18,7 +18,17 @@ import {
   parseAdvancedExcelFiles,
   detectColumns,
   autoMapColumns,
+  autoMapColumnsWithAliases,
 } from "@/lib/advanced-excel-parser"
+import {
+  type ColumnAlias,
+  type EnhancedColumnMapping,
+  type ImportMappingResult
+} from "@/lib/column-alias-config"
+import {
+  EnhancedImportValidator,
+  type ValidationResult
+} from "@/lib/enhanced-import-validation"
 
 interface AdvancedSalaryImportProps {
   onImportComplete?: (result: ImportResult) => void
@@ -32,6 +42,9 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
   const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([])
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [message, setMessage] = useState("")
+  const [aliases, setAliases] = useState<ColumnAlias[]>([])
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null)
+  const [enhancedMappingResult, setEnhancedMappingResult] = useState<ImportMappingResult | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files
@@ -227,6 +240,8 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
           initialMapping={columnMappings[0] || {}}
           onSave={handleMappingSave}
           onCancel={handleMappingCancel}
+          fileName={files?.[0]?.name}
+          enableAliasMapping={true}
         />
       )}
 

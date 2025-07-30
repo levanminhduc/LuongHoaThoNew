@@ -358,6 +358,44 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     is_required: false,
     category: "Lương thực nhận",
     default_value: 0
+  },
+
+  // Bổ sung 3 cột mới
+  {
+    field: "ngay_cong_chu_nhat",
+    label: "Ngày Công Chủ Nhật",
+    description: "Số ngày công làm việc chủ nhật trong tháng",
+    data_type: "number",
+    is_required: false,
+    category: "Thời gian làm việc",
+    default_value: 0
+  },
+  {
+    field: "tien_luong_chu_nhat",
+    label: "Tiền Lương Chủ Nhật",
+    description: "Tiền lương cho các ngày làm việc chủ nhật",
+    data_type: "number",
+    is_required: false,
+    category: "Thưởng và phụ cấp",
+    default_value: 0
+  },
+  {
+    field: "luong_cnkcp_vuot",
+    label: "Lương CNKCP Vượt",
+    description: "Lương công nhân kỹ thuật cao phẩm vượt định mức",
+    data_type: "number",
+    is_required: false,
+    category: "Thưởng và phụ cấp",
+    default_value: 0
+  },
+  {
+    field: "tien_tang_ca_vuot",
+    label: "Tiền Tăng Ca Vượt",
+    description: "Tiền thưởng cho giờ tăng ca vượt định mức",
+    data_type: "number",
+    is_required: false,
+    category: "Thưởng và phụ cấp",
+    default_value: 0
   }
 ]
 

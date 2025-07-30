@@ -90,7 +90,7 @@ CREATE OR REPLACE FUNCTION get_employee_salary_detail(
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     e.full_name,
     e.department,
     p.salary_month,
@@ -99,10 +99,14 @@ BEGIN
     p.luong_toi_thieu_cty,
     p.ngay_cong_trong_gio,
     p.gio_cong_tang_ca,
+    p.ngay_cong_chu_nhat,
     p.tong_gio_lam_viec,
     p.tong_luong_san_pham_cong_doan,
     p.tien_luong_san_pham_trong_gio,
     p.tien_luong_tang_ca,
+    p.tien_luong_chu_nhat,
+    p.luong_cnkcp_vuot,
+    p.tien_tang_ca_vuot,
     p.tong_cong_tien_luong,
     p.bhxh_bhtn_bhyt_total,
     p.thue_tncn,
