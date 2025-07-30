@@ -1,24 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
-import jwt from "jsonwebtoken"
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
-
-// Verify admin token
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization")
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any
-    return decoded.role === "admin" ? decoded : null
-  } catch {
-    return null
-  }
-}
+import { verifyToken, getDepartmentFilter, getEmployeeFilter, getAuditInfo, type AuthContext } from "@/lib/auth-middleware"
 
 // Get client IP address
 function getClientIP(request: NextRequest): string {
@@ -40,9 +22,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify admin authentication
-    const admin = verifyAdminToken(request)
-    if (!admin) {
+    // Enhanced role-based authentication
+    const auth = verifyToken(request)
+    if (!auth) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
@@ -53,8 +35,8 @@ export async function GET(
 
     const supabase = createServiceClient()
 
-    // Get payroll record with employee info
-    const { data: payrollData, error: payrollError } = await supabase
+    // Role-based data access control
+    let query = supabase
       .from("payrolls")
       .select(`
         *,
@@ -66,11 +48,31 @@ export async function GET(
         )
       `)
       .eq("id", payrollId)
-      .single()
+
+    // Apply role-based filtering
+    if (auth.user.role === 'truong_phong') {
+      // Truong_phong can only access allowed departments
+      const allowedDepts = auth.user.allowed_departments || []
+      if (allowedDepts.length > 0) {
+        query = query.in("employees.department", allowedDepts)
+      } else {
+        // No departments allowed
+        return NextResponse.json({ error: "Không có quyền truy cập dữ liệu này" }, { status: 403 })
+      }
+    } else if (auth.user.role === 'to_truong') {
+      // To_truong can only access own department
+      query = query.eq("employees.department", auth.user.department)
+    } else if (auth.user.role === 'nhan_vien') {
+      // Nhan_vien can only access own data
+      query = query.eq("employee_id", auth.user.employee_id)
+    }
+    // Admin has no restrictions
+
+    const { data: payrollData, error: payrollError } = await query.single()
 
     if (payrollError || !payrollData) {
       return NextResponse.json(
-        { error: "Không tìm thấy bản ghi lương" },
+        { error: "Không tìm thấy bản ghi lương hoặc không có quyền truy cập" },
         { status: 404 }
       )
     }
@@ -95,10 +97,15 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify admin authentication
-    const admin = verifyAdminToken(request)
-    if (!admin) {
+    // Enhanced role-based authentication
+    const auth = verifyToken(request)
+    if (!auth) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
+    }
+
+    // Only admin and truong_phong can edit payroll data
+    if (!auth.isRole('admin') && !auth.isRole('truong_phong')) {
+      return NextResponse.json({ error: "Không có quyền chỉnh sửa dữ liệu lương" }, { status: 403 })
     }
 
     const payrollId = parseInt(params.id)
@@ -167,7 +174,7 @@ export async function PUT(
           payroll_id: payrollId,
           employee_id: currentData.employee_id,
           salary_month: currentData.salary_month,
-          changed_by: admin.username,
+          changed_by: auth.user.username,
           change_ip: clientIP,
           change_reason: changeReason,
           field_name: field,

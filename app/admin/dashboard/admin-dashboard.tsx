@@ -18,6 +18,7 @@ import {
   DollarSign,
   TrendingUp,
   Settings,
+  Shield,
   ArrowUpDown,
   UserCheck,
   Edit,
@@ -64,9 +65,40 @@ export function AdminDashboard() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check authentication
+    // Check authentication and role
     const token = localStorage.getItem("admin_token")
-    if (!token) {
+    const userStr = localStorage.getItem("user_info")
+
+    if (!token || !userStr) {
+      router.push("/admin/login")
+      return
+    }
+
+    try {
+      const userData = JSON.parse(userStr)
+
+      // Check if user has admin role
+      if (userData.role !== 'admin') {
+        // Redirect based on actual role
+        switch (userData.role) {
+          case 'truong_phong':
+            router.push('/manager/dashboard')
+            break
+          case 'to_truong':
+            router.push('/supervisor/dashboard')
+            break
+          case 'nhan_vien':
+            router.push('/employee/dashboard')
+            break
+          default:
+            router.push('/admin/login')
+        }
+        return
+      }
+    } catch (error) {
+      console.error("Error parsing user info:", error)
+      localStorage.removeItem("admin_token")
+      localStorage.removeItem("user_info")
       router.push("/admin/login")
       return
     }
@@ -208,6 +240,14 @@ export function AdminDashboard() {
               >
                 <Settings className="h-4 w-4" />
                 Column Mapping Config
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/department-management")}
+                className="flex items-center gap-2 bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+              >
+                <Shield className="h-4 w-4" />
+                Quản Lý Phân Quyền
               </Button>
               <Button
                 variant="outline"

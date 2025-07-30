@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyAdminCredentials } from "@/lib/auth"
+import { authenticateUser, type JWTPayload } from "@/lib/auth"
 import jwt from "jsonwebtoken"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
@@ -12,18 +12,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Thiếu tên đăng nhập hoặc mật khẩu" }, { status: 400 })
     }
 
-    const isValid = await verifyAdminCredentials(username, password)
+    // Use enhanced authentication
+    const authResult = await authenticateUser(username, password)
 
-    if (!isValid) {
-      return NextResponse.json({ error: "Tên đăng nhập hoặc mật khẩu không đúng" }, { status: 401 })
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json({
+        error: authResult.error || "Tên đăng nhập hoặc mật khẩu không đúng"
+      }, { status: 401 })
     }
 
-    // Tạo JWT token
-    const token = jwt.sign({ username, role: "admin" }, JWT_SECRET, { expiresIn: "24h" })
+    const user = authResult.user
+
+    // Create enhanced JWT token with role-based payload
+    const tokenPayload: Omit<JWTPayload, 'iat' | 'exp'> = {
+      username: user.username,
+      employee_id: user.employee_id,
+      role: user.role as any,
+      department: user.department,
+      allowed_departments: user.allowed_departments,
+      permissions: user.permissions
+    }
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "24h" })
 
     return NextResponse.json({
       success: true,
       token,
+      user: {
+        employee_id: user.employee_id,
+        username: user.username,
+        role: user.role,
+        department: user.department,
+        allowed_departments: user.allowed_departments,
+        permissions: user.permissions
+      },
       message: "Đăng nhập thành công",
     })
   } catch (error) {

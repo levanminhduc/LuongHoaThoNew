@@ -36,9 +36,28 @@ export function AdminLoginForm() {
       const data = await response.json()
 
       if (response.ok) {
-        // Lưu token vào localStorage hoặc cookie
+        // Lưu token và user info vào localStorage
         localStorage.setItem("admin_token", data.token)
-        router.push("/admin/dashboard")
+        localStorage.setItem("user_info", JSON.stringify(data.user))
+
+        // Redirect based on user role
+        const userRole = data.user?.role
+        switch (userRole) {
+          case 'admin':
+            router.push("/admin/dashboard")
+            break
+          case 'truong_phong':
+            router.push("/manager/dashboard")
+            break
+          case 'to_truong':
+            router.push("/supervisor/dashboard")
+            break
+          case 'nhan_vien':
+            router.push("/employee/dashboard")
+            break
+          default:
+            router.push("/admin/dashboard") // Fallback to admin dashboard
+        }
       } else {
         setError(data.error || "Đăng nhập thất bại, liên hệ ban Chuyển Đổi Số để được hỗ trợ.")
       }
@@ -55,8 +74,10 @@ export function AdminLoginForm() {
         <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
           <Shield className="w-6 h-6 text-blue-600" />
         </div>
-        <CardTitle>Đăng Nhập Quản Trị</CardTitle>
-        {/* <CardDescription>Tài khoản mặc định: admin / admin123</CardDescription> */}
+        <CardTitle>Đăng Nhập Hệ Thống</CardTitle>
+        <CardDescription>
+          Hỗ trợ tất cả roles: Admin, Trưởng Phòng, Tổ Trưởng, Nhân Viên
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
