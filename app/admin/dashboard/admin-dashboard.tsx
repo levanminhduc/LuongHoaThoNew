@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import { EmployeeImportSection } from "@/components/employee-import-section"
 import { MonthSelector } from "../payroll-management/components/MonthSelector"
+import { AdminSystemMenu } from "@/components/admin-system-menu"
 
 interface PayrollRecord {
   id: number
@@ -217,38 +218,7 @@ export function AdminDashboard() {
               <p className="text-sm text-gray-600">MAY HÒA THỌ ĐIỆN BÀN - Hệ thống quản lý lương</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/payroll-import-export")}
-                className="flex items-center gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-              >
-                <ArrowUpDown className="h-4 w-4" />
-                Import/Export Lương
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/dashboard/update-cccd")}
-                className="flex items-center gap-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-              >
-                <UserCheck className="h-4 w-4" />
-                Quản Lý CCCD
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/column-mapping-config")}
-                className="flex items-center gap-2 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
-              >
-                <Settings className="h-4 w-4" />
-                Column Mapping Config
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/department-management")}
-                className="flex items-center gap-2 bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
-              >
-                <Shield className="h-4 w-4" />
-                Quản Lý Phân Quyền
-              </Button>
+              <AdminSystemMenu />
               <Button
                 variant="outline"
                 onClick={handleDownloadSyncTemplate}

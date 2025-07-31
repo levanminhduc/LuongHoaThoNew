@@ -52,7 +52,14 @@ Chạy SQL script để tạo bảng:
 # Chạy các script theo thứ tự trong thư mục scripts/supabase-setup/
 psql -f scripts/supabase-setup/01-create-employees-table.sql
 psql -f scripts/supabase-setup/02-create-payrolls-table.sql
-# ... (tiếp tục với các script khác)
+psql -f scripts/supabase-setup/03-create-signature-logs-table.sql
+psql -f scripts/supabase-setup/11-create-import-config-tables.sql
+psql -f scripts/supabase-setup/12-create-column-alias-tables.sql
+psql -f scripts/supabase-setup/14-create-payroll-audit-table.sql
+psql -f scripts/supabase-setup/15-add-missing-payroll-columns.sql
+psql -f scripts/supabase-setup/16-add-overtime-bonus-column.sql
+psql -f scripts/supabase-setup/17-create-department-permissions-table.sql
+# ... (tiếp tục với các script khác theo thứ tự)
 \`\`\`
 
 ### 5. Chạy Ứng Dụng
@@ -240,17 +247,73 @@ NV003        | Lê Văn Cường | 001234567892 | Phòng QC       | truong_phong
 - **Bảo mật cao**: CCCD được mã hóa, không thể xem lại số gốc
 - **Audit trail**: Mọi thay đổi được ghi log với timestamp
 
+## 📊 Cấu Trúc Database (Updated 2024-07-30)
+
+### **Core Tables:**
+
+#### **1. employees (Nhân viên)**
+- employee_id (VARCHAR(50), PK) - Mã nhân viên
+- full_name (VARCHAR(255)) - Họ tên đầy đủ
+- department (VARCHAR(100)) - Phòng ban
+- chuc_vu (VARCHAR(50)) - Chức vụ (admin, truong_phong, to_truong, nhan_vien)
+- cccd_hash (VARCHAR(255)) - CCCD đã hash bằng bcrypt
+- is_active (BOOLEAN) - Trạng thái hoạt động
+- created_at, updated_at (TIMESTAMP) - Metadata với timezone Vietnam
+
+#### **2. payrolls (Bảng lương) - 43 cột (bổ sung 4 cột mới)**
+- **Metadata**: id, employee_id, salary_month, source_file, import_batch_id, import_status
+- **Signature Tracking**: is_signed, signed_at, signed_by_name, signature_ip, signature_device
+- **Core Payroll Data**: 39 cột dữ liệu lương chi tiết
+- **🆕 4 CỘT MỚI (Added 2024-07-30)**:
+  - `ngay_cong_chu_nhat` (DECIMAL(5,2)) - Ngày công chủ nhật
+  - `tien_luong_chu_nhat` (DECIMAL(15,2)) - Tiền lương chủ nhật
+  - `luong_cnkcp_vuot` (DECIMAL(15,2)) - Lương CNKCP vượt
+  - `tien_tang_ca_vuot` (DECIMAL(15,2)) - Tiền tăng ca vượt định mức
+
+#### **3. signature_logs (Lịch sử ký nhận)**
+- id, employee_id, salary_month, signed_at, signed_by_name, signature_ip, signature_device
+
+#### **4. 🆕 Configuration Tables (Added 2024-07-30)**
+- **import_file_configs**: Cấu hình file import
+- **import_column_mappings**: Mapping Excel columns to database fields
+- **import_sessions**: Track dual-file import sessions
+- **column_aliases**: Alternative names for database fields
+- **mapping_configurations**: Saved mapping configurations
+- **configuration_field_mappings**: Detailed field mappings
+- **payroll_audit_logs**: Audit trail cho payroll changes
+
+### **Migration Scripts:**
+```bash
+# Core tables
+01-create-employees-table.sql
+02-create-payrolls-table.sql
+03-create-signature-logs-table.sql
+
+# Configuration system
+11-create-import-config-tables.sql
+12-create-column-alias-tables.sql
+14-create-payroll-audit-table.sql
+
+# Column additions
+15-add-missing-payroll-columns.sql (3 cột)
+16-add-overtime-bonus-column.sql (1 cột)
+17-create-department-permissions-table.sql
+
+# Enhancements
+12-fix-timezone-vietnam.sql
+19-update-rls-policies.sql
+```
+
 ## Format File Excel Lương
 
-File Excel lương cần có các cột (tên cột có thể tiếng Việt):
-- Mã nhân viên / Employee ID
-- Họ tên / Full Name
-- CCCD / CMND
-- Chức vụ / Position (tùy chọn)
-- Tháng lương / Salary Month
-- Tổng thu nhập / Total Income
-- Khấu trừ / Deductions
-- Lương thực lĩnh / Net Salary
+File Excel lương hỗ trợ **43 cột dữ liệu** với smart column mapping:
+- **Metadata**: Mã nhân viên, Tháng lương, Source file
+- **Hệ số cơ bản**: Hệ số làm việc, Hệ số phụ cấp, Lương tối thiểu
+- **Thời gian**: Ngày công trong giờ, Giờ tăng ca, **Ngày công chủ nhật** (mới)
+- **Lương sản phẩm**: Tổng lương sản phẩm, Đơn giá, **Tiền lương chủ nhật** (mới)
+- **Thưởng phụ cấp**: Chuyên cần, Ăn ca, **Lương CNKCP vượt** (mới), **Tiền tăng ca vượt** (mới)
+- **Bảo hiểm**: BHXH, BHTN, BHYT, Thuế TNCN
+- **Kết quả**: Tiền lương thực nhận cuối kỳ (NET SALARY)
 
 ## Bảo Mật
 

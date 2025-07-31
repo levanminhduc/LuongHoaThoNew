@@ -228,19 +228,43 @@ export default function Component({ title, onAction }: ComponentProps) {
 // BEFORE adding new API route:
 
 // 1. Analyze existing API patterns:
-"Tôi cần hiểu API patterns trong dự án:
-- Existing API routes structure
-- Authentication middleware usage
-- Error handling patterns
+"Tôi cần hiểu API patterns trong dự án MAY HÒA THỌ ĐIỆN BÀN:
+- Existing API routes structure (admin vs employee)
+- Authentication middleware usage (admin_token key)
+- Error handling patterns (ApiErrorHandler class)
 - Response format conventions
-- Validation approaches
-- Database interaction patterns"
+- Validation approaches (PayrollValidator)
+- Database interaction patterns (Supabase service client)
+- Import configuration system (mapping_configurations table)
+- Audit logging patterns (payroll_audit_logs)"
 
 // 2. Follow discovered patterns:
-// - All APIs use middleware for auth
-// - Consistent error response format
-// - Zod for validation
-// - Supabase client patterns
+// - All APIs use middleware for auth với admin_token
+// - Consistent error response format với ApiErrorHandler
+// - PayrollValidator for business logic validation
+// - Supabase service client patterns
+// - Configuration-based column mapping
+// - Comprehensive audit trail logging
+```
+
+### **Example 3: Working with new database schema**
+```typescript
+// BEFORE modifying payroll-related code:
+
+// 1. Understand new schema changes:
+"Tôi cần hiểu database schema updates:
+- 4 cột mới trong payrolls table (ngay_cong_chu_nhat, tien_luong_chu_nhat, luong_cnkcp_vuot, tien_tang_ca_vuot)
+- Configuration tables (import_file_configs, mapping_configurations, etc.)
+- Audit system (payroll_audit_logs)
+- TypeScript interfaces đã được cập nhật chưa
+- API routes nào cần update để support new columns
+- Excel import/export logic cần thay đổi gì"
+
+// 2. Follow schema patterns:
+// - All new columns có DECIMAL type với proper precision
+// - Configuration system cho flexible column mapping
+// - Audit trail cho all payroll changes
+// - Timezone-aware timestamps (Asia/Ho_Chi_Minh)
 ```
 
 ---
