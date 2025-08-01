@@ -9,11 +9,12 @@ CREATE TABLE column_aliases (
   confidence_score INTEGER DEFAULT 80 CHECK (confidence_score >= 0 AND confidence_score <= 100),
   is_active BOOLEAN DEFAULT true,
   created_by VARCHAR(100) NOT NULL,
+  config_id INTEGER REFERENCES mapping_configurations(id) ON DELETE SET NULL, -- Optional link to configuration
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
-  -- Ensure unique alias names per database field
-  UNIQUE(database_field, alias_name)
+
+  -- Ensure unique alias names per database field (global or per config)
+  UNIQUE(database_field, alias_name, COALESCE(config_id, 0))
 );
 
 -- Table to store mapping configurations (saved mappings)

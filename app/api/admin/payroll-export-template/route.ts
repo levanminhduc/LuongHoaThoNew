@@ -117,13 +117,61 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const includeData = searchParams.get("includeData") === "true"
     const salaryMonth = searchParams.get("salaryMonth")
+    const configId = searchParams.get("configId")
+    const timestampOnly = searchParams.get("timestamp_only") === "true"
+
+    // Handle timestamp-only request for sync checking
+    if (timestampOnly) {
+      const { data: lastUpdated } = await supabase
+        .from("mapping_configurations")
+        .select("updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single()
+
+      return NextResponse.json({
+        last_updated: lastUpdated?.updated_at ? new Date(lastUpdated.updated_at).getTime() : 0
+      })
+    }
+
+    // Load mapping configuration if specified
+    let mappingConfig = null
+    let customHeaders: Record<string, string> = {}
+
+    if (configId) {
+      const { data: config, error: configError } = await supabase
+        .from("mapping_configurations")
+        .select(`
+          *,
+          configuration_field_mappings (
+            database_field,
+            excel_column_name,
+            confidence_score,
+            mapping_type
+          )
+        `)
+        .eq("id", configId)
+        .eq("is_active", true)
+        .single()
+
+      if (!configError && config) {
+        mappingConfig = config
+
+        // Create custom headers from mapping configuration
+        if (config.configuration_field_mappings) {
+          config.configuration_field_mappings.forEach((mapping: any) => {
+            customHeaders[mapping.database_field] = mapping.excel_column_name
+          })
+        }
+      }
+    }
 
     // Analyze which columns have data (non-null, non-zero values)
     const { data: columnAnalysis, error: analysisError } = await supabase
       .rpc('analyze_payroll_columns')
 
     let activeFields = PAYROLL_FIELDS
-    
+
     if (!analysisError && columnAnalysis) {
       // Filter out columns that are completely empty
       activeFields = PAYROLL_FIELDS.filter(field => {
@@ -133,11 +181,22 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // If mapping config is provided, prioritize fields from the configuration
+    if (mappingConfig && mappingConfig.configuration_field_mappings) {
+      const configFields = mappingConfig.configuration_field_mappings.map((m: any) => m.database_field)
+      // Include both active fields and config fields, removing duplicates
+      activeFields = [...new Set([...activeFields, ...configFields])]
+        .filter(field => PAYROLL_FIELDS.includes(field)) // Ensure field exists in schema
+    }
+
     // Create workbook
     const workbook = XLSX.utils.book_new()
 
-    // Prepare headers
-    const headers = activeFields.map(field => FIELD_HEADERS[field] || field)
+    // Prepare headers with mapping configuration support
+    const headers = activeFields.map(field => {
+      // Priority: Custom headers from mapping config > Default headers > Field name
+      return customHeaders[field] || FIELD_HEADERS[field] || field
+    })
     
     // Prepare data rows
     let dataRows: any[][] = []
@@ -201,20 +260,32 @@ export async function GET(request: NextRequest) {
     // Generate Excel buffer
     const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 
-    // Create filename
+    // Create filename with mapping config info
     const timestamp = new Date().toISOString().slice(0, 10)
-    const filename = includeData 
-      ? `luong-export-${salaryMonth || 'all'}-${timestamp}.xlsx`
-      : `template-luong-${timestamp}.xlsx`
+    const configSuffix = mappingConfig ? `-${mappingConfig.config_name.replace(/\s+/g, '-')}` : ''
+    const filename = includeData
+      ? `luong-export-${salaryMonth || 'all'}${configSuffix}-${timestamp}.xlsx`
+      : `template-luong${configSuffix}-${timestamp}.xlsx`
+
+    // Prepare response headers
+    const responseHeaders: Record<string, string> = {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Length": excelBuffer.length.toString(),
+    }
+
+    // Add mapping configuration metadata to headers
+    if (mappingConfig) {
+      responseHeaders["X-Mapping-Config-Id"] = mappingConfig.id.toString()
+      responseHeaders["X-Mapping-Config-Name"] = mappingConfig.config_name
+      responseHeaders["X-Mapping-Config-Fields"] = activeFields.length.toString()
+      responseHeaders["X-Custom-Headers-Count"] = Object.keys(customHeaders).length.toString()
+    }
 
     // Return Excel file
     return new NextResponse(excelBuffer, {
       status: 200,
-      headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-        "Content-Length": excelBuffer.length.toString(),
-      },
+      headers: responseHeaders,
     })
 
   } catch (error) {

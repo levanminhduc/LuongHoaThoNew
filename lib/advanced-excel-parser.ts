@@ -5,6 +5,7 @@ import {
   type ImportMappingResult,
   type MappingConflict,
   type MappingSuggestion,
+  type MappingConfiguration,
   calculateConfidenceScore,
   categorizeMappingConfidence,
   validateMappingConfiguration,
@@ -111,14 +112,154 @@ export function detectColumns(worksheet: XLSX.WorkSheet): string[] {
   return jsonData[0].map((header: any) => String(header || "").trim()).filter((header: string) => header.length > 0)
 }
 
-// Enhanced auto-mapping with aliases support
+// Helper function to apply saved configuration with enhanced matching
+export function applySavedConfigurationWithFallback(
+  detectedColumns: string[],
+  savedConfiguration: MappingConfiguration,
+  fallbackMapping?: ColumnMapping
+): { mapping: ColumnMapping; appliedCount: number; confidence: number } {
+  const mapping: ColumnMapping = {}
+  let appliedCount = 0
+  let totalConfidence = 0
+
+  // Apply saved field mappings with enhanced matching
+  if (savedConfiguration.field_mappings) {
+    savedConfiguration.field_mappings.forEach(fieldMapping => {
+      const dbField = fieldMapping.database_field
+      const excelColumn = fieldMapping.excel_column_name
+
+      // Try exact match first
+      const exactMatch = detectedColumns.find(col =>
+        col.toLowerCase() === excelColumn.toLowerCase()
+      )
+
+      if (exactMatch) {
+        mapping[dbField] = exactMatch
+        appliedCount++
+        totalConfidence += fieldMapping.confidence_score
+        return
+      }
+
+      // Try fuzzy matching
+      const fuzzyMatch = detectedColumns.find(col => {
+        const colLower = col.toLowerCase()
+        const excelLower = excelColumn.toLowerCase()
+
+        // Contains match
+        if (colLower.includes(excelLower) || excelLower.includes(colLower)) {
+          return true
+        }
+
+        // Word boundary match
+        const colWords = colLower.split(/\s+/)
+        const excelWords = excelLower.split(/\s+/)
+
+        return colWords.some(colWord =>
+          excelWords.some(excelWord =>
+            colWord.includes(excelWord) || excelWord.includes(colWord)
+          )
+        )
+      })
+
+      if (fuzzyMatch) {
+        mapping[dbField] = fuzzyMatch
+        appliedCount++
+        totalConfidence += Math.max(fieldMapping.confidence_score * 0.8, 60)
+      }
+    })
+  }
+
+  // Fill in missing mappings with fallback
+  if (fallbackMapping) {
+    Object.keys(fallbackMapping).forEach(dbField => {
+      if (!mapping[dbField]) {
+        mapping[dbField] = fallbackMapping[dbField]
+      }
+    })
+  }
+
+  const averageConfidence = appliedCount > 0 ? totalConfidence / appliedCount : 0
+
+  return {
+    mapping,
+    appliedCount,
+    confidence: averageConfidence
+  }
+}
+
+// Helper function to create mapping configuration from successful mapping
+export function createMappingConfigurationFromMapping(
+  mapping: ColumnMapping,
+  configName: string,
+  description?: string
+): Omit<MappingConfiguration, 'id'> {
+  const fieldMappings = Object.entries(mapping).map(([dbField, excelColumn]) => ({
+    database_field: dbField,
+    excel_column_name: excelColumn,
+    confidence_score: 95, // High confidence for successful mappings
+    mapping_type: 'manual' as const
+  }))
+
+  return {
+    config_name: configName,
+    description: description || `Auto-generated configuration from successful mapping`,
+    field_mappings: fieldMappings,
+    is_default: false,
+    is_active: true,
+    created_by: 'system'
+  }
+}
+
+// Helper function to merge multiple mapping configurations
+export function mergeMappingConfigurations(
+  configs: MappingConfiguration[],
+  mergedName: string
+): Omit<MappingConfiguration, 'id'> {
+  const mergedFieldMappings = new Map<string, any>()
+
+  // Merge field mappings, keeping highest confidence for each database field
+  configs.forEach(config => {
+    if (config.field_mappings) {
+      config.field_mappings.forEach(fieldMapping => {
+        const existing = mergedFieldMappings.get(fieldMapping.database_field)
+        if (!existing || fieldMapping.confidence_score > existing.confidence_score) {
+          mergedFieldMappings.set(fieldMapping.database_field, fieldMapping)
+        }
+      })
+    }
+  })
+
+  return {
+    config_name: mergedName,
+    description: `Merged configuration from ${configs.length} configurations`,
+    field_mappings: Array.from(mergedFieldMappings.values()),
+    is_default: false,
+    is_active: true,
+    created_by: 'system'
+  }
+}
+
+// Enhanced auto-mapping with aliases and saved configurations support
 export async function autoMapColumnsWithAliases(
   detectedColumns: string[],
-  aliases: ColumnAlias[] = []
+  aliases: ColumnAlias[] = [],
+  savedConfiguration?: MappingConfiguration
 ): Promise<ImportMappingResult> {
   const mapping: EnhancedColumnMapping = {}
   const unmappedColumns: string[] = []
   const suggestions: MappingSuggestion[] = []
+
+  // Create saved configuration lookup map for highest priority matching
+  const savedConfigMap = new Map<string, { field: string; confidence: number }>()
+  if (savedConfiguration?.field_mappings) {
+    savedConfiguration.field_mappings.forEach(fieldMapping => {
+      const normalizedExcelColumn = fieldMapping.excel_column_name.toLowerCase().trim()
+      savedConfigMap.set(normalizedExcelColumn, {
+        field: fieldMapping.database_field,
+        confidence: fieldMapping.confidence_score
+      })
+    })
+  }
 
   // Create alias lookup map for faster searching
   const aliasMap = new Map<string, ColumnAlias[]>()
@@ -136,26 +277,84 @@ export async function autoMapColumnsWithAliases(
     let bestMatch: {
       field: string
       confidence: number
-      type: "exact" | "fuzzy" | "alias"
+      type: "exact" | "fuzzy" | "alias" | "saved_config"
       alias?: ColumnAlias
+      savedConfig?: boolean
     } | null = null
 
-    // 1. Check for exact alias matches (highest priority)
-    const exactAliasMatches = aliasMap.get(normalizedColumn) || []
-    if (exactAliasMatches.length > 0) {
-      // Use the alias with highest confidence score
-      const bestAlias = exactAliasMatches.reduce((best, current) =>
-        current.confidence_score > best.confidence_score ? current : best
-      )
+    // 1. Check for saved configuration matches (highest priority)
+    const savedConfigMatch = savedConfigMap.get(normalizedColumn)
+    if (savedConfigMatch) {
       bestMatch = {
-        field: bestAlias.database_field,
-        confidence: bestAlias.confidence_score,
-        type: "alias",
-        alias: bestAlias
+        field: savedConfigMatch.field,
+        confidence: Math.max(savedConfigMatch.confidence, 95), // Boost confidence for saved configs
+        type: "saved_config",
+        savedConfig: true
       }
     }
 
-    // 2. Check for exact field name matches
+    // 2. Check for fuzzy saved configuration matches
+    if (!bestMatch && savedConfiguration?.field_mappings) {
+      const fuzzyConfigMatches: Array<{ field: string; confidence: number; score: number }> = []
+
+      savedConfiguration.field_mappings.forEach(fieldMapping => {
+        const excelColumn = fieldMapping.excel_column_name.toLowerCase()
+        let score = 0
+
+        // Contains match
+        if (excelColumn.includes(normalizedColumn) || normalizedColumn.includes(excelColumn)) {
+          score = Math.max(80, fieldMapping.confidence_score * 0.9)
+        }
+        // Word boundary matches
+        else if (excelColumn.split(/\s+/).some(word =>
+          normalizedColumn.includes(word) || word.includes(normalizedColumn)
+        )) {
+          score = Math.max(70, fieldMapping.confidence_score * 0.8)
+        }
+
+        if (score > 0) {
+          fuzzyConfigMatches.push({
+            field: fieldMapping.database_field,
+            confidence: fieldMapping.confidence_score,
+            score
+          })
+        }
+      })
+
+      if (fuzzyConfigMatches.length > 0) {
+        const bestFuzzyConfig = fuzzyConfigMatches.reduce((best, current) =>
+          current.score > best.score ? current : best
+        )
+
+        if (bestFuzzyConfig.score >= 70) {
+          bestMatch = {
+            field: bestFuzzyConfig.field,
+            confidence: bestFuzzyConfig.confidence,
+            type: "saved_config",
+            savedConfig: true
+          }
+        }
+      }
+    }
+
+    // 3. Check for exact alias matches
+    if (!bestMatch) {
+      const exactAliasMatches = aliasMap.get(normalizedColumn) || []
+      if (exactAliasMatches.length > 0) {
+        // Use the alias with highest confidence score
+        const bestAlias = exactAliasMatches.reduce((best, current) =>
+          current.confidence_score > best.confidence_score ? current : best
+        )
+        bestMatch = {
+          field: bestAlias.database_field,
+          confidence: bestAlias.confidence_score,
+          type: "alias",
+          alias: bestAlias
+        }
+      }
+    }
+
+    // 4. Check for exact field name matches
     if (!bestMatch) {
       const exactFieldMatch = PAYROLL_FIELD_CONFIG.find(
         field => field.field.toLowerCase() === normalizedColumn
@@ -169,7 +368,7 @@ export async function autoMapColumnsWithAliases(
       }
     }
 
-    // 3. Check for fuzzy alias matches
+    // 5. Check for fuzzy alias matches
     if (!bestMatch) {
       const fuzzyMatches: Array<{ alias: ColumnAlias; score: number }> = []
 

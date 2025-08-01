@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server"
 import * as XLSX from "xlsx"
 import jwt from "jsonwebtoken"
 import { ApiErrorHandler, type ApiError, type ApiResponse } from "@/lib/api-error-handler"
+import { DEFAULT_FIELD_HEADERS } from "@/lib/utils/header-mapping"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -22,52 +23,20 @@ function verifyAdminToken(request: NextRequest) {
   }
 }
 
-// Reverse mapping from Vietnamese headers to database fields
-const HEADER_TO_FIELD: Record<string, string> = {
-  "Mã Nhân Viên": "employee_id",
-  "Tháng Lương": "salary_month",
-  "Hệ Số Làm Việc": "he_so_lam_viec",
-  "Hệ Số Phụ Cấp Kết Quả": "he_so_phu_cap_ket_qua",
-  "Hệ Số Lương Cơ Bản": "he_so_luong_co_ban",
-  "Lương Tối Thiểu Công Ty": "luong_toi_thieu_cty",
-  "Ngày Công Trong Giờ": "ngay_cong_trong_gio",
-  "Giờ Công Tăng Ca": "gio_cong_tang_ca",
-  "Giờ Ăn Ca": "gio_an_ca",
-  "Tổng Giờ Làm Việc": "tong_gio_lam_viec",
-  "Tổng Hệ Số Quy Đổi": "tong_he_so_quy_doi",
-  "Tổng Lương Sản Phẩm Công Đoạn": "tong_luong_san_pham_cong_doan",
-  "Đơn Giá Tiền Lương Trên Giờ": "don_gia_tien_luong_tren_gio",
-  "Tiền Lương Sản Phẩm Trong Giờ": "tien_luong_san_pham_trong_gio",
-  "Tiền Lương Tăng Ca": "tien_luong_tang_ca",
-  "Tiền Lương 30p Ăn Ca": "tien_luong_30p_an_ca",
-  "Tiền Khen Thưởng Chuyên Cần": "tien_khen_thuong_chuyen_can",
-  "Lương Học Việc PC Lương": "luong_hoc_viec_pc_luong",
-  "Tổng Cộng Tiền Lương Sản Phẩm": "tong_cong_tien_luong_san_pham",
-  "Hỗ Trợ Thời Tiết Nóng": "ho_tro_thoi_tiet_nong",
-  "Bổ Sung Lương": "bo_sung_luong",
-  "BHXH 21.5%": "bhxh_21_5_percent",
-  "PC CDCS PCCC ATVSV": "pc_cdcs_pccc_atvsv",
-  "Lương Phụ Nữ Hành Kinh": "luong_phu_nu_hanh_kinh",
-  "Tiền Con Bú Thai 7 Tháng": "tien_con_bu_thai_7_thang",
-  "Hỗ Trợ Gửi Con Nhà Trẻ": "ho_tro_gui_con_nha_tre",
-  "Ngày Công Phép Lễ": "ngay_cong_phep_le",
-  "Tiền Phép Lễ": "tien_phep_le",
-  "Tổng Cộng Tiền Lương": "tong_cong_tien_luong",
-  "Tiền Bốc Vác": "tien_boc_vac",
-  "Hỗ Trợ Xăng Xe": "ho_tro_xang_xe",
-  "Thuế TNCN Năm 2024": "thue_tncn_nam_2024",
-  "Tạm Ứng": "tam_ung",
-  "Thuế TNCN": "thue_tncn",
-  "BHXH BHTN BHYT Total": "bhxh_bhtn_bhyt_total",
-  "Truy Thu Thẻ BHYT": "truy_thu_the_bhyt",
-  "Tiền Lương Thực Nhận Cuối Kỳ": "tien_luong_thuc_nhan_cuoi_ky",
+// Create reverse mapping from DEFAULT_FIELD_HEADERS to ensure consistency
+const HEADER_TO_FIELD: Record<string, string> = {}
+Object.entries(DEFAULT_FIELD_HEADERS).forEach(([field, header]) => {
+  HEADER_TO_FIELD[header] = field
+})
 
-  // Bổ sung 4 cột mới
-  "Ngày Công Chủ Nhật": "ngay_cong_chu_nhat",
-  "Tiền Lương Chủ Nhật": "tien_luong_chu_nhat",
-  "Lương CNKCP Vượt": "luong_cnkcp_vuot",
-  "Tiền Tăng Ca Vượt": "tien_tang_ca_vuot"
+// Add any legacy headers that might still be in use
+const LEGACY_HEADER_MAPPINGS: Record<string, string> = {
+  "BHXH BHTN BHYT Total": "bhxh_bhtn_bhyt_total", // Legacy format
+  "Tiền Khen Thưởng Chuyên Cần": "thuong_chuyen_can", // Legacy format
 }
+
+// Merge legacy mappings
+Object.assign(HEADER_TO_FIELD, LEGACY_HEADER_MAPPINGS)
 
 interface ImportError {
   row: number
@@ -147,23 +116,37 @@ export async function POST(request: NextRequest) {
 
     // Map headers to database fields
     const fieldMapping: Record<number, string> = {}
+    const unmappedHeaders: string[] = []
+
     headers.forEach((header, index) => {
-      const field = HEADER_TO_FIELD[header.trim()]
+      const trimmedHeader = header.trim()
+      const field = HEADER_TO_FIELD[trimmedHeader]
       if (field) {
         fieldMapping[index] = field
+      } else {
+        unmappedHeaders.push(trimmedHeader)
       }
     })
 
+    // Debug logging for headers
+    console.log("📋 Excel Headers Found:", headers)
+    console.log("✅ Mapped Fields:", Object.values(fieldMapping))
+    console.log("❌ Unmapped Headers:", unmappedHeaders)
+    console.log("🔍 Available Mappings:", Object.keys(HEADER_TO_FIELD))
+
     // Validate required fields
     const requiredFields = ["employee_id", "salary_month"]
-    const missingFields = requiredFields.filter(field => 
+    const missingFields = requiredFields.filter(field =>
       !Object.values(fieldMapping).includes(field)
     )
 
     if (missingFields.length > 0) {
       const error = ApiErrorHandler.createError(
         ApiErrorHandler.ErrorCodes.VALIDATION_ERROR,
-        `Thiếu các cột bắt buộc: ${missingFields.join(", ")}`
+        `Thiếu các cột bắt buộc: ${missingFields.join(", ")}.
+        Headers tìm thấy: [${headers.join(", ")}].
+        Headers không map được: [${unmappedHeaders.join(", ")}].
+        Vui lòng kiểm tra tên cột trong file Excel có khớp với template không.`
       )
       return NextResponse.json(ApiErrorHandler.createErrorResponse(error), { status: 400 })
     }
@@ -179,6 +162,7 @@ export async function POST(request: NextRequest) {
       .select("employee_id")
 
     if (employeesError) {
+      console.error("❌ Database error loading employees:", employeesError)
       const error = ApiErrorHandler.createDatabaseError(
         "lấy danh sách nhân viên",
         employeesError.message
@@ -187,6 +171,7 @@ export async function POST(request: NextRequest) {
     }
 
     const validEmployeeIds = new Set(employees?.map(emp => emp.employee_id) || [])
+    console.log("👥 Valid Employee IDs loaded:", Array.from(validEmployeeIds))
 
     // Process each row
     for (let i = 0; i < rows.length; i++) {
@@ -217,27 +202,40 @@ export async function POST(request: NextRequest) {
           }
         })
 
+        // Debug logging for each row
+        console.log(`🔍 Row ${rowNumber} data:`, {
+          employee_id: recordData.employee_id,
+          salary_month: recordData.salary_month,
+          rawRow: row.slice(0, 5) // First 5 columns for debugging
+        })
+
         // Validate required fields
         if (!recordData.employee_id || !recordData.salary_month) {
-          errors.push({
+          const error = {
             row: rowNumber,
             employee_id: recordData.employee_id,
             salary_month: recordData.salary_month,
-            error: "Thiếu mã nhân viên hoặc tháng lương",
-            errorType: "validation"
-          })
+            error: `Thiếu dữ liệu bắt buộc - Employee ID: "${recordData.employee_id || 'EMPTY'}", Salary Month: "${recordData.salary_month || 'EMPTY'}". Kiểm tra dữ liệu trong file Excel.`,
+            errorType: "validation" as const
+          }
+          console.log(`❌ Row ${rowNumber} validation error:`, error)
+          errors.push(error)
           continue
         }
 
         // Validate employee exists
         if (!validEmployeeIds.has(recordData.employee_id)) {
-          errors.push({
+          const error = {
             row: rowNumber,
             employee_id: recordData.employee_id,
             salary_month: recordData.salary_month,
-            error: `Mã nhân viên ${recordData.employee_id} không tồn tại trong hệ thống`,
-            errorType: "employee_not_found"
-          })
+            error: `Mã nhân viên "${recordData.employee_id}" không tồn tại trong hệ thống.
+            Valid Employee IDs: [${Array.from(validEmployeeIds).slice(0, 10).join(", ")}${validEmployeeIds.size > 10 ? "..." : ""}].
+            Vui lòng kiểm tra lại mã nhân viên hoặc thêm nhân viên vào hệ thống trước.`,
+            errorType: "employee_not_found" as const
+          }
+          console.log(`❌ Row ${rowNumber} employee not found:`, error)
+          errors.push(error)
           continue
         }
 
@@ -248,7 +246,7 @@ export async function POST(request: NextRequest) {
             row: rowNumber,
             employee_id: recordData.employee_id,
             salary_month: recordData.salary_month,
-            error: "Tháng lương phải có định dạng YYYY-MM (ví dụ: 2024-01)",
+            error: `Tháng lương "${recordData.salary_month}" không đúng định dạng. Phải có định dạng YYYY-MM (ví dụ: 2024-01, 2024-12)`,
             errorType: "validation"
           })
           continue

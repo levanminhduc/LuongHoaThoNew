@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { database_field, alias_name, confidence_score = 80 } = body
+    const { database_field, alias_name, confidence_score = 80, config_id } = body
 
     if (!database_field || !alias_name) {
       return NextResponse.json(
@@ -148,31 +148,45 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient()
 
-    // Check for duplicate alias
-    const { data: existing } = await supabase
+    // Check for duplicate alias (considering config_id)
+    let duplicateQuery = supabase
       .from("column_aliases")
       .select("id")
       .eq("database_field", database_field)
       .eq("alias_name", alias_name)
-      .single()
+
+    if (config_id) {
+      duplicateQuery = duplicateQuery.eq("config_id", config_id)
+    } else {
+      duplicateQuery = duplicateQuery.is("config_id", null)
+    }
+
+    const { data: existing } = await duplicateQuery.single()
 
     if (existing) {
       return NextResponse.json(
-        { success: false, message: "Alias này đã tồn tại cho trường database" },
+        { success: false, message: `Alias này đã tồn tại cho trường database${config_id ? ' trong configuration này' : ' (global)'}` },
         { status: 409 }
       )
     }
 
     // Create new alias
+    const aliasData: any = {
+      database_field,
+      alias_name: alias_name.trim(),
+      confidence_score,
+      is_active: true,
+      created_by: adminUser.username
+    }
+
+    // Add config_id if provided
+    if (config_id) {
+      aliasData.config_id = config_id
+    }
+
     const { data: newAlias, error } = await supabase
       .from("column_aliases")
-      .insert({
-        database_field,
-        alias_name: alias_name.trim(),
-        confidence_score,
-        is_active: true,
-        created_by: adminUser.username
-      })
+      .insert(aliasData)
       .select()
       .single()
 
