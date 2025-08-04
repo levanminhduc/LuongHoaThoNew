@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     // Create template based on current database structure
     const templateData = [
-      // Header row - all 39 columns from database
+      // Header row - all 41 columns from database (updated with 4 new columns)
       [
         "Mã Nhân Viên",
         "Tháng Lương",
@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
         "Giờ Ăn Ca",
         "Tổng Giờ Làm Việc",
         "Tổng Hệ Số Quy Đổi",
+        "Ngày Công Chủ Nhật", // Cột mới 1
         "Tổng Lương Sản Phẩm Công Đoạn",
         "Đơn Giá Tiền Lương Trên Giờ",
         "Tiền Lương Sản Phẩm Trong Giờ",
@@ -75,6 +76,9 @@ export async function GET(request: NextRequest) {
         "Tổng Cộng Tiền Lương Sản Phẩm",
         "Hỗ Trợ Thời Tiết Nóng",
         "Bổ Sung Lương",
+        "Tiền Lương Chủ Nhật", // Cột mới 2
+        "Lương CNKCP Vượt", // Cột mới 3
+        "Tiền Tăng Ca Vượt", // Cột mới 4
         "BHXH 21.5%",
         "PC CDCS PCCC ATVSV",
         "Lương Phụ Nữ Hành Kinh",
@@ -109,6 +113,7 @@ export async function GET(request: NextRequest) {
           payroll.gio_an_ca || 0,
           payroll.tong_gio_lam_viec || 22,
           payroll.tong_he_so_quy_doi || 22,
+          payroll.ngay_cong_chu_nhat || 0, // Cột mới 1
           payroll.tong_luong_san_pham_cong_doan || 0,
           payroll.don_gia_tien_luong_tren_gio || 0,
           payroll.tien_luong_san_pham_trong_gio || 0,
@@ -119,6 +124,9 @@ export async function GET(request: NextRequest) {
           payroll.tong_cong_tien_luong_san_pham || 0,
           payroll.ho_tro_thoi_tiet_nong || 0,
           payroll.bo_sung_luong || 0,
+          payroll.tien_luong_chu_nhat || 0, // Cột mới 2
+          payroll.luong_cnkcp_vuot || 0, // Cột mới 3
+          payroll.tien_tang_ca_vuot || 0, // Cột mới 4
           payroll.bhxh_21_5_percent || 0,
           payroll.pc_cdcs_pccc_atvsv || 0,
           payroll.luong_phu_nu_hanh_kinh || 0,
@@ -153,6 +161,7 @@ export async function GET(request: NextRequest) {
           0.5,
           30,
           30,
+          2, // ngay_cong_chu_nhat - Cột mới 1
           12000000,
           400000,
           10000000,
@@ -163,6 +172,9 @@ export async function GET(request: NextRequest) {
           12500000,
           200000,
           0,
+          800000, // tien_luong_chu_nhat - Cột mới 2
+          500000, // luong_cnkcp_vuot - Cột mới 3
+          300000, // tien_tang_ca_vuot - Cột mới 4
           1500000,
           100000,
           0,
@@ -187,8 +199,8 @@ export async function GET(request: NextRequest) {
     const workbook = XLSX.utils.book_new()
     const worksheet = XLSX.utils.aoa_to_sheet(templateData)
 
-    // Set column widths
-    const columnWidths = Array(37).fill({ wch: 15 })
+    // Set column widths (updated to 41 columns)
+    const columnWidths = Array(41).fill({ wch: 15 })
     worksheet["!cols"] = columnWidths
 
     // Style header row

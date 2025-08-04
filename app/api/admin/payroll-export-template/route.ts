@@ -38,6 +38,7 @@ const FIELD_HEADERS: Record<string, string> = {
   gio_an_ca: "Giờ Ăn Ca",
   tong_gio_lam_viec: "Tổng Giờ Làm Việc",
   tong_he_so_quy_doi: "Tổng Hệ Số Quy Đổi",
+  ngay_cong_chu_nhat: "Ngày Công Chủ Nhật",
   
   // Lương sản phẩm và đơn giá
   tong_luong_san_pham_cong_doan: "Tổng Lương Sản Phẩm Công Đoạn",
@@ -52,6 +53,9 @@ const FIELD_HEADERS: Record<string, string> = {
   tong_cong_tien_luong_san_pham: "Tổng Cộng Tiền Lương Sản Phẩm",
   ho_tro_thoi_tiet_nong: "Hỗ Trợ Thời Tiết Nóng",
   bo_sung_luong: "Bổ Sung Lương",
+  tien_luong_chu_nhat: "Tiền Lương Chủ Nhật",
+  luong_cnkcp_vuot: "Lương CNKCP Vượt",
+  tien_tang_ca_vuot: "Tiền Tăng Ca Vượt",
   
   // Bảo hiểm và phúc lợi
   bhxh_21_5_percent: "BHXH 21.5%",
@@ -85,11 +89,13 @@ const PAYROLL_FIELDS = [
   "employee_id", "salary_month",
   "he_so_lam_viec", "he_so_phu_cap_ket_qua", "he_so_luong_co_ban", "luong_toi_thieu_cty",
   "ngay_cong_trong_gio", "gio_cong_tang_ca", "gio_an_ca", "tong_gio_lam_viec", "tong_he_so_quy_doi",
-  "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio", "tien_luong_san_pham_trong_gio", 
+  "ngay_cong_chu_nhat", // Bổ sung cột mới
+  "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio", "tien_luong_san_pham_trong_gio",
   "tien_luong_tang_ca", "tien_luong_30p_an_ca",
-  "tien_khen_thuong_chuyen_can", "luong_hoc_viec_pc_luong", "tong_cong_tien_luong_san_pham", 
+  "tien_khen_thuong_chuyen_can", "luong_hoc_viec_pc_luong", "tong_cong_tien_luong_san_pham",
   "ho_tro_thoi_tiet_nong", "bo_sung_luong",
-  "bhxh_21_5_percent", "pc_cdcs_pccc_atvsv", "luong_phu_nu_hanh_kinh", "tien_con_bu_thai_7_thang", 
+  "tien_luong_chu_nhat", "luong_cnkcp_vuot", "tien_tang_ca_vuot", // Bổ sung 3 cột mới
+  "bhxh_21_5_percent", "pc_cdcs_pccc_atvsv", "luong_phu_nu_hanh_kinh", "tien_con_bu_thai_7_thang",
   "ho_tro_gui_con_nha_tre",
   "ngay_cong_phep_le", "tien_phep_le",
   "tong_cong_tien_luong", "tien_boc_vac", "ho_tro_xang_xe",
@@ -111,13 +117,61 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const includeData = searchParams.get("includeData") === "true"
     const salaryMonth = searchParams.get("salaryMonth")
+    const configId = searchParams.get("configId")
+    const timestampOnly = searchParams.get("timestamp_only") === "true"
+
+    // Handle timestamp-only request for sync checking
+    if (timestampOnly) {
+      const { data: lastUpdated } = await supabase
+        .from("mapping_configurations")
+        .select("updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single()
+
+      return NextResponse.json({
+        last_updated: lastUpdated?.updated_at ? new Date(lastUpdated.updated_at).getTime() : 0
+      })
+    }
+
+    // Load mapping configuration if specified
+    let mappingConfig = null
+    let customHeaders: Record<string, string> = {}
+
+    if (configId) {
+      const { data: config, error: configError } = await supabase
+        .from("mapping_configurations")
+        .select(`
+          *,
+          configuration_field_mappings (
+            database_field,
+            excel_column_name,
+            confidence_score,
+            mapping_type
+          )
+        `)
+        .eq("id", configId)
+        .eq("is_active", true)
+        .single()
+
+      if (!configError && config) {
+        mappingConfig = config
+
+        // Create custom headers from mapping configuration
+        if (config.configuration_field_mappings) {
+          config.configuration_field_mappings.forEach((mapping: any) => {
+            customHeaders[mapping.database_field] = mapping.excel_column_name
+          })
+        }
+      }
+    }
 
     // Analyze which columns have data (non-null, non-zero values)
     const { data: columnAnalysis, error: analysisError } = await supabase
       .rpc('analyze_payroll_columns')
 
     let activeFields = PAYROLL_FIELDS
-    
+
     if (!analysisError && columnAnalysis) {
       // Filter out columns that are completely empty
       activeFields = PAYROLL_FIELDS.filter(field => {
@@ -127,11 +181,22 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // If mapping config is provided, prioritize fields from the configuration
+    if (mappingConfig && mappingConfig.configuration_field_mappings) {
+      const configFields = mappingConfig.configuration_field_mappings.map((m: any) => m.database_field)
+      // Include both active fields and config fields, removing duplicates
+      activeFields = [...new Set([...activeFields, ...configFields])]
+        .filter(field => PAYROLL_FIELDS.includes(field)) // Ensure field exists in schema
+    }
+
     // Create workbook
     const workbook = XLSX.utils.book_new()
 
-    // Prepare headers
-    const headers = activeFields.map(field => FIELD_HEADERS[field] || field)
+    // Prepare headers with mapping configuration support
+    const headers = activeFields.map(field => {
+      // Priority: Custom headers from mapping config > Default headers > Field name
+      return customHeaders[field] || FIELD_HEADERS[field] || field
+    })
     
     // Prepare data rows
     let dataRows: any[][] = []
@@ -195,20 +260,33 @@ export async function GET(request: NextRequest) {
     // Generate Excel buffer
     const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 
-    // Create filename
-    const timestamp = new Date().toISOString().slice(0, 10)
-    const filename = includeData 
-      ? `luong-export-${salaryMonth || 'all'}-${timestamp}.xlsx`
-      : `template-luong-${timestamp}.xlsx`
+    // Create filename with mapping config info
+    const vietnamDate = new Date(new Date().getTime() + (7 * 60 * 60 * 1000))
+    const timestamp = vietnamDate.toISOString().slice(0, 10)
+    const configSuffix = mappingConfig ? `-${mappingConfig.config_name.replace(/\s+/g, '-')}` : ''
+    const filename = includeData
+      ? `luong-export-${salaryMonth || 'all'}${configSuffix}-${timestamp}.xlsx`
+      : `template-luong${configSuffix}-${timestamp}.xlsx`
+
+    // Prepare response headers
+    const responseHeaders: Record<string, string> = {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Length": excelBuffer.length.toString(),
+    }
+
+    // Add mapping configuration metadata to headers
+    if (mappingConfig) {
+      responseHeaders["X-Mapping-Config-Id"] = mappingConfig.id.toString()
+      responseHeaders["X-Mapping-Config-Name"] = mappingConfig.config_name
+      responseHeaders["X-Mapping-Config-Fields"] = activeFields.length.toString()
+      responseHeaders["X-Custom-Headers-Count"] = Object.keys(customHeaders).length.toString()
+    }
 
     // Return Excel file
     return new NextResponse(excelBuffer, {
       status: 200,
-      headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-        "Content-Length": excelBuffer.length.toString(),
-      },
+      headers: responseHeaders,
     })
 
   } catch (error) {

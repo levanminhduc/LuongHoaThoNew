@@ -86,15 +86,16 @@ export function formatSignatureTime(dateString: string): string {
   if (!dateString) return ''
 
   try {
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-
-    // Format: "HH:MM DD/MM/YYYY" (time first, then date)
-    return `${hours}:${minutes} ${day}/${month}/${year}`
+    // Ensure display in Vietnam timezone
+    return new Date(dateString).toLocaleString("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2})/, '$4:$5 $1/$2/$3')
   } catch (error) {
     console.error('Error formatting signature time:', error)
     return dateString

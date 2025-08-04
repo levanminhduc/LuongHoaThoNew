@@ -138,7 +138,7 @@ export function EmployeeLookup() {
     setError("")
 
     try {
-      // Lấy timestamp hiện tại của thiết bị client
+      // Lấy timestamp hiện tại của thiết bị client (UTC, DB function sẽ handle timezone)
       const clientTimestamp = new Date().toISOString()
 
       const response = await fetch("/api/employee/sign-salary", {
@@ -168,7 +168,12 @@ export function EmployeeLookup() {
         })
         setTimeout(() => setSignSuccess(false), 5000) // Ẩn thông báo sau 5s
       } else {
-        setError(data.error || "Không thể ký nhận lương")
+        // Handle "already signed" case
+        if (data.error && data.error.includes("đã ký nhận lương")) {
+          setError("Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.")
+        } else {
+          setError(data.error || "Không thể ký nhận lương")
+        }
       }
     } catch (error) {
       setError("Có lỗi xảy ra khi ký nhận lương")

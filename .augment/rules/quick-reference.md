@@ -1,7 +1,7 @@
 ---
-type: "manual"
+type: "agent_requested"
+description: "Example description"
 ---
-
 # ⚡ **QUICK REFERENCE GUIDE - AUGMENT CODE AI ASSISTANT**
 
 ## 🚀 **PRE-ACTION CHECKLIST**
@@ -256,5 +256,40 @@ SAFER ALTERNATIVES:
 > **"Communicate clearly"** - Explain what, why, and risks
 > **"Test everything"** - Verify each step works
 > **"Document thoroughly"** - Provide complete instructions
+
+---
+
+## 🛡️ **RULE SET 7: BUG PREVENTION CHECKLIST**
+
+### **Pre-Coding Analysis (MANDATORY):**
+```
+□ Requirement clarity: 100% hiểu yêu cầu?
+□ Business context: Hiểu impact business?
+□ Technical scope: Biết tất cả files affected?
+□ Risk assessment: Đánh giá complexity (1-10)
+□ Breaking change risk: Có risk breaking existing?
+□ Dependencies mapping: List components liên quan
+□ Rollback strategy: Plan sẵn rollback steps
+```
+
+### **Implementation Checklist:**
+```
+□ Input validation: Validate tất cả inputs
+□ Error handling: Try-catch cho tất cả operations
+□ Graceful fallbacks: Fallback values cho edge cases
+□ Step-by-step: Implement từng bước nhỏ
+□ Test after each step: Verify working state
+□ Comprehensive tests: Unit + integration + edge cases
+```
+
+### **Quality Gates:**
+```
+❌ KHÔNG deploy nếu:
+- Không có error handling
+- Không có input validation
+- Không có tests
+- Breaking existing functionality
+- Không có rollback plan
+```
 
 **This guide ensures professional, safe, and effective AI assistance! 🚀**

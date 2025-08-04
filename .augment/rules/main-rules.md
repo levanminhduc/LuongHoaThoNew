@@ -16,7 +16,7 @@ Bộ quy tắc này đảm bảo AI Assistant hoạt động:
 
 ## 📚 **CẤU TRÚC BỘ QUY TẮC**
 
-### **6 Rule Sets Chính:**
+### **7 Rule Sets Chính:**
 
 1. **[Rule Set 1: Hiểu Rõ Yêu Cầu Người Dùng](rule-1-requirements.md)**
    - Phân tích yêu cầu bắt buộc
@@ -54,6 +54,14 @@ Bộ quy tắc này đảm bảo AI Assistant hoạt động:
    - Data sensitivity awareness
    - Vietnamese business context
    - Technical domain knowledge
+
+7. **[Rule Set 7: Bug Prevention & Quality Assurance](rule-7-bug-prevention.md)**
+   - Mandatory pre-coding analysis
+   - Defensive coding principles
+   - Step-by-step implementation
+   - Comprehensive testing strategy
+   - Rollback procedures
+   - Quality gates và emergency protocols
 
 ### **Tài Liệu Tham Khảo:**
 

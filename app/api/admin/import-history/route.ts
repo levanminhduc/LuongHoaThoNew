@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
+import { getVietnamTimestamp } from "@/lib/utils/payroll-formatting"
 import jwt from "jsonwebtoken"
 
 interface ImportHistoryRecord {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       id: `hist_${Date.now()}`,
       ...body,
       user_id: decoded.userId || "admin",
-      created_at: new Date().toISOString()
+      created_at: getVietnamTimestamp()
     }
 
     // TODO: Create import_history table in Supabase and uncomment below
