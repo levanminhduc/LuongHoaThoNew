@@ -46,6 +46,15 @@ export function AdminLoginForm() {
           case 'admin':
             router.push("/admin/dashboard")
             break
+          case 'giam_doc':
+            router.push("/director/dashboard")
+            break
+          case 'ke_toan':
+            router.push("/accountant/dashboard")
+            break
+          case 'nguoi_lap_bieu':
+            router.push("/reporter/dashboard")
+            break
           case 'truong_phong':
             router.push("/manager/dashboard")
             break
@@ -76,7 +85,7 @@ export function AdminLoginForm() {
         </div>
         <CardTitle>Đăng Nhập Hệ Thống</CardTitle>
         <CardDescription>
-          Hỗ trợ tất cả roles: Admin, Trưởng Phòng, Tổ Trưởng, Nhân Viên
+          Hỗ trợ tất cả roles: Admin, Giám Đốc, Kế Toán, Người Lập Biểu, Trưởng Phòng, Tổ Trưởng, Nhân Viên
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

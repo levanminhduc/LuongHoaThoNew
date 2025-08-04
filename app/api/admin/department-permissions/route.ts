@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    if (!['truong_phong', 'to_truong'].includes(employee.chuc_vu)) {
+    if (!['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong', 'to_truong'].includes(employee.chuc_vu)) {
       return NextResponse.json({
-        error: "Chỉ có thể cấp quyền cho nhân viên có chức vụ trưởng phòng hoặc tổ trưởng"
+        error: "Chỉ có thể cấp quyền cho nhân viên có chức vụ giám đốc, kế toán, người lập biểu, trưởng phòng hoặc tổ trưởng"
       }, { status: 400 })
     }
 

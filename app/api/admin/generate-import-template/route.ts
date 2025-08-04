@@ -95,7 +95,8 @@ export async function GET(request: NextRequest) {
 
     const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 
-    const timestamp = new Date().toISOString().slice(0, 10)
+    const vietnamDate = new Date(new Date().getTime() + (7 * 60 * 60 * 1000))
+    const timestamp = vietnamDate.toISOString().slice(0, 10)
     const filename = `import-template-${config.config_name.replace(/\s+/g, '-')}-${timestamp}.xlsx`
 
     return new NextResponse(excelBuffer, {

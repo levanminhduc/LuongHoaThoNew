@@ -17,20 +17,40 @@ export async function GET(request: NextRequest) {
     const includeStats = searchParams.get("include_stats") === "true"
     const month = searchParams.get("month") || new Date().toISOString().slice(0, 7)
 
-    // Get all unique departments from employees table
-    const { data: departments, error: deptError } = await supabase
+    // Get ALL departments (including those with only inactive employees)
+    const { data: allDepartments, error: allDeptError } = await supabase
+      .from("employees")
+      .select("department")
+      .not("department", "is", null)
+      .neq("department", "")
+
+    if (allDeptError) {
+      console.error("All departments query error:", allDeptError)
+      return NextResponse.json({ error: "Lỗi truy vấn all departments" }, { status: 500 })
+    }
+
+    // Get departments with ACTIVE employees only
+    const { data: activeDepartments, error: activeDeptError } = await supabase
       .from("employees")
       .select("department")
       .eq("is_active", true)
-      .order("department")
+      .not("department", "is", null)
+      .neq("department", "")
 
-    if (deptError) {
-      console.error("Department query error:", deptError)
-      return NextResponse.json({ error: "Lỗi truy vấn departments" }, { status: 500 })
+    if (activeDeptError) {
+      console.error("Active departments query error:", activeDeptError)
+      return NextResponse.json({ error: "Lỗi truy vấn active departments" }, { status: 500 })
     }
 
-    // Get unique department names
-    const uniqueDepartments = [...new Set(departments?.map(d => d.department).filter(Boolean))]
+    // Get unique departments
+    const allUniqueDepartments = [...new Set(allDepartments?.map(d => d.department) || [])]
+    const activeUniqueDepartments = [...new Set(activeDepartments?.map(d => d.department) || [])]
+
+    console.log("🔍 All unique departments found:", allUniqueDepartments.length)
+    console.log("🔍 Active unique departments found:", activeUniqueDepartments.length)
+
+    // Use active departments for display (departments with at least 1 active employee)
+    const uniqueDepartments = activeUniqueDepartments
 
     if (!includeStats) {
       return NextResponse.json({
@@ -39,79 +59,119 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    console.log("🔍 Unique departments found:", uniqueDepartments.length, uniqueDepartments)
+
     // Get statistics for each department
     const departmentStats = await Promise.all(
       uniqueDepartments.map(async (dept) => {
-        // Get employee count
-        const { count: employeeCount } = await supabase
-          .from("employees")
-          .select("*", { count: "exact", head: true })
-          .eq("department", dept)
-          .eq("is_active", true)
+        try {
+          // Get employee count (ALL employees, not just active)
+          const { count: employeeCount, error: empCountError } = await supabase
+            .from("employees")
+            .select("*", { count: "exact", head: true })
+            .eq("department", dept)
 
-        // Get payroll statistics for the month
-        const { data: payrollData, error: payrollError } = await supabase
-          .from("payrolls")
-          .select(`
-            tien_luong_thuc_nhan_cuoi_ky,
-            is_signed,
-            employees!inner(department)
-          `)
-          .eq("employees.department", dept)
-          .eq("salary_month", month)
+          if (empCountError) {
+            console.error(`Employee count error for ${dept}:`, empCountError)
+            return null
+          }
 
-        if (payrollError) {
-          console.error(`Payroll query error for ${dept}:`, payrollError)
-        }
+          // Get payroll statistics for the month
+          const { data: payrollData, error: payrollError } = await supabase
+            .from("payrolls")
+            .select(`
+              tien_luong_thuc_nhan_cuoi_ky,
+              is_signed,
+              employees!inner(department)
+            `)
+            .eq("employees.department", dept)
+            .eq("salary_month", month)
 
-        const payrollCount = payrollData?.length || 0
-        const signedCount = payrollData?.filter(p => p.is_signed).length || 0
-        const totalSalary = payrollData?.reduce((sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0), 0) || 0
+          if (payrollError) {
+            console.error(`Payroll query error for ${dept}:`, payrollError)
+          }
 
-        // Get truong_phong for this department
-        const { data: managers } = await supabase
-          .from("employees")
-          .select("employee_id, full_name")
-          .eq("department", dept)
-          .eq("chuc_vu", "truong_phong")
-          .eq("is_active", true)
+          const payrollCount = payrollData?.length || 0
+          const signedCount = payrollData?.filter(p => p.is_signed).length || 0
+          const totalSalary = payrollData?.reduce((sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0), 0) || 0
 
-        // Get to_truong for this department
-        const { data: supervisors } = await supabase
-          .from("employees")
-          .select("employee_id, full_name")
-          .eq("department", dept)
-          .eq("chuc_vu", "to_truong")
-          .eq("is_active", true)
+          // Get truong_phong for this department
+          const { data: managers } = await supabase
+            .from("employees")
+            .select("employee_id, full_name")
+            .eq("department", dept)
+            .eq("chuc_vu", "truong_phong")
+            .eq("is_active", true)
 
-        return {
-          name: dept,
-          employeeCount: employeeCount || 0,
-          payrollCount,
-          signedCount,
-          signedPercentage: payrollCount > 0 ? (signedCount / payrollCount * 100).toFixed(1) : "0",
-          totalSalary,
-          averageSalary: payrollCount > 0 ? Math.round(totalSalary / payrollCount) : 0,
-          managers: managers || [],
-          supervisors: supervisors || []
+          // Get to_truong for this department
+          const { data: supervisors } = await supabase
+            .from("employees")
+            .select("employee_id, full_name")
+            .eq("department", dept)
+            .eq("chuc_vu", "to_truong")
+            .eq("is_active", true)
+
+          return {
+            name: dept,
+            employeeCount: employeeCount || 0,
+            payrollCount,
+            signedCount,
+            signedPercentage: payrollCount > 0 ? (signedCount / payrollCount * 100).toFixed(1) : "0",
+            totalSalary,
+            averageSalary: payrollCount > 0 ? Math.round(totalSalary / payrollCount) : 0,
+            managers: managers || [],
+            supervisors: supervisors || []
+          }
+        } catch (error) {
+          console.error(`Error processing department ${dept}:`, error)
+          return null
         }
       })
     )
 
+    // Filter out null results and log
+    const validDepartmentStats = departmentStats.filter(Boolean)
+    console.log("🔍 Valid department stats:", validDepartmentStats.length, "out of", uniqueDepartments.length)
+
     // Filter departments based on user role
-    let filteredStats = departmentStats
+    let filteredStats = validDepartmentStats
     if (auth.user.role === 'truong_phong') {
       const allowedDepts = auth.user.allowed_departments || []
-      filteredStats = departmentStats.filter(dept => allowedDepts.includes(dept.name))
+      filteredStats = validDepartmentStats.filter(dept => allowedDepts.includes(dept.name))
     } else if (auth.user.role === 'to_truong') {
-      filteredStats = departmentStats.filter(dept => dept.name === auth.user.department)
+      filteredStats = validDepartmentStats.filter(dept => dept.name === auth.user.department)
     }
+
+    console.log("🔍 Final filtered stats:", filteredStats.length)
+
+    // Sắp xếp departments theo chữ cái A-Z
+    filteredStats.sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }))
+
+    // Calculate total employees across ALL employees (including inactive)
+    const { count: totalAllEmployees, error: totalEmpError } = await supabase
+      .from("employees")
+      .select("*", { count: "exact", head: true })
+
+    if (totalEmpError) {
+      console.error("Total employees count error:", totalEmpError)
+    }
+
+    console.log("🔍 Sample department stats:", filteredStats.slice(0, 3).map(d => ({ name: d.name, employeeCount: d.employeeCount })))
+    console.log("🔍 Total ALL employees (including inactive):", totalAllEmployees)
+    console.log("🔍 Active departments count:", activeUniqueDepartments.length)
+    console.log("🔍 All departments count:", allUniqueDepartments.length)
 
     return NextResponse.json({
       success: true,
       departments: filteredStats,
+      summary: {
+        totalDepartments: activeUniqueDepartments.length, // Active departments (có ít nhất 1 employee active)
+        totalEmployees: totalAllEmployees || 0, // TẤT CẢ employees (bao gồm cả inactive)
+        allDepartments: allUniqueDepartments.length, // All departments (bao gồm cả departments chỉ có inactive employees)
+        activeDepartments: activeUniqueDepartments.length // Active departments
+      },
       month,
-      total_departments: filteredStats.length
+      total_departments: activeUniqueDepartments.length
     })
 
   } catch (error) {

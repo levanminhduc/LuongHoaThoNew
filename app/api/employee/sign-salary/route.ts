@@ -44,14 +44,14 @@ export async function POST(request: NextRequest) {
                      "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
 
-    // Bước 4: Gọi function ký tên tự động với client timestamp
+    // Bước 4: Gọi function ký tên tự động (sử dụng server Vietnam timezone)
     const { data: signResult, error: signError } = await supabase
       .rpc("auto_sign_salary", {
         p_employee_id: employee_id.trim(),
         p_salary_month: salary_month.trim(),
         p_ip_address: clientIP,
-        p_device_info: userAgent,
-        // p_client_timestamp: client_timestamp // TEMPORARY FIX: Comment out until DB function updated
+        p_device_info: userAgent
+        // Note: Function sử dụng server Vietnam timezone (+7)
       })
 
     if (signError) {

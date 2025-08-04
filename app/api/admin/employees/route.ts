@@ -14,13 +14,13 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient()
     const { searchParams } = new URL(request.url)
-    const roles = searchParams.get("roles") // e.g., "truong_phong,to_truong"
+    const roles = searchParams.get("roles") // e.g., "giam_doc,ke_toan,nguoi_lap_bieu,truong_phong,to_truong"
     const includeInactive = searchParams.get("include_inactive") === "true"
 
     let query = supabase
       .from("employees")
       .select("employee_id, full_name, department, chuc_vu, is_active")
-      .order("chuc_vu", { ascending: false }) // truong_phong first
+      .order("chuc_vu", { ascending: false }) // giam_doc, ke_toan, nguoi_lap_bieu, truong_phong first
       .order("full_name")
 
     // Filter by roles if specified

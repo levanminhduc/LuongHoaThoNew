@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import AdminDashboard from "@/app/admin/dashboard/page"
+import DirectorDashboard from "@/app/director/dashboard/page"
+import AccountantDashboard from "@/app/accountant/dashboard/page"
+import ReporterDashboard from "@/app/reporter/dashboard/page"
 import ManagerDashboard from "@/components/ManagerDashboard"
 import SupervisorDashboard from "@/components/SupervisorDashboard"
 import EmployeeDashboard from "@/components/EmployeeDashboard"
@@ -61,6 +64,9 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
     // Define role-based access rules
     const accessRules = {
       admin: ['/admin', '/admin/dashboard', '/admin/payroll-management', '/admin/employee-management', '/admin/payroll-import-export'],
+      giam_doc: ['/director', '/director/dashboard', '/director/reports', '/director/financial', '/director/departments'],
+      ke_toan: ['/accountant', '/accountant/dashboard', '/accountant/payroll', '/accountant/financial', '/accountant/reports'],
+      nguoi_lap_bieu: ['/reporter', '/reporter/dashboard', '/reporter/reports', '/reporter/data-entry'],
       truong_phong: ['/manager', '/manager/dashboard', '/manager/payroll-view', '/manager/reports'],
       to_truong: ['/supervisor', '/supervisor/dashboard', '/supervisor/payroll-view'],
       nhan_vien: ['/employee', '/employee/dashboard', '/employee/payroll-view']
@@ -76,6 +82,15 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
       switch (role) {
         case 'admin':
           router.push('/admin/dashboard')
+          break
+        case 'giam_doc':
+          router.push('/director/dashboard')
+          break
+        case 'ke_toan':
+          router.push('/accountant/dashboard')
+          break
+        case 'nguoi_lap_bieu':
+          router.push('/reporter/dashboard')
           break
         case 'truong_phong':
           router.push('/manager/dashboard')
@@ -115,16 +130,25 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
   switch (user.role) {
     case 'admin':
       return <AdminDashboard />
-    
+
+    case 'giam_doc':
+      return <DirectorDashboard />
+
+    case 'ke_toan':
+      return <AccountantDashboard />
+
+    case 'nguoi_lap_bieu':
+      return <ReporterDashboard />
+
     case 'truong_phong':
       return <ManagerDashboard user={user} onLogout={handleLogout} />
-    
+
     case 'to_truong':
       return <SupervisorDashboard user={user} onLogout={handleLogout} />
-    
+
     case 'nhan_vien':
       return <EmployeeDashboard user={user} onLogout={handleLogout} />
-    
+
     default:
       return <LoginPage />
   }
@@ -154,6 +178,9 @@ export function useRoleAccess() {
   const canAccessDepartment = (department: string) => {
     if (!user) return false
     if (user.role === 'admin') return true
+    if (user.role === 'giam_doc') return true
+    if (user.role === 'ke_toan') return true
+    if (user.role === 'nguoi_lap_bieu') return true
     if (user.role === 'truong_phong') {
       return user.allowed_departments?.includes(department) || false
     }
@@ -169,6 +196,9 @@ export function useRoleAccess() {
     hasPermission,
     canAccessDepartment,
     isAdmin: () => hasRole('admin'),
+    isDirector: () => hasRole('giam_doc'),
+    isAccountant: () => hasRole('ke_toan'),
+    isReporter: () => hasRole('nguoi_lap_bieu'),
     isManager: () => hasRole('truong_phong'),
     isSupervisor: () => hasRole('to_truong'),
     isEmployee: () => hasRole('nhan_vien')
@@ -190,6 +220,15 @@ export function withRoleProtection(
         switch (user.role) {
           case 'admin':
             router.push('/admin/dashboard')
+            break
+          case 'giam_doc':
+            router.push('/director/dashboard')
+            break
+          case 'ke_toan':
+            router.push('/accountant/dashboard')
+            break
+          case 'nguoi_lap_bieu':
+            router.push('/reporter/dashboard')
             break
           case 'truong_phong':
             router.push('/manager/dashboard')

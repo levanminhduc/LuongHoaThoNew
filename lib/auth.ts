@@ -123,9 +123,9 @@ export async function authenticateUser(username: string, password: string): Prom
       }
     }
 
-    // Get department permissions for truong_phong
+    // Get department permissions for roles that can have department access
     let allowed_departments: string[] = []
-    if (employee.chuc_vu === 'truong_phong') {
+    if (['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong'].includes(employee.chuc_vu)) {
       const { data: permissions } = await supabase
         .from("department_permissions")
         .select("department")
@@ -164,6 +164,12 @@ function getPermissionsByRole(role: string): string[] {
   switch (role) {
     case 'admin':
       return ['ALL']
+    case 'giam_doc':
+      return ['VIEW_PAYROLL', 'VIEW_EMPLOYEES', 'VIEW_REPORTS', 'EXPORT_DATA', 'VIEW_FINANCIAL', 'APPROVE_PAYROLL', 'MANAGE_DEPARTMENTS']
+    case 'ke_toan':
+      return ['VIEW_PAYROLL', 'VIEW_FINANCIAL', 'EXPORT_DATA', 'MANAGE_PAYROLL', 'VIEW_REPORTS']
+    case 'nguoi_lap_bieu':
+      return ['VIEW_PAYROLL', 'VIEW_EMPLOYEES', 'VIEW_REPORTS', 'EXPORT_DATA', 'CREATE_REPORTS']
     case 'truong_phong':
       return ['VIEW_PAYROLL', 'VIEW_EMPLOYEES', 'VIEW_REPORTS', 'EXPORT_DATA']
     case 'to_truong':

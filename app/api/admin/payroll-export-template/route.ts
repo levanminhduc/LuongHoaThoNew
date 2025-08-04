@@ -261,7 +261,8 @@ export async function GET(request: NextRequest) {
     const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 
     // Create filename with mapping config info
-    const timestamp = new Date().toISOString().slice(0, 10)
+    const vietnamDate = new Date(new Date().getTime() + (7 * 60 * 60 * 1000))
+    const timestamp = vietnamDate.toISOString().slice(0, 10)
     const configSuffix = mappingConfig ? `-${mappingConfig.config_name.replace(/\s+/g, '-')}` : ''
     const filename = includeData
       ? `luong-export-${salaryMonth || 'all'}${configSuffix}-${timestamp}.xlsx`

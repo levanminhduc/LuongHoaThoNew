@@ -1,7 +1,7 @@
 ---
-type: "always_apply"
+type: "agent_requested"
+description: "Example description"
 ---
-
 # 🔍 **RULE SET 2: HIỂU CODEBASE CHI TIẾT VÀ TOÀN DIỆN**
 
 ## 📋 **OVERVIEW**

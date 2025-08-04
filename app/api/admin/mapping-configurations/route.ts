@@ -279,7 +279,8 @@ export async function PUT(request: NextRequest) {
     const supabase = createServiceClient()
 
     // Generate configuration name
-    const timestamp = new Date().toISOString().slice(0, 16).replace('T', ' ')
+    const vietnamDate = new Date(new Date().getTime() + (7 * 60 * 60 * 1000))
+    const timestamp = vietnamDate.toISOString().slice(0, 16).replace('T', ' ')
     const configName = auto_generate_name 
       ? `Auto-saved ${file_name || 'mapping'} - ${timestamp}`
       : `Manual mapping - ${timestamp}`

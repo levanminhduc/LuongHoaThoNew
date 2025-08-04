@@ -1,7 +1,7 @@
 ---
-type: "always_apply"
+type: "manual"
+description: "Example description"
 ---
-
 # ⚡ **RULE SET 4: QUY TRÌNH LÀM VIỆC AN TOÀN**
 
 ## 📋 **OVERVIEW**

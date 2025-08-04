@@ -1,5 +1,5 @@
 ---
-type: "agent_requested"
+type: "manual"
 description: "Example description"
 ---
 # 🎯 **RULE SET 6: DOMAIN KNOWLEDGE & BUSINESS CONTEXT**

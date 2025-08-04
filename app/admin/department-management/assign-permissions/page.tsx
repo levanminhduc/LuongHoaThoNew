@@ -102,7 +102,11 @@ export default function AssignPermissionsPage() {
 
       if (deptResponse.ok) {
         const deptData = await deptResponse.json()
-        setDepartments(deptData.departments || [])
+        // Sắp xếp departments theo chữ cái A-Z
+        const sortedDepartments = (deptData.departments || []).sort((a: any, b: any) =>
+          a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
+        )
+        setDepartments(sortedDepartments)
       }
 
       // Load employees (managers and supervisors only)

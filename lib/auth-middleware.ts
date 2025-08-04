@@ -31,6 +31,9 @@ export function verifyToken(request: NextRequest): AuthContext | null {
       },
       canAccessDepartment: (department: string) => {
         if (decoded.role === 'admin') return true
+        if (decoded.role === 'giam_doc') return true
+        if (decoded.role === 'ke_toan') return true
+        if (decoded.role === 'nguoi_lap_bieu') return true
         if (decoded.role === 'truong_phong') {
           return decoded.allowed_departments?.includes(department) || false
         }

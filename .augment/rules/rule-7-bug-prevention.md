@@ -1,3 +1,7 @@
+---
+type: "manual"
+description: "Example description"
+---
 # 🛡️ **RULE SET 7: BUG PREVENTION & QUALITY ASSURANCE**
 
 ## 📋 **OVERVIEW**

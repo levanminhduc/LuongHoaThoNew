@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { 
-  Building2, 
-  Users, 
-  Shield, 
-  Settings, 
-  ArrowLeft, 
+import DepartmentDebugInfo from "@/components/debug/DepartmentDebugInfo"
+import {
+  Building2,
+  Users,
+  Shield,
+  Settings,
+  ArrowLeft,
   Plus,
   Eye,
   UserCheck,
@@ -82,7 +83,7 @@ export default function DepartmentManagementPage() {
       setLoading(true)
       const token = localStorage.getItem("admin_token")
       
-      // Load departments with statistics
+      // Load departments with statistics (only active employees)
       const deptResponse = await fetch('/api/admin/departments?include_stats=true', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -91,7 +92,11 @@ export default function DepartmentManagementPage() {
 
       if (deptResponse.ok) {
         const deptData = await deptResponse.json()
-        setDepartments(deptData.departments || [])
+        // Sắp xếp departments theo chữ cái A-Z
+        const sortedDepartments = (deptData.departments || []).sort((a: Department, b: Department) =>
+          a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
+        )
+        setDepartments(sortedDepartments)
       }
 
       // Load department permissions
@@ -333,6 +338,9 @@ export default function DepartmentManagementPage() {
           </Card>
         )}
       </div>
+
+      {/* Debug Component */}
+      <DepartmentDebugInfo />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 ---
-type: "manual"
+type: "agent_requested"
+description: "Example description"
 ---
-
 # ⚡ **QUICK REFERENCE GUIDE - AUGMENT CODE AI ASSISTANT**
 
 ## 🚀 **PRE-ACTION CHECKLIST**

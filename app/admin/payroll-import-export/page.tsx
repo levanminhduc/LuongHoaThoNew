@@ -27,6 +27,7 @@ import { ExportConfigurationDialog, type ExportOptions } from "@/components/expo
 import { ColumnMappingAnalysis, type AnalysisResult, type ColumnAnalysis } from "@/components/column-mapping-analysis"
 import { detectColumns, autoMapColumnsWithAliases } from "@/lib/advanced-excel-parser"
 import { useMappingConfig, useAutoLoadConfigurations } from "@/lib/hooks/use-mapping-config"
+import { ImportPreviewSection } from "./components/ImportPreviewSection"
 import * as XLSX from "xlsx"
 
 interface ImportResult {
@@ -37,6 +38,7 @@ interface ImportResult {
   overwriteCount?: number
   errors?: any[]
   processingTime: string
+  importBatchId?: string
 }
 
 export default function PayrollImportExportPage() {
@@ -48,6 +50,7 @@ export default function PayrollImportExportPage() {
   const [results, setResults] = useState<ImportResult | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [exportType, setExportType] = useState<"template" | "data">("template")
+  const [importBatchId, setImportBatchId] = useState<string>("")
   const [salaryMonth, setSalaryMonth] = useState("")
   const [showExportDialog, setShowExportDialog] = useState(false)
 
@@ -231,6 +234,7 @@ export default function PayrollImportExportPage() {
     setMessage("")
     setProgress(0)
     setResults(null)
+    setImportBatchId("")
 
     try {
       const token = localStorage.getItem("admin_token")
@@ -263,10 +267,20 @@ export default function PayrollImportExportPage() {
         if (result.success) {
           setResults(result.data || result)
           setMessage(result.message || "Import thành công!")
+          // Set batch ID from response - check multiple locations
+          const batchId = result.data?.importBatchId || result.importBatchId || result.metadata?.importBatchId
+          if (batchId) {
+            setImportBatchId(batchId)
+          }
         } else {
           // Partial success with errors
           setResults(result.data || result)
           setMessage(result.message || "Import hoàn tất với một số lỗi")
+          // Set batch ID from response even with errors - check multiple locations
+          const batchId = result.data?.importBatchId || result.importBatchId || result.metadata?.importBatchId
+          if (batchId) {
+            setImportBatchId(batchId)
+          }
         }
       } else {
         throw new Error(result.error?.message || result.message || "Import thất bại")
@@ -899,6 +913,15 @@ export default function PayrollImportExportPage() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Import Preview Section */}
+        {results && results.successCount > 0 && importBatchId && (
+          <ImportPreviewSection
+            importBatchId={importBatchId}
+            totalRecords={results.totalRecords}
+            successCount={results.successCount}
+          />
         )}
 
         {/* Export Configuration Dialog */}
