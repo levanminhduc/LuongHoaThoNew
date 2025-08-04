@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -42,7 +42,32 @@ interface DepartmentPermission {
   }
 }
 
-export default function PermissionsPage() {
+// Loading component cho Suspense fallback
+function PermissionsLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
+          <div className="space-y-4">
+            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Component chính chứa logic useSearchParams (được wrap trong Suspense)
+function PermissionsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const departmentFilter = searchParams.get('department')
@@ -457,5 +482,14 @@ export default function PermissionsPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+// Export default với Suspense boundary để fix Next.js 15 build error
+export default function PermissionsPage() {
+  return (
+    <Suspense fallback={<PermissionsLoading />}>
+      <PermissionsContent />
+    </Suspense>
   )
 }
