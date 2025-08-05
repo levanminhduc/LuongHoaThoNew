@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { User, Shield, Building2, Users } from "lucide-react"
+import { User, Shield, Building2, Users, Crown, Calculator, FileText } from "lucide-react"
 
 export default function TestRolesPage() {
   const testAccounts = [
@@ -46,6 +46,36 @@ export default function TestRolesPage() {
       color: "bg-gray-500",
       icon: User,
       permissions: ["Own payroll data only", "Personal information", "Download payslips"]
+    },
+    {
+      username: "GD001",
+      password: "giamdoc123",
+      role: "Giám Đốc",
+      description: "Ký xác nhận cuối cùng",
+      dashboard: "/director/dashboard",
+      color: "bg-red-600",
+      icon: Crown,
+      permissions: ["All employees view", "Final approval", "System overview", "Management signatures"]
+    },
+    {
+      username: "KT001",
+      password: "ketoan123",
+      role: "Kế Toán",
+      description: "Xác nhận tài chính lương",
+      dashboard: "/accountant/dashboard",
+      color: "bg-emerald-600",
+      icon: Calculator,
+      permissions: ["All employees view", "Financial verification", "Payroll validation", "Accounting reports"]
+    },
+    {
+      username: "NLB001",
+      password: "nguoilapbieu123",
+      role: "Người Lập Biểu",
+      description: "Xác nhận báo cáo thống kê",
+      dashboard: "/reporter/dashboard",
+      color: "bg-purple-600",
+      icon: FileText,
+      permissions: ["All employees view", "Report confirmation", "Data validation", "Statistical analysis"]
     }
   ]
 

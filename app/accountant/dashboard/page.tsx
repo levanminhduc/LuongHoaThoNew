@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import EmployeeListModal from "@/components/EmployeeListModal"
 import { 
   Calculator, 
   DollarSign, 
@@ -47,6 +48,7 @@ export default function AccountantDashboard() {
   const [monthStatus, setMonthStatus] = useState<MonthStatus | null>(null)
   const [signatureHistory, setSignatureHistory] = useState<any[]>([])
   const [message, setMessage] = useState("")
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -180,14 +182,17 @@ export default function AccountantDashboard() {
 
         {monthStatus && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <Card
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200"
+              onClick={() => setShowEmployeeModal(true)}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Tổng Nhân Viên</CardTitle>
                 <Calculator className="h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{monthStatus.employee_completion.total_employees}</div>
-                <p className="text-xs text-green-100">Cần xác nhận tài chính</p>
+                <p className="text-xs text-green-100">Cần xác nhận tài chính • Click để xem chi tiết</p>
               </CardContent>
             </Card>
 
@@ -394,6 +399,15 @@ export default function AccountantDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Employee List Modal */}
+      <EmployeeListModal
+        isOpen={showEmployeeModal}
+        onClose={() => setShowEmployeeModal(false)}
+        selectedMonth={selectedMonth}
+        userRole="ke_toan"
+        totalEmployees={monthStatus?.employee_completion.total_employees}
+      />
     </div>
   )
 }
