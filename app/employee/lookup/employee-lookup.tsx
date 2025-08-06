@@ -14,6 +14,7 @@ import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, P
 import Link from "next/link"
 import { PayrollDetailModal } from "./payroll-detail-modal"
 import { formatSalaryMonth, formatSignatureTime, formatCurrency, formatNumber } from "@/lib/utils/date-formatter"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 
 
 interface PayrollResult {
@@ -138,8 +139,8 @@ export function EmployeeLookup() {
     setError("")
 
     try {
-      // Lấy timestamp hiện tại của thiết bị client (UTC, DB function sẽ handle timezone)
-      const clientTimestamp = new Date().toISOString()
+      // Tạo timestamp theo timezone Việt Nam để tránh timezone issues trên Vercel
+      const vietnamTime = getVietnamTimestamp()
 
       const response = await fetch("/api/employee/sign-salary", {
         method: "POST",
@@ -150,7 +151,7 @@ export function EmployeeLookup() {
           employee_id: employeeId.trim(),
           cccd: cccd.trim(),
           salary_month: result.salary_month,
-          client_timestamp: clientTimestamp, // Gửi thời gian client
+          client_timestamp: vietnamTime, // Gửi thời gian Việt Nam
         }),
       })
 

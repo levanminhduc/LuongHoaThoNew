@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
 import bcrypt from "bcryptjs"
 import { formatSalaryMonth, formatSignatureTime } from "@/lib/utils/date-formatter"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,14 +45,18 @@ export async function POST(request: NextRequest) {
                      "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
 
-    // Bước 4: Gọi function ký tên tự động (sử dụng server Vietnam timezone)
+    // Bước 4: Tạo Vietnam timestamp chắc chắn cho Vercel
+    const vietnamTime = getVietnamTimestamp()
+    console.log("Vietnam timestamp being sent:", vietnamTime)
+
+    // Gọi function ký tên tự động
     const { data: signResult, error: signError } = await supabase
       .rpc("auto_sign_salary", {
         p_employee_id: employee_id.trim(),
         p_salary_month: salary_month.trim(),
         p_ip_address: clientIP,
-        p_device_info: userAgent
-        // Note: Function sử dụng server Vietnam timezone (+7)
+        p_device_info: userAgent,
+        p_client_timestamp: vietnamTime // ✅ Sử dụng client Vietnam time
       })
 
     if (signError) {

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 import { verifyToken } from "@/lib/auth-middleware"
 
 export async function GET(request: NextRequest) {
@@ -175,7 +176,7 @@ export async function GET(request: NextRequest) {
           nguoi_lap_bieu: signatures.filter(s => s.signature_type === 'nguoi_lap_bieu').length
         }
       },
-      timestamp: new Date().toISOString()
+      timestamp: getVietnamTimestamp()
     })
 
   } catch (error) {

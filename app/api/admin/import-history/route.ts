@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
-import { getVietnamTimestamp } from "@/lib/utils/payroll-formatting"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 import jwt from "jsonwebtoken"
 
 interface ImportHistoryRecord {

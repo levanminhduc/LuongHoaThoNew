@@ -2,6 +2,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
 import { verifyToken } from "@/lib/auth-middleware"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 
 // GET all employees for management roles with caching
 export async function GET(request: NextRequest) {
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
       },
       metadata: {
         role: auth.user.role,
-        timestamp: new Date().toISOString(),
+        timestamp: getVietnamTimestamp(),
         cached_until: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 60 minutes
       }
     })

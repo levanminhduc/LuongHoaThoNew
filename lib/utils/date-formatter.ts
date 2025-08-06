@@ -54,7 +54,7 @@ export function formatSalaryMonthShort(salaryMonth: string): string {
 }
 
 /**
- * Formats date time for Vietnamese locale
+ * Formats date time for Vietnamese locale with Vietnam timezone
  * @param dateString - ISO date string
  * @returns Vietnamese formatted date time in format "HH:MM DD/MM/YYYY"
  */
@@ -63,14 +63,21 @@ export function formatDateTime(dateString: string): string {
 
   try {
     const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
 
-    // Format: "HH:MM DD/MM/YYYY" (time first, then date)
-    return `${hours}:${minutes} ${day}/${month}/${year}`
+    // Format using Vietnam timezone to ensure consistency
+    const vietnamTime = date.toLocaleString("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+
+    // Convert from "DD/MM/YYYY, HH:MM" to "HH:MM DD/MM/YYYY"
+    const [datePart, timePart] = vietnamTime.split(', ')
+    return `${timePart} ${datePart}`
   } catch (error) {
     console.error('Error formatting date:', error)
     return dateString

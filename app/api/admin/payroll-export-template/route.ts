@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 import * as XLSX from "xlsx"
 import jwt from "jsonwebtoken"
 
@@ -261,8 +262,8 @@ export async function GET(request: NextRequest) {
     const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 
     // Create filename with mapping config info
-    const vietnamDate = new Date(new Date().getTime() + (7 * 60 * 60 * 1000))
-    const timestamp = vietnamDate.toISOString().slice(0, 10)
+    const vietnamTime = getVietnamTimestamp()
+    const timestamp = vietnamTime.slice(0, 10)
     const configSuffix = mappingConfig ? `-${mappingConfig.config_name.replace(/\s+/g, '-')}` : ''
     const filename = includeData
       ? `luong-export-${salaryMonth || 'all'}${configSuffix}-${timestamp}.xlsx`

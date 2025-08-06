@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  FileSpreadsheet, 
-  Search, 
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
+import {
+  FileSpreadsheet,
+  Search,
   Filter,
   ChevronLeft,
   ChevronRight,
@@ -96,15 +97,8 @@ export default function SignatureHistoryTable({
     }
   }
 
-  const formatDateTime = (isoString: string) => {
-    return new Date(isoString).toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  // Use centralized Vietnam timezone formatting
+  const formatDateTime = formatVietnamTimestamp
 
   const formatMonth = (monthString: string) => {
     const [year, month] = monthString.split('-')

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
 import { verifyToken } from "@/lib/auth-middleware"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 
 export async function POST(request: NextRequest) {
   try {
@@ -107,6 +108,9 @@ export async function POST(request: NextRequest) {
                     request.headers.get('x-real-ip') || 
                     'unknown'
 
+    // Tạo timestamp theo timezone Việt Nam
+    const vietnamTime = getVietnamTimestamp()
+
     const signatureRecord = {
       id: crypto.randomUUID(),
       signature_type,
@@ -114,7 +118,7 @@ export async function POST(request: NextRequest) {
       signed_by_id: employee.employee_id,
       signed_by_name: employee.full_name,
       department: employee.department,
-      signed_at: new Date().toISOString(),
+      signed_at: vietnamTime,
       ip_address: clientIP,
       device_info: device_info || 'Unknown',
       notes: notes || null,
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest) {
         message: "Ký xác nhận thành công",
         signature: insertedSignature,
         updated_status: updatedStatus,
-        timestamp: new Date().toISOString()
+        timestamp: vietnamTime
       })
 
     } catch (error) {
@@ -160,7 +164,7 @@ export async function POST(request: NextRequest) {
         message: "Ký xác nhận thành công (Mock - Table chưa tồn tại)",
         signature: signatureRecord,
         updated_status: null,
-        timestamp: new Date().toISOString(),
+        timestamp: vietnamTime,
         note: "Cần chạy migration script để tạo management_signatures table"
       })
     }

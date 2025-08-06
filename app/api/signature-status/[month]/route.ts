@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 import { verifyToken } from "@/lib/auth-middleware"
 
 export async function GET(
@@ -119,7 +120,7 @@ export async function GET(
         is_fully_signed: completedSignatures === 3,
         employee_completion_required: is100PercentComplete
       },
-      timestamp: new Date().toISOString()
+      timestamp: getVietnamTimestamp()
     })
 
   } catch (error) {

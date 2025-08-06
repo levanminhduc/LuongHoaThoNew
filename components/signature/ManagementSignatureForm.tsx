@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 import { 
   PenTool, 
   CheckCircle, 
@@ -98,15 +99,8 @@ export default function ManagementSignatureForm({
     }
   }
 
-  const formatDateTime = (isoString: string) => {
-    return new Date(isoString).toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  // Use centralized Vietnam timezone formatting
+  const formatDateTime = formatVietnamTimestamp
 
   return (
     <Card className={`${className}`}>

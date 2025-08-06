@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 import { verifyToken } from "@/lib/auth-middleware"
 
 export async function GET(
@@ -132,7 +133,7 @@ export async function GET(
       management_progress,
       recent_activity: recentActivity.slice(0, 10),
       real_time_data: {
-        timestamp: currentTime.toISOString(),
+        timestamp: getVietnamTimestamp(),
         next_refresh: nextRefreshTime.toISOString(),
         refresh_interval_seconds: 30
       },

@@ -4,7 +4,7 @@ import * as XLSX from "xlsx"
 import jwt from "jsonwebtoken"
 import { ApiErrorHandler, type ApiError, type ApiResponse } from "@/lib/api-error-handler"
 import { DEFAULT_FIELD_HEADERS } from "@/lib/utils/header-mapping"
-import { getVietnamTimestamp } from "@/lib/utils/payroll-formatting"
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 

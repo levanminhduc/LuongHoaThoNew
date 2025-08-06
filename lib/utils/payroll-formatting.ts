@@ -29,29 +29,29 @@ export const formatDateTime = (dateString: string) => {
 
   try {
     const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
 
-    return `${hours}:${minutes} ${day}/${month}/${year}`
+    // Format using Vietnam timezone to ensure consistency
+    const vietnamTime = date.toLocaleString("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+
+    // Convert from "DD/MM/YYYY, HH:MM" to "HH:MM DD/MM/YYYY"
+    const [datePart, timePart] = vietnamTime.split(', ')
+    return `${timePart} ${datePart}`
   } catch (error) {
     console.error('Error formatting date:', error)
     return dateString
   }
 }
 
-/**
- * Tạo timestamp theo múi giờ Việt Nam (+7)
- * @returns ISO string với timezone Vietnam
- */
-export const getVietnamTimestamp = (): string => {
-  const now = new Date()
-  // Chuyển sang múi giờ Việt Nam (+7)
-  const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000))
-  return vietnamTime.toISOString()
-}
+// NOTE: getVietnamTimestamp function moved to lib/utils/vietnam-timezone.ts
+// to avoid conflicts and ensure consistent timezone handling
 
 /**
  * Format date với timezone Vietnam cho display
