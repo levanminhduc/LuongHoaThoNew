@@ -47,7 +47,7 @@ interface SupervisorDashboardProps {
 export default function SupervisorDashboard({ user, onLogout }: SupervisorDashboardProps) {
   const [payrollData, setPayrollData] = useState<PayrollRecord[]>([])
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats | null>(null)
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7))
+  const [selectedMonth, setSelectedMonth] = useState<string>("2025-06") // Use month with data
   const [loading, setLoading] = useState(true)
   const [monthlyTrend, setMonthlyTrend] = useState<any[]>([])
   const [exportingExcel, setExportingExcel] = useState(false)
@@ -144,11 +144,21 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
     window.open(`/supervisor/employee/${employeeId}`, '_blank')
   }
 
-  const handleExportExcel = async () => {
+  const handleExportExcel = async (exportType: 'employees' | 'overview' | 'trends' = 'employees') => {
     try {
       setExportingExcel(true)
       const token = localStorage.getItem("admin_token")
-      const response = await fetch(`/api/admin/payroll-export?month=${selectedMonth}`, {
+
+      let url = `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(user.department)}`
+      let filename = `Luong_${user.department}_${selectedMonth}`
+
+      if (exportType === 'overview') {
+        filename += '_overview'
+      } else if (exportType === 'trends') {
+        filename += '_trends'
+      }
+
+      const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -156,16 +166,17 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
 
       if (response.ok) {
         const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
+        const downloadUrl = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
-        a.href = url
-        a.download = `Luong_${user.department}_${selectedMonth}_${new Date().toISOString().slice(0, 10)}.xlsx`
+        a.href = downloadUrl
+        a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`
         document.body.appendChild(a)
         a.click()
-        window.URL.revokeObjectURL(url)
+        window.URL.revokeObjectURL(downloadUrl)
         document.body.removeChild(a)
       } else {
-        console.error("Error exporting Excel")
+        const errorData = await response.json()
+        console.error("Export error:", errorData.error || "Lỗi khi xuất dữ liệu")
       }
     } catch (error) {
       console.error("Error exporting Excel:", error)
@@ -178,11 +189,11 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
     return isSigned ? "default" : "secondary"
   }
 
-  const getChucVuBadge = (chucVu: string) => {
+  const getChucVuBadge = (chucVu: string): "default" | "secondary" | "destructive" | "outline" => {
     const colors = {
-      'nhan_vien': 'secondary',
-      'to_truong': 'default',
-      'truong_phong': 'destructive'
+      'nhan_vien': 'secondary' as const,
+      'to_truong': 'default' as const,
+      'truong_phong': 'destructive' as const
     }
     return colors[chucVu as keyof typeof colors] || 'secondary'
   }
@@ -305,6 +316,31 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">Tổng Quan Department</h3>
+                <p className="text-sm text-muted-foreground">Thống kê tổng quan tháng {selectedMonth}</p>
+              </div>
+              <Button
+                onClick={() => handleExportExcel('overview')}
+                disabled={exportingExcel}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {exportingExcel ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xuất...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Xuất Tổng Quan
+                  </>
+                )}
+              </Button>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -376,7 +412,7 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
                   <CardDescription>Tháng {selectedMonth}</CardDescription>
                 </div>
                 <Button
-                  onClick={handleExportExcel}
+                  onClick={() => handleExportExcel('employees')}
                   disabled={exportingExcel}
                   className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
                 >
@@ -457,6 +493,31 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
           </TabsContent>
 
           <TabsContent value="trends" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">Xu Hướng Department</h3>
+                <p className="text-sm text-muted-foreground">Phân tích xu hướng 6 tháng gần nhất</p>
+              </div>
+              <Button
+                onClick={() => handleExportExcel('trends')}
+                disabled={exportingExcel}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {exportingExcel ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xuất...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Xuất Xu Hướng
+                  </>
+                )}
+              </Button>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>

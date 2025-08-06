@@ -30,9 +30,9 @@ export const formatDateTime = (dateString: string) => {
   try {
     const date = new Date(dateString)
 
-    // Format using Vietnam timezone to ensure consistency
+    // ✅ FIX: Database đã lưu Vietnam time, không cần convert thêm
     const vietnamTime = date.toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",
+      // Không dùng timeZone để tránh double conversion
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -62,8 +62,9 @@ export const formatDateVietnam = (dateString: string) => {
   if (!dateString) return ""
 
   try {
+    // ✅ FIX: Database đã lưu Vietnam time, không cần convert thêm
     return new Date(dateString).toLocaleDateString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",
+      // Không dùng timeZone để tránh double conversion
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

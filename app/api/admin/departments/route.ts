@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const includeStats = searchParams.get("include_stats") === "true"
     const month = searchParams.get("month") || new Date().toISOString().slice(0, 7)
+    const departmentName = searchParams.get("department_name")
 
     // Get ALL departments (including those with only inactive employees)
     const { data: allDepartments, error: allDeptError } = await supabase

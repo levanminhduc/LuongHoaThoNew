@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { Building2, Users, DollarSign, FileCheck, LogOut, Eye, Download } from "lucide-react"
+import { DepartmentDetailModalRefactored } from "./department"
 
 interface User {
   employee_id: string
@@ -36,13 +37,49 @@ interface ManagerDashboardProps {
 export default function ManagerDashboard({ user, onLogout }: ManagerDashboardProps) {
   const [departments, setDepartments] = useState<DepartmentStats[]>([])
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all")
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7))
+  const [selectedMonth, setSelectedMonth] = useState<string>("2025-06") // Use month with data
   const [loading, setLoading] = useState(true)
   const [payrollData, setPayrollData] = useState<any[]>([])
+
+  // Department Detail Modal state
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [selectedDepartmentForDetail, setSelectedDepartmentForDetail] = useState<string>("")
+
+  // Export state
+  const [exportingData, setExportingData] = useState(false)
+  const [exportingDepartment, setExportingDepartment] = useState<string | null>(null)
 
   useEffect(() => {
     loadDepartmentStats()
   }, [selectedMonth])
+
+  useEffect(() => {
+    // Auto-detect latest available month on component mount
+    detectLatestMonth()
+  }, [])
+
+  const detectLatestMonth = async () => {
+    try {
+      const token = localStorage.getItem("admin_token")
+      const response = await fetch('/api/debug/payroll-data', {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.availableMonths && data.availableMonths.length > 0) {
+          const latestMonth = data.availableMonths[0] // Already sorted desc
+          if (latestMonth !== selectedMonth) {
+            setSelectedMonth(latestMonth)
+          }
+        }
+      }
+    } catch (error) {
+      console.log("Could not detect latest month, using default")
+    }
+  }
 
   useEffect(() => {
     if (selectedDepartment !== "all") {
@@ -93,13 +130,72 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
   }
 
   const handleViewPayroll = (department: string) => {
-    setSelectedDepartment(department)
+    setSelectedDepartmentForDetail(department)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false)
+    setSelectedDepartmentForDetail("")
+  }
+
+  const handleExportDepartment = async (departmentName: string) => {
+    setExportingDepartment(departmentName)
+    try {
+      const token = localStorage.getItem("admin_token")
+      const response = await fetch(
+        `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(departmentName)}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
+      )
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `payroll-${departmentName}-${selectedMonth}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        const errorData = await response.json()
+        console.error("Export error:", errorData.error || "Lỗi khi xuất dữ liệu")
+
+        // Show user-friendly error message
+        if (errorData.message) {
+          alert(`Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? '\n\n' + errorData.suggestion : ''}`)
+        } else {
+          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.")
+        }
+      }
+    } catch (error) {
+      console.error("Error exporting department data:", error)
+    } finally {
+      setExportingDepartment(null)
+    }
   }
 
   const handleExportData = async () => {
+    setExportingData(true)
     try {
       const token = localStorage.getItem("admin_token")
-      const response = await fetch(`/api/admin/payroll-export?month=${selectedMonth}&department=${selectedDepartment}`, {
+
+      let url = `/api/admin/payroll-export?month=${selectedMonth}`
+      let filename = `payroll-${selectedMonth}`
+
+      if (selectedDepartment !== "all") {
+        url += `&department=${encodeURIComponent(selectedDepartment)}`
+        filename = `payroll-${selectedDepartment}-${selectedMonth}`
+      } else {
+        filename = `payroll-all-departments-${selectedMonth}`
+      }
+
+      const response = await fetch(url, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -107,17 +203,29 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
 
       if (response.ok) {
         const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
+        const downloadUrl = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
-        a.href = url
-        a.download = `payroll-${selectedDepartment}-${selectedMonth}.xlsx`
+        a.href = downloadUrl
+        a.download = `${filename}.xlsx`
         document.body.appendChild(a)
         a.click()
-        window.URL.revokeObjectURL(url)
+        window.URL.revokeObjectURL(downloadUrl)
         document.body.removeChild(a)
+      } else {
+        const errorData = await response.json()
+        console.error("Export error:", errorData.error || "Lỗi khi xuất dữ liệu")
+
+        // Show user-friendly error message
+        if (errorData.message) {
+          alert(`Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? '\n\n' + errorData.suggestion : ''}`)
+        } else {
+          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.")
+        }
       }
     } catch (error) {
       console.error("Error exporting data:", error)
+    } finally {
+      setExportingData(false)
     }
   }
 
@@ -341,15 +449,36 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                         <p className="font-semibold">{(dept.averageSalary / 1000).toFixed(0)}K</p>
                       </div>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleViewPayroll(dept.name)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Xem Chi Tiết
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleViewPayroll(dept.name)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Xem Chi Tiết
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleExportDepartment(dept.name)}
+                        disabled={exportingDepartment === dept.name}
+                      >
+                        {exportingDepartment === dept.name ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-2"></div>
+                            Xuất...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-2" />
+                            Xuất Excel
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -373,9 +502,22 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleExportData} disabled={selectedDepartment === "all"}>
-                <Download className="h-4 w-4 mr-2" />
-                Xuất Excel
+              <Button
+                onClick={handleExportData}
+                disabled={exportingData}
+                className="flex items-center gap-2"
+              >
+                {exportingData ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Đang xuất...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Xuất Excel
+                  </>
+                )}
               </Button>
             </div>
 
@@ -420,6 +562,14 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Department Detail Modal */}
+      <DepartmentDetailModalRefactored
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        departmentName={selectedDepartmentForDetail}
+        month={selectedMonth}
+      />
     </div>
   )
 }

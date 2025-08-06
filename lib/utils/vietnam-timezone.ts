@@ -6,12 +6,12 @@
 /**
  * Tạo timestamp theo timezone Việt Nam (UTC+7)
  * Sử dụng cho tất cả signature operations để đảm bảo consistency
- * 
+ *
  * @returns string - Timestamp theo format YYYY-MM-DD HH:mm:ss
  */
 export function getVietnamTimestamp(): string {
-  return new Date().toLocaleString("sv-SE", { 
-    timeZone: "Asia/Ho_Chi_Minh" 
+  return new Date().toLocaleString("sv-SE", {
+    timeZone: "Asia/Ho_Chi_Minh"
   })
 }
 
@@ -43,13 +43,13 @@ export function getVietnamISOTimestamp(): string {
  */
 export function formatVietnamTimestamp(timestamp: string | Date): string {
   if (!timestamp) return ""
-  
+
   try {
     const date = new Date(timestamp)
-    
-    // Format theo kiểu Việt Nam: HH:mm DD/MM/YYYY
+
+    // ✅ FIX: Database đã lưu Vietnam time, không cần convert thêm
     return date.toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",
+      // Không dùng timeZone để tránh double conversion
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

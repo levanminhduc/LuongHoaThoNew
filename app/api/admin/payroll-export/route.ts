@@ -86,14 +86,12 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("payrolls")
       .select(`
-        ${PAYROLL_FIELDS.join(", ")},
-        is_signed,
+        *,
         employees!inner(
           full_name,
           department
         )
       `)
-      .order("employees.department")
       .order("employee_id")
 
     // Apply month filter
@@ -132,15 +130,139 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: payrollData, error } = await query
+    // Debug: Check if we have any data first
+    const { data: debugData, error: debugError } = await supabase
+      .from("payrolls")
+      .select("id, employee_id, salary_month")
+      .limit(5)
+
+    console.log("Debug - Payrolls table sample:", debugData)
+    console.log("Debug - Payrolls error:", debugError)
+
+    const { data: employeesDebug, error: employeesError } = await supabase
+      .from("employees")
+      .select("employee_id, full_name, department")
+      .limit(5)
+
+    console.log("Debug - Employees table sample:", employeesDebug)
+    console.log("Debug - Employees error:", employeesError)
+
+    let { data: payrollData, error } = await query
 
     if (error) {
       console.error("Error fetching payroll data:", error)
-      return NextResponse.json({ error: "Lỗi khi lấy dữ liệu lương" }, { status: 500 })
+      console.error("Query details:", {
+        month,
+        department,
+        role: auth.user.role,
+        allowed_departments: auth.user.allowed_departments,
+        user_department: auth.user.department
+      })
+      return NextResponse.json({
+        error: "Lỗi khi lấy dữ liệu lương",
+        details: error.message,
+        debug: process.env.NODE_ENV === 'development' ? {
+          error,
+          debugData,
+          employeesDebug,
+          queryParams: { month, department }
+        } : undefined
+      }, { status: 500 })
     }
 
     if (!payrollData || payrollData.length === 0) {
-      return NextResponse.json({ error: "Không có dữ liệu để xuất" }, { status: 404 })
+      // Try fallback query without join
+      console.log("Trying fallback query without join...")
+
+      let fallbackQuery = supabase
+        .from("payrolls")
+        .select("*")
+        .order("employee_id")
+
+      // Apply same filters
+      if (month) {
+        fallbackQuery = fallbackQuery.eq("salary_month", month)
+      }
+
+      // Skip role-based filtering in fallback for now
+      console.log("Fallback query - skipping role-based filtering")
+
+      const { data: fallbackData, error: fallbackError } = await fallbackQuery
+
+      if (fallbackError || !fallbackData || fallbackData.length === 0) {
+        // Check what months are available
+        const { data: availableMonths } = await supabase
+          .from("payrolls")
+          .select("salary_month")
+          .order("salary_month", { ascending: false })
+          .limit(10)
+
+        const uniqueMonths = [...new Set(availableMonths?.map(p => p.salary_month) || [])]
+
+        return NextResponse.json({
+          error: "Không có dữ liệu lương để xuất",
+          message: month
+            ? `Không có dữ liệu lương cho tháng ${month}${department ? ` của department ${department}` : ''}`
+            : "Không có dữ liệu lương trong hệ thống",
+          availableMonths: uniqueMonths.slice(0, 5),
+          suggestion: uniqueMonths.length > 0
+            ? `Thử xuất dữ liệu cho tháng: ${uniqueMonths.slice(0, 3).join(', ')}`
+            : "Vui lòng import dữ liệu lương trước khi xuất Excel",
+          debug: process.env.NODE_ENV === 'development' ? {
+            fallbackError,
+            originalError: error,
+            queryParams: { month, department },
+            availableMonths: uniqueMonths
+          } : undefined
+        }, { status: 404 })
+      }
+
+      // Get employee data separately
+      const { data: employeesData } = await supabase
+        .from("employees")
+        .select("employee_id, full_name, department")
+
+      // Merge data manually
+      const mergedData = fallbackData.map(payroll => {
+        const employee = employeesData?.find(emp => emp.employee_id === payroll.employee_id)
+        return {
+          ...payroll,
+          employees: employee ? {
+            full_name: employee.full_name,
+            department: employee.department
+          } : null
+        }
+      })
+
+      // Apply department filtering for role-based access
+      let filteredData = mergedData
+      if (auth.user.role === 'truong_phong') {
+        const allowedDepartments = auth.user.allowed_departments || []
+        filteredData = mergedData.filter(record =>
+          record.employees && allowedDepartments.includes(record.employees.department)
+        )
+
+        if (department) {
+          filteredData = filteredData.filter(record =>
+            record.employees && record.employees.department === department
+          )
+        }
+      } else if (auth.user.role === 'to_truong') {
+        filteredData = mergedData.filter(record =>
+          record.employees && record.employees.department === auth.user.department
+        )
+      } else if (auth.user.role === 'admin' && department) {
+        filteredData = mergedData.filter(record =>
+          record.employees && record.employees.department === department
+        )
+      }
+
+      if (filteredData.length === 0) {
+        return NextResponse.json({ error: "Không có dữ liệu để xuất" }, { status: 404 })
+      }
+
+      // Use filtered data for export
+      payrollData = filteredData
     }
 
     // Create workbook
@@ -153,36 +275,69 @@ export async function GET(request: NextRequest) {
       "Ký Nhận"
     ]
 
-    // Prepare data rows
-    const dataRows = payrollData.map((record, index) => [
-      index + 1, // STT
-      ...PAYROLL_FIELDS.map(field => record[field] || ""),
-      // Ký Nhận logic: full_name if signed, "Chưa Ký" if not
-      record.is_signed 
+    // Prepare data rows - simplified approach
+    const dataRows = payrollData.map((record: any, index: number) => {
+      const row = [index + 1] // STT
+
+      // Add all payroll fields
+      PAYROLL_FIELDS.forEach(field => {
+        row.push(record[field] || "")
+      })
+
+      // Add signature column
+      row.push(record.is_signed
         ? (record.employees?.full_name || "N/A")
         : "Chưa Ký"
-    ])
+      )
+
+      return row
+    })
 
     // Create worksheet data
+    console.log("Creating worksheet with headers:", headers.length, "and data rows:", dataRows.length)
     const worksheetData = [headers, ...dataRows]
+    console.log("Worksheet data prepared, creating sheet...")
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
+    console.log("Worksheet created successfully")
 
     // Set column widths
-    const columnWidths = headers.map(() => ({ width: 20 }))
+    const columnWidths = headers.map(() => ({ wch: 15 }))
     worksheet['!cols'] = columnWidths
 
     // Add worksheet to workbook
     const departmentName = department || "TatCa"
     const monthName = month || "TatCa"
-    const sheetName = `Lương ${departmentName} ${monthName}`
+
+    // Create ASCII-safe sheet name (max 31 chars)
+    const safeDeptName = departmentName
+      .replace(/[^\w\s-]/g, '') // Remove special chars
+      .replace(/\s+/g, '_')     // Replace spaces with underscores
+
+    let sheetName = `${safeDeptName}_${monthName}`
+    if (sheetName.length > 31) {
+      // Truncate department name if too long
+      const maxDeptLength = 31 - monthName.length - 1 // -1 for underscore
+      const shortDeptName = safeDeptName.substring(0, maxDeptLength)
+      sheetName = `${shortDeptName}_${monthName}`
+    }
+
+    console.log("Sheet name:", sheetName, "Length:", sheetName.length)
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
 
     // Generate Excel buffer
     const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 
-    // Create meaningful filename
+    // Create meaningful filename (safe for download)
     const timestamp = new Date().toISOString().slice(0, 10)
-    const filename = `Luong_${departmentName}_${monthName}_${timestamp}.xlsx`
+
+    // Convert to ASCII-safe filename
+    const safeDepartmentName = departmentName
+      .replace(/[^\w\s-]/g, '') // Remove special chars
+      .replace(/\s+/g, '_')     // Replace spaces with underscores
+      .substring(0, 20)         // Limit length
+
+    const filename = `Luong_${safeDepartmentName}_${monthName}_${timestamp}.xlsx`
+    console.log("Safe filename:", filename)
 
     // Return Excel file
     return new NextResponse(excelBuffer, {
@@ -196,9 +351,11 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Payroll export error:", error)
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi xuất dữ liệu lương" },
-      { status: 500 }
-    )
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace")
+    return NextResponse.json({
+      error: "Có lỗi xảy ra khi xuất dữ liệu lương",
+      details: error instanceof Error ? error.message : "Unknown error",
+      debug: process.env.NODE_ENV === 'development' ? error : undefined
+    }, { status: 500 })
   }
 }

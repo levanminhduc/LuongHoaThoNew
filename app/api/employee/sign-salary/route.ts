@@ -45,18 +45,18 @@ export async function POST(request: NextRequest) {
                      "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
 
-    // Bước 4: Tạo Vietnam timestamp chắc chắn cho Vercel
-    const vietnamTime = getVietnamTimestamp()
-    console.log("Vietnam timestamp being sent:", vietnamTime)
+    // Bước 4: Tạo Vietnam timestamp - KHÔNG gửi client_timestamp
+    // Để database function tự tạo Vietnam time từ server UTC
+    console.log("Using server-side Vietnam timezone conversion")
 
-    // Gọi function ký tên tự động
+    // Gọi function ký tên tự động - KHÔNG gửi client_timestamp
     const { data: signResult, error: signError } = await supabase
       .rpc("auto_sign_salary", {
         p_employee_id: employee_id.trim(),
         p_salary_month: salary_month.trim(),
         p_ip_address: clientIP,
-        p_device_info: userAgent,
-        p_client_timestamp: vietnamTime // ✅ Sử dụng client Vietnam time
+        p_device_info: userAgent
+        // ✅ KHÔNG gửi p_client_timestamp để tránh double conversion
       })
 
     if (signError) {
