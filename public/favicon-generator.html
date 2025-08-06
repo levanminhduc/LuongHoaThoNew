@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator - Hoà Thọ Điện Bàn</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .preview { display: flex; align-items: center; gap: 20px; }
+        button { padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0051cc; }
+    </style>
+</head>
+<body>
+    <h1>🏭 Favicon Generator - MAY HÒA THỌ ĐIỆN BÀN</h1>
+    
+    <div class="preview">
+        <div>
+            <h3>32x32 Favicon</h3>
+            <canvas id="favicon32" width="32" height="32"></canvas>
+            <br><button onclick="downloadFavicon32()">Download favicon.ico</button>
+        </div>
+        
+        <div>
+            <h3>512x512 Icon</h3>
+            <canvas id="icon512" width="512" height="512"></canvas>
+            <br><button onclick="downloadIcon512()">Download icon.png</button>
+        </div>
+        
+        <div>
+            <h3>180x180 Apple Touch</h3>
+            <canvas id="apple180" width="180" height="180"></canvas>
+            <br><button onclick="downloadApple180()">Download apple-touch-icon.png</button>
+        </div>
+    </div>
+
+    <script>
+        // Tạo favicon 32x32
+        function createFavicon32() {
+            const canvas = document.getElementById('favicon32');
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+            gradient.addColorStop(0, '#1e40af');
+            gradient.addColorStop(1, '#3b82f6');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            // Text "HT"
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('HT', 16, 16);
+        }
+        
+        // Tạo icon 512x512
+        function createIcon512() {
+            const canvas = document.getElementById('icon512');
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+            gradient.addColorStop(0, '#1e40af');
+            gradient.addColorStop(1, '#3b82f6');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Border
+            ctx.strokeStyle = '#1e3a8a';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(4, 4, 504, 504);
+            
+            // Text "HT"
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 280px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('HT', 256, 256);
+            
+            // Subtitle
+            ctx.font = 'bold 48px Arial';
+            ctx.fillText('MAY HÒA THỌ', 256, 400);
+        }
+        
+        // Tạo apple touch icon 180x180
+        function createApple180() {
+            const canvas = document.getElementById('apple180');
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 180, 180);
+            gradient.addColorStop(0, '#1e40af');
+            gradient.addColorStop(1, '#3b82f6');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 180, 180);
+            
+            // Rounded corners (iOS style)
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, 180, 180, 32);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Text "HT"
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 100px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('HT', 90, 90);
+        }
+        
+        // Download functions
+        function downloadFavicon32() {
+            const canvas = document.getElementById('favicon32');
+            const link = document.createElement('a');
+            link.download = 'favicon.ico';
+            link.href = canvas.toDataURL('image/x-icon');
+            link.click();
+        }
+        
+        function downloadIcon512() {
+            const canvas = document.getElementById('icon512');
+            const link = document.createElement('a');
+            link.download = 'icon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function downloadApple180() {
+            const canvas = document.getElementById('apple180');
+            const link = document.createElement('a');
+            link.download = 'apple-touch-icon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Tạo tất cả icons khi load
+        window.onload = function() {
+            createFavicon32();
+            createIcon512();
+            createApple180();
+        }
+    </script>
+</body>
+</html>

@@ -7,7 +7,14 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "Tra Cứu Lương Hoà Thọ Điện Bàn",
   description: "MAY HÒA THỌ ĐIỆN BÀN",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: [
+      { url: '/favicon.ico?v=2', type: 'image/x-icon' },
+      { url: '/favicon-32x32.png?v=2', sizes: '32x32', type: 'image/png' }
+    ],
+    shortcut: '/favicon.ico?v=2'
+  }
 }
 
 export default function RootLayout({
@@ -18,6 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon" />
         <style>{`
         html {
           font-family: ${GeistSans.style.fontFamily};

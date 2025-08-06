@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
-import { Users, DollarSign, FileCheck, LogOut, Eye, TrendingUp, Calendar } from "lucide-react"
+import { Users, DollarSign, FileCheck, LogOut, Eye, TrendingUp, Calendar, Download, Loader2 } from "lucide-react"
 
 interface User {
   employee_id: string
@@ -50,6 +50,7 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7))
   const [loading, setLoading] = useState(true)
   const [monthlyTrend, setMonthlyTrend] = useState<any[]>([])
+  const [exportingExcel, setExportingExcel] = useState(false)
 
   useEffect(() => {
     loadDepartmentData()
@@ -141,6 +142,36 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
   const handleViewEmployee = (employeeId: string) => {
     // Navigate to employee detail view
     window.open(`/supervisor/employee/${employeeId}`, '_blank')
+  }
+
+  const handleExportExcel = async () => {
+    try {
+      setExportingExcel(true)
+      const token = localStorage.getItem("admin_token")
+      const response = await fetch(`/api/admin/payroll-export?month=${selectedMonth}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `Luong_${user.department}_${selectedMonth}_${new Date().toISOString().slice(0, 10)}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        console.error("Error exporting Excel")
+      }
+    } catch (error) {
+      console.error("Error exporting Excel:", error)
+    } finally {
+      setExportingExcel(false)
+    }
   }
 
   const getStatusColor = (isSigned: boolean) => {
@@ -339,15 +370,35 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
 
           <TabsContent value="employees" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Danh Sách Nhân Viên - {user.department}</CardTitle>
-                <CardDescription>Tháng {selectedMonth}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Danh Sách Nhân Viên - {user.department}</CardTitle>
+                  <CardDescription>Tháng {selectedMonth}</CardDescription>
+                </div>
+                <Button
+                  onClick={handleExportExcel}
+                  disabled={exportingExcel}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {exportingExcel ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Đang xuất...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      Xuất Excel
+                    </>
+                  )}
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
+                        <th className="text-center p-3 w-16">STT</th>
                         <th className="text-left p-3">Mã NV</th>
                         <th className="text-left p-3">Họ Tên</th>
                         <th className="text-left p-3">Chức Vụ</th>
@@ -358,8 +409,11 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
                       </tr>
                     </thead>
                     <tbody>
-                      {payrollData.map((payroll) => (
+                      {payrollData.map((payroll, index) => (
                         <tr key={payroll.id} className="border-b hover:bg-gray-50">
+                          <td className="p-3 text-center font-medium text-gray-500">
+                            {index + 1}
+                          </td>
                           <td className="p-3 font-medium">{payroll.employee_id}</td>
                           <td className="p-3">{payroll.employees?.full_name}</td>
                           <td className="p-3">
