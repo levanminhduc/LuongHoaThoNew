@@ -504,21 +504,21 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                         <p className="font-semibold text-sm sm:text-base">{(dept.averageSalary / 1000).toFixed(0)}K</p>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-row gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 h-9 sm:h-8 text-xs sm:text-sm touch-manipulation"
+                        className="flex-1 h-12 sm:h-8 text-xs sm:text-sm touch-manipulation"
                         onClick={() => handleViewPayroll(dept.name)}
                       >
                         <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         <span className="hidden sm:inline">Xem Chi Tiết</span>
-                        <span className="sm:hidden">Chi Tiết</span>
+                        <span className="sm:hidden">Xem Chi Tiết</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 h-9 sm:h-8 text-xs sm:text-sm touch-manipulation"
+                        className="flex-1 h-12 sm:h-8 text-xs sm:text-sm touch-manipulation"
                         onClick={() => handleExportDepartment(dept.name)}
                         disabled={exportingDepartment === dept.name}
                       >
@@ -532,7 +532,7 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                           <>
                             <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             <span className="hidden sm:inline">Xuất Excel</span>
-                            <span className="sm:hidden">Xuất</span>
+                            <span className="sm:hidden">Xuất Excel</span>
                           </>
                         )}
                       </Button>
@@ -563,7 +563,7 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
               <Button
                 onClick={handleExportData}
                 disabled={exportingData}
-                className="flex items-center gap-2 w-full sm:w-auto h-9 sm:h-8 touch-manipulation"
+                className="flex items-center gap-2 w-full sm:w-auto h-12 sm:h-8 touch-manipulation"
               >
                 {exportingData ? (
                   <>
