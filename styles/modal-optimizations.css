@@ -1,0 +1,112 @@
+/* Modal Performance & Touch Optimizations for DepartmentDetailModal */
+
+/* Smooth scrolling and momentum for mobile */
+.modal-scroll-area {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Touch optimization for interactive elements */
+.touch-optimized {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Button touch targets */
+.touch-button {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Card hover effects with hardware acceleration */
+.card-hover {
+  will-change: transform, box-shadow;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-1px);
+}
+
+/* Table scroll optimization */
+.table-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+}
+
+/* Chart container optimization */
+.chart-container {
+  will-change: contents;
+  contain: layout style paint;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 1rem;
+  }
+  
+  .touch-button {
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .card-spacing {
+    gap: 0.75rem;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .card-hover {
+    transition: none;
+  }
+  
+  .modal-scroll-area {
+    scroll-behavior: auto;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card-hover {
+    border: 2px solid;
+  }
+}
+
+/* Focus styles for accessibility */
+.focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Loading state optimizations */
+.loading-skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Performance optimizations for large lists */
+.virtual-scroll {
+  contain: strict;
+  will-change: transform;
+}
+
+/* Prevent layout shift during loading */
+.stable-layout {
+  contain: layout style;
+}

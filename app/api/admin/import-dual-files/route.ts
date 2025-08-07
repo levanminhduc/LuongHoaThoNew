@@ -495,39 +495,84 @@ function parseNumberField(value: string, columnName: string): number {
     // Validate reasonable ranges based on column type
     const columnLower = columnName.toLowerCase()
 
-    // Different validation rules for different types of fields
-    if (columnLower.includes("he_so") || columnLower.includes("heso")) {
-      // Coefficient fields - typically 0-10
-      if (parsed < 0 || parsed > 100) {
-        throw new Error(`Coefficient value out of range: ${parsed}. Expected range: 0-100`)
+    // Simplified validation rules - focus on actual database constraints
+    if (columnLower.includes("tong_he_so_quy_doi") || columnLower.includes("tổng hệ số quy đổi")) {
+      // Special handling for tong_he_so_quy_doi - DECIMAL(15,2) - Max: 9,999,999,999,999.99
+      if (parsed < 0) {
+        throw new Error(`Negative value not allowed: ${parsed}`)
+      }
+      if (parsed > 9999999999999.99) {
+        throw new Error(`Value too large: ${parsed}. Maximum: 9,999,999,999,999.99`)
+      }
+      // Business logic warning for very high values
+      if (parsed > 100000000) { // 100 million
+        console.warn(`Very high tong_he_so_quy_doi value detected: ${parsed} for column ${columnName}`)
+      }
+    } else if (columnLower.includes("he_so") || columnLower.includes("heso")) {
+      // Coefficient fields - DECIMAL(5,2) - Max: 999.99
+      if (parsed < 0) {
+        throw new Error(`Negative coefficient not allowed: ${parsed}`)
+      }
+      if (parsed > 999.99) {
+        throw new Error(`Coefficient value too large: ${parsed}. Maximum: 999.99`)
+      }
+      // Business logic warning for high coefficients
+      if (parsed > 100) {
+        console.warn(`High coefficient value detected: ${parsed} for column ${columnName}`)
       }
     } else if (columnLower.includes("luong") || columnLower.includes("salary") || columnLower.includes("tien")) {
-      // Salary/money fields - reasonable salary range
+      // Salary/money fields - DECIMAL(15,2) - Max: 9,999,999,999,999.99
       if (parsed < 0) {
         throw new Error(`Negative salary not allowed: ${parsed}`)
       }
-      if (parsed > 1000000000) { // 1 billion VND limit
-        throw new Error(`Salary value too large: ${parsed}. Maximum: 1,000,000,000`)
+      if (parsed > 9999999999999.99) {
+        throw new Error(`Salary value too large: ${parsed}. Maximum: 9,999,999,999,999.99`)
       }
     } else if (columnLower.includes("gio") || columnLower.includes("hour")) {
-      // Hour fields - reasonable working hours
-      if (parsed < 0 || parsed > 744) { // 744 = max hours in a month (31 days * 24 hours)
-        throw new Error(`Hours value out of range: ${parsed}. Expected range: 0-744`)
+      // Hour fields - DECIMAL(5,2) - Max: 999.99
+      if (parsed < 0) {
+        throw new Error(`Negative hours not allowed: ${parsed}`)
+      }
+      if (parsed > 999.99) {
+        throw new Error(`Hours value too large: ${parsed}. Maximum: 999.99`)
+      }
+      // Business logic warning for high hours
+      if (parsed > 744) { // 744 = max hours in a month (31 days × 24 hours)
+        console.warn(`High hours value detected: ${parsed} for column ${columnName} (monthly max typically 744)`)
       }
     } else if (columnLower.includes("ngay") || columnLower.includes("day")) {
-      // Day fields - reasonable working days
-      if (parsed < 0 || parsed > 31) {
-        throw new Error(`Days value out of range: ${parsed}. Expected range: 0-31`)
+      // Day fields - DECIMAL(5,2) - Max: 999.99
+      if (parsed < 0) {
+        throw new Error(`Negative days not allowed: ${parsed}`)
+      }
+      if (parsed > 999.99) {
+        throw new Error(`Days value too large: ${parsed}. Maximum: 999.99`)
+      }
+      // Business logic warning for high days
+      if (parsed > 31) {
+        console.warn(`High days value detected: ${parsed} for column ${columnName} (monthly max typically 31)`)
       }
     } else {
-      // General numeric fields
+      // General numeric fields - reasonable range
       if (parsed < -1000000000 || parsed > 1000000000) {
         throw new Error(`Value out of range: ${parsed}. Expected range: -1,000,000,000 to 1,000,000,000`)
       }
     }
 
-    // Round to reasonable precision (2 decimal places for money, 4 for coefficients)
-    const precision = (columnLower.includes("he_so") || columnLower.includes("heso")) ? 4 : 2
+    // Precision rounding based on field type and actual database schema
+    let precision: number
+    if (columnLower.includes("tong_he_so_quy_doi") || columnLower.includes("tổng hệ số quy đổi")) {
+      precision = 2  // Special case: DECIMAL(15,2)
+    } else if (columnLower.includes("he_so") || columnLower.includes("heso")) {
+      precision = 2  // Coefficient fields: DECIMAL(5,2)
+    } else if (columnLower.includes("gio") || columnLower.includes("ngay") || columnLower.includes("hour") || columnLower.includes("day")) {
+      precision = 2  // Time fields: DECIMAL(5,2)
+    } else if (columnLower.includes("luong") || columnLower.includes("tien") || columnLower.includes("salary")) {
+      precision = 2  // Money fields: DECIMAL(15,2)
+    } else {
+      precision = 2  // Default precision for most fields
+    }
+
     const rounded = Math.round(parsed * Math.pow(10, precision)) / Math.pow(10, precision)
 
     console.log(`Number parsing successful: '${value}' -> ${rounded} (column: ${columnName})`)

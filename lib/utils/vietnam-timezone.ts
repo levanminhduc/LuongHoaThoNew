@@ -47,9 +47,9 @@ export function formatVietnamTimestamp(timestamp: string | Date): string {
   try {
     const date = new Date(timestamp)
 
-    // ✅ FIX: Database đã lưu Vietnam time, không cần convert thêm
+    // ✅ FINAL FIX: Force Vietnam timezone để đảm bảo consistency
     return date.toLocaleString("vi-VN", {
-      // Không dùng timeZone để tránh double conversion
+      timeZone: "Asia/Ho_Chi_Minh",  // Force Vietnam timezone
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

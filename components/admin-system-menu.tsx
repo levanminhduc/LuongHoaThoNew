@@ -8,6 +8,7 @@ import {
   UserCheck,
   Shield,
   Cog,
+  Database,
 } from "lucide-react"
 
 interface AdminSystemMenuProps {
@@ -26,6 +27,15 @@ export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
       colorClass: "text-blue-700 hover:text-blue-800 hover:bg-blue-50",
       iconColorClass: "text-blue-600",
       onClick: () => router.push("/admin/payroll-import-export"),
+    },
+    {
+      id: "data-validation",
+      label: "Kiểm Tra Dữ Liệu",
+      icon: Database,
+      description: "So sánh nhân viên vs dữ liệu lương, phát hiện thiếu sót",
+      colorClass: "text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50",
+      iconColorClass: "text-cyan-600",
+      onClick: () => router.push("/admin/data-validation"),
     },
     {
       id: "cccd-management",

@@ -62,16 +62,26 @@ export async function POST(request: NextRequest) {
     if (signError) {
       console.error("Sign salary error:", signError)
       return NextResponse.json(
-        { error: "Lỗi hệ thống khi ký tên" },
+        { error: "Lỗi hệ thống khi ký tên: " + signError.message },
         { status: 500 }
       )
     }
 
     // Bước 5: Xử lý kết quả từ function
-    if (!signResult.success) {
+    if (!signResult || !signResult.success) {
+      const errorMessage = signResult?.message || "Không thể ký nhận lương"
+
+      // Determine appropriate status code based on error
+      let statusCode = 400
+      if (errorMessage.includes("không tìm thấy")) {
+        statusCode = 404
+      } else if (errorMessage.includes("đã ký")) {
+        statusCode = 409 // Conflict
+      }
+
       return NextResponse.json(
-        { error: signResult.message },
-        { status: 400 }
+        { error: errorMessage },
+        { status: statusCode }
       )
     }
 
@@ -79,7 +89,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Ký nhận lương thành công!",
       data: {
-        employee_name: signResult.signed_by,
+        employee_name: signResult.signed_by,  // Keep for backward compatibility
+        signed_by: signResult.signed_by,      // ✅ Add this field for consistency
         signed_at: signResult.signed_at, // Raw timestamp for processing
         signed_at_display: formatSignatureTime(signResult.signed_at), // Formatted for display
         employee_id: signResult.employee_id,

@@ -165,19 +165,27 @@ export function EmployeeLookup() {
           is_signed: true,
           signed_at: data.data.signed_at,
           signed_at_display: data.data.signed_at_display, // Use formatted display from API
-          signed_by_name: data.data.employee_name
+          signed_by_name: data.data.employee_name || data.data.signed_by // ✅ Fix: Support both field names
         })
         setTimeout(() => setSignSuccess(false), 5000) // Ẩn thông báo sau 5s
       } else {
-        // Handle "already signed" case
+        // ✅ FIX: Hiển thị chính xác error message từ API
+        console.error("Sign salary API error:", response.status, data)
+
+        // Handle specific error cases
         if (data.error && data.error.includes("đã ký nhận lương")) {
           setError("Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.")
+        } else if (data.error && data.error.includes("CCCD không đúng")) {
+          setError("Số CCCD không đúng. Vui lòng kiểm tra lại số CCCD.")
+        } else if (data.error && data.error.includes("không tìm thấy nhân viên")) {
+          setError("Không tìm thấy nhân viên với mã nhân viên đã nhập.")
         } else {
-          setError(data.error || "Không thể ký nhận lương")
+          setError(data.error || `Không thể ký nhận lương (Mã lỗi: ${response.status})`)
         }
       }
     } catch (error) {
-      setError("Có lỗi xảy ra khi ký nhận lương")
+      console.error("Network error:", error)
+      setError("Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.")
     } finally {
       setSigningLoading(false)
     }

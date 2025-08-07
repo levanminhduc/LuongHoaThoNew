@@ -34,9 +34,63 @@ interface PayrollRecord {
   id: number
   employee_id: string
   salary_month: string
+
+  // Hệ số và thông số cơ bản
+  he_so_lam_viec?: number
+  he_so_phu_cap_ket_qua?: number
+  he_so_luong_co_ban?: number
+  luong_toi_thieu_cty?: number
+
+  // Thời gian làm việc
+  ngay_cong_trong_gio?: number
+  gio_cong_tang_ca?: number
+  gio_an_ca?: number
+  tong_gio_lam_viec?: number
+  tong_he_so_quy_doi?: number
+  ngay_cong_chu_nhat?: number
+
+  // Lương sản phẩm và đơn giá
+  tong_luong_san_pham_cong_doan?: number
+  don_gia_tien_luong_tren_gio?: number
+  tien_luong_san_pham_trong_gio?: number
+  tien_luong_tang_ca?: number
+  tien_luong_30p_an_ca?: number
+  tien_khen_thuong_chuyen_can?: number
+  luong_hoc_viec_pc_luong?: number
+  tong_cong_tien_luong_san_pham?: number
+
+  // Phụ cấp và hỗ trợ
+  ho_tro_thoi_tiet_nong?: number
+  bo_sung_luong?: number
+  tien_luong_chu_nhat?: number
+  luong_cnkcp_vuot?: number
+  tien_tang_ca_vuot?: number
+  bhxh_21_5_percent?: number
+  pc_cdcs_pccc_atvsv?: number
+  luong_phu_nu_hanh_kinh?: number
+
+  // Tổng lương và phụ cấp khác
+  tong_cong_tien_luong?: number
+  tien_boc_vac?: number
+  ho_tro_xang_xe?: number
+
+  // Thuế và khấu trừ
+  thue_tncn_nam_2024?: number
+  tam_ung?: number
+  thue_tncn?: number
+  bhxh_bhtn_bhyt_total?: number
+  truy_thu_the_bhyt?: number
+
+  // Lương thực nhận cuối kỳ
   tien_luong_thuc_nhan_cuoi_ky: number
+
+  // Thông tin ký
   is_signed: boolean
   signed_at: string | null
+  signed_by_name?: string
+  signature_ip?: string
+  signature_device?: string
+
   employees: {
     employee_id: string
     full_name: string
@@ -61,7 +115,7 @@ export default function EmployeeTable({ payrolls, onFiltersChange }: EmployeeTab
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize] = useState(10)
+  const [pageSize] = useState(50)
 
   // Notify parent of filter changes
   useEffect(() => {
@@ -217,97 +271,226 @@ export default function EmployeeTable({ payrolls, onFiltersChange }: EmployeeTab
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mã NV</TableHead>
-                <TableHead>Họ Tên</TableHead>
-                <TableHead>Chức Vụ</TableHead>
-                <TableHead className="text-right">Lương</TableHead>
-                <TableHead className="text-center">Trạng Thái</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedPayrolls.length > 0 ? (
-                paginatedPayrolls.map((payroll) => (
-                  <TableRow key={payroll.id}>
-                    <TableCell className="font-medium">
-                      {payroll.employee_id}
-                    </TableCell>
-                    <TableCell>{payroll.employees?.full_name}</TableCell>
-                    <TableCell>{payroll.employees?.chuc_vu}</TableCell>
-                    <TableCell className="text-right">
+      {/* Mobile Card Layout */}
+      <div className="block sm:hidden space-y-3">
+        {paginatedPayrolls.length > 0 ? (
+          paginatedPayrolls.map((payroll, index) => (
+            <Card key={payroll.id} className="p-4 hover:shadow-md transition-shadow duration-200">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        #{(currentPage - 1) * pageSize + index + 1}
+                      </span>
+                      <h4 className="font-semibold text-sm truncate">{payroll.employees?.full_name}</h4>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Mã: {payroll.employee_id}</p>
+                  </div>
+                  <Badge
+                    variant={payroll.is_signed ? "default" : "secondary"}
+                    className="ml-2 text-xs"
+                  >
+                    {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-muted-foreground">Chức vụ:</span>
+                    <p className="font-medium mt-1">{payroll.employees?.chuc_vu}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Ngày công:</span>
+                    <p className="font-medium mt-1">{payroll.ngay_cong_trong_gio || 0} ngày</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Thưởng Chuyên Cần:</span>
+                    <p className="font-medium mt-1">{formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Hệ số LV:</span>
+                    <p className="font-medium mt-1">{(payroll.he_so_lam_viec || 0).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Ngày ký:</span>
+                    <span className="font-medium">
+                      {payroll.signed_at
+                        ? new Date(payroll.signed_at).toLocaleDateString('vi-VN')
+                        : "-"
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Lương thực nhận:</span>
+                    <span className="font-semibold text-sm">
                       {formatCurrency(payroll.tien_luong_thuc_nhan_cuoi_ky)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={payroll.is_signed ? "default" : "secondary"}>
-                        {payroll.is_signed ? "Đã ký" : "Chưa ký"}
-                      </Badge>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Không có dữ liệu
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table Layout */}
+      <Card className="hidden sm:block">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-center w-16">STT</TableHead>
+                  <TableHead className="min-w-[100px]">Mã NV</TableHead>
+                  <TableHead className="min-w-[150px]">Họ Tên</TableHead>
+                  <TableHead className="min-w-[120px]">Chức Vụ</TableHead>
+                  <TableHead className="text-center min-w-[80px]">Ngày Công</TableHead>
+                  <TableHead className="text-right min-w-[120px]">Thưởng Chuyên Cần</TableHead>
+                  <TableHead className="text-center min-w-[80px]">Hệ Số LV</TableHead>
+                  <TableHead className="text-right min-w-[140px]">Thực Nhận</TableHead>
+                  <TableHead className="text-center min-w-[100px]">Trạng Thái</TableHead>
+                  <TableHead className="text-center min-w-[100px]">Ngày Ký</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedPayrolls.length > 0 ? (
+                  paginatedPayrolls.map((payroll, index) => (
+                    <TableRow key={payroll.id} className="hover:bg-gray-50">
+                      <TableCell className="text-center font-medium text-gray-500">
+                        {(currentPage - 1) * pageSize + index + 1}
+                      </TableCell>
+                      <TableCell className="font-medium font-mono text-sm">
+                        {payroll.employee_id}
+                      </TableCell>
+                      <TableCell className="font-medium">{payroll.employees?.full_name}</TableCell>
+                      <TableCell>{payroll.employees?.chuc_vu}</TableCell>
+                      <TableCell className="text-center">
+                        {payroll.ngay_cong_trong_gio || 0}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatCurrency(payroll.tien_luong_thuc_nhan_cuoi_ky)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant={payroll.is_signed ? "default" : "secondary"}>
+                          {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center text-xs text-muted-foreground">
+                        {payroll.signed_at
+                          ? new Date(payroll.signed_at).toLocaleDateString('vi-VN')
+                          : "-"
+                        }
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                      {filteredAndSortedPayrolls.length === 0
+                        ? "Không tìm thấy nhân viên nào phù hợp với bộ lọc"
+                        : "Không có dữ liệu"
+                      }
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    {filteredAndSortedPayrolls.length === 0 
-                      ? "Không tìm thấy nhân viên nào phù hợp với bộ lọc"
-                      : "Không có dữ liệu"
-                    }
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum
-                if (totalPages <= 5) {
-                  pageNum = i + 1
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i
-                } else {
-                  pageNum = currentPage - 2 + i
-                }
-                
-                return (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(pageNum)}
-                      isActive={currentPage === pageNum}
-                      className="cursor-pointer"
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              })}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
+          {/* Mobile: Simple pagination */}
+          <div className="flex sm:hidden justify-center w-full">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="h-8 w-8 p-0 touch-manipulation"
+              >
+                ←
+              </Button>
+              <span className="text-sm px-3 py-1 bg-gray-100 rounded">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 w-8 p-0 touch-manipulation"
+              >
+                →
+              </Button>
+            </div>
+          </div>
+
+          {/* Desktop: Full pagination */}
+          <div className="hidden sm:flex justify-center w-full">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum
+                  if (totalPages <= 5) {
+                    pageNum = i + 1
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i
+                  } else {
+                    pageNum = currentPage - 2 + i
+                  }
+
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       )}
     </div>

@@ -64,9 +64,9 @@ export function formatDateTime(dateString: string): string {
   try {
     const date = new Date(dateString)
 
-    // ✅ FIX: Database đã lưu Vietnam time, không cần convert thêm
+    // ✅ FINAL FIX: Force Vietnam timezone để đảm bảo consistency
     const vietnamTime = date.toLocaleString("vi-VN", {
-      // Không dùng timeZone để tránh double conversion
+      timeZone: "Asia/Ho_Chi_Minh",  // Force Vietnam timezone
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -93,9 +93,13 @@ export function formatSignatureTime(dateString: string): string {
   if (!dateString) return ''
 
   try {
-    // ✅ FIX: Database đã lưu Vietnam time, không cần convert thêm
-    return new Date(dateString).toLocaleString("vi-VN", {
-      // Không dùng timeZone để tránh double conversion
+    // ✅ FINAL FIX: Database lưu Vietnam time (UTC+7), hiển thị trực tiếp
+    // Không cần timezone conversion, chỉ format string
+    const date = new Date(dateString)
+
+    // Force Vietnam timezone display để đảm bảo consistency
+    return date.toLocaleString("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",  // Force Vietnam timezone
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

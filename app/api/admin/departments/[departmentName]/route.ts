@@ -61,7 +61,54 @@ export async function GET(request: NextRequest, { params }: DepartmentDetailPara
     const { data: payrolls, error: payrollsError } = await supabase
       .from("payrolls")
       .select(`
-        *,
+        id,
+        employee_id,
+        salary_month,
+        source_file,
+        import_batch_id,
+        import_status,
+        he_so_lam_viec,
+        he_so_phu_cap_ket_qua,
+        he_so_luong_co_ban,
+        luong_toi_thieu_cty,
+        ngay_cong_trong_gio,
+        gio_cong_tang_ca,
+        gio_an_ca,
+        tong_gio_lam_viec,
+        tong_he_so_quy_doi,
+        ngay_cong_chu_nhat,
+        tong_luong_san_pham_cong_doan,
+        don_gia_tien_luong_tren_gio,
+        tien_luong_san_pham_trong_gio,
+        tien_luong_tang_ca,
+        tien_luong_30p_an_ca,
+        tien_khen_thuong_chuyen_can,
+        luong_hoc_viec_pc_luong,
+        tong_cong_tien_luong_san_pham,
+        ho_tro_thoi_tiet_nong,
+        bo_sung_luong,
+        tien_luong_chu_nhat,
+        luong_cnkcp_vuot,
+        tien_tang_ca_vuot,
+        bhxh_21_5_percent,
+        pc_cdcs_pccc_atvsv,
+        luong_phu_nu_hanh_kinh,
+        tong_cong_tien_luong,
+        tien_boc_vac,
+        ho_tro_xang_xe,
+        thue_tncn_nam_2024,
+        tam_ung,
+        thue_tncn,
+        bhxh_bhtn_bhyt_total,
+        truy_thu_the_bhyt,
+        tien_luong_thuc_nhan_cuoi_ky,
+        is_signed,
+        signed_at,
+        signed_by_name,
+        signature_ip,
+        signature_device,
+        created_at,
+        updated_at,
         employees!inner(
           employee_id,
           full_name,
@@ -75,7 +122,16 @@ export async function GET(request: NextRequest, { params }: DepartmentDetailPara
 
     if (payrollsError) {
       console.error("Payrolls query error:", payrollsError)
-      return NextResponse.json({ error: "Lỗi truy vấn dữ liệu lương" }, { status: 500 })
+      console.error("Query details:", {
+        departmentName,
+        month,
+        userRole: auth.user.role,
+        allowedDepartments: auth.user.allowed_departments
+      })
+      return NextResponse.json({
+        error: "Lỗi truy vấn dữ liệu lương",
+        details: process.env.NODE_ENV === 'development' ? payrollsError.message : undefined
+      }, { status: 500 })
     }
 
     // Get historical payroll data for trends (last 6 months)
@@ -106,6 +162,14 @@ export async function GET(request: NextRequest, { params }: DepartmentDetailPara
     const totalSalary = payrolls?.reduce((sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0), 0) || 0
     const averageSalary = payrollCount > 0 ? Math.round(totalSalary / payrollCount) : 0
     const signedPercentage = payrollCount > 0 ? (signedCount / payrollCount * 100).toFixed(1) : "0"
+
+    // Calculate additional statistics
+    const totalWorkDays = payrolls?.reduce((sum, p) => sum + (p.ngay_cong_trong_gio || 0), 0) || 0
+    const totalOvertimeHours = payrolls?.reduce((sum, p) => sum + (p.gio_cong_tang_ca || 0), 0) || 0
+    const totalAllowances = payrolls?.reduce((sum, p) =>
+      sum + (p.ho_tro_thoi_tiet_nong || 0) + (p.pc_cdcs_pccc_atvsv || 0) + (p.ho_tro_xang_xe || 0) + (p.tien_boc_vac || 0), 0) || 0
+    const totalDeductions = payrolls?.reduce((sum, p) =>
+      sum + (p.bhxh_bhtn_bhyt_total || 0) + (p.thue_tncn || 0) + (p.tam_ung || 0), 0) || 0
 
     // Calculate salary distribution
     const salaryRanges = [
@@ -173,7 +237,11 @@ export async function GET(request: NextRequest, { params }: DepartmentDetailPara
           signedCount,
           signedPercentage,
           totalSalary,
-          averageSalary
+          averageSalary,
+          totalWorkDays,
+          totalOvertimeHours,
+          totalAllowances,
+          totalDeductions
         },
         employees: employees || [],
         payrolls: payrolls || [],

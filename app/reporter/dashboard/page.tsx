@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import EmployeeListModal from "@/components/EmployeeListModal"
+import { getPreviousMonth } from "@/utils/dateUtils"
 import { 
   FileText, 
   BarChart3, 
@@ -44,7 +45,7 @@ interface MonthStatus {
 
 export default function ReporterDashboard() {
   const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7))
+  const [selectedMonth, setSelectedMonth] = useState<string>(getPreviousMonth())
   const [monthStatus, setMonthStatus] = useState<MonthStatus | null>(null)
   const [signatureHistory, setSignatureHistory] = useState<any[]>([])
   const [message, setMessage] = useState("")
