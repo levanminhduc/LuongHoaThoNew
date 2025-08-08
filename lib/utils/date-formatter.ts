@@ -97,9 +97,9 @@ export function formatSignatureTime(dateString: string): string {
     // Không cần timezone conversion, chỉ format string
     const date = new Date(dateString)
 
-    // Force Vietnam timezone display để đảm bảo consistency
+    // HIỂN THỊ THEO GIỜ VIỆT NAM NHƯ DB ĐÃ LƯU: KHÔNG ÉP TIMEZONE TRÁNH DOUBLE CONVERSION
     return date.toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",  // Force Vietnam timezone
+      // Không set timeZone ở đây vì DB đã lưu Vietnam time (UTC+7)
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

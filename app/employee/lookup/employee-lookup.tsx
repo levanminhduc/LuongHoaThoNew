@@ -431,7 +431,9 @@ export function EmployeeLookup() {
                         </p>
                         {result.signed_at && (
                           <p className="text-sm text-green-600">
-                            Thời gian: {result.signed_at_display || formatSignatureTime(result.signed_at)}
+                            Thời gian: {result.signed_at_display}
+                            {/* Fallback tạm thời tắt để tránh double conversion: */}
+                            {/* {result.signed_at_display || formatSignatureTime(result.signed_at)} */}
                           </p>
                         )}
                       </div>
@@ -480,7 +482,7 @@ export function EmployeeLookup() {
             <div className="text-sm text-gray-500">
               <p>Nguồn dữ liệu: {result.source_file}</p>
               <p className="mt-1">
-                <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham khảo. Vui lòng liên hệ phòng nhân sự nếu
+                <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham khảo. Vui lòng liên hệ phòng Kế Toán Lương nếu
                 có thắc mắc.
               </p>
             </div>

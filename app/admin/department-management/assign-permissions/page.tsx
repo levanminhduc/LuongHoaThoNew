@@ -332,17 +332,22 @@ function AssignPermissionsContent() {
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn nhân viên..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-w-[90vw] sm:max-w-md">
                       {employees.map((employee) => (
                         <SelectItem key={employee.employee_id} value={employee.employee_id}>
-                          <div className="flex items-center gap-2">
-                            <span>{employee.full_name}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {employee.chuc_vu}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              ({employee.employee_id})
-                            </span>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-medium truncate">{employee.full_name}</span>
+                              <Badge variant="outline" className="text-xs shrink-0">
+                                {employee.chuc_vu}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground sm:ml-auto">
+                              <span className="shrink-0">({employee.employee_id})</span>
+                              <span className="text-blue-600 truncate">
+                                {employee.department}
+                              </span>
+                            </div>
                           </div>
                         </SelectItem>
                       ))}
