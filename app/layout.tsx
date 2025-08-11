@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import "./globals.css"
+import TickerGate from "@/components/TickerGate"
+import { ENABLE_TICKER } from "@/lib/features"
 
 export const metadata: Metadata = {
   title: "Tra Cứu Lương Hoà Thọ Điện Bàn",
@@ -35,7 +37,14 @@ export default function RootLayout({
         }
       `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        {ENABLE_TICKER ? (
+          <header className="sticky top-0 z-50">
+            <TickerGate />
+          </header>
+        ) : null}
+        {children}
+      </body>
     </html>
   )
 }
