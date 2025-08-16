@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { verifyAuditLogsAccess } from "@/lib/auth-middleware"
 import { auditService } from "@/lib/audit-service"
 
+export const runtime = "nodejs" // ép route này chạy Node.js thay vì Edge
+
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const admin = verifyAuditLogsAccess(request)
