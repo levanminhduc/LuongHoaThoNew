@@ -1,50 +1,25 @@
-import { createServerClient } from "@supabase/ssr"
+// middleware.ts
 import { NextResponse, type NextRequest } from "next/server"
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+// Middleware chạy trước tất cả request
+export function middleware(request: NextRequest) {
+  // Supabase tự động lưu token trong cookie khi login
+  // Cookie mặc định: sb-access-token và sb-refresh-token
+  const accessToken = request.cookies.get("sb-access-token")?.value
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
-        },
-      },
-    },
-  )
+  // Nếu không có token => chặn và redirect về trang login
+  if (!accessToken) {
+    return NextResponse.redirect(new URL("/login", request.url))
+  }
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // Nếu có token => cho phép request đi tiếp
+  return NextResponse.next()
+}
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-  // creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
-
-  return supabaseResponse
+// Cấu hình matcher để middleware chỉ áp dụng cho các route cần bảo vệ
+export const config = {
+  matcher: [
+    "/admin/:path*",    // bảo vệ toàn bộ route trong /admin
+    "/api/admin/:path*" // bảo vệ luôn API admin
+  ],
 }
