@@ -1,64 +1,165 @@
-// API endpoint for getting employees by role (managers and supervisors)
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
-import { verifyToken } from "@/lib/auth-middleware"
+import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware"
+import { auditService } from "@/lib/audit-service"
+import bcrypt from "bcryptjs"
 
-// GET employees by role (for permission assignment)
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const auth = verifyToken(request)
-    if (!auth || !auth.isRole('admin')) {
-      return NextResponse.json({ error: "Chỉ admin mới có quyền truy cập" }, { status: 403 })
+    const admin = verifyEmployeeManagementAccess(request)
+    if (!admin) {
+      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
-    const supabase = createServiceClient()
     const { searchParams } = new URL(request.url)
-    const roles = searchParams.get("roles") // e.g., "giam_doc,ke_toan,nguoi_lap_bieu,truong_phong,to_truong"
-    const includeInactive = searchParams.get("include_inactive") === "true"
+    const search = searchParams.get("search") || ""
+    const department = searchParams.get("department") || ""
+    const role = searchParams.get("role") || ""
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "20")
+    const offset = (page - 1) * limit
+
+    const supabase = createServiceClient()
 
     let query = supabase
       .from("employees")
-      .select("employee_id, full_name, department, chuc_vu, is_active")
-      .order("chuc_vu", { ascending: false }) // giam_doc, ke_toan, nguoi_lap_bieu, truong_phong first
-      .order("full_name")
+      .select("employee_id, full_name, department, chuc_vu, phone_number, is_active, created_at, updated_at", { count: "exact" })
 
-    // Filter by roles if specified
-    if (roles) {
-      const roleArray = roles.split(',').map(r => r.trim())
-      query = query.in("chuc_vu", roleArray)
-    } else {
-      // Default: only managers and supervisors
-      query = query.in("chuc_vu", ["truong_phong", "to_truong"])
+    if (search) {
+      query = query.or(`employee_id.ilike.%${search}%,full_name.ilike.%${search}%,phone_number.ilike.%${search}%`)
     }
 
-    // Filter by active status
-    if (!includeInactive) {
-      query = query.eq("is_active", true)
+    if (department) {
+      query = query.eq("department", department)
     }
 
-    const { data: employees, error } = await query
+    if (role) {
+      query = query.eq("chuc_vu", role)
+    }
+
+    const { data: employees, error, count } = await query
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1)
 
     if (error) {
       console.error("Error fetching employees:", error)
-      return NextResponse.json({ error: "Lỗi truy vấn dữ liệu nhân viên" }, { status: 500 })
+      return NextResponse.json({ error: "Lỗi khi lấy danh sách nhân viên" }, { status: 500 })
     }
 
-    // Group employees by role for easier frontend handling
-    const groupedEmployees = {
-      truong_phong: employees?.filter(e => e.chuc_vu === 'truong_phong') || [],
-      to_truong: employees?.filter(e => e.chuc_vu === 'to_truong') || [],
-      all: employees || []
+    const { data: departments } = await supabase
+      .from("employees")
+      .select("department")
+      .not("department", "is", null)
+      .not("department", "eq", "")
+
+    const uniqueDepartments = [...new Set(departments?.map(d => d.department) || [])]
+
+    return NextResponse.json({
+      employees: employees || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      },
+      departments: uniqueDepartments
+    })
+
+  } catch (error) {
+    console.error("Employee GET error:", error)
+    return NextResponse.json({ error: "Lỗi server" }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const admin = verifyEmployeeManagementAccess(request)
+    if (!admin) {
+      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { employee_id, full_name, cccd, chuc_vu, department, phone_number, is_active = true } = body
+
+    if (!employee_id || !full_name || !cccd || !chuc_vu) {
+      return NextResponse.json({ error: "Thiếu thông tin bắt buộc" }, { status: 400 })
+    }
+
+    const validRoles = ["admin", "giam_doc", "ke_toan", "nguoi_lap_bieu", "truong_phong", "to_truong", "nhan_vien", "van_phong"]
+    if (!validRoles.includes(chuc_vu)) {
+      return NextResponse.json({ error: "Chức vụ không hợp lệ" }, { status: 400 })
+    }
+
+    const supabase = createServiceClient()
+
+    const { data: existing } = await supabase
+      .from("employees")
+      .select("employee_id")
+      .eq("employee_id", employee_id)
+      .single()
+
+    if (existing) {
+      return NextResponse.json({ error: "Mã nhân viên đã tồn tại" }, { status: 409 })
+    }
+
+    const cccd_hash = await bcrypt.hash(cccd, 10)
+
+    const { data: newEmployee, error } = await supabase
+      .from("employees")
+      .insert({
+        employee_id,
+        full_name,
+        cccd_hash,
+        chuc_vu,
+        department: department || null,
+        phone_number: phone_number || null,
+        is_active
+      })
+      .select("employee_id, full_name, department, chuc_vu, phone_number, is_active, created_at, updated_at")
+      .single()
+
+    if (error) {
+      console.error("Error creating employee:", error)
+
+      // Log failed employee creation
+      try {
+        await auditService.logFailedOperation(
+          admin.employee_id,
+          admin.full_name || admin.employee_id,
+          employee_id,
+          'CREATE',
+          error.message
+        )
+      } catch (auditError) {
+        console.error("Audit logging failed:", auditError)
+      }
+
+      return NextResponse.json({ error: "Lỗi khi tạo nhân viên" }, { status: 500 })
+    }
+
+    // Log successful employee creation
+    try {
+      await auditService.logEmployeeChange({
+        adminUserId: admin.employee_id,
+        adminUserName: admin.full_name || admin.employee_id,
+        employeeId: newEmployee.employee_id,
+        employeeName: newEmployee.full_name,
+        actionType: 'CREATE',
+        changeReason: 'New employee created via admin panel'
+      })
+    } catch (auditError) {
+      console.error("Audit logging failed:", auditError)
+      // Don't fail the main operation if audit logging fails
     }
 
     return NextResponse.json({
       success: true,
-      employees: groupedEmployees,
-      total: employees?.length || 0
+      employee: newEmployee,
+      message: "Tạo nhân viên thành công"
     })
 
   } catch (error) {
-    console.error("Get employees error:", error)
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 })
+    console.error("Employee POST error:", error)
+    return NextResponse.json({ error: "Lỗi server" }, { status: 500 })
   }
 }

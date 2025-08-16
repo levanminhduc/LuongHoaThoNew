@@ -1,5 +1,5 @@
 ---
-type: "agent_requested"
+type: "manual"
 description: "Example description"
 ---
 # ⚡ **QUICK REFERENCE GUIDE - AUGMENT CODE AI ASSISTANT**

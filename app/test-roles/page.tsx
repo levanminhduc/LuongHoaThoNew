@@ -7,16 +7,7 @@ import { User, Shield, Building2, Users, Crown, Calculator, FileText } from "luc
 
 export default function TestRolesPage() {
   const testAccounts = [
-    {
-      username: "admin",
-      password: "admin123",
-      role: "Admin",
-      description: "Toàn quyền quản lý hệ thống",
-      dashboard: "/admin/dashboard",
-      color: "bg-red-500",
-      icon: Shield,
-      permissions: ["Tất cả departments", "CRUD operations", "User management", "System config"]
-    },
+    // Admin account removed for security reasons
     {
       username: "TP001",
       password: "truongphong123",

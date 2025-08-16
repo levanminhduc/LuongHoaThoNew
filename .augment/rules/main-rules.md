@@ -1,7 +1,7 @@
 ---
-type: "always_apply"
+type: "agent_requested"
+description: "Example description"
 ---
-
 # 🎯 **BỘ QUY TẮC CHUYÊN BIỆT CHO AUGMENT CODE AI ASSISTANT**
 
 ## 📋 **EXECUTIVE SUMMARY**

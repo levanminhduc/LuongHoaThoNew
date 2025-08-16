@@ -1,24 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
-import jwt from "jsonwebtoken"
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
-
-// Verify admin token
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization")
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any
-    return decoded.role === "admin" ? decoded : null
-  } catch {
-    return null
-  }
-}
+import { verifyAdminToken } from "@/lib/auth-middleware"
 
 export async function GET(request: NextRequest) {
   try {

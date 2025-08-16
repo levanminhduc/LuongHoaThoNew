@@ -303,10 +303,14 @@ export function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="employee-import" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="employee-import" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Import Nhân Viên
+            </TabsTrigger>
+            <TabsTrigger value="employee-management" className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              Quản Lý NV
             </TabsTrigger>
             <TabsTrigger value="data-overview" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
@@ -323,6 +327,32 @@ export function AdminDashboard() {
           {/* Employee Import Tab */}
           <TabsContent value="employee-import" className="space-y-6">
             <EmployeeImportSection />
+          </TabsContent>
+
+          {/* Employee Management Tab */}
+          <TabsContent value="employee-management" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5" />
+                  Quản Lý Thông Tin Nhân Viên
+                </CardTitle>
+                <CardDescription>
+                  Quản lý thông tin chi tiết của tất cả nhân viên trong hệ thống
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => router.push('/admin/employee-management')}
+                    className="flex items-center gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Mở Trang Quản Lý Nhân Viên
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Data Overview Tab */}

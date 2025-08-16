@@ -1,5 +1,5 @@
 ---
-type: "agent_requested"
+type: "manual"
 description: "Example description"
 ---
 # 🔍 **RULE SET 2: HIỂU CODEBASE CHI TIẾT VÀ TOÀN DIỆN**

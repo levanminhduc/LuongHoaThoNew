@@ -64,6 +64,9 @@ export function AdminLoginForm() {
           case 'nhan_vien':
             router.push("/employee/dashboard")
             break
+          case 'van_phong':
+            router.push("/admin/employee-management")
+            break
           default:
             router.push("/admin/dashboard") // Fallback to admin dashboard
         }

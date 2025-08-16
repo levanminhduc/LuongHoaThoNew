@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
-// Verify admin token
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization")
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -22,7 +21,6 @@ function verifyAdminToken(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
     const admin = verifyAdminToken(request)
     if (!admin) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })

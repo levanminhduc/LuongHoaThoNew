@@ -1,5 +1,5 @@
 ---
-type: "agent_requested"
+type: "manual"
 description: "Example description"
 ---
 # 🛡️ **RULE SET 3: BẢO VỆ CÁC FILE CẤU HÌNH QUAN TRỌNG**
