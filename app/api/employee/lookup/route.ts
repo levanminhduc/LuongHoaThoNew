@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Bước 1: Tìm nhân viên và verify CCCD
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select("employee_id, full_name, cccd_hash, department, chuc_vu")
+      .select("*") // Select all to avoid column not found error
       .eq("employee_id", employee_id.trim())
       .single()
 
@@ -27,11 +27,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Bước 2: Verify CCCD với hash
-    const isValidCCCD = await bcrypt.compare(cccd.trim(), employee.cccd_hash)
-    if (!isValidCCCD) {
+    // Bước 2: Verify password (use password_hash if exists, fallback to cccd_hash)
+    // This allows gradual migration: users with password_hash use their custom password,
+    // users without password_hash still use CCCD
+    const hashToVerify = employee.password_hash || employee.cccd_hash
+    const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify)
+    
+    if (!isValidPassword) {
       return NextResponse.json(
-        { error: "Số CCCD không đúng" },
+        { error: "Mật khẩu không đúng" },
         { status: 401 },
       )
     }
@@ -66,6 +70,9 @@ export async function POST(request: NextRequest) {
       deductions: (payroll.bhxh_bhtn_bhyt_total || 0) + (payroll.thue_tncn || 0),
       net_salary: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
       source_file: payroll.source_file || "Unknown",
+      
+      // Password change status (safe check for new columns)
+      must_change_password: employee.must_change_password ?? (employee.password_changed_at ? false : true),
 
       // Hệ số và thông số cơ bản
       he_so_lam_viec: payroll.he_so_lam_viec || 0,

@@ -16,10 +16,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient()
 
-    // Bước 1: Verify nhân viên và CCCD
+    // Bước 1: Verify nhân viên và password
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select("employee_id, full_name, cccd_hash")
+      .select("employee_id, full_name, cccd_hash, password_hash")
       .eq("employee_id", employee_id.trim())
       .single()
 
@@ -30,11 +30,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Bước 2: Verify CCCD
-    const isValidCCCD = await bcrypt.compare(cccd.trim(), employee.cccd_hash)
-    if (!isValidCCCD) {
+    // Bước 2: Verify password (use password_hash if exists, fallback to cccd_hash)
+    const hashToVerify = employee.password_hash || employee.cccd_hash
+    const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify)
+    if (!isValidPassword) {
+      // Custom error message based on whether user has changed password
+      const errorMsg = employee.password_hash 
+        ? "Mật khẩu không đúng" 
+        : "Số CCCD không đúng"
       return NextResponse.json(
-        { error: "Số CCCD không đúng" },
+        { error: errorMsg },
         { status: 401 }
       )
     }

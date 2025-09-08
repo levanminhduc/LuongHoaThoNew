@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, PenTool, CheckCircle, Clock, Timer, FileText } from "lucide-react"
+import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, PenTool, CheckCircle, Clock, Timer, FileText, Lock, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { PayrollDetailModal } from "./payroll-detail-modal"
+import { ResetPasswordModal } from "./reset-password-modal"
 import { formatSalaryMonth, formatSignatureTime, formatCurrency, formatNumber } from "@/lib/utils/date-formatter"
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 
@@ -99,6 +100,16 @@ export function EmployeeLookup() {
   const [signingLoading, setSigningLoading] = useState(false)
   const [signSuccess, setSignSuccess] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [mustChangePassword, setMustChangePassword] = useState(false)
+  
+  // State mới cho label động
+  const [authFieldConfig, setAuthFieldConfig] = useState({
+    label: "Số CCCD",
+    placeholder: "Nhập số CCCD",
+    type: "text" as "text" | "password"
+  })
+  const [checkingStatus, setCheckingStatus] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,6 +133,11 @@ export function EmployeeLookup() {
 
       if (response.ok) {
         setResult(data.payroll)
+        // Don't force password change - let users decide
+        // if (data.payroll.must_change_password) {
+        //   setMustChangePassword(true)
+        //   setShowPasswordModal(true)
+        // }
       } else {
         setError(data.error || "Không tìm thấy thông tin lương")
       }
@@ -176,7 +192,7 @@ export function EmployeeLookup() {
         if (data.error && data.error.includes("đã ký nhận lương")) {
           setError("Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.")
         } else if (data.error && data.error.includes("CCCD không đúng")) {
-          setError("Số CCCD không đúng. Vui lòng kiểm tra lại số CCCD.")
+          setError(`${authFieldConfig.label} không đúng. Vui lòng kiểm tra lại ${authFieldConfig.label.toLowerCase()}.`)
         } else if (data.error && data.error.includes("không tìm thấy nhân viên")) {
           setError("Không tìm thấy nhân viên với mã nhân viên đã nhập.")
         } else {
@@ -190,6 +206,54 @@ export function EmployeeLookup() {
       setSigningLoading(false)
     }
   }
+
+  // Kiểm tra trạng thái mật khẩu khi người dùng nhập mã nhân viên
+  useEffect(() => {
+    const checkPasswordStatus = async () => {
+      // Chỉ kiểm tra khi mã nhân viên đủ dài (ít nhất 5 ký tự)
+      if (employeeId.trim().length < 5) {
+        // Reset về mặc định khi mã nhân viên không hợp lệ
+        setAuthFieldConfig({
+          label: "Số CCCD",
+          placeholder: "Nhập số CCCD",
+          type: "text"
+        })
+        return
+      }
+
+      setCheckingStatus(true)
+      try {
+        const response = await fetch("/api/employee/check-password-status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            employee_id: employeeId.trim(),
+          }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.authField) {
+          setAuthFieldConfig(data.authField)
+          // Clear CCCD field khi chuyển giữa các trạng thái khác nhau
+          if ((data.authField.label === "Mật khẩu" && authFieldConfig.label === "Số CCCD") ||
+              (data.authField.label === "Số CCCD" && authFieldConfig.label === "Mật khẩu")) {
+            setCccd("")
+          }
+        }
+      } catch (error) {
+        console.error("Error checking password status:", error)
+      } finally {
+        setCheckingStatus(false)
+      }
+    }
+
+    // Debounce để tránh gọi API quá nhiều
+    const timeoutId = setTimeout(checkPasswordStatus, 500)
+    return () => clearTimeout(timeoutId)
+  }, [employeeId, authFieldConfig.label])
 
   // Using utility functions from date-formatter
 
@@ -227,14 +291,19 @@ export function EmployeeLookup() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cccd">Số CCCD</Label>
+                <Label htmlFor="cccd">
+                  {authFieldConfig.label}
+                  {checkingStatus && (
+                    <Loader2 className="inline-block ml-2 h-3 w-3 animate-spin" />
+                  )}
+                </Label>
                 <div className="relative">
                   <Input
                     id="cccd"
-                    type={showCccd ? "text" : "password"}
+                    type={showCccd ? "text" : authFieldConfig.type}
                     value={cccd}
                     onChange={(e) => setCccd(e.target.value)}
-                    placeholder="Nhập số CCCD"
+                    placeholder={authFieldConfig.placeholder}
                     className="pr-10"
                     required
                   />
@@ -242,7 +311,7 @@ export function EmployeeLookup() {
                     type="button"
                     onClick={() => setShowCccd(!showCccd)}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-                    aria-label={showCccd ? "Ẩn số CCCD" : "Hiển thị số CCCD"}
+                    aria-label={showCccd ? `Ẩn ${authFieldConfig.label}` : `Hiển thị ${authFieldConfig.label}`}
                   >
                     {showCccd ? (
                       <EyeOff className="w-4 h-4" />
@@ -251,6 +320,11 @@ export function EmployeeLookup() {
                     )}
                   </button>
                 </div>
+                {authFieldConfig.label === "Mật khẩu" && (
+                  <p className="text-xs text-gray-500">
+                    Sử dụng mật khẩu bạn đã đổi thay cho số CCCD
+                  </p>
+                )}
               </div>
             </div>
 
@@ -326,22 +400,36 @@ export function EmployeeLookup() {
 
             <Separator />
 
+            {/* Password Security Reminder - Not forced */}
+            {/* Removed forced password change warning - users can change voluntarily */}
+
             {/* Salary Details */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <DollarSign className="w-5 h-5" />
                   Chi Tiết Lương
                 </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowDetailModal(true)}
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
-                >
-                  <FileText className="w-4 h-4" />
-                  Xem Chi Tiết Đầy Đủ
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-flow-col sm:auto-cols-max gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPasswordModal(true)}
+                    className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300"
+                  >
+                    <Lock className="w-4 h-4 flex-shrink-0" />
+                    <span>Đổi Mật Khẩu</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDetailModal(true)}
+                    className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+                  >
+                    <FileText className="w-4 h-4 flex-shrink-0" />
+                    <span>Xem Chi Tiết Đầy Đủ</span>
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
@@ -496,6 +584,21 @@ export function EmployeeLookup() {
           isOpen={showDetailModal}
           onClose={() => setShowDetailModal(false)}
           payrollData={result}
+        />
+      )}
+
+      {/* Reset Password Modal - Using CCCD */}
+      {employeeId && (
+        <ResetPasswordModal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          employeeId={employeeId}
+          onPasswordReset={() => {
+            setMustChangePassword(false)
+            // Clear any errors
+            setError("")
+            // Note: User will need to login with new password
+          }}
         />
       )}
     </div>
