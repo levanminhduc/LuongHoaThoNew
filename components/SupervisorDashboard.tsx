@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
 import { Users, DollarSign, FileCheck, LogOut, Eye, TrendingUp, Calendar, Download, Loader2 } from "lucide-react"
 import { getPreviousMonth } from "@/utils/dateUtils"
+import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal"
+import { transformPayrollRecordToResult, type PayrollResult } from "@/lib/utils/payroll-transformer"
 
 interface User {
   employee_id: string
@@ -22,14 +24,71 @@ interface PayrollRecord {
   id: number
   employee_id: string
   salary_month: string
-  tien_luong_thuc_nhan_cuoi_ky: number
-  tien_khen_thuong_chuyen_can?: number
+
+  // Hệ số và thông số cơ bản
   he_so_lam_viec?: number
+  he_so_phu_cap_ket_qua?: number
+  he_so_luong_co_ban?: number
+  luong_toi_thieu_cty?: number
+
+  // Thời gian làm việc
   ngay_cong_trong_gio?: number
+  gio_cong_tang_ca?: number
+  gio_an_ca?: number
+  tong_gio_lam_viec?: number
+  tong_he_so_quy_doi?: number
+  ngay_cong_chu_nhat?: number
+
+  // Lương sản phẩm và đơn giá
+  tong_luong_san_pham_cong_doan?: number
+  don_gia_tien_luong_tren_gio?: number
+  tien_luong_san_pham_trong_gio?: number
+  tien_luong_tang_ca?: number
+  tien_luong_30p_an_ca?: number
+  tien_khen_thuong_chuyen_can?: number
+  luong_hoc_viec_pc_luong?: number
+  tong_cong_tien_luong_san_pham?: number
+  ho_tro_thoi_tiet_nong?: number
+  bo_sung_luong?: number
+  tien_tang_ca_vuot?: number
+  tien_luong_chu_nhat?: number
+
+  // Bảo hiểm và phúc lợi
+  bhxh_21_5_percent?: number
+  pc_cdcs_pccc_atvsv?: number
+  luong_phu_nu_hanh_kinh?: number
+  tien_con_bu_thai_7_thang?: number
+  ho_tro_gui_con_nha_tre?: number
+
+  // Phép và lễ
+  ngay_cong_phep_le?: number
+  tien_phep_le?: number
+
+  // Tổng lương và phụ cấp khác
+  tong_cong_tien_luong?: number
+  tien_boc_vac?: number
+  ho_tro_xang_xe?: number
+
+  // Thuế và khấu trừ
+  thue_tncn_nam_2024?: number
+  tam_ung?: number
+  thue_tncn?: number
+  bhxh_bhtn_bhyt_total?: number
+  truy_thu_the_bhyt?: number
+
+  // Lương thực nhận
+  tien_luong_thuc_nhan_cuoi_ky: number
+
+  // Thông tin ký nhận
   is_signed: boolean
   signed_at: string | null
+  signed_by_name?: string
+
+  // Employee relationship
   employees: {
+    employee_id?: string
     full_name: string
+    department?: string
     chuc_vu: string
   }
 }
@@ -55,6 +114,8 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
   const [loading, setLoading] = useState(true)
   const [monthlyTrend, setMonthlyTrend] = useState<any[]>([])
   const [exportingExcel, setExportingExcel] = useState(false)
+  const [showPayrollModal, setShowPayrollModal] = useState(false)
+  const [selectedPayrollData, setSelectedPayrollData] = useState<PayrollResult | null>(null)
 
   useEffect(() => {
     loadDepartmentData()
@@ -144,8 +205,14 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
   }
 
   const handleViewEmployee = (employeeId: string) => {
-    // Navigate to employee detail view
-    window.open(`/supervisor/employee/${employeeId}`, '_blank')
+    // Find the payroll record for this employee
+    const payrollRecord = payrollData.find(p => p.employee_id === employeeId)
+    if (payrollRecord) {
+      // Transform to PayrollResult format and open modal
+      const payrollResult = transformPayrollRecordToResult(payrollRecord)
+      setSelectedPayrollData(payrollResult)
+      setShowPayrollModal(true)
+    }
   }
 
   const handleExportExcel = async (exportType: 'employees' | 'overview' | 'trends' = 'employees') => {
@@ -692,6 +759,18 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Payroll Detail Modal */}
+      {selectedPayrollData && (
+        <PayrollDetailModal
+          isOpen={showPayrollModal}
+          onClose={() => {
+            setShowPayrollModal(false)
+            setSelectedPayrollData(null)
+          }}
+          payrollData={selectedPayrollData}
+        />
+      )}
     </div>
   )
 }

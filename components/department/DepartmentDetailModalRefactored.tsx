@@ -283,7 +283,7 @@ export default function DepartmentDetailModalRefactored({
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Building2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-              <span className="truncate text-sm sm:text-base">Chi Tiết Department - {departmentName}</span>
+              <span className="truncate text-sm sm:text-base">Chi Tiết Bộ Phận - {departmentName}</span>
             </div>
             <div className="flex items-center gap-2 self-end sm:self-center">
               <Button

@@ -50,6 +50,8 @@ interface PayrollResult {
   tien_luong_san_pham_trong_gio?: number
   tien_luong_tang_ca?: number
   tien_luong_30p_an_ca?: number
+  tien_tang_ca_vuot?: number
+  tien_luong_chu_nhat?: number
   
   // Thưởng và phụ cấp
   tien_khen_thuong_chuyen_can?: number
@@ -193,6 +195,8 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
                 <DetailRow label="Tiền Lương Sản Phẩm Trong Giờ" value={payrollData.tien_luong_san_pham_trong_gio} isCurrency />
                 <DetailRow label="Tiền Lương Tăng Ca" value={payrollData.tien_luong_tang_ca} isCurrency />
                 <DetailRow label="Tiền Lương 30p Ăn Ca" value={payrollData.tien_luong_30p_an_ca} isCurrency />
+                <DetailRow label="Tiền Tăng Ca Vượt" value={payrollData.tien_tang_ca_vuot} isCurrency />
+                <DetailRow label="Tiền Chủ Nhật" value={payrollData.tien_luong_chu_nhat} isCurrency />
               </CardContent>
             </Card>
 

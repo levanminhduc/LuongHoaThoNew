@@ -38,10 +38,10 @@ export default function ExportTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Download className="w-4 h-4 sm:w-5 sm:h-5" />
-            Xuất Dữ Liệu Department
+            Xuất Dữ Liệu Bộ Phận
           </CardTitle>
           <CardDescription className="text-sm">
-            Xuất dữ liệu chi tiết của department {departmentName} tháng {month}
+            Xuất dữ liệu chi tiết của bộ phận {departmentName} tháng {month}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -109,7 +109,7 @@ export default function ExportTab({
         <CardHeader>
           <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
           <CardDescription className="text-sm">
-            Các thao tác nhanh cho department này
+            Các thao tác nhanh cho bộ phận này
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

@@ -289,7 +289,7 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                 Dashboard Trưởng Phòng
               </h1>
               <p className="text-xs sm:text-sm text-gray-600 truncate">
-                Xin chào, {user.username} | Quản lý {user.allowed_departments?.length || 0} departments
+                Xin chào, {user.username} | Bạn đang Quản lý {user.allowed_departments?.length || 0} Bộ Phận
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
@@ -387,7 +387,7 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
               <span className="sm:hidden">Tổng Quan</span>
             </TabsTrigger>
             <TabsTrigger value="departments" className="text-xs sm:text-sm px-2 py-2">
-              <span className="hidden sm:inline">Chi Tiết Departments</span>
+              <span className="hidden sm:inline">Chi Tiết Các Bộ Phận</span>
               <span className="sm:hidden">Departments</span>
             </TabsTrigger>
             <TabsTrigger value="payroll" className="text-xs sm:text-sm px-2 py-2">
@@ -434,8 +434,8 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Phân Bố Lương Theo Department</CardTitle>
-                  <CardDescription className="text-sm">Tỷ lệ tổng lương theo từng department</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Phân Bố Lương Theo Bộ Phận</CardTitle>
+                  <CardDescription className="text-sm">Tỷ lệ tổng lương theo từng Bộ Phận</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
@@ -551,7 +551,7 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                     <SelectValue placeholder="Chọn department" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tất cả departments</SelectItem>
+                    <SelectItem value="all">Tất cả Bộ Phận</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.name} value={dept.name}>
                         {dept.name}

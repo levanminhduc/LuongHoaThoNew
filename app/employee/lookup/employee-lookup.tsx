@@ -49,6 +49,8 @@ interface PayrollResult {
   tien_luong_san_pham_trong_gio?: number
   tien_luong_tang_ca?: number
   tien_luong_30p_an_ca?: number
+  tien_tang_ca_vuot?: number
+  tien_luong_chu_nhat?: number
 
   // Thưởng và phụ cấp
   tien_khen_thuong_chuyen_can?: number
@@ -483,6 +485,24 @@ export function EmployeeLookup() {
                     <div className="text-center">
                       <p className="text-sm font-medium text-emerald-600">Lương Thực Nhận Cuối Kỳ</p>
                       <p className="text-lg md:text-2xl font-bold text-emerald-700">{formatCurrency(result.tien_luong_thuc_nhan_cuoi_ky || 0)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-cyan-50 border-cyan-200">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-cyan-600">Tiền Tăng Ca Vượt</p>
+                      <p className="text-lg md:text-2xl font-bold text-cyan-700">{formatCurrency(result.tien_tang_ca_vuot || 0)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-amber-50 border-amber-200">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-amber-600">Tiền Chủ Nhật</p>
+                      <p className="text-lg md:text-2xl font-bold text-amber-700">{formatCurrency(result.tien_luong_chu_nhat || 0)}</p>
                     </div>
                   </CardContent>
                 </Card>

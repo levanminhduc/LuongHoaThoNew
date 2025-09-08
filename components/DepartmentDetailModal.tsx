@@ -318,7 +318,7 @@ export default function DepartmentDetailModal({
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Building2 className="w-5 h-5" />
-              <span className="truncate">Chi Tiết Department - {departmentName}</span>
+              <span className="truncate">Chi Tiết Bộ Phận - {departmentName}</span>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
@@ -723,10 +723,10 @@ export default function DepartmentDetailModal({
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Download className="w-4 h-4" />
-                          Xuất Dữ Liệu Department
+                          Xuất Dữ Liệu Bộ Phận
                         </CardTitle>
                         <CardDescription>
-                          Xuất dữ liệu chi tiết của department {departmentName} tháng {month}
+                          Xuất dữ liệu chi tiết của bộ phận {departmentName} tháng {month}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -768,7 +768,7 @@ export default function DepartmentDetailModal({
                       <CardHeader>
                         <CardTitle>Quick Actions</CardTitle>
                         <CardDescription>
-                          Các thao tác nhanh cho department này
+                          Các thao tác nhanh cho bộ phận này
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
