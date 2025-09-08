@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // Bước 1: Verify nhân viên và password
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select("employee_id, full_name, cccd_hash, password_hash")
+      .select("employee_id, full_name, cccd_hash, password_hash, last_password_change_at")
       .eq("employee_id", employee_id.trim())
       .single()
 
@@ -30,13 +30,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Bước 2: Verify password (use password_hash if exists, fallback to cccd_hash)
-    const hashToVerify = employee.password_hash || employee.cccd_hash
+    // Bước 2: Verify password based on last_password_change_at
+    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
+    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
+    const hasChangedPassword = employee.last_password_change_at !== null
+    const hashToVerify = hasChangedPassword ? employee.password_hash : employee.cccd_hash
     const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify)
     if (!isValidPassword) {
       // Custom error message based on whether user has changed password
-      const errorMsg = employee.password_hash 
-        ? "Mật khẩu không đúng" 
+      const errorMsg = hasChangedPassword
+        ? "Mật khẩu không đúng"
         : "Số CCCD không đúng"
       return NextResponse.json(
         { error: errorMsg },

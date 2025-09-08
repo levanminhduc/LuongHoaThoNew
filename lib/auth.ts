@@ -141,7 +141,7 @@ export async function authenticateUser(username: string, password: string): Prom
     // PRIORITY 3: Check employee login from database
     const { data: employee, error } = await supabase
       .from("employees")
-      .select("employee_id, full_name, department, chuc_vu, cccd_hash, password_hash")
+      .select("employee_id, full_name, department, chuc_vu, cccd_hash, password_hash, last_password_change_at")
       .eq("employee_id", username)
       .eq("is_active", true)
       .single()
@@ -153,8 +153,11 @@ export async function authenticateUser(username: string, password: string): Prom
       }
     }
 
-    // Verify password (use password_hash if exists, fallback to cccd_hash)
-    const hashToVerify = employee.password_hash || employee.cccd_hash
+    // Verify password based on last_password_change_at
+    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
+    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
+    const hasChangedPassword = employee.last_password_change_at !== null
+    const hashToVerify = hasChangedPassword ? employee.password_hash : employee.cccd_hash
     const isPasswordValid = await bcrypt.compare(password, hashToVerify)
 
     if (!isPasswordValid) {

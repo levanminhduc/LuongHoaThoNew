@@ -152,9 +152,11 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Step 2: Verify current password
-    // Check password_hash first (if user already changed password), then fallback to cccd_hash
-    const passwordToCheck = employee.password_hash || employee.cccd_hash
+    // Step 2: Verify current password based on last_password_change_at
+    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
+    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
+    const hasChangedPassword = employee.last_password_change_at !== null
+    const passwordToCheck = hasChangedPassword ? employee.password_hash : employee.cccd_hash
     const isValidPassword = await bcrypt.compare(current_password.trim(), passwordToCheck)
     
     if (!isValidPassword) {
