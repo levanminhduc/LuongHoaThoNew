@@ -82,7 +82,7 @@ export function AuditTrail({ payrollId }: AuditTrailProps) {
       "tien_luong_tang_ca": "Tiền Lương Tăng Ca",
       "tien_luong_30p_an_ca": "Tiền Lương 30p Ăn Ca",
       "tien_tang_ca_vuot": "Tiền Tăng Ca Vượt",
-      "tien_luong_chu_nhat": "Tiền Lương Chủ Nhật",
+      "luong_cnkcp_vuot": "Lương CNKCP Vượt",
       
       // Khen thưởng và phụ cấp
       "tien_khen_thuong_chuyen_can": "Tiền Khen Thưởng Chuyên Cần",
@@ -128,7 +128,7 @@ export function AuditTrail({ payrollId }: AuditTrailProps) {
     const currencyFields = [
       "luong_toi_thieu_cty", "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio",
       "tien_luong_san_pham_trong_gio", "tien_luong_tang_ca", "tien_luong_30p_an_ca",
-      "tien_tang_ca_vuot", "tien_luong_chu_nhat", "tien_khen_thuong_chuyen_can",
+      "tien_tang_ca_vuot", "luong_cnkcp_vuot", "tien_khen_thuong_chuyen_can",
       "luong_hoc_viec_pc_luong", "tong_cong_tien_luong_san_pham", "ho_tro_thoi_tiet_nong",
       "bo_sung_luong", "bhxh_21_5_percent", "pc_cdcs_pccc_atvsv", "luong_phu_nu_hanh_kinh",
       "tien_con_bu_thai_7_thang", "ho_tro_gui_con_nha_tre", "tien_phep_le",

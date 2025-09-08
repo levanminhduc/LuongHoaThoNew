@@ -58,6 +58,7 @@ interface PayrollResult {
   tong_cong_tien_luong_san_pham?: number
   ho_tro_thoi_tiet_nong?: number
   bo_sung_luong?: number
+  luong_cnkcp_vuot?: number
 
   // Bảo hiểm và phúc lợi
   bhxh_21_5_percent?: number
@@ -501,8 +502,8 @@ export function EmployeeLookup() {
                 <Card className="bg-amber-50 border-amber-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-amber-600">Tiền Chủ Nhật</p>
-                      <p className="text-lg md:text-2xl font-bold text-amber-700">{formatCurrency(result.tien_luong_chu_nhat || 0)}</p>
+                      <p className="text-sm font-medium text-amber-600">Lương CNKCP Vượt</p>
+                      <p className="text-lg md:text-2xl font-bold text-amber-700">{formatCurrency(result.luong_cnkcp_vuot || 0)}</p>
                     </div>
                   </CardContent>
                 </Card>

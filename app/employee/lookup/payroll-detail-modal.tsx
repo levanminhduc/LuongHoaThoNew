@@ -59,6 +59,7 @@ interface PayrollResult {
   tong_cong_tien_luong_san_pham?: number
   ho_tro_thoi_tiet_nong?: number
   bo_sung_luong?: number
+  luong_cnkcp_vuot?: number
   
   // Bảo hiểm và phúc lợi
   bhxh_21_5_percent?: number
@@ -196,7 +197,7 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
                 <DetailRow label="Tiền Lương Tăng Ca" value={payrollData.tien_luong_tang_ca} isCurrency />
                 <DetailRow label="Tiền Lương 30p Ăn Ca" value={payrollData.tien_luong_30p_an_ca} isCurrency />
                 <DetailRow label="Tiền Tăng Ca Vượt" value={payrollData.tien_tang_ca_vuot} isCurrency />
-                <DetailRow label="Tiền Chủ Nhật" value={payrollData.tien_luong_chu_nhat} isCurrency />
+                <DetailRow label="Lương CNKCP Vượt" value={payrollData.luong_cnkcp_vuot} isCurrency />
               </CardContent>
             </Card>
 

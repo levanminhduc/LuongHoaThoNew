@@ -51,7 +51,7 @@ interface PayrollRecord {
   ho_tro_thoi_tiet_nong?: number
   bo_sung_luong?: number
   tien_tang_ca_vuot?: number
-  tien_luong_chu_nhat?: number
+  luong_cnkcp_vuot?: number
 
   // Bảo hiểm và phúc lợi
   bhxh_21_5_percent?: number

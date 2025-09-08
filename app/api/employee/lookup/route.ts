@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       tien_luong_tang_ca: payroll.tien_luong_tang_ca || 0,
       tien_luong_30p_an_ca: payroll.tien_luong_30p_an_ca || 0,
       tien_tang_ca_vuot: payroll.tien_tang_ca_vuot || 0,
-      tien_luong_chu_nhat: payroll.tien_luong_chu_nhat || 0,
+      luong_cnkcp_vuot: payroll.luong_cnkcp_vuot || 0,
 
       // Thưởng và phụ cấp
       tien_khen_thuong_chuyen_can: payroll.tien_khen_thuong_chuyen_can || 0,
