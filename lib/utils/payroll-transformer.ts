@@ -35,6 +35,7 @@ interface PayrollRecord {
   ho_tro_thoi_tiet_nong?: number
   bo_sung_luong?: number
   tien_tang_ca_vuot?: number
+  luong_cnkcp_vuot?: number
   tien_luong_chu_nhat?: number
 
   // Bảo hiểm và phúc lợi
@@ -111,6 +112,7 @@ interface PayrollResult {
   ho_tro_thoi_tiet_nong?: number
   bo_sung_luong?: number
   tien_tang_ca_vuot?: number
+  luong_cnkcp_vuot?: number
   tien_luong_chu_nhat?: number
   bhxh_21_5_percent?: number
   pc_cdcs_pccc_atvsv?: number
@@ -182,6 +184,7 @@ export function transformPayrollRecordToResult(payrollRecord: PayrollRecord): Pa
     ho_tro_thoi_tiet_nong: payrollRecord.ho_tro_thoi_tiet_nong,
     bo_sung_luong: payrollRecord.bo_sung_luong,
     tien_tang_ca_vuot: payrollRecord.tien_tang_ca_vuot,
+    luong_cnkcp_vuot: payrollRecord.luong_cnkcp_vuot,
     tien_luong_chu_nhat: payrollRecord.tien_luong_chu_nhat,
     bhxh_21_5_percent: payrollRecord.bhxh_21_5_percent,
     pc_cdcs_pccc_atvsv: payrollRecord.pc_cdcs_pccc_atvsv,
