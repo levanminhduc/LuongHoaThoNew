@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search, ArrowUpDown, Filter } from "lucide-react"
+import { Search, ArrowUpDown, Filter, Eye } from "lucide-react"
 
 interface PayrollRecord {
   id: number
@@ -107,9 +107,10 @@ interface EmployeeTableProps {
     sortBy: string
     sortOrder: "asc" | "desc"
   }) => void
+  onViewEmployee?: (employeeId: string) => void
 }
 
-export default function EmployeeTable({ payrolls, onFiltersChange }: EmployeeTableProps) {
+export default function EmployeeTable({ payrolls, onFiltersChange, onViewEmployee }: EmployeeTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<string>("name")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
@@ -287,12 +288,25 @@ export default function EmployeeTable({ payrolls, onFiltersChange }: EmployeeTab
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">Mã: {payroll.employee_id}</p>
                   </div>
-                  <Badge
-                    variant={payroll.is_signed ? "default" : "secondary"}
-                    className="ml-2 text-xs"
-                  >
-                    {payroll.is_signed ? "Đã ký" : "Chưa ký"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={payroll.is_signed ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                    </Badge>
+                    {onViewEmployee && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onViewEmployee(payroll.employee_id)}
+                        className="h-8 w-8 p-0 touch-manipulation"
+                        title="Xem chi tiết lương"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
@@ -314,17 +328,7 @@ export default function EmployeeTable({ payrolls, onFiltersChange }: EmployeeTab
                   </div>
                 </div>
 
-                <div className="pt-2 border-t">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground">Ngày ký:</span>
-                    <span className="font-medium">
-                      {payroll.signed_at
-                        ? new Date(payroll.signed_at).toLocaleDateString('vi-VN')
-                        : "-"
-                      }
-                    </span>
-                  </div>
-                </div>
+
 
                 <div className="pt-2 border-t">
                   <div className="flex justify-between items-center">
@@ -360,7 +364,9 @@ export default function EmployeeTable({ payrolls, onFiltersChange }: EmployeeTab
                   <TableHead className="text-center min-w-[80px]">Hệ Số LV</TableHead>
                   <TableHead className="text-right min-w-[140px]">Thực Nhận</TableHead>
                   <TableHead className="text-center min-w-[100px]">Trạng Thái</TableHead>
-                  <TableHead className="text-center min-w-[100px]">Ngày Ký</TableHead>
+                  {onViewEmployee && (
+                    <TableHead className="text-center min-w-[80px]">Thao Tác</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -392,17 +398,24 @@ export default function EmployeeTable({ payrolls, onFiltersChange }: EmployeeTab
                           {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center text-xs text-muted-foreground">
-                        {payroll.signed_at
-                          ? new Date(payroll.signed_at).toLocaleDateString('vi-VN')
-                          : "-"
-                        }
-                      </TableCell>
+                      {onViewEmployee && (
+                        <TableCell className="text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onViewEmployee(payroll.employee_id)}
+                            className="h-8 w-8 p-0"
+                            title="Xem chi tiết lương"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={onViewEmployee ? 11 : 10} className="text-center py-8 text-muted-foreground">
                       {filteredAndSortedPayrolls.length === 0
                         ? "Không tìm thấy nhân viên nào phù hợp với bộ lọc"
                         : "Không có dữ liệu"

@@ -10,6 +10,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Building2, Users, DollarSign, FileCheck, LogOut, Eye, Download } from "lucide-react"
 import { DepartmentDetailModalRefactored } from "./department"
 import { getPreviousMonth } from "@/utils/dateUtils"
+import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal"
+import { transformPayrollRecordToResult, type PayrollResult } from "@/lib/utils/payroll-transformer"
 
 interface User {
   employee_id: string
@@ -66,6 +68,10 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
   // Export state
   const [exportingData, setExportingData] = useState(false)
   const [exportingDepartment, setExportingDepartment] = useState<string | null>(null)
+
+  // Payroll Detail Modal state
+  const [showPayrollModal, setShowPayrollModal] = useState(false)
+  const [selectedPayrollData, setSelectedPayrollData] = useState<PayrollResult | null>(null)
 
   useEffect(() => {
     loadDepartmentStats()
@@ -244,6 +250,19 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
       console.error("Error exporting data:", error)
     } finally {
       setExportingData(false)
+    }
+  }
+
+  const handleViewEmployee = (employeeId: string) => {
+    // Find the payroll record for this employee
+    const payrollRecord = payrollData.find(p => p.employee_id === employeeId)
+    if (payrollRecord && payrollRecord.employees) {
+      // Transform to PayrollResult format and open modal
+      const payrollResult = transformPayrollRecordToResult(payrollRecord as any)
+      // Set source file to indicate Manager Dashboard
+      payrollResult.source_file = 'Manager Dashboard'
+      setSelectedPayrollData(payrollResult)
+      setShowPayrollModal(true)
     }
   }
 
@@ -594,13 +613,23 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                       <Card key={payroll.id} className="p-4">
                         <div className="space-y-2">
                           <div className="flex justify-between items-start">
-                            <div>
+                            <div className="flex-1 min-w-0">
                               <p className="font-semibold text-sm">{payroll.employees?.full_name}</p>
                               <p className="text-xs text-muted-foreground">Mã: {payroll.employee_id}</p>
                             </div>
-                            <Badge variant={payroll.is_signed ? "default" : "secondary"} className="text-xs">
-                              {payroll.is_signed ? "Đã ký" : "Chưa ký"}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={payroll.is_signed ? "default" : "secondary"} className="text-xs">
+                                {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                              </Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewEmployee(payroll.employee_id)}
+                                className="h-8 w-8 p-0 touch-manipulation"
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                           <div className="pt-2 border-t">
                             <div className="grid grid-cols-2 gap-2 text-xs mb-2">
@@ -633,6 +662,7 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                           <th className="text-center p-2 sm:p-3 min-w-[80px]">Hệ Số LV</th>
                           <th className="text-right p-2 sm:p-3 min-w-[140px]">Lương Thực Nhận</th>
                           <th className="text-center p-2 sm:p-3 min-w-[100px]">Trạng Thái</th>
+                          <th className="text-center p-2 sm:p-3 min-w-[80px]">Thao Tác</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -654,6 +684,16 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                                 {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                               </Badge>
                             </td>
+                            <td className="p-2 sm:p-3 text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewEmployee(payroll.employee_id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -673,6 +713,18 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
         departmentName={selectedDepartmentForDetail}
         month={selectedMonth}
       />
+
+      {/* Payroll Detail Modal */}
+      {selectedPayrollData && (
+        <PayrollDetailModal
+          isOpen={showPayrollModal}
+          onClose={() => {
+            setShowPayrollModal(false)
+            setSelectedPayrollData(null)
+          }}
+          payrollData={selectedPayrollData}
+        />
+      )}
     </div>
   )
 }

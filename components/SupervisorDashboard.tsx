@@ -589,15 +589,7 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
                                 {(payroll.tien_luong_thuc_nhan_cuoi_ky || 0).toLocaleString()} VND
                               </p>
                             </div>
-                            <div className="text-right">
-                              <p className="text-xs text-muted-foreground">Ngày ký</p>
-                              <p className="text-xs">
-                                {payroll.signed_at
-                                  ? new Date(payroll.signed_at).toLocaleDateString('vi-VN')
-                                  : "-"
-                                }
-                              </p>
-                            </div>
+
                           </div>
                         </div>
                       </div>
@@ -619,7 +611,6 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
                         <th className="text-center p-2 sm:p-3 min-w-[80px]">Hệ Số LV</th>
                         <th className="text-right p-2 sm:p-3 min-w-[140px]">Lương Thực Nhận</th>
                         <th className="text-center p-2 sm:p-3 min-w-[100px]">Trạng Thái</th>
-                        <th className="text-center p-2 sm:p-3 min-w-[100px]">Ngày Ký</th>
                         <th className="text-center p-2 sm:p-3 min-w-[80px]">Thao Tác</th>
                       </tr>
                     </thead>
@@ -655,12 +646,6 @@ export default function SupervisorDashboard({ user, onLogout }: SupervisorDashbo
                             <Badge variant={getStatusColor(payroll.is_signed)}>
                               {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                             </Badge>
-                          </td>
-                          <td className="p-2 sm:p-3 text-center text-xs text-muted-foreground">
-                            {payroll.signed_at
-                              ? new Date(payroll.signed_at).toLocaleDateString('vi-VN')
-                              : "-"
-                            }
                           </td>
                           <td className="p-2 sm:p-3 text-center">
                             <Button

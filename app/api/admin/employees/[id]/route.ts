@@ -14,10 +14,20 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const { id } = params
     const body = await request.json()
-    const { employee_id, full_name, cccd, chuc_vu, department, phone_number, is_active } = body
+    const { employee_id, full_name, cccd, password, chuc_vu, department, phone_number, is_active } = body
 
     if (!employee_id || !full_name || !chuc_vu) {
       return NextResponse.json({ error: "Thiếu thông tin bắt buộc" }, { status: 400 })
+    }
+
+    // Validate CCCD format if provided
+    if (cccd && !/^\d{12}$/.test(cccd)) {
+      return NextResponse.json({ error: "CCCD phải có đúng 12 chữ số" }, { status: 400 })
+    }
+
+    // Validate password if provided
+    if (password && password.length < 6) {
+      return NextResponse.json({ error: "Mật khẩu phải có ít nhất 6 ký tự" }, { status: 400 })
     }
 
     // Validate employee_id format
@@ -76,6 +86,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         updateData.cccd_hash = await bcrypt.hash(cccd, 10)
       }
 
+      if (password) {
+        updateData.password_hash = await bcrypt.hash(password, 10)
+        updateData.last_password_change_at = new Date().toISOString()
+      }
+
       // Update additional fields (employee_id already updated by cascade)
       const { data: updatedEmployee, error: updateError } = await supabase
         .from("employees")
@@ -110,6 +125,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     if (cccd) {
       updateData.cccd_hash = await bcrypt.hash(cccd, 10)
+    }
+
+    if (password) {
+      updateData.password_hash = await bcrypt.hash(password, 10)
+      updateData.last_password_change_at = new Date().toISOString()
     }
 
     const { data: updatedEmployee, error } = await supabase

@@ -29,6 +29,10 @@ import ExportTab from "./ExportTab"
 // Import cache utility
 import DepartmentCache from "@/utils/departmentCache"
 
+// Import PayrollDetailModal and transformer
+import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal"
+import { transformPayrollRecordToResult, type PayrollResult } from "@/lib/utils/payroll-transformer"
+
 interface Employee {
   employee_id: string
   full_name: string
@@ -167,6 +171,10 @@ export default function DepartmentDetailModalRefactored({
   const [exporting, setExporting] = useState(false)
   const [activeTab, setActiveTab] = useState("employees")
 
+  // Payroll Detail Modal state
+  const [showPayrollModal, setShowPayrollModal] = useState(false)
+  const [selectedPayrollData, setSelectedPayrollData] = useState<PayrollResult | null>(null)
+
   useEffect(() => {
     if (isOpen && departmentName) {
       loadDepartmentDetail()
@@ -276,6 +284,19 @@ export default function DepartmentDetailModalRefactored({
     console.log('Quick action:', action)
   }
 
+  const handleViewEmployee = (employeeId: string) => {
+    // Find the payroll record for this employee
+    const payrollRecord = departmentData?.payrolls.find(p => p.employee_id === employeeId)
+    if (payrollRecord) {
+      // Transform to PayrollResult format and open modal
+      const payrollResult = transformPayrollRecordToResult(payrollRecord as any)
+      // Set source file to indicate Department Detail
+      payrollResult.source_file = 'Department Detail'
+      setSelectedPayrollData(payrollResult)
+      setShowPayrollModal(true)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
@@ -361,7 +382,10 @@ export default function DepartmentDetailModalRefactored({
                 </TabsList>
 
                 <TabsContent value="employees" className="space-y-3 sm:space-y-4">
-                  <EmployeeTable payrolls={departmentData.payrolls} />
+                  <EmployeeTable
+                    payrolls={departmentData.payrolls}
+                    onViewEmployee={handleViewEmployee}
+                  />
                 </TabsContent>
 
                 <TabsContent value="analysis" className="space-y-3 sm:space-y-4">
@@ -396,6 +420,18 @@ export default function DepartmentDetailModalRefactored({
           ) : null}
         </ScrollArea>
       </DialogContent>
+
+      {/* Payroll Detail Modal */}
+      {selectedPayrollData && (
+        <PayrollDetailModal
+          isOpen={showPayrollModal}
+          onClose={() => {
+            setShowPayrollModal(false)
+            setSelectedPayrollData(null)
+          }}
+          payrollData={selectedPayrollData}
+        />
+      )}
     </Dialog>
   )
 }

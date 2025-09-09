@@ -79,10 +79,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { employee_id, full_name, cccd, chuc_vu, department, phone_number, is_active = true } = body
+    const { employee_id, full_name, cccd, password, chuc_vu, department, phone_number, is_active = true } = body
 
     if (!employee_id || !full_name || !cccd || !chuc_vu) {
       return NextResponse.json({ error: "Thiếu thông tin bắt buộc" }, { status: 400 })
+    }
+
+    // Validate CCCD format (12 digits)
+    if (!/^\d{12}$/.test(cccd)) {
+      return NextResponse.json({ error: "CCCD phải có đúng 12 chữ số" }, { status: 400 })
+    }
+
+    // Validate password if provided
+    if (password && password.length < 6) {
+      return NextResponse.json({ error: "Mật khẩu phải có ít nhất 6 ký tự" }, { status: 400 })
     }
 
     const validRoles = ["admin", "giam_doc", "ke_toan", "nguoi_lap_bieu", "truong_phong", "to_truong", "nhan_vien", "van_phong"]
@@ -103,6 +113,10 @@ export async function POST(request: NextRequest) {
     }
 
     const cccd_hash = await bcrypt.hash(cccd, 10)
+    // If password provided, use it; otherwise use CCCD as default password
+    const password_hash = password
+      ? await bcrypt.hash(password, 10)
+      : cccd_hash
 
     const { data: newEmployee, error } = await supabase
       .from("employees")
@@ -110,6 +124,8 @@ export async function POST(request: NextRequest) {
         employee_id,
         full_name,
         cccd_hash,
+        password_hash,
+        last_password_change_at: new Date().toISOString(),
         chuc_vu,
         department: department || null,
         phone_number: phone_number || null,

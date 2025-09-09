@@ -41,6 +41,7 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
     employee_id: employee?.employee_id || "",
     full_name: employee?.full_name || "",
     cccd: "",
+    password: "",
     chuc_vu: employee?.chuc_vu || "",
     department: employee?.department ? employee.department : "none_selected",
     phone_number: employee?.phone_number || "",
@@ -183,12 +184,18 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
       newErrors.full_name = "Họ và tên là bắt buộc"
     }
 
+    // CCCD validation (only for new employee creation)
     if (!employee && !formData.cccd.trim()) {
-      newErrors.cccd = "Mật khẩu là bắt buộc khi tạo mới"
+      newErrors.cccd = "CCCD là bắt buộc khi tạo mới"
     }
 
-    if (formData.cccd && formData.cccd.length < 6) {
-      newErrors.cccd = "Mật khẩu phải có ít nhất 6 ký tự"
+    if (formData.cccd && !/^\d{12}$/.test(formData.cccd)) {
+      newErrors.cccd = "CCCD phải có đúng 12 chữ số"
+    }
+
+    // Password validation (optional for updates, required for new if no CCCD)
+    if (formData.password && formData.password.length < 6) {
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự"
     }
 
     if (!formData.chuc_vu) {
@@ -223,11 +230,18 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
       const submitData = {
         ...formData,
         cccd: formData.cccd || undefined,
+        password: formData.password || undefined,
         department: formData.department === "none_selected" ? null : formData.department
       }
 
-      if (employee && !formData.cccd) {
-        delete submitData.cccd
+      // Remove empty fields for updates
+      if (employee) {
+        if (!formData.cccd) {
+          delete submitData.cccd
+        }
+        if (!formData.password) {
+          delete submitData.password
+        }
       }
 
       const response = await fetch(url, {
@@ -310,19 +324,43 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="cccd">
-            Thay Đổi Mật Khẩu {employee ? "(để trống nếu không đổi)" : "*"}
-          </Label>
-          <div className="relative">
+        {/* CCCD field - only show for new employee creation */}
+        {!employee && (
+          <div className="space-y-2">
+            <Label htmlFor="cccd">CCCD *</Label>
             <Input
               id="cccd"
-              type={showPassword ? "text" : "password"}
+              type="text"
               value={formData.cccd}
               onChange={(e) => handleInputChange("cccd", e.target.value)}
               disabled={loading}
-              placeholder={employee ? "Nhập mật khẩu mới" : "Nhập mật khẩu"}
-              className={errors.cccd ? "border-red-500 pr-10" : "pr-10"}
+              placeholder="Nhập số CCCD (12 chữ số)"
+              className={errors.cccd ? "border-red-500" : ""}
+              maxLength={12}
+            />
+            {errors.cccd && (
+              <p className="text-sm text-red-500">{errors.cccd}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              CCCD sẽ được sử dụng để xác thực và khôi phục mật khẩu
+            </p>
+          </div>
+        )}
+
+        {/* Password field - show for both create and update */}
+        <div className="space-y-2">
+          <Label htmlFor="password">
+            Mật Khẩu {employee ? "(để trống nếu không đổi)" : "(tùy chọn)"}
+          </Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={(e) => handleInputChange("password", e.target.value)}
+              disabled={loading}
+              placeholder={employee ? "Nhập mật khẩu mới" : "Nhập mật khẩu tùy chỉnh"}
+              className={errors.password ? "border-red-500 pr-10" : "pr-10"}
             />
             <Button
               type="button"
@@ -339,11 +377,14 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
               )}
             </Button>
           </div>
-          {errors.cccd && (
-            <p className="text-sm text-red-500">{errors.cccd}</p>
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            Mật khẩu sẽ được mã hóa an toàn trong hệ thống
+            {employee
+              ? "Để trống nếu không muốn thay đổi mật khẩu hiện tại"
+              : "Nếu để trống, CCCD sẽ được sử dụng làm mật khẩu mặc định"
+            }
           </p>
         </div>
 
