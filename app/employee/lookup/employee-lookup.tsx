@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -105,6 +105,7 @@ export function EmployeeLookup() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [mustChangePassword, setMustChangePassword] = useState(false)
+  const salaryInfoRef = useRef<HTMLDivElement>(null) // Ref để scroll đến phần thông tin lương
   
   // State mới cho label động
   const [authFieldConfig, setAuthFieldConfig] = useState({
@@ -141,6 +142,16 @@ export function EmployeeLookup() {
         //   setMustChangePassword(true)
         //   setShowPasswordModal(true)
         // }
+        
+        // Auto-scroll đến phần thông tin lương sau khi có kết quả
+        setTimeout(() => {
+          if (salaryInfoRef.current) {
+            salaryInfoRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start'
+            })
+          }
+        }, 100) // Đợi 100ms để đảm bảo DOM đã render
       } else {
         setError(data.error || "Không tìm thấy thông tin lương")
       }
@@ -362,7 +373,7 @@ export function EmployeeLookup() {
 
       {/* Results */}
       {result && (
-        <Card>
+        <Card ref={salaryInfoRef}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-700">
               <User className="w-5 h-5" />
