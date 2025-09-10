@@ -239,11 +239,12 @@ export async function PUT(request: NextRequest) {
     const supabase = createServiceClient()
 
     // Get all department permissions with employee info
+    // Updated query syntax: Use exact constraint name to resolve ambiguous relationships
     const { data: permissions, error } = await supabase
       .from("department_permissions")
       .select(`
         *,
-        employees!department_permissions_employee_id_fkey(
+        employees!fk_dept_perm_employee(
           employee_id,
           full_name,
           department,

@@ -18,11 +18,15 @@ export async function GET(request: NextRequest) {
     const department = searchParams.get("department")
     const isActive = searchParams.get("is_active")
 
+    // Updated query syntax: Use exact constraint names to resolve ambiguous relationships
+    // Supabase detected 2 foreign key relationships between department_permissions and employees:
+    // 1. fk_dept_perm_employee (employee_id -> employees.employee_id)
+    // 2. department_permissions_granted_by_fkey (granted_by -> employees.employee_id)
     let query = supabase
       .from("department_permissions")
       .select(`
         *,
-        employees!department_permissions_employee_id_fkey(
+        employees!fk_dept_perm_employee(
           employee_id,
           full_name,
           department,

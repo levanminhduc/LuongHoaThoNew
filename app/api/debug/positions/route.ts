@@ -56,12 +56,13 @@ export async function GET(request: NextRequest) {
     }, {}) || {}
 
     // 3. Get department permissions info
+    // Updated query syntax: Use exact constraint name to resolve ambiguous relationships
     const { data: permissions, error: permError } = await supabase
       .from("department_permissions")
       .select(`
         employee_id,
         department,
-        employees!department_permissions_employee_id_fkey(
+        employees!fk_dept_perm_employee(
           chuc_vu,
           full_name
         )

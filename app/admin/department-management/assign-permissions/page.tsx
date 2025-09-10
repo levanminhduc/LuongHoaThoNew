@@ -129,20 +129,37 @@ function AssignPermissionsContent() {
       }
 
       // Load employees (managers and supervisors only)
-      const empResponse = await fetch('/api/admin/employees?roles=truong_phong,to_truong', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      // API chỉ hỗ trợ single role, nên cần gọi 2 lần
+      const [truongPhongResponse, toTruongResponse] = await Promise.all([
+        fetch('/api/admin/employees?role=truong_phong&limit=1000', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('/api/admin/employees?role=to_truong&limit=1000', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      ])
 
-      if (empResponse.ok) {
-        const empData = await empResponse.json()
-        setEmployees(empData.employees.all || [])
-      } else {
-        console.error("Failed to load employees")
-        // Fallback to empty array
-        setEmployees([])
+      let allEmployees: Employee[] = []
+
+      if (truongPhongResponse.ok) {
+        const truongPhongData = await truongPhongResponse.json()
+        allEmployees = [...allEmployees, ...(truongPhongData.employees || [])]
       }
+
+      if (toTruongResponse.ok) {
+        const toTruongData = await toTruongResponse.json()
+        allEmployees = [...allEmployees, ...(toTruongData.employees || [])]
+      }
+
+      if (allEmployees.length === 0) {
+        console.error("Failed to load employees")
+      }
+
+      setEmployees(allEmployees)
 
       // Load existing permissions
       const permResponse = await fetch('/api/admin/department-permissions', {
