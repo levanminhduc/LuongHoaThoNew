@@ -2,7 +2,8 @@
 import React from "react";
 import Marquee from "react-fast-marquee";
 import { tickerConfig } from "@/config/ticker";
-import { useReducedMotion, useClientOnly } from "@/lib/hooks";
+import { useReducedMotion } from "@/lib/hooks/useMobile";
+import { useClientOnly } from "@/lib/hooks/useClientOnly";
 
 export default function TopMarquee() {
   // Use SSR-safe hooks - no localStorage logic needed

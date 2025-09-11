@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { ENABLE_TICKER } from "@/lib/features"
-import { useClientOnly } from "@/lib/hooks"
+import { useClientOnly } from "@/lib/hooks/useClientOnly"
 import { useTickerStore } from "@/lib/stores/ticker-store"
 
 const TopMarqueeLazy = dynamic(() => import("./TopMarquee"), { ssr: false })

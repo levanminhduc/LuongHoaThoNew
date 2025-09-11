@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 import TickerGate from "@/components/TickerGate"
 import { ENABLE_TICKER } from "@/lib/features"
+import ErrorBoundary from "@/components/error-boundary"
 
 export const metadata: Metadata = {
   title: "Tra Cứu Lương Hoà Thọ Điện Bàn",
@@ -25,8 +26,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon" />
         <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon" />
         <style>{`
@@ -37,13 +39,15 @@ export default function RootLayout({
         }
       `}</style>
       </head>
-      <body>
-        {ENABLE_TICKER ? (
-          <header className="sticky top-0 z-50">
-            <TickerGate />
-          </header>
-        ) : null}
-        {children}
+      <body suppressHydrationWarning>
+        <ErrorBoundary>
+          {ENABLE_TICKER ? (
+            <header className="sticky top-0 z-50">
+              <TickerGate />
+            </header>
+          ) : null}
+          {children}
+        </ErrorBoundary>
       </body>
     </html>
   )
