@@ -42,6 +42,7 @@ interface PayrollResult {
   gio_an_ca?: number
   tong_gio_lam_viec?: number
   tong_he_so_quy_doi?: number
+  ngay_cong_chu_nhat?: number
 
   // Lương sản phẩm và đơn giá
   tong_luong_san_pham_cong_doan?: number

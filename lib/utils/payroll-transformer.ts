@@ -101,6 +101,7 @@ interface PayrollResult {
   gio_an_ca?: number
   tong_gio_lam_viec?: number
   tong_he_so_quy_doi?: number
+  ngay_cong_chu_nhat?: number
   tong_luong_san_pham_cong_doan?: number
   don_gia_tien_luong_tren_gio?: number
   tien_luong_san_pham_trong_gio?: number
@@ -173,6 +174,7 @@ export function transformPayrollRecordToResult(payrollRecord: PayrollRecord): Pa
     gio_an_ca: payrollRecord.gio_an_ca,
     tong_gio_lam_viec: payrollRecord.tong_gio_lam_viec,
     tong_he_so_quy_doi: payrollRecord.tong_he_so_quy_doi,
+    ngay_cong_chu_nhat: payrollRecord.ngay_cong_chu_nhat,
     tong_luong_san_pham_cong_doan: payrollRecord.tong_luong_san_pham_cong_doan,
     don_gia_tien_luong_tren_gio: payrollRecord.don_gia_tien_luong_tren_gio,
     tien_luong_san_pham_trong_gio: payrollRecord.tien_luong_san_pham_trong_gio,

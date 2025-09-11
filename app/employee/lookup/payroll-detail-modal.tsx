@@ -43,6 +43,7 @@ interface PayrollResult {
   gio_an_ca?: number
   tong_gio_lam_viec?: number
   tong_he_so_quy_doi?: number
+  ngay_cong_chu_nhat?: number
   
   // Lương sản phẩm và đơn giá
   tong_luong_san_pham_cong_doan?: number
@@ -179,6 +180,7 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
                 <DetailRow label="Giờ Ăn Ca" value={payrollData.gio_an_ca} isNumber />
                 <DetailRow label="Tổng Giờ Làm Việc" value={payrollData.tong_gio_lam_viec} isNumber />
                 <DetailRow label="Tổng Hệ Số Quy Đổi" value={payrollData.tong_he_so_quy_doi} isNumber />
+                <DetailRow label="Ngày Công Chủ Nhật" value={payrollData.ngay_cong_chu_nhat} isNumber />
               </CardContent>
             </Card>
 
