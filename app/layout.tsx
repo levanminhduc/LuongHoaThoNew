@@ -6,6 +6,7 @@ import "./globals.css"
 import TickerGate from "@/components/TickerGate"
 import { ENABLE_TICKER } from "@/lib/features"
 import ErrorBoundary from "@/components/error-boundary"
+import { SafeClientComponent } from "@/components/safe-client-component"
 
 export const metadata: Metadata = {
   title: "Tra Cứu Lương Hoà Thọ Điện Bàn",
@@ -42,9 +43,11 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <ErrorBoundary>
           {ENABLE_TICKER ? (
-            <header className="sticky top-0 z-50">
-              <TickerGate />
-            </header>
+            <SafeClientComponent componentName="TickerGate" fallback={null}>
+              <header className="sticky top-0 z-50">
+                <TickerGate />
+              </header>
+            </SafeClientComponent>
           ) : null}
           {children}
         </ErrorBoundary>

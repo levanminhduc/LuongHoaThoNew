@@ -9,6 +9,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Add support for older browsers
+  swcMinify: true,
+  compiler: {
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
   // Fix webpack chunk loading issues
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {

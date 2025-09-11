@@ -1,20 +1,20 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Marquee from "react-fast-marquee";
 import { tickerConfig } from "@/config/ticker";
-import { useReducedMotion } from "@/lib/hooks/useMobile";
-import { useClientOnly } from "@/lib/hooks/useClientOnly";
 
 export default function TopMarquee() {
-  // Use SSR-safe hooks - no localStorage logic needed
-  const prefersReduced = useReducedMotion(false);
-  const isClient = useClientOnly(true, false);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Don't render during SSR to prevent hydration mismatch
-  if (!isClient) return null;
+  if (!mounted) return null;
 
-  // Calculate speed based on reduced motion preference
-  const speed = prefersReduced ? Math.max(10, Math.floor(tickerConfig.speed * 0.2)) : tickerConfig.speed;
+  // Use default speed - avoid complex motion detection that might fail on some devices
+  const speed = tickerConfig.speed || 30;
 
   return (
     <div style={{ background: "#085bf3ff", color: "#ffffffff" }}>
