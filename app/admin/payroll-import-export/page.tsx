@@ -426,7 +426,7 @@ export default function PayrollImportExportPage() {
       const exactMatches = columnDetails.filter(c => c.mappingType === 'exact').length
       const aliasMatches = columnDetails.filter(c => c.mappingType === 'alias').length
       const fuzzyMatches = columnDetails.filter(c => c.mappingType === 'fuzzy').length
-      const configMatches = columnDetails.filter(c => c.mappingType === 'configuration').length
+      const manualMatches = columnDetails.filter(c => c.mappingType === 'manual').length
 
       const analysisResult: AnalysisResult = {
         totalColumns: detectedColumns.length,
@@ -442,7 +442,7 @@ export default function PayrollImportExportPage() {
           exactMatches,
           aliasMatches,
           fuzzyMatches,
-          configMatches
+          manualMatches
         },
         aliasesUsed: aliases.length
       }

@@ -4,9 +4,9 @@ import { createServiceClient } from "@/utils/supabase/server"
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware"
 
 interface DepartmentDetailParams {
-  params: {
+  params: Promise<{
     departmentName: string
-  }
+  }>
 }
 
 // GET detailed department information

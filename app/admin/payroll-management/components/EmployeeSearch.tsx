@@ -136,7 +136,7 @@ export function EmployeeSearch({ onEmployeeSelect, selectedEmployee }: EmployeeS
         console.error("❌ JSON Parse Error:", jsonError)
         const responseText = await response.clone().text()
         console.log("📄 Raw Response Text:", responseText)
-        throw new Error(`Failed to parse JSON response: ${jsonError.message}`)
+        throw new Error(`Failed to parse JSON response: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`)
       }
 
       if (response.ok) {

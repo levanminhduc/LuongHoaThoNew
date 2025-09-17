@@ -69,9 +69,13 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
   const [exportingData, setExportingData] = useState(false)
   const [exportingDepartment, setExportingDepartment] = useState<string | null>(null)
 
-  // Payroll Detail Modal state
+  // Payroll Detail Modal state (from payroll tab)
   const [showPayrollModal, setShowPayrollModal] = useState(false)
   const [selectedPayrollData, setSelectedPayrollData] = useState<PayrollResult | null>(null)
+
+  // Payroll Detail Modal state (from department detail modal)
+  const [showDepartmentPayrollModal, setShowDepartmentPayrollModal] = useState(false)
+  const [selectedDepartmentPayrollData, setSelectedDepartmentPayrollData] = useState<PayrollResult | null>(null)
 
   useEffect(() => {
     loadDepartmentStats()
@@ -264,6 +268,12 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
       setSelectedPayrollData(payrollResult)
       setShowPayrollModal(true)
     }
+  }
+
+  const handleViewEmployeeFromDepartment = (payrollData: PayrollResult) => {
+    // Handle payroll detail modal from department detail modal
+    setSelectedDepartmentPayrollData(payrollData)
+    setShowDepartmentPayrollModal(true)
   }
 
   const totalStats = departments.reduce((acc, dept) => ({
@@ -712,9 +722,10 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
         onClose={handleCloseDetailModal}
         departmentName={selectedDepartmentForDetail}
         month={selectedMonth}
+        onViewEmployee={handleViewEmployeeFromDepartment}
       />
 
-      {/* Payroll Detail Modal */}
+      {/* Payroll Detail Modal (from payroll tab) */}
       {selectedPayrollData && (
         <PayrollDetailModal
           isOpen={showPayrollModal}
@@ -723,6 +734,18 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
             setSelectedPayrollData(null)
           }}
           payrollData={selectedPayrollData}
+        />
+      )}
+
+      {/* Payroll Detail Modal (from department detail modal) */}
+      {selectedDepartmentPayrollData && (
+        <PayrollDetailModal
+          isOpen={showDepartmentPayrollModal}
+          onClose={() => {
+            setShowDepartmentPayrollModal(false)
+            setSelectedDepartmentPayrollData(null)
+          }}
+          payrollData={selectedDepartmentPayrollData}
         />
       )}
     </div>

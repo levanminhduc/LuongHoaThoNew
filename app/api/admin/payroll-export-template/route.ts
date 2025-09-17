@@ -218,8 +218,8 @@ export async function GET(request: NextRequest) {
       const { data: payrollData, error: dataError } = await query
 
       if (!dataError && payrollData) {
-        dataRows = payrollData.map(record => 
-          activeFields.map(field => record[field] || "")
+        dataRows = payrollData.map(record =>
+          activeFields.map(field => (record as any)[field] || "")
         )
       }
     } else {

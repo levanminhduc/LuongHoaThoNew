@@ -4,14 +4,15 @@ import { auditService } from "@/lib/audit-service"
 
 export const runtime = "nodejs" // ép route này chạy Node.js thay vì Edge
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = verifyAuditLogsAccess(request)
     if (!admin) {
       return NextResponse.json({ error: "Không có quyền xem audit logs" }, { status: 403 })
     }
 
-    const { id } = params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')

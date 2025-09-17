@@ -154,20 +154,4 @@ export interface AuditLogSummary {
   recentActivity: EmployeeAuditLog[]
 }
 
-// Export all types
-export type {
-  AuditActionType,
-  AuditStatus,
-  AuditLogEntry,
-  AuditLogResult,
-  EmployeeAuditLog,
-  AuditLogResponse,
-  FieldChange,
-  CascadeUpdateStats,
-  AuditLogRecord,
-  GetAuditLogsRequest,
-  GetAuditLogsResponse,
-  AuditServiceConfig,
-  AuditLogFilters,
-  AuditLogSummary
-}
+

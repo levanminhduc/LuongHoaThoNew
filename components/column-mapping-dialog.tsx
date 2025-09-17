@@ -594,8 +594,8 @@ export function ColumnMappingDialog({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
-                                    setCreateAliasColumn(column)
-                                    setCreateAliasField("")
+                                    setCreateAliasColumn("")
+                                    setCreateAliasField(field.field)
                                     setShowCreateAliasDialog(true)
                                   }}
                                   className="ml-2 text-xs"

@@ -60,21 +60,22 @@ export async function GET(request: NextRequest) {
 
       totalCount = count || 0
 
-      const { data: signatureData, error: signatureError } = await supabase
+      let signatureQuery = supabase
         .from("management_signatures")
         .select("*")
         .eq("is_active", true)
-        .modify((query) => {
-          if (months.length > 0) {
-            query.in("salary_month", months)
-          }
-          if (signatureType) {
-            query.eq("signature_type", signatureType)
-          }
-          if (auth.user.role !== 'admin') {
-            query.eq("signed_by_id", auth.user.employee_id)
-          }
-        })
+
+      if (months.length > 0) {
+        signatureQuery = signatureQuery.in("salary_month", months)
+      }
+      if (signatureType) {
+        signatureQuery = signatureQuery.eq("signature_type", signatureType)
+      }
+      if (auth.user.role !== 'admin') {
+        signatureQuery = signatureQuery.eq("signed_by_id", auth.user.employee_id)
+      }
+
+      const { data: signatureData, error: signatureError } = await signatureQuery
         .order("signed_at", { ascending: false })
         .range(offset, offset + limit - 1)
 
@@ -140,8 +141,8 @@ export async function GET(request: NextRequest) {
       user_filter: auth.user.role !== 'admin' ? auth.user.employee_id : null
     }
 
-    const monthlyStats = {}
-    signatures.forEach(sig => {
+    const monthlyStats: any = {}
+    signatures.forEach((sig: any) => {
       if (!monthlyStats[sig.salary_month]) {
         monthlyStats[sig.salary_month] = {
           month: sig.salary_month,

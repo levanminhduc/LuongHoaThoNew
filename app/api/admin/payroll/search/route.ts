@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
     }
 
     // If no data exists, return helpful message
-    if (!payrollCount || payrollCount.length === 0) {
+    if (!payrollCount || payrollCount === 0) {
       return NextResponse.json({
         success: true,
         results: [],
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    if (!employeeCount || employeeCount.length === 0) {
+    if (!employeeCount || employeeCount === 0) {
       return NextResponse.json({
         success: true,
         results: [],
@@ -243,7 +243,7 @@ export async function GET(request: NextRequest) {
             .select("employee_id, full_name, department, chuc_vu, is_active")
             .in("employee_id", employeeIds)
 
-          // Manually join the data
+          // Manually join the data with proper typing
           const joinedData = simpleData.map(payroll => ({
             ...payroll,
             employees: employeeData?.find(emp => emp.employee_id === payroll.employee_id) || null
@@ -251,13 +251,17 @@ export async function GET(request: NextRequest) {
 
           console.log("✅ Manual join completed")
 
-          // Use the manually joined data
-          const results = joinedData.filter(record => record.employees).map(record => ({
+          // Use the manually joined data with type guards
+          const results = joinedData.filter((record): record is typeof record & { employees: NonNullable<typeof record.employees> } => {
+            return record.employees !== null && record.employees !== undefined &&
+                   typeof record.employees === 'object' &&
+                   'full_name' in record.employees
+          }).map(record => ({
             payroll_id: record.id,
             employee_id: record.employee_id,
-            full_name: record.employees?.full_name || "N/A",
-            department: record.employees?.department || "N/A",
-            position: record.employees?.chuc_vu || "N/A",
+            full_name: record.employees.full_name || "N/A",
+            department: record.employees.department || "N/A",
+            position: record.employees.chuc_vu || "N/A",
             salary_month: record.salary_month,
             net_salary: record.tien_luong_thuc_nhan_cuoi_ky || 0,
             source_file: record.source_file || "N/A",
@@ -304,21 +308,27 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Transform data for frontend with null safety
-    const results = payrollData?.filter(record => {
+    // Transform data for frontend with null safety and proper type guards
+    const results = payrollData?.filter((record): record is typeof record & { employees: NonNullable<typeof record.employees> } => {
       // Filter out records without employee data (due to RLS or missing data)
-      return record.employees && record.employees.full_name
-    }).map(record => ({
-      payroll_id: record.id,
-      employee_id: record.employee_id,
-      full_name: record.employees?.full_name || "N/A",
-      department: record.employees?.department || "N/A",
-      position: record.employees?.chuc_vu || "N/A",
-      salary_month: record.salary_month,
-      net_salary: record.tien_luong_thuc_nhan_cuoi_ky || 0,
-      source_file: record.source_file || "N/A",
-      created_at: record.created_at
-    })) || []
+      return record.employees !== null && record.employees !== undefined &&
+             typeof record.employees === 'object' &&
+             'full_name' in record.employees &&
+             record.employees.full_name !== null
+    }).map(record => {
+      const employee = record.employees as any
+      return {
+        payroll_id: record.id,
+        employee_id: record.employee_id,
+        full_name: employee?.full_name || "N/A",
+        department: employee?.department || "N/A",
+        position: employee?.chuc_vu || "N/A",
+        salary_month: record.salary_month,
+        net_salary: record.tien_luong_thuc_nhan_cuoi_ky || 0,
+        source_file: record.source_file || "N/A",
+        created_at: record.created_at
+      }
+    }) || []
 
     return NextResponse.json({
       success: true,

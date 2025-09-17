@@ -101,13 +101,17 @@ const isValidToken = () => {
   return !!token
 }
 
-const getAuthHeaders = () => {
+const getAuthHeaders = (): Record<string, string> => {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return { 'Content-Type': 'application/json' }
+  }
+  const token = localStorage.getItem('admin_token')
+  if (!token) {
     return { 'Content-Type': 'application/json' }
   }
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+    'Authorization': `Bearer ${token}`
   }
 }
 

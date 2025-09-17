@@ -23,7 +23,7 @@ function verifyAdminToken(request: NextRequest) {
 // GET audit trail for specific payroll record
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -32,7 +32,8 @@ export async function GET(
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
-    const payrollId = parseInt(params.id)
+    const resolvedParams = await params
+    const payrollId = parseInt(resolvedParams.id)
     if (isNaN(payrollId)) {
       return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 })
     }

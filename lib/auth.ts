@@ -131,7 +131,7 @@ export async function authenticateUser(username: string, password: string): Prom
             username: testAccount.name,
             role: testAccount.role,
             department: testAccount.department,
-            allowed_departments: testAccount.allowed_departments,
+            allowed_departments: (testAccount as any).allowed_departments || [],
             permissions: getPermissionsByRole(testAccount.role)
           }
         }

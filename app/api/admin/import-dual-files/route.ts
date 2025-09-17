@@ -812,12 +812,12 @@ export async function POST(request: NextRequest) {
         const apiError = ApiErrorHandler.fromError(error, ApiErrorHandler.ErrorCodes.PROCESSING_ERROR, undefined, undefined, undefined, undefined, "file1")
         allDetailedErrors.push({
           row: 0,
-          employee_id: "SYSTEM",
           field: "file1",
-          error: apiError.message,
+          value: "SYSTEM",
           errorType: "system",
-          file_type: "file1",
-          details: apiError.details
+          severity: "critical" as const,
+          message: apiError.message,
+          suggestion: "Kiểm tra lại file và thử lại"
         })
         errorCount++
       }
@@ -838,12 +838,12 @@ export async function POST(request: NextRequest) {
         const apiError = ApiErrorHandler.fromError(error, ApiErrorHandler.ErrorCodes.PROCESSING_ERROR, undefined, undefined, undefined, undefined, "file2")
         allDetailedErrors.push({
           row: 0,
-          employee_id: "SYSTEM",
           field: "file2",
-          error: apiError.message,
+          value: "SYSTEM",
           errorType: "system",
-          file_type: "file2",
-          details: apiError.details
+          severity: "critical" as const,
+          message: apiError.message,
+          suggestion: "Kiểm tra lại file và thử lại"
         })
         errorCount++
       }
@@ -874,13 +874,12 @@ export async function POST(request: NextRequest) {
           txResult.errors.forEach((error: any) => {
             allDetailedErrors.push({
               row: 0,
-              employee_id: error.employee_id,
-              salary_month: error.salary_month,
               field: "transaction",
-              error: error.error,
+              value: error.employee_id || "UNKNOWN",
               errorType: error.code === "DUPLICATE_RECORD" ? "duplicate" : "database",
-              file_type: error.file_type,
-              details: error.error
+              severity: "high" as const,
+              message: error.error,
+              suggestion: "Kiểm tra dữ liệu và thử lại"
             })
           })
         }
@@ -889,12 +888,12 @@ export async function POST(request: NextRequest) {
         const apiError = ApiErrorHandler.fromError(error, ApiErrorHandler.ErrorCodes.DATABASE_ERROR)
         allDetailedErrors.push({
           row: 0,
-          employee_id: "SYSTEM",
           field: "transaction",
-          error: apiError.message,
+          value: "SYSTEM",
           errorType: "database",
-          file_type: "system",
-          details: apiError.details
+          severity: "critical" as const,
+          message: apiError.message,
+          suggestion: "Liên hệ quản trị viên hệ thống"
         })
         errorCount++
       }
@@ -917,12 +916,12 @@ export async function POST(request: NextRequest) {
         error.errorType === "database" ? ApiErrorHandler.ErrorCodes.DATABASE_ERROR :
         ApiErrorHandler.ErrorCodes.PROCESSING_ERROR,
         error.message,
-        error.details,
+        error.suggestion,
         error.field,
         error.row,
-        error.employee_id,
-        error.salary_month,
-        error.file_type as "file1" | "file2"
+        error.value?.toString(),
+        undefined,
+        undefined
       )
     )
 
@@ -1054,13 +1053,12 @@ async function processFileForTransaction(
         if (!hasRequiredFields) {
           detailedErrors.push({
             row: actualRowNumber,
-            employee_id: mappedData.employee_id || "UNKNOWN",
-            salary_month: mappedData.salary_month || "UNKNOWN",
             field: missingRequired.join(", "),
-            error: `Missing required fields: ${missingRequired.join(", ")}`,
+            value: mappedData.employee_id || "UNKNOWN",
             errorType: "validation",
-            file_type: fileType,
-            details: `Row ${actualRowNumber} is missing required data`
+            severity: "critical" as const,
+            message: `Missing required fields: ${missingRequired.join(", ")}`,
+            suggestion: "Đảm bảo tất cả trường bắt buộc có giá trị"
           })
           return // Skip this record
         }
@@ -1076,37 +1074,32 @@ async function processFileForTransaction(
         // Add validation errors
         detailedErrors.push(...validationResult.errors.map(error => ({
           row: actualRowNumber,
-          employee_id: error.employee_id || mappedData.employee_id || "UNKNOWN",
-          salary_month: error.salary_month || mappedData.salary_month || "UNKNOWN",
           field: error.field || "validation",
-          error: error.message,
+          value: mappedData.employee_id || "UNKNOWN",
           errorType: "validation" as const,
-          file_type: fileType,
-          details: error.details
+          severity: "high" as const,
+          message: error.message,
+          suggestion: "Kiểm tra và sửa giá trị không hợp lệ"
         })))
 
         // Add validation warnings as detailed errors with warning type
         detailedErrors.push(...validationResult.warnings.map(warning => ({
           row: actualRowNumber,
-          employee_id: warning.employee_id || mappedData.employee_id || "UNKNOWN",
-          salary_month: warning.salary_month || mappedData.salary_month || "UNKNOWN",
           field: warning.field || "validation",
-          error: warning.message,
-          errorType: "warning" as const,
-          file_type: fileType,
-          details: warning.details
+          value: mappedData.employee_id || "UNKNOWN",
+          errorType: "validation" as const,
+          severity: "medium" as const,
+          message: warning.message,
+          suggestion: "Xem xét cải thiện chất lượng dữ liệu"
         })))
 
         // Add auto-fixes
         autoFixes.push(...validationResult.autoFixes.map(fix => ({
-          row: actualRowNumber,
-          employee_id: mappedData.employee_id || "UNKNOWN",
-          field: fix.field,
-          originalValue: fix.originalValue,
+          success: true,
           fixedValue: fix.fixedValue,
-          reason: fix.reason,
+          fixType: "validation",
           confidence: fix.confidence,
-          file_type: fileType
+          description: `${fix.field}: ${fix.reason}`
         })))
 
         // Only add record if validation passed (no errors, warnings are OK)
@@ -1121,13 +1114,12 @@ async function processFileForTransaction(
       } catch (error) {
         detailedErrors.push({
           row: actualRowNumber,
-          employee_id: "UNKNOWN",
-          salary_month: "UNKNOWN",
           field: "processing",
-          error: error instanceof Error ? error.message : "Unknown processing error",
-          errorType: "processing",
-          file_type: fileType,
-          details: `Error processing row ${actualRowNumber}`
+          value: "UNKNOWN",
+          errorType: "system",
+          severity: "critical" as const,
+          message: error instanceof Error ? error.message : "Unknown processing error",
+          suggestion: "Kiểm tra định dạng dữ liệu và thử lại"
         })
       }
     })
@@ -1195,7 +1187,7 @@ async function processFile(
 
       try {
         // Map Excel data to database fields
-        const mappedData: any = {}
+        let mappedData: any = {}
         let hasRequiredFields = true
         const missingRequired: string[] = []
 

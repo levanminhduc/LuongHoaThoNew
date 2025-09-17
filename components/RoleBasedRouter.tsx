@@ -14,7 +14,7 @@ import LoginPage from "@/app/admin/login/page"
 interface User {
   employee_id: string
   username: string
-  role: 'admin' | 'truong_phong' | 'to_truong' | 'nhan_vien'
+  role: 'admin' | 'giam_doc' | 'ke_toan' | 'nguoi_lap_bieu' | 'truong_phong' | 'to_truong' | 'nhan_vien' | 'van_phong'
   department: string
   allowed_departments?: string[]
   permissions: string[]

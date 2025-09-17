@@ -261,13 +261,13 @@ export class EnhancedImportValidator {
       }
     })
 
-    if (bestMatch && bestMatch.score > 30) {
+    if (bestMatch && (bestMatch as any).score > 30) {
       return {
         excel_column: column,
-        suggested_field: bestMatch.field,
-        confidence_score: bestMatch.score,
-        reason: bestMatch.reason,
-        action: bestMatch.score > 70 ? "map" : "review"
+        suggested_field: (bestMatch as any).field,
+        confidence_score: (bestMatch as any).score,
+        reason: (bestMatch as any).reason,
+        action: (bestMatch as any).score > 70 ? "map" : "review"
       }
     }
 

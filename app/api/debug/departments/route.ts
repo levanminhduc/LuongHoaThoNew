@@ -125,8 +125,8 @@ export async function GET(request: NextRequest) {
         acc[dept].active++
         acc[dept].employees.push({
           employee_id: perm.employee_id,
-          full_name: perm.employees?.full_name,
-          chuc_vu: perm.employees?.chuc_vu
+          full_name: (perm.employees as any)?.full_name,
+          chuc_vu: (perm.employees as any)?.chuc_vu
         })
       }
 

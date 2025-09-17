@@ -29,8 +29,7 @@ import ExportTab from "./ExportTab"
 // Import cache utility
 import DepartmentCache from "@/utils/departmentCache"
 
-// Import PayrollDetailModal and transformer
-import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal"
+// Import transformer
 import { transformPayrollRecordToResult, type PayrollResult } from "@/lib/utils/payroll-transformer"
 
 interface Employee {
@@ -157,13 +156,15 @@ interface DepartmentDetailModalProps {
   onClose: () => void
   departmentName: string
   month: string
+  onViewEmployee?: (payrollData: PayrollResult) => void
 }
 
 export default function DepartmentDetailModalRefactored({
   isOpen,
   onClose,
   departmentName,
-  month
+  month,
+  onViewEmployee
 }: DepartmentDetailModalProps) {
   const [departmentData, setDepartmentData] = useState<DepartmentDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -171,9 +172,7 @@ export default function DepartmentDetailModalRefactored({
   const [exporting, setExporting] = useState(false)
   const [activeTab, setActiveTab] = useState("employees")
 
-  // Payroll Detail Modal state
-  const [showPayrollModal, setShowPayrollModal] = useState(false)
-  const [selectedPayrollData, setSelectedPayrollData] = useState<PayrollResult | null>(null)
+
 
   useEffect(() => {
     if (isOpen && departmentName) {
@@ -287,19 +286,18 @@ export default function DepartmentDetailModalRefactored({
   const handleViewEmployee = (employeeId: string) => {
     // Find the payroll record for this employee
     const payrollRecord = departmentData?.payrolls.find(p => p.employee_id === employeeId)
-    if (payrollRecord) {
-      // Transform to PayrollResult format and open modal
+    if (payrollRecord && onViewEmployee) {
+      // Transform to PayrollResult format and call parent callback
       const payrollResult = transformPayrollRecordToResult(payrollRecord as any)
       // Set source file to indicate Department Detail
       payrollResult.source_file = 'Department Detail'
-      setSelectedPayrollData(payrollResult)
-      setShowPayrollModal(true)
+      onViewEmployee(payrollResult)
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden department-detail-modal">
         <DialogHeader className="pb-2 sm:pb-4">
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -420,18 +418,6 @@ export default function DepartmentDetailModalRefactored({
           ) : null}
         </ScrollArea>
       </DialogContent>
-
-      {/* Payroll Detail Modal */}
-      {selectedPayrollData && (
-        <PayrollDetailModal
-          isOpen={showPayrollModal}
-          onClose={() => {
-            setShowPayrollModal(false)
-            setSelectedPayrollData(null)
-          }}
-          payrollData={selectedPayrollData}
-        />
-      )}
     </Dialog>
   )
 }

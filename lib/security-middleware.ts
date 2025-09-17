@@ -74,7 +74,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
   ].filter(Boolean)
 
   const isValidOrigin = origin && allowedOrigins.includes(origin)
-  const isValidReferer = referer && allowedOrigins.some(allowed => referer.startsWith(allowed))
+  const isValidReferer = referer && allowedOrigins.some(allowed => (referer as any).startsWith(allowed))
 
   if (!isValidOrigin && !isValidReferer) {
     return NextResponse.json(

@@ -244,19 +244,26 @@ export async function DELETE(request: NextRequest) {
 
     const supabase = createServiceClient()
 
-    let query = supabase.from("department_permissions")
-
+    // Soft delete by setting is_active = false
+    let updateQuery
     if (permissionId) {
-      query = query.eq("id", parseInt(permissionId))
+      updateQuery = supabase
+        .from("department_permissions")
+        .update({ is_active: false })
+        .eq("id", parseInt(permissionId))
+        .select()
+        .single()
     } else {
-      query = query.eq("employee_id", employeeId).eq("department", department)
+      updateQuery = supabase
+        .from("department_permissions")
+        .update({ is_active: false })
+        .eq("employee_id", employeeId)
+        .eq("department", department)
+        .select()
+        .single()
     }
 
-    // Soft delete by setting is_active = false
-    const { data: revokedPermission, error } = await query
-      .update({ is_active: false })
-      .select()
-      .single()
+    const { data: revokedPermission, error } = await updateQuery
 
     if (error) {
       console.error("Revoke permission error:", error)

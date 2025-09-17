@@ -53,11 +53,19 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
   }, [formData, payrollData])
 
   const handleFieldChange = (fieldKey: keyof PayrollData, value: string) => {
-    const numericValue = value === "" ? 0 : parseFloat(value)
-    
+    // Handle empty string as null/undefined for optional fields, 0 for required fields
+    let processedValue: number | undefined
+
+    if (value === "" || value === null || value === undefined) {
+      processedValue = undefined
+    } else {
+      const numericValue = parseFloat(value)
+      processedValue = isNaN(numericValue) ? 0 : numericValue
+    }
+
     setFormData(prev => ({
       ...prev,
-      [fieldKey]: isNaN(numericValue) ? 0 : numericValue
+      [fieldKey]: processedValue
     }))
 
     // Clear validation error for this field
@@ -76,20 +84,21 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
     PAYROLL_FIELD_GROUPS.forEach(group => {
       group.fields.forEach(field => {
         const value = formData[field.key]
-        
-        if (field.required && (value === undefined || value === null || value === 0)) {
+
+        // Type-safe validation with proper null/undefined handling
+        if (field.required && (value === undefined || value === null || (typeof value === 'number' && value === 0))) {
           errors[field.key] = `${field.label} là bắt buộc`
         }
-        
-        if (field.min !== undefined && value !== undefined && value < field.min) {
+
+        if (field.min !== undefined && value !== undefined && value !== null && typeof value === 'number' && value < field.min) {
           errors[field.key] = `${field.label} phải >= ${field.min}`
         }
-        
-        if (field.max !== undefined && value !== undefined && value > field.max) {
+
+        if (field.max !== undefined && value !== undefined && value !== null && typeof value === 'number' && value > field.max) {
           errors[field.key] = `${field.label} phải <= ${field.max}`
         }
 
-        if (field.validation && value !== undefined) {
+        if (field.validation && value !== undefined && value !== null) {
           const validationError = field.validation(value)
           if (validationError) {
             errors[field.key] = validationError
@@ -116,7 +125,7 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
     }
 
     // Prepare updates (only changed fields)
-    const updates: Partial<PayrollData> = {}
+    const updates: Record<string, any> = {}
     PAYROLL_FIELD_GROUPS.forEach(group => {
       group.fields.forEach(field => {
         const currentValue = formData[field.key]
@@ -270,7 +279,7 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
                         <Input
                           id={field.key}
                           type="number"
-                          value={formData[field.key] || ""}
+                          value={formData[field.key] !== undefined && formData[field.key] !== null ? String(formData[field.key]) : ""}
                           onChange={(e) => handleFieldChange(field.key, e.target.value)}
                           min={field.min}
                           max={field.max}

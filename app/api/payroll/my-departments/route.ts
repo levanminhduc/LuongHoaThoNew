@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate statistics by department
     const departmentStats = allowedDepartments.map(dept => {
-      const deptData = stats?.filter(s => s.employees.department === dept) || []
+      const deptData = stats?.filter(s => (s.employees as any)?.department === dept) || []
       const totalEmployees = deptData.length
       const signedCount = deptData.filter(s => s.is_signed).length
       const totalSalary = deptData.reduce((sum, s) => sum + (s.tien_luong_thuc_nhan_cuoi_ky || 0), 0)

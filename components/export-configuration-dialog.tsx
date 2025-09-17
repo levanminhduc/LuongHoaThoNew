@@ -30,10 +30,8 @@ import {
   Calendar,
   Database
 } from "lucide-react"
-import { 
-  useMappingConfig,
-  useHeaderMapping,
-  useHeaderMappingPreview
+import {
+  useMappingConfig
 } from "@/lib/hooks/use-mapping-config"
 import { useHeaderMapping as useHeaderMappingUtils } from "@/lib/hooks/use-header-mapping"
 import type { MappingConfiguration } from "@/lib/column-alias-config"

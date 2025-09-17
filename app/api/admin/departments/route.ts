@@ -138,15 +138,18 @@ export async function GET(request: NextRequest) {
     let filteredStats = validDepartmentStats
     if (auth.user.role === 'truong_phong') {
       const allowedDepts = auth.user.allowed_departments || []
-      filteredStats = validDepartmentStats.filter(dept => allowedDepts.includes(dept.name))
+      filteredStats = validDepartmentStats.filter(dept => dept && allowedDepts.includes(dept.name))
     } else if (auth.user.role === 'to_truong') {
-      filteredStats = validDepartmentStats.filter(dept => dept.name === auth.user.department)
+      filteredStats = validDepartmentStats.filter(dept => dept && dept.name === auth.user.department)
     }
 
     console.log("🔍 Final filtered stats:", filteredStats.length)
 
     // Sắp xếp departments theo chữ cái A-Z
-    filteredStats.sort((a, b) => a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' }))
+    filteredStats.sort((a, b) => {
+      if (!a || !b) return 0
+      return a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
+    })
 
     // Calculate total employees across ALL employees (including inactive)
     const { count: totalAllEmployees, error: totalEmpError } = await supabase
@@ -157,7 +160,7 @@ export async function GET(request: NextRequest) {
       console.error("Total employees count error:", totalEmpError)
     }
 
-    console.log("🔍 Sample department stats:", filteredStats.slice(0, 3).map(d => ({ name: d.name, employeeCount: d.employeeCount })))
+    console.log("🔍 Sample department stats:", filteredStats.slice(0, 3).map(d => d ? ({ name: d.name, employeeCount: d.employeeCount }) : null).filter(Boolean))
     console.log("🔍 Total ALL employees (including inactive):", totalAllEmployees)
     console.log("🔍 Active departments count:", activeUniqueDepartments.length)
     console.log("🔍 All departments count:", allUniqueDepartments.length)

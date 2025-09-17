@@ -197,7 +197,8 @@ export function createMappingConfigurationFromMapping(
     database_field: dbField,
     excel_column_name: excelColumn,
     confidence_score: 95, // High confidence for successful mappings
-    mapping_type: 'manual' as const
+    mapping_type: 'manual' as const,
+    validation_passed: true
   }))
 
   return {
@@ -458,7 +459,7 @@ export async function autoMapColumnsWithAliases(
       mapping[column] = {
         database_field: bestMatch.field,
         confidence_score: bestMatch.confidence,
-        mapping_type: bestMatch.type,
+        mapping_type: bestMatch.type === "saved_config" ? "manual" : bestMatch.type,
         matched_alias: bestMatch.alias,
         validation_status: bestMatch.confidence >= 70 ? "valid" : "warning",
         validation_messages: bestMatch.confidence < 70 ?

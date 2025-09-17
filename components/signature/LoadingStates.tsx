@@ -51,7 +51,7 @@ interface RefreshButtonProps {
   loading?: boolean
   lastUpdated?: string
   disabled?: boolean
-  size?: "sm" | "md" | "lg"
+  size?: "sm" | "lg" | "default"
   variant?: "default" | "outline" | "ghost"
   className?: string
 }

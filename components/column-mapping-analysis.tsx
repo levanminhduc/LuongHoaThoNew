@@ -40,7 +40,7 @@ export interface AnalysisResult {
     exactMatches: number
     aliasMatches: number
     fuzzyMatches: number
-    configMatches: number
+    manualMatches: number
   }
   aliasesUsed?: number
 }
@@ -207,8 +207,8 @@ export function ColumnMappingAnalysis({
                 <div className="text-xs text-blue-600">Alias Matches</div>
               </div>
               <div className="text-center p-2 bg-purple-50 rounded">
-                <div className="text-lg font-bold text-purple-600">{mappingTypeStats.configMatches}</div>
-                <div className="text-xs text-purple-600">Config Matches</div>
+                <div className="text-lg font-bold text-purple-600">{mappingTypeStats.manualMatches}</div>
+                <div className="text-xs text-purple-600">Manual Matches</div>
               </div>
               <div className="text-center p-2 bg-orange-50 rounded">
                 <div className="text-lg font-bold text-orange-600">{mappingTypeStats.fuzzyMatches}</div>

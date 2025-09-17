@@ -130,7 +130,11 @@ export function PayrollDetailModal({ isOpen, onClose, payrollData }: PayrollDeta
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] overflow-hidden payroll-detail-modal modal-event-isolation"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calculator className="w-5 h-5" />

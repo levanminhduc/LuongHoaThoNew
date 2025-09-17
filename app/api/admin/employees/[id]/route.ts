@@ -5,14 +5,15 @@ import { cascadeUpdateEmployeeId } from "@/lib/cascade-update-employee"
 import { auditService } from "@/lib/audit-service"
 import bcrypt from "bcryptjs"
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = verifyEmployeeManagementAccess(request)
     if (!admin) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
-    const { id } = params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const body = await request.json()
     const { employee_id, full_name, cccd, password, chuc_vu, department, phone_number, is_active } = body
 
@@ -238,14 +239,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = verifyEmployeeManagementAccess(request)
     if (!admin) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
-    const { id } = params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const supabase = createServiceClient()
 
     const { data: existing } = await supabase
@@ -361,14 +363,15 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = verifyEmployeeManagementAccess(request)
     if (!admin) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
-    const { id } = params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const supabase = createServiceClient()
 
     const { data: employee, error } = await supabase

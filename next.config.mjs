@@ -1,16 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true,
   },
-  // Add support for older browsers
-  swcMinify: true,
+  // Add support for older browsers (swcMinify is enabled by default in Next.js 15)
   compiler: {
     // Remove console logs in production
     removeConsole: process.env.NODE_ENV === 'production' ? {

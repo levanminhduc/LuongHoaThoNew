@@ -99,7 +99,7 @@ export default function EmployeeAuditLogs({ employeeId, employeeName }: Employee
 
       if (!response.ok) {
         const errorText = await response.text()
-        let errorData = {}
+        let errorData: { error?: string } = {}
         try {
           errorData = JSON.parse(errorText)
         } catch (e) {

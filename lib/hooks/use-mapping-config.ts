@@ -29,17 +29,21 @@ export interface UseMappingConfigReturn {
   updateConfiguration: (id: number, updates: Partial<MappingConfiguration>) => Promise<void>
   deleteConfiguration: (id: number) => Promise<void>
   setDefaultConfiguration: (id: number) => Promise<void>
+  setCurrentConfig: (config: MappingConfiguration | null) => void
   applyConfiguration: (id: number) => Promise<void>
   clearCurrentConfig: () => void
   
   // Notifications
+  addNotification: (notification: Omit<ConfigNotification, 'id' | 'timestamp'>) => void
   markNotificationRead: (id: string) => void
   clearNotifications: () => void
   clearAllNotifications: () => void
   
   // Utilities
+  invalidateCache: () => void
   refreshConfigurations: () => Promise<void>
   clearError: () => void
+  reset: () => void
   
   // Computed
   hasConfigurations: boolean

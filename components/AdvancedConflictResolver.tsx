@@ -243,7 +243,7 @@ export function AdvancedConflictResolver({
       condition: customRule.condition,
       action: customRule.action,
       priority: resolutionRules.length + 1,
-      field_rules: customRule.field_rules
+      field_rules: customRule.field_rules as Record<string, "existing" | "new" | "latest" | "highest" | "lowest" | "merge">
     }
 
     setResolutionRules(prev => [...prev, newRule])

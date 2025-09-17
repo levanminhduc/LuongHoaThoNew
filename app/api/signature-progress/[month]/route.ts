@@ -130,7 +130,7 @@ export async function GET(
         last_updated: lastEmployeeSignature || null,
         is_complete: signedCount === totalCount && totalCount > 0
       },
-      management_progress,
+      management_progress: managementProgress,
       recent_activity: recentActivity.slice(0, 10),
       real_time_data: {
         timestamp: getVietnamTimestamp(),

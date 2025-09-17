@@ -19,7 +19,7 @@ function getClientIP(request: NextRequest): string {
 // GET single payroll record with full details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Enhanced role-based authentication
@@ -28,7 +28,8 @@ export async function GET(
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
-    const payrollId = parseInt(params.id)
+    const resolvedParams = await params
+    const payrollId = parseInt(resolvedParams.id)
     if (isNaN(payrollId)) {
       return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 })
     }
@@ -94,7 +95,7 @@ export async function GET(
 // PUT update payroll record
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Enhanced role-based authentication
@@ -108,7 +109,8 @@ export async function PUT(
       return NextResponse.json({ error: "Không có quyền chỉnh sửa dữ liệu lương" }, { status: 403 })
     }
 
-    const payrollId = parseInt(params.id)
+    const resolvedParams = await params
+    const payrollId = parseInt(resolvedParams.id)
     if (isNaN(payrollId)) {
       return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 })
     }
@@ -147,11 +149,11 @@ export async function PUT(
     const editableFields = [
       "he_so_lam_viec", "he_so_phu_cap_ket_qua", "he_so_luong_co_ban", "luong_toi_thieu_cty",
       "ngay_cong_trong_gio", "gio_cong_tang_ca", "gio_an_ca", "tong_gio_lam_viec", "tong_he_so_quy_doi",
-      "ngay_cong_chu_nhat", // Bổ sung cột mới
+      "ngay_cong_chu_nhat",
       "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio", "tien_luong_san_pham_trong_gio",
       "tien_luong_tang_ca", "tien_luong_30p_an_ca", "tien_khen_thuong_chuyen_can", "luong_hoc_viec_pc_luong",
       "tong_cong_tien_luong_san_pham", "ho_tro_thoi_tiet_nong", "bo_sung_luong",
-      "tien_luong_chu_nhat", "luong_cnkcp_vuot", "tien_tang_ca_vuot", // Bổ sung 3 cột mới
+      "tien_luong_chu_nhat", "luong_cnkcp_vuot", "tien_tang_ca_vuot",
       "bhxh_21_5_percent", "pc_cdcs_pccc_atvsv", "luong_phu_nu_hanh_kinh", "tien_con_bu_thai_7_thang", "ho_tro_gui_con_nha_tre",
       "ngay_cong_phep_le", "tien_phep_le", "tong_cong_tien_luong", "tien_boc_vac", "ho_tro_xang_xe",
       "thue_tncn_nam_2024", "tam_ung", "thue_tncn", "bhxh_bhtn_bhyt_total", "truy_thu_the_bhyt",

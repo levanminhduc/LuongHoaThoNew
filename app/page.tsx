@@ -1,7 +1,7 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Shield, FileSpreadsheet } from "lucide-react"
+import { AnimatedGradientButton } from "@/components/ui/animated-gradient-button"
+import { Users, Shield } from "lucide-react"
 
 export default function HomePage() {
   return (
@@ -35,9 +35,9 @@ export default function HomePage() {
                   </div>
                 </div>
                 <Link href="/admin/login">
-                  <Button className="w-full" size="lg">
-                    Đăng Nhập Admin
-                  </Button>
+                  <AnimatedGradientButton variant="blue" className="w-full">
+                    Đăng Nhập
+                  </AnimatedGradientButton>
                 </Link>
               </div>
             </CardContent>
@@ -58,13 +58,9 @@ export default function HomePage() {
                   <p>Nhập mã nhân viên và số CCCD để xem thông tin lương</p>
                 </div>
                 <Link href="/employee/lookup">
-                  <Button
-                    variant="outline"
-                    className="w-full bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                    size="lg"
-                  >
+                  <AnimatedGradientButton variant="green" className="w-full">
                     Tra Cứu Lương
-                  </Button>
+                  </AnimatedGradientButton>
                 </Link>
               </div>
             </CardContent>

@@ -24,7 +24,7 @@ function verifyAdminToken(request: NextRequest) {
 // GET: Fetch specific column alias
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminUser = verifyAdminToken(request)
@@ -35,7 +35,8 @@ export async function GET(
       )
     }
 
-    const aliasId = parseInt(params.id)
+    const resolvedParams = await params
+    const aliasId = parseInt(resolvedParams.id)
     if (isNaN(aliasId)) {
       return NextResponse.json(
         { success: false, message: "ID không hợp lệ" },
@@ -76,7 +77,7 @@ export async function GET(
 // PUT: Update column alias
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminUser = verifyAdminToken(request)
@@ -87,7 +88,8 @@ export async function PUT(
       )
     }
 
-    const aliasId = parseInt(params.id)
+    const resolvedParams = await params
+    const aliasId = parseInt(resolvedParams.id)
     if (isNaN(aliasId)) {
       return NextResponse.json(
         { success: false, message: "ID không hợp lệ" },
@@ -194,7 +196,7 @@ export async function PUT(
 // DELETE: Delete column alias
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminUser = verifyAdminToken(request)
@@ -205,7 +207,8 @@ export async function DELETE(
       )
     }
 
-    const aliasId = parseInt(params.id)
+    const resolvedParams = await params
+    const aliasId = parseInt(resolvedParams.id)
     if (isNaN(aliasId)) {
       return NextResponse.json(
         { success: false, message: "ID không hợp lệ" },

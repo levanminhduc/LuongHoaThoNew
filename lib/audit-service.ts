@@ -59,9 +59,9 @@ export class EmployeeAuditService {
   /**
    * Get client IP address from request headers
    */
-  private getClientIP(): string | null {
-    const headersList = headers()
-    
+  private async getClientIP(): Promise<string | null> {
+    const headersList = await headers()
+
     // Try various headers for IP address
     const ipHeaders = [
       'x-forwarded-for',
@@ -87,8 +87,8 @@ export class EmployeeAuditService {
   /**
    * Get user agent from request headers
    */
-  private getUserAgent(): string | null {
-    const headersList = headers()
+  private async getUserAgent(): Promise<string | null> {
+    const headersList = await headers()
     return headersList.get('user-agent')
   }
 
@@ -97,8 +97,8 @@ export class EmployeeAuditService {
    */
   async logEmployeeChange(entry: AuditLogEntry): Promise<AuditLogResult> {
     try {
-      const ipAddress = this.getClientIP()
-      const userAgent = this.getUserAgent()
+      const ipAddress = await this.getClientIP()
+      const userAgent = await this.getUserAgent()
 
       const { data, error } = await this.supabase.rpc('log_employee_change', {
         p_admin_user_id: entry.adminUserId,
@@ -142,8 +142,8 @@ export class EmployeeAuditService {
     errorMessage: string
   ): Promise<AuditLogResult> {
     try {
-      const ipAddress = this.getClientIP()
-      const userAgent = this.getUserAgent()
+      const ipAddress = await this.getClientIP()
+      const userAgent = await this.getUserAgent()
 
       const { data, error } = await this.supabase.rpc('log_employee_change_failed', {
         p_admin_user_id: adminUserId,

@@ -110,3 +110,45 @@
 .stable-layout {
   contain: layout style;
 }
+
+/* Modal Z-Index Hierarchy */
+.department-detail-modal {
+  z-index: 50;
+}
+
+.payroll-detail-modal {
+  z-index: 60;
+}
+
+/* Mobile Event Isolation for Nested Modals */
+.modal-event-isolation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-event-isolation * {
+  touch-action: manipulation;
+}
+
+/* Prevent event bubbling on modal content */
+.modal-content-isolated {
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+/* Mobile touch event prevention for modal overlays */
+@media (max-width: 768px) {
+  .modal-overlay-isolated {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .modal-content-isolated {
+    touch-action: manipulation;
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}

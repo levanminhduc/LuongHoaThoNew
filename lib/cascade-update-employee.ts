@@ -340,7 +340,7 @@ export async function cascadeUpdateEmployeeId(
           oldEmployeeId,
           newEmployeeId,
           updatedEmployee.full_name,
-          updatedStats
+          updatedStats as unknown as Record<string, number>
         )
         console.log(`Cascade update audit logged for ${oldEmployeeId} → ${newEmployeeId}`)
       } catch (auditError) {
@@ -352,7 +352,7 @@ export async function cascadeUpdateEmployeeId(
     return {
       success: true,
       message: `Cascade update thành công! Đã cập nhật ${totalAffected} records across ${Object.keys(updatedStats).filter(k => updatedStats[k as keyof CascadeUpdateStats] > 0).length} tables.`,
-      affectedTables: updatedStats
+      affectedTables: updatedStats as unknown as Record<string, number>
     }
 
   } catch (error) {
