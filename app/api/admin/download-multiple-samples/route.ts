@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     zip.file("README.txt", readmeContent)
 
     // Generate ZIP buffer
-    const zipBuffer = await zip.generateAsync({ type: "uint8array" })
+    const zipBuffer = Buffer.from(await zip.generateAsync({ type: "uint8array" }))
 
     // Trả về ZIP file
     return new NextResponse(zipBuffer, {
