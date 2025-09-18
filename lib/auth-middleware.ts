@@ -31,11 +31,8 @@ export function verifyToken(request: NextRequest): AuthContext | null {
       },
       canAccessDepartment: (department: string) => {
         if (decoded.role === 'admin') return true
-        if (decoded.role === 'giam_doc') return true
-        if (decoded.role === 'ke_toan') return true
-        if (decoded.role === 'nguoi_lap_bieu') return true
         if (decoded.role === 'van_phong') return true
-        if (decoded.role === 'truong_phong') {
+        if (['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong'].includes(decoded.role)) {
           return decoded.allowed_departments?.includes(department) || false
         }
         if (decoded.role === 'to_truong') {
@@ -118,6 +115,9 @@ export function getDepartmentFilter(auth: AuthContext): string[] {
   switch (auth.user.role) {
     case 'admin':
       return [] // No filter - access all
+    case 'giam_doc':
+    case 'ke_toan':
+    case 'nguoi_lap_bieu':
     case 'truong_phong':
       return auth.user.allowed_departments || []
     case 'to_truong':

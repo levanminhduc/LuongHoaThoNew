@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
 
     // Filter departments based on user role
     let filteredStats = validDepartmentStats
-    if (auth.user.role === 'truong_phong') {
+    if (['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong'].includes(auth.user.role)) {
       const allowedDepts = auth.user.allowed_departments || []
       filteredStats = validDepartmentStats.filter(dept => dept && allowedDepts.includes(dept.name))
     } else if (auth.user.role === 'to_truong') {

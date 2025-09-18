@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check role permissions
-    if (!['admin', 'truong_phong', 'to_truong'].includes(auth.user.role)) {
+    if (!['admin', 'giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong', 'to_truong'].includes(auth.user.role)) {
       return NextResponse.json({ error: "Không có quyền xuất dữ liệu" }, { status: 403 })
     }
 
@@ -100,23 +100,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply role-based department filtering
-    if (auth.user.role === 'truong_phong') {
-      // Manager can only access allowed departments
+    if (['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong'].includes(auth.user.role)) {
+      // Management roles can only access allowed departments
       const allowedDepartments = auth.user.allowed_departments || []
       if (allowedDepartments.length === 0) {
-        return NextResponse.json({ 
-          error: "Chưa được phân quyền truy cập department nào" 
+        return NextResponse.json({
+          error: "Chưa được phân quyền truy cập department nào"
         }, { status: 403 })
       }
       query = query.in("employees.department", allowedDepartments)
-      
+
       // If specific department requested, check permission
       if (department && !allowedDepartments.includes(department)) {
-        return NextResponse.json({ 
-          error: "Không có quyền truy cập department này" 
+        return NextResponse.json({
+          error: "Không có quyền truy cập department này"
         }, { status: 403 })
       }
-      
+
       if (department) {
         query = query.eq("employees.department", department)
       }
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
 
       // Apply department filtering for role-based access
       let filteredData = mergedData
-      if (auth.user.role === 'truong_phong') {
+      if (['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong'].includes(auth.user.role)) {
         const allowedDepartments = auth.user.allowed_departments || []
         filteredData = mergedData.filter(record =>
           record.employees && allowedDepartments.includes(record.employees.department)

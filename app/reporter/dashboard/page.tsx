@@ -9,18 +9,21 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import EmployeeListModal from "@/components/EmployeeListModal"
+import OverviewModal from "@/components/OverviewModal"
 import { getPreviousMonth } from "@/utils/dateUtils"
-import { 
-  FileText, 
-  BarChart3, 
-  TrendingUp, 
-  CheckCircle, 
-  Clock, 
+import { type JWTPayload } from "@/lib/auth"
+import {
+  FileText,
+  BarChart3,
+  TrendingUp,
+  CheckCircle,
+  Clock,
   AlertCircle,
   Database,
   PenTool,
   FileSpreadsheet,
-  LogOut
+  LogOut,
+  Eye
 } from "lucide-react"
 
 interface MonthStatus {
@@ -50,9 +53,22 @@ export default function ReporterDashboard() {
   const [signatureHistory, setSignatureHistory] = useState<any[]>([])
   const [message, setMessage] = useState("")
   const [showEmployeeModal, setShowEmployeeModal] = useState(false)
+  const [showOverviewModal, setShowOverviewModal] = useState(false)
+  const [user, setUser] = useState<JWTPayload | null>(null)
   const router = useRouter()
 
   useEffect(() => {
+    // Load user info from localStorage
+    const userStr = localStorage.getItem("user_info")
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr)
+        setUser(userData)
+      } catch (error) {
+        console.error("Error parsing user info:", error)
+      }
+    }
+
     fetchDashboardData()
   }, [selectedMonth])
 
@@ -147,6 +163,22 @@ export default function ReporterDashboard() {
               <p className="text-sm text-gray-600">MAY HÒA THỌ ĐIỆN BÀN - Xác nhận báo cáo và thống kê</p>
             </div>
             <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowOverviewModal(true)}
+                className="hidden sm:flex"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Xem Tổng Quan
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowOverviewModal(true)}
+                className="sm:hidden"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
@@ -422,6 +454,16 @@ export default function ReporterDashboard() {
         userRole="nguoi_lap_bieu"
         totalEmployees={monthStatus?.employee_completion.total_employees}
       />
+
+      {/* Overview Modal */}
+      {user && (
+        <OverviewModal
+          isOpen={showOverviewModal}
+          onClose={() => setShowOverviewModal(false)}
+          user={user}
+          initialMonth={selectedMonth}
+        />
+      )}
     </div>
   )
 }

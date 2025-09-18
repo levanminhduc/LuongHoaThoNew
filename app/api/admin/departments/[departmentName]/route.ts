@@ -1,4 +1,4 @@
-// API endpoint for getting detailed department information for truong_phong
+// API endpoint for getting detailed department information for management roles
 import { type NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware"
@@ -18,9 +18,9 @@ export async function GET(request: NextRequest, { params }: DepartmentDetailPara
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
     }
 
-    // Only truong_phong can access this endpoint
-    if (!auth.isRole('truong_phong')) {
-      return NextResponse.json({ error: "Chỉ trưởng phòng mới có quyền truy cập" }, { status: 403 })
+    // Only management roles can access this endpoint
+    if (!['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong'].includes(auth.user.role)) {
+      return NextResponse.json({ error: "Không có quyền truy cập chức năng này" }, { status: 403 })
     }
 
     // Await params for Next.js 15 compatibility
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest, { params }: DepartmentDetailPara
     const { searchParams } = new URL(request.url)
     const month = searchParams.get("month") || new Date().toISOString().slice(0, 7)
 
-    // Check if truong_phong has permission to access this department
+    // Check if user has permission to access this department
     const allowedDepartments = auth.user.allowed_departments || []
     if (!allowedDepartments.includes(departmentName)) {
       return NextResponse.json({ 

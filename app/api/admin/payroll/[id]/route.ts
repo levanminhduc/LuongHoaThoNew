@@ -51,8 +51,8 @@ export async function GET(
       .eq("id", payrollId)
 
     // Apply role-based filtering
-    if (auth.user.role === 'truong_phong') {
-      // Truong_phong can only access allowed departments
+    if (['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong'].includes(auth.user.role)) {
+      // Management roles can only access allowed departments
       const allowedDepts = auth.user.allowed_departments || []
       if (allowedDepts.length > 0) {
         query = query.in("employees.department", allowedDepts)
@@ -67,7 +67,7 @@ export async function GET(
       // Nhan_vien can only access own data
       query = query.eq("employee_id", auth.user.employee_id)
     }
-    // Admin has no restrictions
+    // Admin and van_phong have no restrictions
 
     const { data: payrollData, error: payrollError } = await query.single()
 

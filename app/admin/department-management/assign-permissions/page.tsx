@@ -128,9 +128,24 @@ function AssignPermissionsContent() {
         setDepartments(sortedDepartments)
       }
 
-      // Load employees (managers and supervisors only)
-      // API chỉ hỗ trợ single role, nên cần gọi 2 lần
-      const [truongPhongResponse, toTruongResponse] = await Promise.all([
+      // Load employees (all management roles)
+      // API chỉ hỗ trợ single role, nên cần gọi 5 lần cho tất cả management roles
+      const [giamDocResponse, keToanResponse, nguoiLapBieuResponse, truongPhongResponse, toTruongResponse] = await Promise.all([
+        fetch('/api/admin/employees?role=giam_doc&limit=1000', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('/api/admin/employees?role=ke_toan&limit=1000', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('/api/admin/employees?role=nguoi_lap_bieu&limit=1000', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
         fetch('/api/admin/employees?role=truong_phong&limit=1000', {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -145,6 +160,21 @@ function AssignPermissionsContent() {
 
       let allEmployees: Employee[] = []
 
+      if (giamDocResponse.ok) {
+        const giamDocData = await giamDocResponse.json()
+        allEmployees = [...allEmployees, ...(giamDocData.employees || [])]
+      }
+
+      if (keToanResponse.ok) {
+        const keToanData = await keToanResponse.json()
+        allEmployees = [...allEmployees, ...(keToanData.employees || [])]
+      }
+
+      if (nguoiLapBieuResponse.ok) {
+        const nguoiLapBieuData = await nguoiLapBieuResponse.json()
+        allEmployees = [...allEmployees, ...(nguoiLapBieuData.employees || [])]
+      }
+
       if (truongPhongResponse.ok) {
         const truongPhongData = await truongPhongResponse.json()
         allEmployees = [...allEmployees, ...(truongPhongData.employees || [])]
@@ -156,7 +186,7 @@ function AssignPermissionsContent() {
       }
 
       if (allEmployees.length === 0) {
-        console.error("Failed to load employees")
+        console.error("Failed to load management employees")
       }
 
       setEmployees(allEmployees)
@@ -306,7 +336,7 @@ function AssignPermissionsContent() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Cấp Quyền Department</h1>
                 <p className="text-sm text-gray-600">
-                  Cấp quyền truy cập departments cho Trưởng Phòng và Tổ Trưởng
+                  Cấp quyền truy cập departments cho Giám Đốc, Kế Toán, Người Lập Biểu, Trưởng Phòng và Tổ Trưởng
                 </p>
               </div>
             </div>
@@ -338,7 +368,7 @@ function AssignPermissionsContent() {
                 Chọn Nhân Viên
               </CardTitle>
               <CardDescription>
-                Chọn Trưởng Phòng hoặc Tổ Trưởng để cấp quyền truy cập departments
+                Chọn nhân viên quản lý (Giám Đốc, Kế Toán, Người Lập Biểu, Trưởng Phòng, Tổ Trưởng) để cấp quyền truy cập departments
               </CardDescription>
             </CardHeader>
             <CardContent>
