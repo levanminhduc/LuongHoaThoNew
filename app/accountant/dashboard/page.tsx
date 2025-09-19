@@ -25,6 +25,8 @@ import {
   LogOut,
   Eye
 } from "lucide-react"
+import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone"
+
 
 interface MonthStatus {
   month: string
@@ -55,6 +57,7 @@ export default function AccountantDashboard() {
   const [showEmployeeModal, setShowEmployeeModal] = useState(false)
   const [showOverviewModal, setShowOverviewModal] = useState(false)
   const [user, setUser] = useState<JWTPayload | null>(null)
+  const [isSigning, setIsSigning] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -76,7 +79,7 @@ export default function AccountantDashboard() {
     try {
       setLoading(true)
       const token = localStorage.getItem("admin_token")
-      
+
       const [statusResponse, historyResponse] = await Promise.all([
         fetch(`/api/signature-status/${selectedMonth}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -109,6 +112,9 @@ export default function AccountantDashboard() {
   }
 
   const handleSignature = async () => {
+    if (isSigning) return
+
+    setIsSigning(true)
     try {
       const token = localStorage.getItem("admin_token")
       const response = await fetch("/api/management-signature", {
@@ -134,6 +140,8 @@ export default function AccountantDashboard() {
       }
     } catch (error) {
       setMessage("Lỗi kết nối khi ký xác nhận")
+    } finally {
+      setIsSigning(false)
     }
   }
 
@@ -305,7 +313,7 @@ export default function AccountantDashboard() {
                       <CheckCircle className="h-5 w-5 text-green-500" />
                       <span className="text-green-700">100% nhân viên đã ký lương - Kế Toán có thể ký</span>
                     </div>
-                    
+
                     {monthStatus.management_signatures.ke_toan ? (
                       <div className="p-4 bg-green-50 rounded-lg">
                         <p className="text-green-800 font-medium">✅ Đã xác nhận tài chính</p>
@@ -313,7 +321,7 @@ export default function AccountantDashboard() {
                           Ký bởi: {monthStatus.management_signatures.ke_toan.signed_by_name}
                         </p>
                         <p className="text-sm text-green-600">
-                          Thời gian: {new Date(monthStatus.management_signatures.ke_toan.signed_at).toLocaleString('vi-VN')}
+                          Thời gian: {formatTimestampFromDBRaw(monthStatus.management_signatures.ke_toan.signed_at)}
                         </p>
                         {monthStatus.management_signatures.ke_toan.notes && (
                           <p className="text-sm text-green-600 mt-2">
@@ -332,9 +340,22 @@ export default function AccountantDashboard() {
                             <li>✅ Kiểm tra tính chính xác tính toán</li>
                           </ul>
                         </div>
-                        <Button onClick={handleSignature} className="w-full bg-green-600 hover:bg-green-700 text-white">
-                          <PenTool className="h-4 w-4 mr-2" />
-                          Ký Xác Nhận Kế Toán
+                        <Button
+                          onClick={handleSignature}
+                          disabled={isSigning}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSigning ? (
+                            <>
+                              <Clock className="h-4 w-4 mr-2 animate-spin" />
+                              Đang xử lý...
+                            </>
+                          ) : (
+                            <>
+                              <PenTool className="h-4 w-4 mr-2" />
+                              Ký Xác Nhận Kế Toán
+                            </>
+                          )}
                         </Button>
                       </div>
                     )}
@@ -346,7 +367,7 @@ export default function AccountantDashboard() {
                       <span className="text-yellow-800 font-medium">Chờ nhân viên ký đủ</span>
                     </div>
                     <p className="text-sm text-yellow-700">
-                      Hiện tại: {monthStatus?.employee_completion.signed_employees}/{monthStatus?.employee_completion.total_employees} nhân viên đã ký 
+                      Hiện tại: {monthStatus?.employee_completion.signed_employees}/{monthStatus?.employee_completion.total_employees} nhân viên đã ký
                       ({monthStatus?.employee_completion.completion_percentage.toFixed(1)}%)
                     </p>
                     <p className="text-sm text-yellow-700 mt-2">
@@ -416,7 +437,7 @@ export default function AccountantDashboard() {
                           )}
                         </div>
                         <Badge variant="secondary">
-                          {new Date(signature.signed_at).toLocaleDateString('vi-VN')}
+                          {formatTimestampFromDBRaw(signature.signed_at)}
                         </Badge>
                       </div>
                     ))
