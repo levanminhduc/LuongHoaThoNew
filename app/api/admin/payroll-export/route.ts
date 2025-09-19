@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServiceClient } from "@/utils/supabase/server"
 import { verifyToken } from "@/lib/auth-middleware"
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 import * as XLSX from "xlsx"
 
 // All 39 payroll fields from database
@@ -293,9 +294,68 @@ export async function GET(request: NextRequest) {
       return row
     })
 
-    // Create worksheet data
+    // Fetch management signatures for the month
+    let managementSignatures = {
+      giam_doc: null as any,
+      ke_toan: null as any,
+      nguoi_lap_bieu: null as any
+    }
+
+    if (month) {
+      try {
+        const { data: signatures, error: sigError } = await supabase
+          .from("management_signatures")
+          .select("*")
+          .eq("salary_month", month)
+          .eq("is_active", true)
+
+        if (!sigError && signatures) {
+          signatures.forEach(sig => {
+            managementSignatures[sig.signature_type as keyof typeof managementSignatures] = sig
+          })
+        }
+      } catch (error) {
+        console.log("Management signatures table not available - using fallback")
+      }
+    }
+
+    // Create worksheet data with signature section
     console.log("Creating worksheet with headers:", headers.length, "and data rows:", dataRows.length)
     const worksheetData = [headers, ...dataRows]
+
+    // Calculate signature column positions based on total columns
+    const totalColumns = headers.length
+    const leftCol = 0 // Column A (Giám Đốc)
+    const centerCol = Math.floor(totalColumns / 2) // Center column (Kế Toán)
+    const rightCol = totalColumns - 1 // Last column (Người Lập Biểu)
+
+    // Add signature section
+    const signatureStartRow = worksheetData.length + 2
+
+    // Add signature headers
+    worksheetData.push([]) // Empty row
+    worksheetData.push([]) // Empty row
+
+    // Signature headers row
+    const signatureHeaderRow = new Array(totalColumns).fill("")
+    signatureHeaderRow[leftCol] = "Giám Đốc"
+    signatureHeaderRow[centerCol] = "Kế Toán"
+    signatureHeaderRow[rightCol] = "Người Lập Biểu"
+    worksheetData.push(signatureHeaderRow)
+
+    // Signature data row
+    const signatureDataRow = new Array(totalColumns).fill("")
+    signatureDataRow[leftCol] = managementSignatures.giam_doc
+      ? `${managementSignatures.giam_doc.signed_by_name}\n${formatVietnamTimestamp(managementSignatures.giam_doc.signed_at)}`
+      : "Chưa ký"
+    signatureDataRow[centerCol] = managementSignatures.ke_toan
+      ? `${managementSignatures.ke_toan.signed_by_name}\n${formatVietnamTimestamp(managementSignatures.ke_toan.signed_at)}`
+      : "Chưa ký"
+    signatureDataRow[rightCol] = managementSignatures.nguoi_lap_bieu
+      ? `${managementSignatures.nguoi_lap_bieu.signed_by_name}\n${formatVietnamTimestamp(managementSignatures.nguoi_lap_bieu.signed_at)}`
+      : "Chưa ký"
+    worksheetData.push(signatureDataRow)
+
     console.log("Worksheet data prepared, creating sheet...")
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
     console.log("Worksheet created successfully")
@@ -303,6 +363,41 @@ export async function GET(request: NextRequest) {
     // Set column widths
     const columnWidths = headers.map(() => ({ wch: 15 }))
     worksheet['!cols'] = columnWidths
+
+    // Apply styling to signature section
+    const signatureHeaderRowIndex = signatureStartRow + 1
+    const signatureDataRowIndex = signatureStartRow + 2
+
+    // Style signature headers (bold, centered, bottom border)
+    const signatureHeaderCells = [
+      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: leftCol }),
+      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: centerCol }),
+      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: rightCol })
+    ]
+
+    signatureHeaderCells.forEach(cellRef => {
+      if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's', v: '' }
+      worksheet[cellRef].s = {
+        font: { bold: true },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: { bottom: { style: 'thin', color: { rgb: '000000' } } }
+      }
+    })
+
+    // Style signature data (italic, centered)
+    const signatureDataCells = [
+      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: leftCol }),
+      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: centerCol }),
+      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: rightCol })
+    ]
+
+    signatureDataCells.forEach(cellRef => {
+      if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's', v: '' }
+      worksheet[cellRef].s = {
+        font: { italic: true },
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
+      }
+    })
 
     // Add worksheet to workbook
     const departmentName = department || "TatCa"

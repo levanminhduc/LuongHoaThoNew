@@ -195,7 +195,6 @@ export default function ReporterDashboard() {
                 <Eye className="h-4 w-4" />
                 Xem Tổng Quan
               </Button>
-              {/* Month selector: full width on mobile, fixed width on larger screens */}
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger className="w-full sm:w-40">
                   <SelectValue />
