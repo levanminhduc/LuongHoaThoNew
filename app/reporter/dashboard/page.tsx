@@ -165,12 +165,19 @@ export default function ReporterDashboard() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard Người Lập Biểu</h1>
-              <p className="text-sm text-gray-600">MAY HÒA THỌ ĐIỆN BÀN - Xác nhận báo cáo và thống kê</p>
+          
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 space-y-4 sm:space-y-0">
+            
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                Dashboard Người Lập Biểu
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">
+                MAY HÒA THỌ ĐIỆN BÀN - Xác nhận báo cáo và thống kê
+              </p>
             </div>
-            <div className="flex items-center space-x-4">
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <Button
                 variant="outline"
                 onClick={() => setShowOverviewModal(true)}
@@ -186,9 +193,11 @@ export default function ReporterDashboard() {
                 className="sm:hidden"
               >
                 <Eye className="h-4 w-4" />
+                Xem Tổng Quan
               </Button>
+              {/* Month selector: full width on mobile, fixed width on larger screens */}
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
