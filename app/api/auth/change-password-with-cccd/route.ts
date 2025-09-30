@@ -133,10 +133,10 @@ export async function POST(request: NextRequest) {
     // Step 1: Get employee with necessary fields only
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select("employee_id, cccd_hash, password_hash, recovery_locked_until, recovery_fail_count")
+      .select("employee_id, cccd_hash, password_hash, recovery_locked_until, recovery_fail_count, last_password_change_at")
       .eq("employee_id", employee_code.trim())
       .single()
-    
+
     // Don't reveal if user exists or not
     if (employeeError || !employee) {
       await logSecurityEvent(
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       )
       return okGeneric() // Neutral response
     }
-    
+
     // Step 2: Check if account is locked
     if (employee.recovery_locked_until) {
       const lockExpiry = new Date(employee.recovery_locked_until)
@@ -165,9 +165,13 @@ export async function POST(request: NextRequest) {
         return okGeneric() // Neutral response
       }
     }
-    
-    // Step 3: Verify CCCD against cccd_hash (NOT password_hash)
-    const isValidCCCD = await bcrypt.compare(cccd.trim(), employee.cccd_hash)
+
+    // Step 3: Verify credentials based on last_password_change_at
+    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
+    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
+    const hasChangedPassword = employee.last_password_change_at !== null
+    const hashToVerify = hasChangedPassword ? employee.password_hash : employee.cccd_hash
+    const isValidCCCD = await bcrypt.compare(cccd.trim(), hashToVerify)
     
     if (!isValidCCCD) {
       // Increment fail count and possibly lock
@@ -177,20 +181,20 @@ export async function POST(request: NextRequest) {
           p_max_attempts: MAX_ATTEMPTS,
           p_lock_duration: `${LOCKOUT_DURATION / 60000} minutes`
         })
-      
+
       await logSecurityEvent(
         supabase,
         employee.employee_id,
         failResult?.locked ? "account_locked" : "change_pw_cccd_failed",
         ipHash,
         userAgent,
-        { 
-          reason: "invalid_cccd",
+        {
+          reason: hasChangedPassword ? "invalid_password" : "invalid_cccd",
           fail_count: failResult?.fail_count,
           locked: failResult?.locked
         }
       )
-      
+
       return okGeneric() // Neutral response
     }
     

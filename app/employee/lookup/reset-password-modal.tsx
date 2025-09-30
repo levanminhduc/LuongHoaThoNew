@@ -7,15 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { 
-  Eye, 
-  EyeOff, 
-  Lock, 
-  AlertCircle, 
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  AlertCircle,
   CheckCircle2,
   Loader2,
   ShieldCheck,
-  CreditCard,
   Info
 } from "lucide-react"
 
@@ -23,6 +22,8 @@ interface ResetPasswordModalProps {
   isOpen: boolean
   onClose: () => void
   employeeId: string
+  cccd: string
+  employeeName: string
   onPasswordReset?: () => void
 }
 
@@ -37,16 +38,16 @@ export function ResetPasswordModal({
   isOpen,
   onClose,
   employeeId,
+  cccd,
+  employeeName,
   onPasswordReset
 }: ResetPasswordModalProps) {
   const [formData, setFormData] = useState({
-    cccd: "",
     newPassword: "",
     confirmPassword: ""
   })
-  
+
   const [showPasswords, setShowPasswords] = useState({
-    cccd: false,
     new: false,
     confirm: false
   })
@@ -136,54 +137,38 @@ export function ResetPasswordModal({
 
   // Validate form
   const validateForm = (): boolean => {
-    if (!formData.cccd) {
-      setError("Vui lòng nhập số CCCD")
-      return false
-    }
-    
-    if (formData.cccd.length < 9) {
-      setError("Số CCCD không hợp lệ")
-      return false
-    }
-    
     if (!formData.newPassword) {
       setError("Vui lòng nhập mật khẩu mới")
       return false
     }
-    
+
     if (formData.newPassword.length < 8) {
       setError("Mật khẩu mới phải có ít nhất 8 ký tự")
       return false
     }
-    
+
     if (!/[a-zA-Z]/.test(formData.newPassword) || !/[0-9]/.test(formData.newPassword)) {
       setError("Mật khẩu mới phải có cả chữ và số")
       return false
     }
-    
+
     if (formData.newPassword !== formData.confirmPassword) {
       setError("Mật khẩu xác nhận không khớp")
       return false
     }
-    
-    // Check if password is same as CCCD
-    if (formData.newPassword === formData.cccd) {
-      setError("Mật khẩu mới không được trùng với số CCCD")
-      return false
-    }
-    
+
     return true
   }
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
-    
+
     setLoading(true)
     setError("")
-    
+
     try {
       const response = await fetch("/api/auth/change-password-with-cccd", {
         method: "POST",
@@ -192,7 +177,7 @@ export function ResetPasswordModal({
         },
         body: JSON.stringify({
           employee_code: employeeId,
-          cccd: formData.cccd,
+          cccd: cccd,
           new_password: formData.newPassword
         })
       })
@@ -228,19 +213,17 @@ export function ResetPasswordModal({
   const handleClose = () => {
     // Reset form
     setFormData({
-      cccd: "",
       newPassword: "",
       confirmPassword: ""
     })
     setShowPasswords({
-      cccd: false,
       new: false,
       confirm: false
     })
     setError("")
     setSuccess(false)
     setPasswordStrength({ score: 0, label: "", color: "", issues: [] })
-    
+
     onClose()
   }
 
@@ -250,51 +233,29 @@ export function ResetPasswordModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="w-5 h-5" />
-            Đổi Mật Khẩu Bằng CCCD
+            Đổi Mật Khẩu
           </DialogTitle>
-          <DialogDescription>
-            Sử dụng số CCCD của bạn để đặt mật khẩu mới.
-            Sau khi đổi, bạn sẽ dùng mật khẩu mới để đăng nhập.
+          <DialogDescription className="space-y-2">
+            <span className="block">
+              Đặt mật khẩu mới cho tài khoản của bạn.
+            </span>
+            <span className="block text-yellow-600 font-medium">
+              ⚠️ Đảm bảo bạn đang sử dụng thiết bị cá nhân
+            </span>
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Info Alert */}
+          {/* Confirmation Alert */}
           <Alert className="border-blue-200 bg-blue-50">
             <Info className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-xs text-blue-700">
-              <strong>Lưu ý:</strong> Số CCCD chỉ dùng để xác thực danh tính. 
-              Mật khẩu mới sẽ được lưu riêng biệt và không liên quan đến CCCD.
+            <AlertDescription className="text-sm text-blue-700">
+              <strong>Bạn đang đổi mật khẩu cho:</strong>
+              <div className="mt-1 font-medium">
+                {employeeId} - {employeeName}
+              </div>
             </AlertDescription>
           </Alert>
-
-          {/* CCCD Input */}
-          <div className="space-y-2">
-            <Label htmlFor="cccd">
-              <CreditCard className="w-4 h-4 inline mr-2" />
-              Số CCCD
-            </Label>
-            <div className="relative">
-              <Input
-                id="cccd"
-                type={showPasswords.cccd ? "text" : "password"}
-                value={formData.cccd}
-                onChange={(e) => setFormData(prev => ({ ...prev, cccd: e.target.value }))}
-                placeholder="Nhập số CCCD của bạn"
-                className="pr-10"
-                disabled={loading}
-                required
-                maxLength={12}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords(prev => ({ ...prev, cccd: !prev.cccd }))}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPasswords.cccd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
 
           {/* New Password */}
           <div className="space-y-2">
@@ -395,8 +356,8 @@ export function ResetPasswordModal({
           <Alert className="border-amber-200 bg-amber-50">
             <ShieldCheck className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-xs text-amber-700">
-              <strong>Bảo mật:</strong> Mật khẩu mới phải khác CCCD, có ít nhất 8 ký tự, 
-              bao gồm chữ và số. Khuyến nghị thêm chữ hoa và ký tự đặc biệt.
+              <strong>Lưu ý bảo mật:</strong> Sử dụng mật khẩu mạnh với ít nhất 8 ký tự,
+              bao gồm chữ và số. Không chia sẻ mật khẩu với người khác.
             </AlertDescription>
           </Alert>
 

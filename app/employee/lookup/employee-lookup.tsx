@@ -621,11 +621,13 @@ export function EmployeeLookup() {
       )}
 
       {/* Reset Password Modal - Using CCCD */}
-      {employeeId && (
+      {employeeId && result && (
         <ResetPasswordModal
           isOpen={showPasswordModal}
           onClose={() => setShowPasswordModal(false)}
           employeeId={employeeId}
+          cccd={cccd}
+          employeeName={result.full_name}
           onPasswordReset={() => {
             setMustChangePassword(false)
             // Clear any errors

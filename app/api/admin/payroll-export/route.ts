@@ -319,12 +319,47 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Create worksheet data with signature section
+    // Format month for display
+    const formatMonthDisplay = (monthParam: string | null): string => {
+      if (!monthParam || !monthParam.match(/^\d{4}-\d{2}$/)) {
+        return "Tháng ... năm ....."
+      }
+      const [year, month] = monthParam.split('-')
+      return `Tháng ${month} năm ${year}`
+    }
+
+    // Create title rows (5 rows total)
+    const totalColumns = headers.length // 41 columns
+    const titleRows = []
+
+    // Row 1: Empty
+    titleRows.push(new Array(totalColumns).fill(""))
+
+    // Row 2: Empty
+    titleRows.push(new Array(totalColumns).fill(""))
+
+    // Row 3: Company name in A3, Report title in P3 (index 15)
+    const row3 = new Array(totalColumns).fill("")
+    row3[0] = "TỔNG CTY CP DỆT MAY HÒA THỌ"
+    row3[15] = "BẢNG THANH TOÁN TIỀN LƯƠNG"
+    titleRows.push(row3)
+
+    // Row 4: Company branch in A4, Month/Year in P4 (index 15)
+    const row4 = new Array(totalColumns).fill("")
+    row4[0] = "CTY MAY HÒA THỌ - ĐIỆN BÀN"
+    row4[15] = formatMonthDisplay(month)
+    titleRows.push(row4)
+
+    // Row 5: Department info in P5 (index 15)
+    const row5 = new Array(totalColumns).fill("")
+    row5[15] = department ? `PHÒNG BAN: ${department}` : "PHÒNG BAN: TẤT CẢ"
+    titleRows.push(row5)
+
+    // Create worksheet data with title rows, headers, and data
     console.log("Creating worksheet with headers:", headers.length, "and data rows:", dataRows.length)
-    const worksheetData = [headers, ...dataRows]
+    const worksheetData = [...titleRows, headers, ...dataRows]
 
     // Calculate signature column positions based on total columns
-    const totalColumns = headers.length
     const leftCol = 0 // Column A (Giám Đốc)
     const centerCol = Math.floor(totalColumns / 2) // Center column (Kế Toán)
     const rightCol = totalColumns - 1 // Last column (Người Lập Biểu)
@@ -343,16 +378,22 @@ export async function GET(request: NextRequest) {
     signatureHeaderRow[rightCol] = "Người Lập Biểu"
     worksheetData.push(signatureHeaderRow)
 
+    // Add 4 empty rows for manual signature space
+    worksheetData.push([])
+    worksheetData.push([])
+    worksheetData.push([])
+    worksheetData.push([])
+
     // Signature data row
     const signatureDataRow = new Array(totalColumns).fill("")
     signatureDataRow[leftCol] = managementSignatures.giam_doc
-      ? `${managementSignatures.giam_doc.signed_by_name}\n${formatVietnamTimestamp(managementSignatures.giam_doc.signed_at)}`
+      ? managementSignatures.giam_doc.signed_by_name
       : "Chưa ký"
     signatureDataRow[centerCol] = managementSignatures.ke_toan
-      ? `${managementSignatures.ke_toan.signed_by_name}\n${formatVietnamTimestamp(managementSignatures.ke_toan.signed_at)}`
+      ? managementSignatures.ke_toan.signed_by_name
       : "Chưa ký"
     signatureDataRow[rightCol] = managementSignatures.nguoi_lap_bieu
-      ? `${managementSignatures.nguoi_lap_bieu.signed_by_name}\n${formatVietnamTimestamp(managementSignatures.nguoi_lap_bieu.signed_at)}`
+      ? managementSignatures.nguoi_lap_bieu.signed_by_name
       : "Chưa ký"
     worksheetData.push(signatureDataRow)
 
@@ -366,7 +407,7 @@ export async function GET(request: NextRequest) {
 
     // Apply styling to signature section
     const signatureHeaderRowIndex = signatureStartRow + 1
-    const signatureDataRowIndex = signatureStartRow + 2
+    const signatureDataRowIndex = signatureStartRow + 6
 
     // Style signature headers (bold, centered, bottom border)
     const signatureHeaderCells = [
@@ -396,6 +437,23 @@ export async function GET(request: NextRequest) {
       worksheet[cellRef].s = {
         font: { italic: true },
         alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
+      }
+    })
+
+    // Apply styling to title cells
+    const titleCells = [
+      XLSX.utils.encode_cell({ r: 2, c: 0 }),   // A3: Company name
+      XLSX.utils.encode_cell({ r: 3, c: 0 }),   // A4: Company branch
+      XLSX.utils.encode_cell({ r: 2, c: 15 }),  // P3: Report title
+      XLSX.utils.encode_cell({ r: 3, c: 15 }),  // P4: Month/Year
+      XLSX.utils.encode_cell({ r: 4, c: 15 })   // P5: Department
+    ]
+
+    titleCells.forEach(cellRef => {
+      if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's', v: '' }
+      worksheet[cellRef].s = {
+        font: { bold: true, sz: 12 },
+        alignment: { horizontal: 'center', vertical: 'center' }
       }
     })
 
