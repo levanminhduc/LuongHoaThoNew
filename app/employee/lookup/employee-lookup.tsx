@@ -10,10 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, PenTool, CheckCircle, Clock, Timer, FileText, Lock, AlertTriangle } from "lucide-react"
+import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, PenTool, CheckCircle, Clock, Timer, FileText, Lock, AlertTriangle, History } from "lucide-react"
 import Link from "next/link"
 import { PayrollDetailModal } from "./payroll-detail-modal"
 import { ResetPasswordModal } from "./reset-password-modal"
+import { SalaryHistoryModal } from "./salary-history-modal"
 import { formatSalaryMonth, formatSignatureTime, formatCurrency, formatNumber } from "@/lib/utils/date-formatter"
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
 
@@ -105,6 +106,7 @@ export function EmployeeLookup() {
   const [signSuccess, setSignSuccess] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [mustChangePassword, setMustChangePassword] = useState(false)
   const salaryInfoRef = useRef<HTMLDivElement>(null) // Ref để scroll đến phần thông tin lương
   
@@ -438,6 +440,15 @@ export function EmployeeLookup() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setShowHistoryModal(true)}
+                    className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300"
+                  >
+                    <Calendar className="w-4 h-4 flex-shrink-0" />
+                    <span>Lịch Sử Lương</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setShowDetailModal(true)}
                     className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
                   >
@@ -630,10 +641,20 @@ export function EmployeeLookup() {
           employeeName={result.full_name}
           onPasswordReset={() => {
             setMustChangePassword(false)
-            // Clear any errors
             setError("")
-            // Note: User will need to login with new password
           }}
+        />
+      )}
+
+      {/* Salary History Modal */}
+      {employeeId && result && (
+        <SalaryHistoryModal
+          isOpen={showHistoryModal}
+          onClose={() => setShowHistoryModal(false)}
+          employeeId={employeeId}
+          cccd={cccd}
+          currentMonth={result.salary_month}
+          employeeName={result.full_name}
         />
       )}
     </div>
