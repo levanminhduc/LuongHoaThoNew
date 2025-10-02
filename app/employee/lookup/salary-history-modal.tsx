@@ -217,7 +217,6 @@ export function SalaryHistoryModal({
       <DialogContent
         className="max-w-4xl max-h-[90vh] overflow-hidden salary-history-modal modal-event-isolation"
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

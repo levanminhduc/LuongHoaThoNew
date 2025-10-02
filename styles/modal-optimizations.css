@@ -130,6 +130,15 @@
   touch-action: manipulation;
 }
 
+/* Exception for Radix UI ScrollArea viewport - Fix mobile scroll at scrollTop = 0 */
+/* Use attribute selector with higher specificity to override universal selector */
+.modal-event-isolation [data-radix-scroll-area-viewport][data-radix-scroll-area-viewport] {
+  overscroll-behavior-y: contain;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
 /* Prevent event bubbling on modal content */
 .modal-content-isolated {
   pointer-events: auto;
