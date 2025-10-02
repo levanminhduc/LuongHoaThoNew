@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { Component, ReactNode } from "react"
+import { Component, ReactNode } from "react";
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  componentName?: string
+  children: ReactNode;
+  fallback?: ReactNode;
+  componentName?: string;
 }
 
 interface State {
-  hasError: boolean
-  error?: Error
+  hasError: boolean;
+  error?: Error;
 }
 
 /**
@@ -19,28 +19,28 @@ interface State {
  */
 export class SafeClientComponent extends Component<Props, State> {
   state: State = {
-    hasError: false
-  }
+    hasError: false,
+  };
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error) {
     // Log the error with component name for easier debugging
     console.warn(
-      `[SafeClientComponent] Error in ${this.props.componentName || 'component'}:`,
-      error.message
-    )
+      `[SafeClientComponent] Error in ${this.props.componentName || "component"}:`,
+      error.message,
+    );
   }
 
   render() {
     if (this.state.hasError) {
       // Return fallback or nothing if component fails
-      return this.props.fallback || null
+      return this.props.fallback || null;
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
@@ -48,27 +48,27 @@ export class SafeClientComponent extends Component<Props, State> {
  * Hook version for functional components
  */
 export function useSafeClient() {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return {
       isClient: false,
-      isSafe: false
-    }
+      isSafe: false,
+    };
   }
 
   try {
     // Check for basic browser features
-    const hasLocalStorage = 'localStorage' in window
-    const hasSessionStorage = 'sessionStorage' in window
-    const hasJSON = 'JSON' in window && typeof JSON.parse === 'function'
-    
+    const hasLocalStorage = "localStorage" in window;
+    const hasSessionStorage = "sessionStorage" in window;
+    const hasJSON = "JSON" in window && typeof JSON.parse === "function";
+
     return {
       isClient: true,
-      isSafe: hasLocalStorage && hasSessionStorage && hasJSON
-    }
+      isSafe: hasLocalStorage && hasSessionStorage && hasJSON,
+    };
   } catch {
     return {
       isClient: true,
-      isSafe: false
-    }
+      isSafe: false,
+    };
   }
 }

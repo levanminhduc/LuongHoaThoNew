@@ -1,64 +1,64 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { isBrowser, isMobileViewport, onWindowResize } from "@/lib/utils/browser-detection"
+import { useState, useEffect } from "react";
+import {
+  isBrowser,
+  isMobileViewport,
+  onWindowResize,
+} from "@/lib/utils/browser-detection";
 
 interface UseMobileOptions {
-  breakpoint?: number
-  fallback?: boolean
-  debounceDelay?: number
+  breakpoint?: number;
+  fallback?: boolean;
+  debounceDelay?: number;
 }
 
 export function useMobile(options: UseMobileOptions = {}): boolean {
-  const {
-    breakpoint = 768,
-    fallback = false,
-    debounceDelay = 250
-  } = options
+  const { breakpoint = 768, fallback = false, debounceDelay = 250 } = options;
 
-  const [mounted, setMounted] = useState(false)
-  const [isMobile, setIsMobile] = useState(fallback)
+  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(fallback);
 
   useEffect(() => {
-    setMounted(true)
+    setMounted(true);
 
-    if (!isBrowser()) return
+    if (!isBrowser()) return;
 
-    setIsMobile(isMobileViewport(breakpoint, fallback))
+    setIsMobile(isMobileViewport(breakpoint, fallback));
 
     const cleanup = onWindowResize((size) => {
-      setIsMobile(size.width < breakpoint)
-    }, debounceDelay)
+      setIsMobile(size.width < breakpoint);
+    }, debounceDelay);
 
-    return cleanup
-  }, [breakpoint, fallback, debounceDelay])
+    return cleanup;
+  }, [breakpoint, fallback, debounceDelay]);
 
-  return mounted ? isMobile : fallback
+  return mounted ? isMobile : fallback;
 }
 
 export function useReducedMotion(fallback = false): boolean {
-  const [mounted, setMounted] = useState(false)
-  const [prefersReduced, setPrefersReduced] = useState(fallback)
+  const [mounted, setMounted] = useState(false);
+  const [prefersReduced, setPrefersReduced] = useState(fallback);
 
   useEffect(() => {
-    setMounted(true)
+    setMounted(true);
 
-    if (!isBrowser() || !window.matchMedia) return
+    if (!isBrowser() || !window.matchMedia) return;
 
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const updatePreference = () => {
-      setPrefersReduced(mediaQuery.matches)
-    }
+      setPrefersReduced(mediaQuery.matches);
+    };
 
-    updatePreference()
+    updatePreference();
 
-    mediaQuery.addEventListener('change', updatePreference)
+    mediaQuery.addEventListener("change", updatePreference);
 
     return () => {
-      mediaQuery.removeEventListener('change', updatePreference)
-    }
-  }, [])
+      mediaQuery.removeEventListener("change", updatePreference);
+    };
+  }, []);
 
-  return mounted ? prefersReduced : fallback
+  return mounted ? prefersReduced : fallback;
 }

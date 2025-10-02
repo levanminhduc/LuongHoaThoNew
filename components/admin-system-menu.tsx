@@ -1,7 +1,10 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { HoverDropdownMenu, type DropdownMenuItem } from "@/components/ui/hover-dropdown-menu"
+import { useRouter } from "next/navigation";
+import {
+  HoverDropdownMenu,
+  type DropdownMenuItem,
+} from "@/components/ui/hover-dropdown-menu";
 import {
   Settings,
   ArrowUpDown,
@@ -9,14 +12,14 @@ import {
   Shield,
   Cog,
   Database,
-} from "lucide-react"
+} from "lucide-react";
 
 interface AdminSystemMenuProps {
-  className?: string
+  className?: string;
 }
 
 export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   const menuItems: DropdownMenuItem[] = [
     {
@@ -64,7 +67,7 @@ export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
       iconColorClass: "text-orange-600",
       onClick: () => router.push("/admin/department-management"),
     },
-  ]
+  ];
 
   return (
     <HoverDropdownMenu
@@ -83,8 +86,8 @@ export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
         {
           title: "Công Cụ Quản Trị",
           description: "Chọn chức năng cần sử dụng",
-          items: menuItems
-        }
+          items: menuItems,
+        },
       ]}
       menuWidth="w-80"
       menuAlign="end"
@@ -93,5 +96,5 @@ export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
       footerText="MAY HÒA THỌ ĐIỆN BÀN - Admin Tools"
       variant="outline"
     />
-  )
+  );
 }

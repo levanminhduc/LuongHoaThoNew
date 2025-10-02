@@ -1,48 +1,75 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { X, Check, AlertTriangle, RefreshCw, Save, Zap, Target, Plus, Trash2 } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  X,
+  Check,
+  AlertTriangle,
+  RefreshCw,
+  Save,
+  Zap,
+  Target,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   type ColumnMapping,
   PAYROLL_FIELD_CONFIG,
   autoMapColumns,
-  autoMapColumnsWithAliases
-} from "@/lib/advanced-excel-parser"
+  autoMapColumnsWithAliases,
+} from "@/lib/advanced-excel-parser";
 import {
   type EnhancedColumnMapping,
   type ColumnAlias,
   type ImportMappingResult,
   type MappingConfiguration,
   CONFIDENCE_LEVELS,
-  categorizeMappingConfidence
-} from "@/lib/column-alias-config"
+  categorizeMappingConfidence,
+} from "@/lib/column-alias-config";
 
 interface ColumnMappingDialogProps {
-  detectedColumns: string[]
-  initialMapping: ColumnMapping
+  detectedColumns: string[];
+  initialMapping: ColumnMapping;
   onSave: (
     mapping: ColumnMapping,
     shouldSaveConfig?: boolean,
-    newAliases?: Array<{database_field: string, alias_name: string, confidence_score: number}>
-  ) => void
-  onCancel: () => void
-  fileName?: string
-  enableAliasMapping?: boolean
-  enableSaveConfig?: boolean
-  currentConfig?: MappingConfiguration | null
-  availableConfigs?: MappingConfiguration[]
+    newAliases?: Array<{
+      database_field: string;
+      alias_name: string;
+      confidence_score: number;
+    }>,
+  ) => void;
+  onCancel: () => void;
+  fileName?: string;
+  enableAliasMapping?: boolean;
+  enableSaveConfig?: boolean;
+  currentConfig?: MappingConfiguration | null;
+  availableConfigs?: MappingConfiguration[];
 }
 
 export function ColumnMappingDialog({
@@ -54,156 +81,179 @@ export function ColumnMappingDialog({
   enableAliasMapping = true,
   enableSaveConfig = false,
   currentConfig = null,
-  availableConfigs = []
+  availableConfigs = [],
 }: ColumnMappingDialogProps) {
-  const [mapping, setMapping] = useState<ColumnMapping>(initialMapping)
-  const [enhancedMapping, setEnhancedMapping] = useState<EnhancedColumnMapping>({})
-  const [aliases, setAliases] = useState<ColumnAlias[]>([])
-  const [errors, setErrors] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
-  const [mappingResult, setMappingResult] = useState<ImportMappingResult | null>(null)
-  const [showAdvancedView, setShowAdvancedView] = useState(false)
-  const [newAliases, setNewAliases] = useState<Array<{database_field: string, alias_name: string, confidence_score: number}>>([])
-  const [showCreateAliasDialog, setShowCreateAliasDialog] = useState(false)
-  const [createAliasColumn, setCreateAliasColumn] = useState<string>("")
-  const [createAliasField, setCreateAliasField] = useState<string>("")
+  const [mapping, setMapping] = useState<ColumnMapping>(initialMapping);
+  const [enhancedMapping, setEnhancedMapping] = useState<EnhancedColumnMapping>(
+    {},
+  );
+  const [aliases, setAliases] = useState<ColumnAlias[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [mappingResult, setMappingResult] =
+    useState<ImportMappingResult | null>(null);
+  const [showAdvancedView, setShowAdvancedView] = useState(false);
+  const [newAliases, setNewAliases] = useState<
+    Array<{
+      database_field: string;
+      alias_name: string;
+      confidence_score: number;
+    }>
+  >([]);
+  const [showCreateAliasDialog, setShowCreateAliasDialog] = useState(false);
+  const [createAliasColumn, setCreateAliasColumn] = useState<string>("");
+  const [createAliasField, setCreateAliasField] = useState<string>("");
 
   // Save configuration state
-  const [shouldSaveConfig, setShouldSaveConfig] = useState(false)
+  const [shouldSaveConfig, setShouldSaveConfig] = useState(false);
   const [selectedConfigId, setSelectedConfigId] = useState<number | null>(
-    currentConfig?.id || null
-  )
+    currentConfig?.id || null,
+  );
 
   useEffect(() => {
     if (enableAliasMapping) {
-      loadAliases()
+      loadAliases();
     }
-    validateMapping()
-  }, [mapping, enableAliasMapping])
+    validateMapping();
+  }, [mapping, enableAliasMapping]);
 
   const loadAliases = async () => {
     try {
-      const token = localStorage.getItem("admin_token")
-      if (!token) return
+      const token = localStorage.getItem("admin_token");
+      if (!token) return;
 
-      const response = await fetch("/api/admin/column-aliases?limit=200&is_active=true", {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        "/api/admin/column-aliases?limit=200&is_active=true",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      })
+      );
 
-      const result = await response.json()
+      const result = await response.json();
       if (result.success) {
-        setAliases(result.data || [])
+        setAliases(result.data || []);
       }
     } catch (error) {
-      console.error("Error loading aliases:", error)
+      console.error("Error loading aliases:", error);
     }
-  }
+  };
 
   const validateMapping = () => {
-    const newErrors: string[] = []
+    const newErrors: string[] = [];
 
     // Check for required field mappings
-    const requiredFields = PAYROLL_FIELD_CONFIG.filter((field) => field.required)
-    const mappedFields = Object.values(mapping)
+    const requiredFields = PAYROLL_FIELD_CONFIG.filter(
+      (field) => field.required,
+    );
+    const mappedFields = Object.values(mapping);
 
     requiredFields.forEach((field) => {
       if (!mappedFields.includes(field.field)) {
-        newErrors.push(`Trường bắt buộc "${field.label}" chưa được ánh xạ`)
+        newErrors.push(`Trường bắt buộc "${field.label}" chưa được ánh xạ`);
       }
-    })
+    });
 
     // Check for duplicate mappings
     const fieldCounts = mappedFields.reduce(
       (acc, field) => {
-        acc[field] = (acc[field] || 0) + 1
-        return acc
+        acc[field] = (acc[field] || 0) + 1;
+        return acc;
       },
       {} as { [key: string]: number },
-    )
+    );
 
     Object.entries(fieldCounts).forEach(([field, count]) => {
       if (count > 1) {
-        const fieldConfig = PAYROLL_FIELD_CONFIG.find((f) => f.field === field)
-        newErrors.push(`Trường "${fieldConfig?.label || field}" được ánh xạ ${count} lần`)
+        const fieldConfig = PAYROLL_FIELD_CONFIG.find((f) => f.field === field);
+        newErrors.push(
+          `Trường "${fieldConfig?.label || field}" được ánh xạ ${count} lần`,
+        );
       }
-    })
+    });
 
-    setErrors(newErrors)
-  }
+    setErrors(newErrors);
+  };
 
   const handleMappingChange = (excelColumn: string, dbField: string) => {
     setMapping((prev) => ({
       ...prev,
       [excelColumn]: dbField,
-    }))
-  }
+    }));
+  };
 
   const handleRemoveMapping = (excelColumn: string) => {
     setMapping((prev) => {
-      const newMapping = { ...prev }
-      delete newMapping[excelColumn]
-      return newMapping
-    })
-  }
+      const newMapping = { ...prev };
+      delete newMapping[excelColumn];
+      return newMapping;
+    });
+  };
 
   const handleAutoMap = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       if (enableAliasMapping && aliases.length > 0) {
         // Use enhanced auto-mapping with aliases
-        const result = await autoMapColumnsWithAliases(detectedColumns, aliases)
-        setMappingResult(result)
+        const result = await autoMapColumnsWithAliases(
+          detectedColumns,
+          aliases,
+        );
+        setMappingResult(result);
 
         // Convert enhanced mapping to simple mapping for backward compatibility
-        const simpleMapping: ColumnMapping = {}
+        const simpleMapping: ColumnMapping = {};
         Object.entries(result.mapping).forEach(([column, config]) => {
-          simpleMapping[column] = config.database_field
-        })
+          simpleMapping[column] = config.database_field;
+        });
 
-        setMapping(simpleMapping)
-        setEnhancedMapping(result.mapping)
-        setShowAdvancedView(true)
+        setMapping(simpleMapping);
+        setEnhancedMapping(result.mapping);
+        setShowAdvancedView(true);
       } else {
         // Use legacy auto-mapping
-        const autoMapping = autoMapColumns(detectedColumns)
-        setMapping(autoMapping)
+        const autoMapping = autoMapColumns(detectedColumns);
+        setMapping(autoMapping);
       }
     } catch (error) {
-      console.error("Error in auto-mapping:", error)
+      console.error("Error in auto-mapping:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getConfidenceColor = (score: number) => {
-    if (score >= 80) return "bg-green-100 text-green-800 border-green-200"
-    if (score >= 50) return "bg-yellow-100 text-yellow-800 border-yellow-200"
-    return "bg-red-100 text-red-800 border-red-200"
-  }
+    if (score >= 80) return "bg-green-100 text-green-800 border-green-200";
+    if (score >= 50) return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    return "bg-red-100 text-red-800 border-red-200";
+  };
 
   const getConfidenceIcon = (score: number) => {
-    if (score >= 80) return <Check className="h-3 w-3" />
-    if (score >= 50) return <AlertTriangle className="h-3 w-3" />
-    return <X className="h-3 w-3" />
-  }
+    if (score >= 80) return <Check className="h-3 w-3" />;
+    if (score >= 50) return <AlertTriangle className="h-3 w-3" />;
+    return <X className="h-3 w-3" />;
+  };
 
   const getMappingTypeIcon = (type: string) => {
     switch (type) {
-      case "exact": return <Check className="h-3 w-3 text-green-600" />
-      case "alias": return <Target className="h-3 w-3 text-blue-600" />
-      case "fuzzy": return <Zap className="h-3 w-3 text-yellow-600" />
-      default: return <AlertTriangle className="h-3 w-3 text-gray-600" />
+      case "exact":
+        return <Check className="h-3 w-3 text-green-600" />;
+      case "alias":
+        return <Target className="h-3 w-3 text-blue-600" />;
+      case "fuzzy":
+        return <Zap className="h-3 w-3 text-yellow-600" />;
+      default:
+        return <AlertTriangle className="h-3 w-3 text-gray-600" />;
     }
-  }
+  };
 
   const handleSaveSuccessfulMapping = async () => {
-    if (!mappingResult || !fileName) return
+    if (!mappingResult || !fileName) return;
 
     try {
-      const token = localStorage.getItem("admin_token")
-      if (!token) return
+      const token = localStorage.getItem("admin_token");
+      if (!token) return;
 
       const response = await fetch("/api/admin/mapping-configurations", {
         method: "PUT",
@@ -214,72 +264,74 @@ export function ColumnMappingDialog({
         body: JSON.stringify({
           mapping: mappingResult.mapping,
           file_name: fileName,
-          auto_generate_name: true
+          auto_generate_name: true,
         }),
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
       if (result.success) {
         // Show success message or notification
-        console.log("Mapping saved successfully:", result.message)
+        console.log("Mapping saved successfully:", result.message);
       }
     } catch (error) {
-      console.error("Error saving mapping:", error)
+      console.error("Error saving mapping:", error);
     }
-  }
+  };
 
   const handleSave = () => {
     if (errors.length === 0) {
       // Save successful mapping configuration if available
       if (mappingResult && fileName && enableAliasMapping) {
-        handleSaveSuccessfulMapping()
+        handleSaveSuccessfulMapping();
       }
 
       // Pass new aliases along with mapping if saving config
       if (shouldSaveConfig && newAliases.length > 0) {
         // Call enhanced save function that includes aliases
-        onSave(mapping, shouldSaveConfig, newAliases)
+        onSave(mapping, shouldSaveConfig, newAliases);
       } else {
-        onSave(mapping, shouldSaveConfig)
+        onSave(mapping, shouldSaveConfig);
       }
     }
-  }
+  };
 
   // Handle creating new alias for unmapped column
   const handleCreateAlias = (excelColumn: string, databaseField: string) => {
     const newAlias = {
       database_field: databaseField,
       alias_name: excelColumn,
-      confidence_score: 90
-    }
+      confidence_score: 90,
+    };
 
-    setNewAliases(prev => [...prev, newAlias])
+    setNewAliases((prev) => [...prev, newAlias]);
 
     // Update mapping
-    setMapping(prev => ({
+    setMapping((prev) => ({
       ...prev,
-      [excelColumn]: databaseField
-    }))
+      [excelColumn]: databaseField,
+    }));
 
-    setShowCreateAliasDialog(false)
-  }
+    setShowCreateAliasDialog(false);
+  };
 
   // Handle removing created alias
   const handleRemoveNewAlias = (index: number) => {
-    setNewAliases(prev => prev.filter((_, i) => i !== index))
-  }
+    setNewAliases((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const getMappedFieldsCount = () => {
-    const mappedFields = Object.values(mapping)
+    const mappedFields = Object.values(mapping);
     const requiredMapped = PAYROLL_FIELD_CONFIG.filter(
       (field) => field.required && mappedFields.includes(field.field),
-    ).length
-    const totalRequired = PAYROLL_FIELD_CONFIG.filter((field) => field.required).length
+    ).length;
+    const totalRequired = PAYROLL_FIELD_CONFIG.filter(
+      (field) => field.required,
+    ).length;
 
-    return { requiredMapped, totalRequired, totalMapped: mappedFields.length }
-  }
+    return { requiredMapped, totalRequired, totalMapped: mappedFields.length };
+  };
 
-  const stats = getMappedFieldsCount()
+  const stats = getMappedFieldsCount();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -299,7 +351,9 @@ export function ColumnMappingDialog({
                 <CardContent className="pt-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-sm">Configuration Management</h4>
+                      <h4 className="font-medium text-sm">
+                        Configuration Management
+                      </h4>
                       {currentConfig && (
                         <Badge variant="secondary" className="text-xs">
                           Using: {currentConfig.config_name}
@@ -309,12 +363,14 @@ export function ColumnMappingDialog({
 
                     {availableConfigs.length > 0 && (
                       <div className="space-y-2">
-                        <Label htmlFor="config-select" className="text-xs">Load Configuration</Label>
+                        <Label htmlFor="config-select" className="text-xs">
+                          Load Configuration
+                        </Label>
                         <Select
                           value={selectedConfigId?.toString() || ""}
                           onValueChange={(value) => {
-                            const configId = value ? parseInt(value) : null
-                            setSelectedConfigId(configId)
+                            const configId = value ? parseInt(value) : null;
+                            setSelectedConfigId(configId);
                             // TODO: Apply selected configuration to mapping
                           }}
                         >
@@ -324,11 +380,19 @@ export function ColumnMappingDialog({
                           <SelectContent>
                             <SelectItem value="">No configuration</SelectItem>
                             {availableConfigs.map((config) => (
-                              <SelectItem key={config.id} value={config.id!.toString()}>
+                              <SelectItem
+                                key={config.id}
+                                value={config.id!.toString()}
+                              >
                                 <div className="flex items-center gap-2">
                                   <span>{config.config_name}</span>
                                   {config.is_default && (
-                                    <Badge variant="outline" className="text-xs">Default</Badge>
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      Default
+                                    </Badge>
                                   )}
                                 </div>
                               </SelectItem>
@@ -343,7 +407,9 @@ export function ColumnMappingDialog({
                         checked={shouldSaveConfig}
                         onCheckedChange={setShouldSaveConfig}
                       />
-                      <Label className="text-xs">Save this mapping as configuration</Label>
+                      <Label className="text-xs">
+                        Save this mapping as configuration
+                      </Label>
                     </div>
                   </div>
                 </CardContent>
@@ -356,7 +422,9 @@ export function ColumnMappingDialog({
                 <CardContent className="pt-4">
                   <div className="text-center">
                     <p className="text-sm text-blue-600">Cột Excel</p>
-                    <p className="text-2xl font-bold text-blue-700">{detectedColumns.length}</p>
+                    <p className="text-2xl font-bold text-blue-700">
+                      {detectedColumns.length}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -365,7 +433,9 @@ export function ColumnMappingDialog({
                 <CardContent className="pt-4">
                   <div className="text-center">
                     <p className="text-sm text-green-600">Đã Ánh Xạ</p>
-                    <p className="text-2xl font-bold text-green-700">{stats.totalMapped}</p>
+                    <p className="text-2xl font-bold text-green-700">
+                      {stats.totalMapped}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -390,7 +460,9 @@ export function ColumnMappingDialog({
                 className="flex items-center gap-2 bg-transparent"
                 disabled={loading}
               >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                />
                 {enableAliasMapping ? "Smart Auto-Map" : "Tự Động Ánh Xạ"}
               </Button>
 
@@ -429,7 +501,9 @@ export function ColumnMappingDialog({
                   <Card className="bg-green-50 border-green-200">
                     <CardContent className="pt-4">
                       <div className="text-center">
-                        <p className="text-sm text-green-600">High Confidence</p>
+                        <p className="text-sm text-green-600">
+                          High Confidence
+                        </p>
                         <p className="text-2xl font-bold text-green-700">
                           {mappingResult.confidence_summary.high_confidence}
                         </p>
@@ -440,7 +514,9 @@ export function ColumnMappingDialog({
                   <Card className="bg-yellow-50 border-yellow-200">
                     <CardContent className="pt-4">
                       <div className="text-center">
-                        <p className="text-sm text-yellow-600">Medium Confidence</p>
+                        <p className="text-sm text-yellow-600">
+                          Medium Confidence
+                        </p>
                         <p className="text-2xl font-bold text-yellow-700">
                           {mappingResult.confidence_summary.medium_confidence}
                         </p>
@@ -494,17 +570,24 @@ export function ColumnMappingDialog({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Excel Columns */}
               <div>
-                <h3 className="font-semibold mb-3">Cột Excel ({detectedColumns.length})</h3>
+                <h3 className="font-semibold mb-3">
+                  Cột Excel ({detectedColumns.length})
+                </h3>
                 <ScrollArea className="h-[400px] border rounded-md p-4">
                   <div className="space-y-3">
                     {detectedColumns.map((column, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <p className="font-medium">{column}</p>
                             {showAdvancedView && enhancedMapping[column] && (
                               <div className="flex items-center gap-1">
-                                {getMappingTypeIcon(enhancedMapping[column].mapping_type)}
+                                {getMappingTypeIcon(
+                                  enhancedMapping[column].mapping_type,
+                                )}
                                 <Badge
                                   className={`text-xs ${getConfidenceColor(enhancedMapping[column].confidence_score)}`}
                                 >
@@ -517,20 +600,30 @@ export function ColumnMappingDialog({
                             <div>
                               <p className="text-sm text-gray-600">
                                 →{" "}
-                                {PAYROLL_FIELD_CONFIG.find((f) => f.field === mapping[column])?.label || mapping[column]}
+                                {PAYROLL_FIELD_CONFIG.find(
+                                  (f) => f.field === mapping[column],
+                                )?.label || mapping[column]}
                               </p>
-                              {showAdvancedView && enhancedMapping[column]?.matched_alias && (
-                                <p className="text-xs text-blue-600">
-                                  via alias: "{enhancedMapping[column].matched_alias!.alias_name}"
-                                </p>
-                              )}
+                              {showAdvancedView &&
+                                enhancedMapping[column]?.matched_alias && (
+                                  <p className="text-xs text-blue-600">
+                                    via alias: "
+                                    {
+                                      enhancedMapping[column].matched_alias!
+                                        .alias_name
+                                    }
+                                    "
+                                  </p>
+                                )}
                             </div>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
                           <Select
                             value={mapping[column] || "none"}
-                            onValueChange={(value) => handleMappingChange(column, value)}
+                            onValueChange={(value) =>
+                              handleMappingChange(column, value)
+                            }
                           >
                             <SelectTrigger className="w-[200px]">
                               <SelectValue placeholder="Chọn trường" />
@@ -538,16 +631,25 @@ export function ColumnMappingDialog({
                             <SelectContent>
                               <SelectItem value="none">Không ánh xạ</SelectItem>
                               {PAYROLL_FIELD_CONFIG.map((field) => (
-                                <SelectItem key={field.field} value={field.field}>
+                                <SelectItem
+                                  key={field.field}
+                                  value={field.field}
+                                >
                                   {field.label}
-                                  {field.required && <span className="text-red-500"> *</span>}
+                                  {field.required && (
+                                    <span className="text-red-500"> *</span>
+                                  )}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
 
                           {mapping[column] && (
-                            <Button variant="ghost" size="icon" onClick={() => handleRemoveMapping(column)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveMapping(column)}
+                            >
                               <X className="h-4 w-4" />
                             </Button>
                           )}
@@ -564,23 +666,34 @@ export function ColumnMappingDialog({
                 <ScrollArea className="h-[400px] border rounded-md p-4">
                   <div className="space-y-2">
                     {PAYROLL_FIELD_CONFIG.map((field) => {
-                      const isMapped = Object.values(mapping).includes(field.field)
-                      const mappedColumn = Object.keys(mapping).find((key) => mapping[key] === field.field)
+                      const isMapped = Object.values(mapping).includes(
+                        field.field,
+                      );
+                      const mappedColumn = Object.keys(mapping).find(
+                        (key) => mapping[key] === field.field,
+                      );
 
                       return (
-                        <div key={field.field} className={`p-2 rounded ${isMapped ? "bg-green-50" : "bg-gray-50"}`}>
+                        <div
+                          key={field.field}
+                          className={`p-2 rounded ${isMapped ? "bg-green-50" : "bg-gray-50"}`}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <p className="font-medium">
                                 {field.label}
-                                {field.required && <span className="text-red-500"> *</span>}
+                                {field.required && (
+                                  <span className="text-red-500"> *</span>
+                                )}
                               </p>
                               <p className="text-sm text-gray-600">
                                 {field.field} ({field.type})
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant={isMapped ? "default" : "secondary"}>
+                              <Badge
+                                variant={isMapped ? "default" : "secondary"}
+                              >
                                 {isMapped ? (
                                   <>
                                     <Check className="h-3 w-3 mr-1" /> Đã ánh xạ
@@ -594,9 +707,9 @@ export function ColumnMappingDialog({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
-                                    setCreateAliasColumn("")
-                                    setCreateAliasField(field.field)
-                                    setShowCreateAliasDialog(true)
+                                    setCreateAliasColumn("");
+                                    setCreateAliasField(field.field);
+                                    setShowCreateAliasDialog(true);
                                   }}
                                   className="ml-2 text-xs"
                                 >
@@ -606,9 +719,13 @@ export function ColumnMappingDialog({
                               )}
                             </div>
                           </div>
-                          {isMapped && mappedColumn && <p className="text-sm text-green-600 mt-1">← {mappedColumn}</p>}
+                          {isMapped && mappedColumn && (
+                            <p className="text-sm text-green-600 mt-1">
+                              ← {mappedColumn}
+                            </p>
+                          )}
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </ScrollArea>
@@ -622,16 +739,28 @@ export function ColumnMappingDialog({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Plus className="h-4 w-4 text-green-600" />
-                  <h4 className="font-medium text-green-600">Aliases Mới Sẽ Được Tạo ({newAliases.length})</h4>
+                  <h4 className="font-medium text-green-600">
+                    Aliases Mới Sẽ Được Tạo ({newAliases.length})
+                  </h4>
                 </div>
                 <div className="grid gap-2">
                   {newAliases.map((alias, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded"
+                    >
                       <div className="flex-1">
-                        <span className="font-medium text-green-800">{alias.alias_name}</span>
+                        <span className="font-medium text-green-800">
+                          {alias.alias_name}
+                        </span>
                         <span className="text-green-600 mx-2">→</span>
-                        <span className="text-green-700">{alias.database_field}</span>
-                        <Badge variant="outline" className="ml-2 text-green-600 border-green-300">
+                        <span className="text-green-700">
+                          {alias.database_field}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="ml-2 text-green-600 border-green-300"
+                        >
                           {alias.confidence_score}%
                         </Badge>
                       </div>
@@ -655,7 +784,11 @@ export function ColumnMappingDialog({
               <Button variant="outline" onClick={onCancel}>
                 Hủy
               </Button>
-              <Button onClick={handleSave} disabled={errors.length > 0} className="flex items-center gap-2">
+              <Button
+                onClick={handleSave}
+                disabled={errors.length > 0}
+                className="flex items-center gap-2"
+              >
                 <Check className="h-4 w-4" />
                 Lưu Cấu Hình
                 {newAliases.length > 0 && (
@@ -670,12 +803,16 @@ export function ColumnMappingDialog({
       </Card>
 
       {/* Create Alias Dialog */}
-      <Dialog open={showCreateAliasDialog} onOpenChange={setShowCreateAliasDialog}>
+      <Dialog
+        open={showCreateAliasDialog}
+        onOpenChange={setShowCreateAliasDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Tạo Alias Mới</DialogTitle>
             <DialogDescription>
-              Tạo alias cho column "{createAliasColumn}" để tự động mapping trong tương lai
+              Tạo alias cho column "{createAliasColumn}" để tự động mapping
+              trong tương lai
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -705,13 +842,16 @@ export function ColumnMappingDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateAliasDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateAliasDialog(false)}
+            >
               Hủy
             </Button>
             <Button
               onClick={() => {
                 if (createAliasField && createAliasColumn) {
-                  handleCreateAlias(createAliasColumn, createAliasField)
+                  handleCreateAlias(createAliasColumn, createAliasField);
                 }
               }}
               disabled={!createAliasField}
@@ -722,5 +862,5 @@ export function ColumnMappingDialog({
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

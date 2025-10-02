@@ -2,6 +2,7 @@
 type: "manual"
 description: "Example description"
 ---
+
 # 🔍 **RULE SET 2: HIỂU CODEBASE CHI TIẾT VÀ TOÀN DIỆN**
 
 ## 📋 **OVERVIEW**
@@ -13,11 +14,13 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về codebase trước khi t
 ## 🔍 **RULE 2.1: MANDATORY CODEBASE ANALYSIS**
 
 ### **Quy tắc:**
+
 ```
 BEFORE ANY EDIT → ALWAYS CALL codebase-retrieval
 ```
 
 ### **Template query cho codebase-retrieval:**
+
 ```
 "Tôi cần thông tin chi tiết về:
 - [Component/Function/Module cần edit]
@@ -31,6 +34,7 @@ BEFORE ANY EDIT → ALWAYS CALL codebase-retrieval
 ```
 
 ### **Mandatory analysis checklist:**
+
 ```
 □ Component/function structure
 □ Input/output interfaces
@@ -43,6 +47,7 @@ BEFORE ANY EDIT → ALWAYS CALL codebase-retrieval
 ```
 
 ### **Analysis depth levels:**
+
 - **Surface**: Component interface và basic structure
 - **Medium**: Dependencies, usage patterns, conventions
 - **Deep**: Business logic, data flow, architectural patterns
@@ -52,6 +57,7 @@ BEFORE ANY EDIT → ALWAYS CALL codebase-retrieval
 ## 🏗️ **RULE 2.2: RESPECT EXISTING PATTERNS**
 
 ### **Quy tắc:**
+
 ```
 ✅ Follow existing naming conventions
 ✅ Use established patterns
@@ -61,6 +67,7 @@ BEFORE ANY EDIT → ALWAYS CALL codebase-retrieval
 ```
 
 ### **Pattern analysis checklist:**
+
 ```
 □ Naming conventions (camelCase, PascalCase, kebab-case)
 □ File organization structure
@@ -75,17 +82,19 @@ BEFORE ANY EDIT → ALWAYS CALL codebase-retrieval
 ### **Examples of respecting patterns:**
 
 #### **Naming Conventions:**
+
 ```typescript
 // Existing pattern found:
-const getUserData = () => {}
-const updateUserProfile = () => {}
+const getUserData = () => {};
+const updateUserProfile = () => {};
 
 // Follow same pattern:
-const deleteUserAccount = () => {} // ✅ Correct
-const removeUser = () => {}        // ❌ Inconsistent
+const deleteUserAccount = () => {}; // ✅ Correct
+const removeUser = () => {}; // ❌ Inconsistent
 ```
 
 #### **Component Structure:**
+
 ```typescript
 // Existing pattern:
 interface ComponentProps {
@@ -105,6 +114,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ## 📊 **RULE 2.3: UNDERSTAND IMPACT RADIUS**
 
 ### **Impact Assessment Framework:**
+
 ```
 🟢 LOW IMPACT: UI styling, text changes, isolated components
 🟡 MEDIUM IMPACT: Component logic, new features, shared utilities
@@ -113,6 +123,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ```
 
 ### **Impact analysis questions:**
+
 ```
 □ How many files will be affected?
 □ How many components depend on this?
@@ -125,6 +136,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ```
 
 ### **Impact documentation template:**
+
 ```
 📊 **Impact Analysis:**
 - **Files affected**: [number] files
@@ -140,6 +152,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ## 🔗 **RULE 2.4: ANALYZE DEPENDENCIES**
 
 ### **Dependency analysis checklist:**
+
 ```
 □ What depends on this code? (consumers)
 □ What does this code depend on? (dependencies)
@@ -151,6 +164,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ```
 
 ### **Dependency mapping template:**
+
 ```
 🔗 **Dependency Analysis:**
 
@@ -176,6 +190,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ## 🏛️ **RULE 2.5: ARCHITECTURAL UNDERSTANDING**
 
 ### **Architecture analysis points:**
+
 ```
 □ Overall application structure
 □ Data flow patterns
@@ -188,6 +203,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ```
 
 ### **Common architectural patterns to identify:**
+
 - **MVC/MVP/MVVM**: Model-View-Controller patterns
 - **Component composition**: How components are structured
 - **State management**: Redux, Context, local state patterns
@@ -200,6 +216,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ## 📝 **PRACTICAL EXAMPLES**
 
 ### **Example 1: Before editing a component**
+
 ```typescript
 // BEFORE editing UserProfile component:
 
@@ -224,6 +241,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ```
 
 ### **Example 2: Adding new API endpoint**
+
 ```typescript
 // BEFORE adding new API route:
 
@@ -248,6 +266,7 @@ export default function Component({ title, onAction }: ComponentProps) {
 ```
 
 ### **Example 3: Working with new database schema**
+
 ```typescript
 // BEFORE modifying payroll-related code:
 

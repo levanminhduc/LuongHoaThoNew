@@ -1,11 +1,11 @@
 export interface PayrollFieldDefinition {
-  field: string
-  label: string
-  description: string
-  data_type: "text" | "number" | "date"
-  is_required: boolean
-  category: string
-  default_value?: string | number
+  field: string;
+  label: string;
+  description: string;
+  data_type: "text" | "number" | "date";
+  is_required: boolean;
+  category: string;
+  default_value?: string | number;
 }
 
 export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
@@ -16,7 +16,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     description: "Mã định danh duy nhất của nhân viên",
     data_type: "text",
     is_required: true,
-    category: "Thông tin cơ bản"
+    category: "Thông tin cơ bản",
   },
   {
     field: "salary_month",
@@ -24,7 +24,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     description: "Tháng lương theo định dạng YYYY-MM",
     data_type: "text",
     is_required: true,
-    category: "Thông tin cơ bản"
+    category: "Thông tin cơ bản",
   },
 
   // Hệ số và thông số cơ bản
@@ -35,7 +35,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Hệ số cơ bản",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "he_so_phu_cap_ket_qua",
@@ -44,7 +44,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Hệ số cơ bản",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "he_so_luong_co_ban",
@@ -53,7 +53,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Hệ số cơ bản",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "luong_toi_thieu_cty",
@@ -62,7 +62,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Hệ số cơ bản",
-    default_value: 0
+    default_value: 0,
   },
 
   // Thời gian làm việc
@@ -73,7 +73,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thời gian làm việc",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "gio_cong_tang_ca",
@@ -82,7 +82,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thời gian làm việc",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "gio_an_ca",
@@ -91,7 +91,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thời gian làm việc",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tong_gio_lam_viec",
@@ -100,7 +100,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thời gian làm việc",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tong_he_so_quy_doi",
@@ -109,7 +109,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thời gian làm việc",
-    default_value: 0
+    default_value: 0,
   },
 
   // Lương sản phẩm và đơn giá
@@ -120,7 +120,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Lương sản phẩm",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "don_gia_tien_luong_tren_gio",
@@ -129,7 +129,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Lương sản phẩm",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_luong_san_pham_trong_gio",
@@ -138,7 +138,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Lương sản phẩm",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_luong_tang_ca",
@@ -147,7 +147,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Lương sản phẩm",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_luong_30p_an_ca",
@@ -156,7 +156,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Lương sản phẩm",
-    default_value: 0
+    default_value: 0,
   },
 
   // Thưởng và phụ cấp
@@ -167,7 +167,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "luong_hoc_viec_pc_luong",
@@ -176,7 +176,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tong_cong_tien_luong_san_pham",
@@ -185,7 +185,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "ho_tro_thoi_tiet_nong",
@@ -194,7 +194,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "bo_sung_luong",
@@ -203,7 +203,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
+    default_value: 0,
   },
 
   // Bảo hiểm và phúc lợi
@@ -214,16 +214,17 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Bảo hiểm và phúc lợi",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "pc_cdcs_pccc_atvsv",
     label: "PC CDCS PCCC ATVSV",
-    description: "Phụ cấp chỉ đạo chỉ huy, phòng cháy chữa cháy, an toàn vệ sinh lao động",
+    description:
+      "Phụ cấp chỉ đạo chỉ huy, phòng cháy chữa cháy, an toàn vệ sinh lao động",
     data_type: "number",
     is_required: false,
     category: "Bảo hiểm và phúc lợi",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "luong_phu_nu_hanh_kinh",
@@ -232,7 +233,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Bảo hiểm và phúc lợi",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_con_bu_thai_7_thang",
@@ -241,7 +242,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Bảo hiểm và phúc lợi",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "ho_tro_gui_con_nha_tre",
@@ -250,7 +251,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Bảo hiểm và phúc lợi",
-    default_value: 0
+    default_value: 0,
   },
 
   // Phép và lễ
@@ -261,7 +262,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Phép và lễ",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_phep_le",
@@ -270,7 +271,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Phép và lễ",
-    default_value: 0
+    default_value: 0,
   },
 
   // Tổng lương
@@ -281,7 +282,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Tổng lương",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_boc_vac",
@@ -290,7 +291,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Tổng lương",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "ho_tro_xang_xe",
@@ -299,7 +300,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Tổng lương",
-    default_value: 0
+    default_value: 0,
   },
 
   // Thuế và khấu trừ
@@ -310,7 +311,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thuế và khấu trừ",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tam_ung",
@@ -319,7 +320,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thuế và khấu trừ",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "thue_tncn",
@@ -328,7 +329,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thuế và khấu trừ",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "bhxh_bhtn_bhyt_total",
@@ -337,7 +338,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thuế và khấu trừ",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "truy_thu_the_bhyt",
@@ -346,7 +347,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thuế và khấu trừ",
-    default_value: 0
+    default_value: 0,
   },
 
   // Lương thực nhận
@@ -357,7 +358,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Lương thực nhận",
-    default_value: 0
+    default_value: 0,
   },
 
   // Bổ sung 3 cột mới
@@ -368,7 +369,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thời gian làm việc",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_luong_chu_nhat",
@@ -377,7 +378,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "luong_cnkcp_vuot",
@@ -386,7 +387,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
+    default_value: 0,
   },
   {
     field: "tien_tang_ca_vuot",
@@ -395,13 +396,13 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     data_type: "number",
     is_required: false,
     category: "Thưởng và phụ cấp",
-    default_value: 0
-  }
-]
+    default_value: 0,
+  },
+];
 
 export const PAYROLL_FIELD_CATEGORIES = [
   "Thông tin cơ bản",
-  "Hệ số cơ bản", 
+  "Hệ số cơ bản",
   "Thời gian làm việc",
   "Lương sản phẩm",
   "Thưởng và phụ cấp",
@@ -409,17 +410,23 @@ export const PAYROLL_FIELD_CATEGORIES = [
   "Phép và lễ",
   "Tổng lương",
   "Thuế và khấu trừ",
-  "Lương thực nhận"
-]
+  "Lương thực nhận",
+];
 
-export function getFieldsByCategory(category: string): PayrollFieldDefinition[] {
-  return PAYROLL_FIELD_DEFINITIONS.filter(field => field.category === category)
+export function getFieldsByCategory(
+  category: string,
+): PayrollFieldDefinition[] {
+  return PAYROLL_FIELD_DEFINITIONS.filter(
+    (field) => field.category === category,
+  );
 }
 
 export function getRequiredFields(): PayrollFieldDefinition[] {
-  return PAYROLL_FIELD_DEFINITIONS.filter(field => field.is_required)
+  return PAYROLL_FIELD_DEFINITIONS.filter((field) => field.is_required);
 }
 
-export function getFieldDefinition(fieldName: string): PayrollFieldDefinition | undefined {
-  return PAYROLL_FIELD_DEFINITIONS.find(field => field.field === fieldName)
+export function getFieldDefinition(
+  fieldName: string,
+): PayrollFieldDefinition | undefined {
+  return PAYROLL_FIELD_DEFINITIONS.find((field) => field.field === fieldName);
 }

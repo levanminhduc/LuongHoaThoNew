@@ -1,86 +1,85 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import SupervisorDashboard from "@/components/SupervisorDashboard"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import SupervisorDashboard from "@/components/SupervisorDashboard";
 
 interface User {
-  employee_id: string
-  username: string
-  role: string
-  department: string
-  permissions: string[]
+  employee_id: string;
+  username: string;
+  role: string;
+  department: string;
+  permissions: string[];
 }
 
 export default function SupervisorDashboardPage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    checkAuthentication()
-  }, [])
+    checkAuthentication();
+  }, []);
 
   const checkAuthentication = () => {
     try {
-      const token = localStorage.getItem("admin_token")
-      const userStr = localStorage.getItem("user_info")
-      
+      const token = localStorage.getItem("admin_token");
+      const userStr = localStorage.getItem("user_info");
+
       if (!token || !userStr) {
-        router.push('/admin/login')
-        return
+        router.push("/admin/login");
+        return;
       }
 
-      const userData = JSON.parse(userStr)
-      
+      const userData = JSON.parse(userStr);
+
       // Check if user has supervisor role
-      if (userData.role !== 'to_truong') {
+      if (userData.role !== "to_truong") {
         // Redirect based on actual role
         switch (userData.role) {
-          case 'admin':
-            router.push('/admin/dashboard')
-            break
-          case 'truong_phong':
-            router.push('/manager/dashboard')
-            break
-          case 'nhan_vien':
-            router.push('/employee/dashboard')
-            break
+          case "admin":
+            router.push("/admin/dashboard");
+            break;
+          case "truong_phong":
+            router.push("/manager/dashboard");
+            break;
+          case "nhan_vien":
+            router.push("/employee/dashboard");
+            break;
           default:
-            router.push('/admin/login')
+            router.push("/admin/login");
         }
-        return
+        return;
       }
 
-      setUser(userData)
-      
+      setUser(userData);
     } catch (error) {
-      console.error("Authentication check error:", error)
-      localStorage.removeItem("admin_token")
-      localStorage.removeItem("user_info")
-      router.push('/admin/login')
+      console.error("Authentication check error:", error);
+      localStorage.removeItem("admin_token");
+      localStorage.removeItem("user_info");
+      router.push("/admin/login");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_token")
-    localStorage.removeItem("user_info")
-    router.push('/admin/login')
-  }
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("user_info");
+    router.push("/admin/login");
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null // Will redirect
+    return null; // Will redirect
   }
 
-  return <SupervisorDashboard user={user} onLogout={handleLogout} />
+  return <SupervisorDashboard user={user} onLogout={handleLogout} />;
 }

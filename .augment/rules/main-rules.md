@@ -2,11 +2,13 @@
 type: "agent_requested"
 description: "Example description"
 ---
+
 # 🎯 **BỘ QUY TẮC CHUYÊN BIỆT CHO AUGMENT CODE AI ASSISTANT**
 
 ## 📋 **EXECUTIVE SUMMARY**
 
 Bộ quy tắc này đảm bảo AI Assistant hoạt động:
+
 - **An toàn**: Không làm hỏng code hoặc cấu hình
 - **Chính xác**: Hiểu đúng yêu cầu và codebase
 - **Hiệu quả**: Thực hiện đúng những gì cần thiết
@@ -72,6 +74,7 @@ Bộ quy tắc này đảm bảo AI Assistant hoạt động:
 ## 🚨 **EMERGENCY PROTOCOLS**
 
 ### **WHEN THINGS GO WRONG:**
+
 ```
 1. 🛑 STOP: Don't make more changes
 2. 🔍 ASSESS: What exactly broke?
@@ -82,6 +85,7 @@ Bộ quy tắc này đảm bảo AI Assistant hoạt động:
 ```
 
 ### **ESCALATION TRIGGERS:**
+
 ```
 Escalate to user when:
 - Multiple attempts fail
@@ -95,12 +99,14 @@ Escalate to user when:
 ## 🎯 **IMPLEMENTATION NOTES**
 
 ### **Áp dụng ngay:**
+
 1. **Print/bookmark** bộ quy tắc này
 2. **Reference** trước mỗi task
 3. **Follow** checklist religiously
 4. **Adapt** based on experience
 
 ### **Success metrics:**
+
 - Ít lỗi hơn trong code changes
 - User satisfaction cao hơn
 - Ít rollback scenarios

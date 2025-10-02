@@ -3,28 +3,28 @@
  * Provides comprehensive validation including business logic and cross-field validation
  */
 
-import { ApiErrorHandler, type ApiError } from "./api-error-handler"
+import { ApiErrorHandler, type ApiError } from "./api-error-handler";
 
 export interface ValidationResult {
-  isValid: boolean
-  errors: ApiError[]
-  warnings: ApiError[]
-  autoFixes: AutoFix[]
+  isValid: boolean;
+  errors: ApiError[];
+  warnings: ApiError[];
+  autoFixes: AutoFix[];
 }
 
 export interface AutoFix {
-  field: string
-  originalValue: any
-  fixedValue: any
-  reason: string
-  confidence: "high" | "medium" | "low"
+  field: string;
+  originalValue: any;
+  fixedValue: any;
+  reason: string;
+  confidence: "high" | "medium" | "low";
 }
 
 export interface PayrollValidationContext {
-  employee_id: string
-  salary_month: string
-  row?: number
-  file_type?: "file1" | "file2"
+  employee_id: string;
+  salary_month: string;
+  row?: number;
+  file_type?: "file1" | "file2";
 }
 
 export class PayrollValidator {
@@ -33,36 +33,36 @@ export class PayrollValidator {
    */
   static validatePayrollRecord(
     data: Record<string, any>,
-    context: PayrollValidationContext
+    context: PayrollValidationContext,
   ): ValidationResult {
     const result: ValidationResult = {
       isValid: true,
       errors: [],
       warnings: [],
-      autoFixes: []
-    }
+      autoFixes: [],
+    };
 
     // Required field validation
-    this.validateRequiredFields(data, context, result)
-    
+    this.validateRequiredFields(data, context, result);
+
     // Data type validation
-    this.validateDataTypes(data, context, result)
-    
+    this.validateDataTypes(data, context, result);
+
     // Business logic validation
-    this.validateBusinessLogic(data, context, result)
-    
+    this.validateBusinessLogic(data, context, result);
+
     // Cross-field validation
-    this.validateCrossFields(data, context, result)
-    
+    this.validateCrossFields(data, context, result);
+
     // Range validation
-    this.validateRanges(data, context, result)
-    
+    this.validateRanges(data, context, result);
+
     // Format validation
-    this.validateFormats(data, context, result)
+    this.validateFormats(data, context, result);
 
-    result.isValid = result.errors.length === 0
+    result.isValid = result.errors.length === 0;
 
-    return result
+    return result;
   }
 
   /**
@@ -71,11 +71,11 @@ export class PayrollValidator {
   private static validateRequiredFields(
     data: Record<string, any>,
     context: PayrollValidationContext,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
-    const requiredFields = ["employee_id", "salary_month"]
+    const requiredFields = ["employee_id", "salary_month"];
 
-    requiredFields.forEach(field => {
+    requiredFields.forEach((field) => {
       if (!data[field] || String(data[field]).trim() === "") {
         result.errors.push(
           ApiErrorHandler.createValidationError(
@@ -84,11 +84,11 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
-    })
+    });
   }
 
   /**
@@ -97,32 +97,49 @@ export class PayrollValidator {
   private static validateDataTypes(
     data: Record<string, any>,
     context: PayrollValidationContext,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
     const numericFields = [
-      "he_so_lam_viec", "he_so_phu_cap_ket_qua", "he_so_luong_co_ban",
-      "luong_toi_thieu_cty", "so_gio_lam_viec_thuc_te", "so_gio_lam_viec_quy_dinh",
-      "so_ngay_lam_viec_thuc_te", "so_ngay_lam_viec_quy_dinh", "luong_san_pham",
-      "luong_co_ban", "phu_cap_ket_qua", "phu_cap_vuot_gio", "phu_cap_ca_dem",
-      "phu_cap_chu_nhat", "phu_cap_le_tet", "phu_cap_khac", "thuong_hieu_qua_lam_viec",
-      "thuong_khac", "tien_luong_thuc_nhan_cuoi_ky"
-    ]
+      "he_so_lam_viec",
+      "he_so_phu_cap_ket_qua",
+      "he_so_luong_co_ban",
+      "luong_toi_thieu_cty",
+      "so_gio_lam_viec_thuc_te",
+      "so_gio_lam_viec_quy_dinh",
+      "so_ngay_lam_viec_thuc_te",
+      "so_ngay_lam_viec_quy_dinh",
+      "luong_san_pham",
+      "luong_co_ban",
+      "phu_cap_ket_qua",
+      "phu_cap_vuot_gio",
+      "phu_cap_ca_dem",
+      "phu_cap_chu_nhat",
+      "phu_cap_le_tet",
+      "phu_cap_khac",
+      "thuong_hieu_qua_lam_viec",
+      "thuong_khac",
+      "tien_luong_thuc_nhan_cuoi_ky",
+    ];
 
-    numericFields.forEach(field => {
-      if (data[field] !== undefined && data[field] !== null && data[field] !== "") {
-        const value = Number(data[field])
+    numericFields.forEach((field) => {
+      if (
+        data[field] !== undefined &&
+        data[field] !== null &&
+        data[field] !== ""
+      ) {
+        const value = Number(data[field]);
         if (isNaN(value)) {
           // Try to auto-fix common issues
-          const cleanedValue = this.tryAutoFixNumeric(data[field])
+          const cleanedValue = this.tryAutoFixNumeric(data[field]);
           if (cleanedValue !== null) {
             result.autoFixes.push({
               field,
               originalValue: data[field],
               fixedValue: cleanedValue,
               reason: "Tự động chuyển đổi định dạng số",
-              confidence: "high"
-            })
-            data[field] = cleanedValue
+              confidence: "high",
+            });
+            data[field] = cleanedValue;
           } else {
             result.errors.push(
               ApiErrorHandler.createValidationError(
@@ -131,13 +148,13 @@ export class PayrollValidator {
                 context.row,
                 context.employee_id,
                 context.salary_month,
-                context.file_type
-              )
-            )
+                context.file_type,
+              ),
+            );
           }
         }
       }
-    })
+    });
   }
 
   /**
@@ -146,11 +163,11 @@ export class PayrollValidator {
   private static validateBusinessLogic(
     data: Record<string, any>,
     context: PayrollValidationContext,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
     // Validate salary month format (YYYY-MM)
     if (data.salary_month) {
-      const monthPattern = /^\d{4}-\d{2}$/
+      const monthPattern = /^\d{4}-\d{2}$/;
       if (!monthPattern.test(data.salary_month)) {
         result.errors.push(
           ApiErrorHandler.createValidationError(
@@ -159,12 +176,12 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       } else {
         // Validate month range
-        const [year, month] = data.salary_month.split("-").map(Number)
+        const [year, month] = data.salary_month.split("-").map(Number);
         if (month < 1 || month > 12) {
           result.errors.push(
             ApiErrorHandler.createValidationError(
@@ -173,13 +190,13 @@ export class PayrollValidator {
               context.row,
               context.employee_id,
               context.salary_month,
-              context.file_type
-            )
-          )
+              context.file_type,
+            ),
+          );
         }
-        
+
         // Validate year range
-        const currentYear = new Date().getFullYear()
+        const currentYear = new Date().getFullYear();
         if (year < 2020 || year > currentYear + 1) {
           result.warnings.push(
             ApiErrorHandler.createValidationError(
@@ -188,16 +205,16 @@ export class PayrollValidator {
               context.row,
               context.employee_id,
               context.salary_month,
-              context.file_type
-            )
-          )
+              context.file_type,
+            ),
+          );
         }
       }
     }
 
     // Validate employee ID format
     if (data.employee_id) {
-      const empIdPattern = /^[A-Z0-9]{3,20}$/
+      const empIdPattern = /^[A-Z0-9]{3,20}$/;
       if (!empIdPattern.test(data.employee_id)) {
         result.warnings.push(
           ApiErrorHandler.createValidationError(
@@ -206,17 +223,17 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
     }
 
     // Validate working hours logic
     if (data.so_gio_lam_viec_thuc_te && data.so_gio_lam_viec_quy_dinh) {
-      const actualHours = Number(data.so_gio_lam_viec_thuc_te)
-      const standardHours = Number(data.so_gio_lam_viec_quy_dinh)
-      
+      const actualHours = Number(data.so_gio_lam_viec_thuc_te);
+      const standardHours = Number(data.so_gio_lam_viec_quy_dinh);
+
       if (actualHours > standardHours * 2) {
         result.warnings.push(
           ApiErrorHandler.createValidationError(
@@ -225,17 +242,17 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
     }
 
     // Validate working days logic
     if (data.so_ngay_lam_viec_thuc_te && data.so_ngay_lam_viec_quy_dinh) {
-      const actualDays = Number(data.so_ngay_lam_viec_thuc_te)
-      const standardDays = Number(data.so_ngay_lam_viec_quy_dinh)
-      
+      const actualDays = Number(data.so_ngay_lam_viec_thuc_te);
+      const standardDays = Number(data.so_ngay_lam_viec_quy_dinh);
+
       if (actualDays > 31) {
         result.errors.push(
           ApiErrorHandler.createValidationError(
@@ -244,11 +261,11 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
-      
+
       if (actualDays > standardDays * 1.5) {
         result.warnings.push(
           ApiErrorHandler.createValidationError(
@@ -257,9 +274,9 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
     }
   }
@@ -270,24 +287,32 @@ export class PayrollValidator {
   private static validateCrossFields(
     data: Record<string, any>,
     context: PayrollValidationContext,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
     // Validate salary calculation consistency
-    const basicSalary = Number(data.luong_co_ban) || 0
-    const productSalary = Number(data.luong_san_pham) || 0
+    const basicSalary = Number(data.luong_co_ban) || 0;
+    const productSalary = Number(data.luong_san_pham) || 0;
     const allowances = [
-      "phu_cap_ket_qua", "phu_cap_vuot_gio", "phu_cap_ca_dem",
-      "phu_cap_chu_nhat", "phu_cap_le_tet", "phu_cap_khac"
-    ].reduce((sum, field) => sum + (Number(data[field]) || 0), 0)
-    
-    const bonuses = [
-      "thuong_hieu_qua_lam_viec", "thuong_khac"
-    ].reduce((sum, field) => sum + (Number(data[field]) || 0), 0)
+      "phu_cap_ket_qua",
+      "phu_cap_vuot_gio",
+      "phu_cap_ca_dem",
+      "phu_cap_chu_nhat",
+      "phu_cap_le_tet",
+      "phu_cap_khac",
+    ].reduce((sum, field) => sum + (Number(data[field]) || 0), 0);
 
-    const grossSalary = Number(data.tong_luong_truoc_thue) || 0
-    const calculatedGross = basicSalary + productSalary + allowances + bonuses
+    const bonuses = ["thuong_hieu_qua_lam_viec", "thuong_khac"].reduce(
+      (sum, field) => sum + (Number(data[field]) || 0),
+      0,
+    );
 
-    if (grossSalary > 0 && Math.abs(grossSalary - calculatedGross) > calculatedGross * 0.1) {
+    const grossSalary = Number(data.tong_luong_truoc_thue) || 0;
+    const calculatedGross = basicSalary + productSalary + allowances + bonuses;
+
+    if (
+      grossSalary > 0 &&
+      Math.abs(grossSalary - calculatedGross) > calculatedGross * 0.1
+    ) {
       result.warnings.push(
         ApiErrorHandler.createValidationError(
           "tong_luong_truoc_thue",
@@ -295,22 +320,30 @@ export class PayrollValidator {
           context.row,
           context.employee_id,
           context.salary_month,
-          context.file_type
-        )
-      )
+          context.file_type,
+        ),
+      );
     }
 
     // Validate deductions vs net salary
     const deductions = [
-      "thue_thu_nhap_ca_nhan", "bao_hiem_xa_hoi_nv_dong",
-      "bao_hiem_y_te_nv_dong", "bao_hiem_that_nghiep_nv_dong",
-      "kinh_phi_cong_doan_nv_dong", "tam_ung_luong", "khau_tru_khac"
-    ].reduce((sum, field) => sum + (Number(data[field]) || 0), 0)
+      "thue_thu_nhap_ca_nhan",
+      "bao_hiem_xa_hoi_nv_dong",
+      "bao_hiem_y_te_nv_dong",
+      "bao_hiem_that_nghiep_nv_dong",
+      "kinh_phi_cong_doan_nv_dong",
+      "tam_ung_luong",
+      "khau_tru_khac",
+    ].reduce((sum, field) => sum + (Number(data[field]) || 0), 0);
 
-    const netSalary = Number(data.tien_luong_thuc_nhan_cuoi_ky) || 0
-    const calculatedNet = grossSalary - deductions
+    const netSalary = Number(data.tien_luong_thuc_nhan_cuoi_ky) || 0;
+    const calculatedNet = grossSalary - deductions;
 
-    if (netSalary > 0 && grossSalary > 0 && Math.abs(netSalary - calculatedNet) > calculatedNet * 0.1) {
+    if (
+      netSalary > 0 &&
+      grossSalary > 0 &&
+      Math.abs(netSalary - calculatedNet) > calculatedNet * 0.1
+    ) {
       result.warnings.push(
         ApiErrorHandler.createValidationError(
           "tien_luong_thuc_nhan_cuoi_ky",
@@ -318,9 +351,9 @@ export class PayrollValidator {
           context.row,
           context.employee_id,
           context.salary_month,
-          context.file_type
-        )
-      )
+          context.file_type,
+        ),
+      );
     }
   }
 
@@ -330,15 +363,18 @@ export class PayrollValidator {
   private static validateRanges(
     data: Record<string, any>,
     context: PayrollValidationContext,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
     // Validate negative values that shouldn't be negative
     const shouldBePositive = [
-      "he_so_lam_viec", "he_so_phu_cap_ket_qua", "he_so_luong_co_ban",
-      "so_gio_lam_viec_thuc_te", "so_ngay_lam_viec_thuc_te"
-    ]
+      "he_so_lam_viec",
+      "he_so_phu_cap_ket_qua",
+      "he_so_luong_co_ban",
+      "so_gio_lam_viec_thuc_te",
+      "so_ngay_lam_viec_thuc_te",
+    ];
 
-    shouldBePositive.forEach(field => {
+    shouldBePositive.forEach((field) => {
       if (data[field] !== undefined && Number(data[field]) < 0) {
         result.errors.push(
           ApiErrorHandler.createValidationError(
@@ -347,16 +383,17 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
-    })
+    });
 
     // Validate reasonable salary ranges
-    const netSalary = Number(data.tien_luong_thuc_nhan_cuoi_ky) || 0
+    const netSalary = Number(data.tien_luong_thuc_nhan_cuoi_ky) || 0;
     if (netSalary > 0) {
-      if (netSalary < 1000000) { // Less than 1M VND
+      if (netSalary < 1000000) {
+        // Less than 1M VND
         result.warnings.push(
           ApiErrorHandler.createValidationError(
             "tien_luong_thuc_nhan_cuoi_ky",
@@ -364,10 +401,11 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
-      } else if (netSalary > 100000000) { // More than 100M VND
+            context.file_type,
+          ),
+        );
+      } else if (netSalary > 100000000) {
+        // More than 100M VND
         result.warnings.push(
           ApiErrorHandler.createValidationError(
             "tien_luong_thuc_nhan_cuoi_ky",
@@ -375,9 +413,9 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
     }
   }
@@ -388,11 +426,11 @@ export class PayrollValidator {
   private static validateFormats(
     data: Record<string, any>,
     context: PayrollValidationContext,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
     // Validate CCCD format if provided
     if (data.cccd) {
-      const cccdPattern = /^\d{12}$/
+      const cccdPattern = /^\d{12}$/;
       if (!cccdPattern.test(data.cccd)) {
         result.errors.push(
           ApiErrorHandler.createValidationError(
@@ -401,9 +439,9 @@ export class PayrollValidator {
             context.row,
             context.employee_id,
             context.salary_month,
-            context.file_type
-          )
-        )
+            context.file_type,
+          ),
+        );
       }
     }
   }
@@ -412,16 +450,16 @@ export class PayrollValidator {
    * Try to auto-fix numeric values
    */
   private static tryAutoFixNumeric(value: any): number | null {
-    if (typeof value === "number") return value
-    
-    const stringValue = String(value).trim()
-    
+    if (typeof value === "number") return value;
+
+    const stringValue = String(value).trim();
+
     // Remove common formatting
     const cleaned = stringValue
       .replace(/[,\s]/g, "") // Remove commas and spaces
-      .replace(/[^\d.-]/g, "") // Keep only digits, dots, and minus
-    
-    const parsed = Number(cleaned)
-    return isNaN(parsed) ? null : parsed
+      .replace(/[^\d.-]/g, ""); // Keep only digits, dots, and minus
+
+    const parsed = Number(cleaned);
+    return isNaN(parsed) ? null : parsed;
   }
 }

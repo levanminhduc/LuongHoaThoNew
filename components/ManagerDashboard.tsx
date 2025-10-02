@@ -1,310 +1,383 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { Building2, Users, DollarSign, FileCheck, LogOut, Eye, Download } from "lucide-react"
-import { DepartmentDetailModalRefactored } from "./department"
-import { getPreviousMonth } from "@/utils/dateUtils"
-import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal"
-import { transformPayrollRecordToResult, type PayrollResult } from "@/lib/utils/payroll-transformer"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import {
+  Building2,
+  Users,
+  DollarSign,
+  FileCheck,
+  LogOut,
+  Eye,
+  Download,
+} from "lucide-react";
+import { DepartmentDetailModalRefactored } from "./department";
+import { getPreviousMonth } from "@/utils/dateUtils";
+import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
+import {
+  transformPayrollRecordToResult,
+  type PayrollResult,
+} from "@/lib/utils/payroll-transformer";
 
 interface User {
-  employee_id: string
-  username: string
-  role: string
-  department: string
-  allowed_departments?: string[]
-  permissions: string[]
+  employee_id: string;
+  username: string;
+  role: string;
+  department: string;
+  allowed_departments?: string[];
+  permissions: string[];
 }
 
 interface DepartmentStats {
-  name: string
-  employeeCount: number
-  payrollCount: number
-  signedCount: number
-  signedPercentage: string
-  totalSalary: number
-  averageSalary: number
+  name: string;
+  employeeCount: number;
+  payrollCount: number;
+  signedCount: number;
+  signedPercentage: string;
+  totalSalary: number;
+  averageSalary: number;
 }
 
 interface ManagerDashboardProps {
-  user: User
-  onLogout: () => void
+  user: User;
+  onLogout: () => void;
 }
 
 interface PayrollRecord {
-  id: number
-  employee_id: string
-  salary_month: string
-  tien_luong_thuc_nhan_cuoi_ky: number
-  tien_khen_thuong_chuyen_can?: number
-  he_so_lam_viec?: number
-  is_signed: boolean
-  signed_at: string | null
+  id: number;
+  employee_id: string;
+  salary_month: string;
+  tien_luong_thuc_nhan_cuoi_ky: number;
+  tien_khen_thuong_chuyen_can?: number;
+  he_so_lam_viec?: number;
+  is_signed: boolean;
+  signed_at: string | null;
   employees?: {
-    employee_id: string
-    full_name: string
-    department: string
-    chuc_vu: string
-  }
+    employee_id: string;
+    full_name: string;
+    department: string;
+    chuc_vu: string;
+  };
 }
 
-export default function ManagerDashboard({ user, onLogout }: ManagerDashboardProps) {
-  const [departments, setDepartments] = useState<DepartmentStats[]>([])
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all")
-  const [selectedMonth, setSelectedMonth] = useState<string>(getPreviousMonth())
-  const [loading, setLoading] = useState(true)
-  const [payrollData, setPayrollData] = useState<PayrollRecord[]>([])
+export default function ManagerDashboard({
+  user,
+  onLogout,
+}: ManagerDashboardProps) {
+  const [departments, setDepartments] = useState<DepartmentStats[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] =
+    useState<string>(getPreviousMonth());
+  const [loading, setLoading] = useState(true);
+  const [payrollData, setPayrollData] = useState<PayrollRecord[]>([]);
 
   // Department Detail Modal state
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [selectedDepartmentForDetail, setSelectedDepartmentForDetail] = useState<string>("")
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedDepartmentForDetail, setSelectedDepartmentForDetail] =
+    useState<string>("");
 
   // Export state
-  const [exportingData, setExportingData] = useState(false)
-  const [exportingDepartment, setExportingDepartment] = useState<string | null>(null)
+  const [exportingData, setExportingData] = useState(false);
+  const [exportingDepartment, setExportingDepartment] = useState<string | null>(
+    null,
+  );
 
   // Payroll Detail Modal state (from payroll tab)
-  const [showPayrollModal, setShowPayrollModal] = useState(false)
-  const [selectedPayrollData, setSelectedPayrollData] = useState<PayrollResult | null>(null)
+  const [showPayrollModal, setShowPayrollModal] = useState(false);
+  const [selectedPayrollData, setSelectedPayrollData] =
+    useState<PayrollResult | null>(null);
 
   // Payroll Detail Modal state (from department detail modal)
-  const [showDepartmentPayrollModal, setShowDepartmentPayrollModal] = useState(false)
-  const [selectedDepartmentPayrollData, setSelectedDepartmentPayrollData] = useState<PayrollResult | null>(null)
+  const [showDepartmentPayrollModal, setShowDepartmentPayrollModal] =
+    useState(false);
+  const [selectedDepartmentPayrollData, setSelectedDepartmentPayrollData] =
+    useState<PayrollResult | null>(null);
 
   useEffect(() => {
-    loadDepartmentStats()
-  }, [selectedMonth])
+    loadDepartmentStats();
+  }, [selectedMonth]);
 
   useEffect(() => {
     // Auto-detect latest available month on component mount
-    detectLatestMonth()
-  }, [])
+    detectLatestMonth();
+  }, []);
 
   const detectLatestMonth = async () => {
     try {
-      const token = localStorage.getItem("admin_token")
-      const response = await fetch('/api/debug/payroll-data', {
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch("/api/debug/payroll-data", {
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json();
         if (data.availableMonths && data.availableMonths.length > 0) {
-          const latestMonth = data.availableMonths[0] // Already sorted desc
+          const latestMonth = data.availableMonths[0]; // Already sorted desc
           if (latestMonth !== selectedMonth) {
-            setSelectedMonth(latestMonth)
+            setSelectedMonth(latestMonth);
           }
         }
       }
     } catch (error) {
-      console.log("Could not detect latest month, using default")
+      console.log("Could not detect latest month, using default");
     }
-  }
+  };
 
   useEffect(() => {
     if (selectedDepartment !== "all") {
-      loadPayrollData()
+      loadPayrollData();
     }
-  }, [selectedDepartment, selectedMonth])
+  }, [selectedDepartment, selectedMonth]);
 
   const loadDepartmentStats = async () => {
     try {
-      const token = localStorage.getItem("admin_token")
-      const response = await fetch(`/api/admin/departments?include_stats=true&month=${selectedMonth}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      })
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(
+        `/api/admin/departments?include_stats=true&month=${selectedMonth}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       if (response.ok) {
-        const data = await response.json()
-        setDepartments(data.departments || [])
+        const data = await response.json();
+        setDepartments(data.departments || []);
       }
     } catch (error) {
-      console.error("Error loading department stats:", error)
+      console.error("Error loading department stats:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadPayrollData = async () => {
     try {
-      const token = localStorage.getItem("admin_token")
-      const url = selectedDepartment === "all" 
-        ? `/api/payroll/my-departments?month=${selectedMonth}&limit=50`
-        : `/api/payroll/my-departments?month=${selectedMonth}&department=${selectedDepartment}&limit=50`
-      
+      const token = localStorage.getItem("admin_token");
+      const url =
+        selectedDepartment === "all"
+          ? `/api/payroll/my-departments?month=${selectedMonth}&limit=50`
+          : `/api/payroll/my-departments?month=${selectedMonth}&department=${selectedDepartment}&limit=50`;
+
       const response = await fetch(url, {
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setPayrollData(data.data || [])
+        const data = await response.json();
+        setPayrollData(data.data || []);
       }
     } catch (error) {
-      console.error("Error loading payroll data:", error)
+      console.error("Error loading payroll data:", error);
     }
-  }
+  };
 
   const handleViewPayroll = (department: string) => {
-    setSelectedDepartmentForDetail(department)
-    setIsDetailModalOpen(true)
-  }
+    setSelectedDepartmentForDetail(department);
+    setIsDetailModalOpen(true);
+  };
 
   const handleCloseDetailModal = () => {
-    setIsDetailModalOpen(false)
-    setSelectedDepartmentForDetail("")
-  }
+    setIsDetailModalOpen(false);
+    setSelectedDepartmentForDetail("");
+  };
 
   const handleExportDepartment = async (departmentName: string) => {
-    setExportingDepartment(departmentName)
+    setExportingDepartment(departmentName);
     try {
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       const response = await fetch(
         `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(departmentName)}`,
         {
           headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        }
-      )
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `payroll-${departmentName}-${selectedMonth}.xlsx`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `payroll-${departmentName}-${selectedMonth}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
       } else {
-        const errorData = await response.json()
-        console.error("Export error:", errorData.error || "Lỗi khi xuất dữ liệu")
+        const errorData = await response.json();
+        console.error(
+          "Export error:",
+          errorData.error || "Lỗi khi xuất dữ liệu",
+        );
 
         // Show user-friendly error message
         if (errorData.message) {
-          alert(`Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? '\n\n' + errorData.suggestion : ''}`)
+          alert(
+            `Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? "\n\n" + errorData.suggestion : ""}`,
+          );
         } else {
-          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.")
+          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.");
         }
       }
     } catch (error) {
-      console.error("Error exporting department data:", error)
+      console.error("Error exporting department data:", error);
     } finally {
-      setExportingDepartment(null)
+      setExportingDepartment(null);
     }
-  }
+  };
 
   const handleExportData = async () => {
-    setExportingData(true)
+    setExportingData(true);
     try {
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
 
-      let url = `/api/admin/payroll-export?month=${selectedMonth}`
-      let filename = `payroll-${selectedMonth}`
+      let url = `/api/admin/payroll-export?month=${selectedMonth}`;
+      let filename = `payroll-${selectedMonth}`;
 
       if (selectedDepartment !== "all") {
-        url += `&department=${encodeURIComponent(selectedDepartment)}`
-        filename = `payroll-${selectedDepartment}-${selectedMonth}`
+        url += `&department=${encodeURIComponent(selectedDepartment)}`;
+        filename = `payroll-${selectedDepartment}-${selectedMonth}`;
       } else {
-        filename = `payroll-all-departments-${selectedMonth}`
+        filename = `payroll-all-departments-${selectedMonth}`;
       }
 
       const response = await fetch(url, {
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        const blob = await response.blob()
-        const downloadUrl = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = downloadUrl
-        a.download = `${filename}.xlsx`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(downloadUrl)
-        document.body.removeChild(a)
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = `${filename}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
       } else {
-        const errorData = await response.json()
-        console.error("Export error:", errorData.error || "Lỗi khi xuất dữ liệu")
+        const errorData = await response.json();
+        console.error(
+          "Export error:",
+          errorData.error || "Lỗi khi xuất dữ liệu",
+        );
 
         // Show user-friendly error message
         if (errorData.message) {
-          alert(`Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? '\n\n' + errorData.suggestion : ''}`)
+          alert(
+            `Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? "\n\n" + errorData.suggestion : ""}`,
+          );
         } else {
-          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.")
+          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.");
         }
       }
     } catch (error) {
-      console.error("Error exporting data:", error)
+      console.error("Error exporting data:", error);
     } finally {
-      setExportingData(false)
+      setExportingData(false);
     }
-  }
+  };
 
   const handleViewEmployee = (employeeId: string) => {
     // Find the payroll record for this employee
-    const payrollRecord = payrollData.find(p => p.employee_id === employeeId)
+    const payrollRecord = payrollData.find((p) => p.employee_id === employeeId);
     if (payrollRecord && payrollRecord.employees) {
       // Transform to PayrollResult format and open modal
-      const payrollResult = transformPayrollRecordToResult(payrollRecord as any)
+      const payrollResult = transformPayrollRecordToResult(
+        payrollRecord as any,
+      );
       // Set source file to indicate Manager Dashboard
-      payrollResult.source_file = 'Manager Dashboard'
-      setSelectedPayrollData(payrollResult)
-      setShowPayrollModal(true)
+      payrollResult.source_file = "Manager Dashboard";
+      setSelectedPayrollData(payrollResult);
+      setShowPayrollModal(true);
     }
-  }
+  };
 
   const handleViewEmployeeFromDepartment = (payrollData: PayrollResult) => {
     // Handle payroll detail modal from department detail modal
-    setSelectedDepartmentPayrollData(payrollData)
-    setShowDepartmentPayrollModal(true)
-  }
+    setSelectedDepartmentPayrollData(payrollData);
+    setShowDepartmentPayrollModal(true);
+  };
 
-  const totalStats = departments.reduce((acc, dept) => ({
-    totalEmployees: acc.totalEmployees + dept.employeeCount,
-    totalPayroll: acc.totalPayroll + dept.payrollCount,
-    totalSigned: acc.totalSigned + dept.signedCount,
-    totalSalary: acc.totalSalary + dept.totalSalary
-  }), { totalEmployees: 0, totalPayroll: 0, totalSigned: 0, totalSalary: 0 })
+  const totalStats = departments.reduce(
+    (acc, dept) => ({
+      totalEmployees: acc.totalEmployees + dept.employeeCount,
+      totalPayroll: acc.totalPayroll + dept.payrollCount,
+      totalSigned: acc.totalSigned + dept.signedCount,
+      totalSalary: acc.totalSalary + dept.totalSalary,
+    }),
+    { totalEmployees: 0, totalPayroll: 0, totalSigned: 0, totalSalary: 0 },
+  );
 
-  const chartData = departments.map(dept => ({
+  const chartData = departments.map((dept) => ({
     name: dept.name,
     employees: dept.employeeCount,
     signed: dept.signedCount,
     unsigned: dept.payrollCount - dept.signedCount,
-    totalSalary: dept.totalSalary / 1000000 // Convert to millions
-  }))
+    totalSalary: dept.totalSalary / 1000000, // Convert to millions
+  }));
 
-  const pieData = departments.map(dept => ({
+  const pieData = departments.map((dept) => ({
     name: dept.name,
     value: dept.totalSalary,
-    percentage: totalStats.totalSalary > 0 ? ((dept.totalSalary / totalStats.totalSalary) * 100).toFixed(1) : "0"
-  }))
+    percentage:
+      totalStats.totalSalary > 0
+        ? ((dept.totalSalary / totalStats.totalSalary) * 100).toFixed(1)
+        : "0",
+  }));
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#8884D8",
+    "#82CA9D",
+  ];
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -318,7 +391,8 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                 Dashboard Trưởng Phòng
               </h1>
               <p className="text-xs sm:text-sm text-gray-600 truncate">
-                Xin chào, {user.username} | Bạn đang Quản lý {user.allowed_departments?.length || 0} Bộ Phận
+                Xin chào, {user.username} | Bạn đang Quản lý{" "}
+                {user.allowed_departments?.length || 0} Bộ Phận
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
@@ -328,19 +402,26 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date()
-                    date.setMonth(date.getMonth() - i)
-                    const value = date.toISOString().slice(0, 7)
-                    const label = date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long' })
+                    const date = new Date();
+                    date.setMonth(date.getMonth() - i);
+                    const value = date.toISOString().slice(0, 7);
+                    const label = date.toLocaleDateString("vi-VN", {
+                      year: "numeric",
+                      month: "long",
+                    });
                     return (
                       <SelectItem key={`month-${i}-${value}`} value={value}>
                         {label}
                       </SelectItem>
-                    )
+                    );
                   })}
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={onLogout} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={onLogout}
+                className="w-full sm:w-auto"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Đăng xuất
               </Button>
@@ -354,11 +435,15 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">Tổng Departments</CardTitle>
+              <CardTitle className="text-sm font-medium truncate">
+                Tổng Departments
+              </CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">{departments.length}</div>
+              <div className="text-xl sm:text-2xl font-bold">
+                {departments.length}
+              </div>
               <p className="text-xs text-muted-foreground truncate">
                 Được phân quyền quản lý
               </p>
@@ -367,11 +452,15 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
 
           <Card className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">Tổng Nhân Viên</CardTitle>
+              <CardTitle className="text-sm font-medium truncate">
+                Tổng Nhân Viên
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">{totalStats.totalEmployees}</div>
+              <div className="text-xl sm:text-2xl font-bold">
+                {totalStats.totalEmployees}
+              </div>
               <p className="text-xs text-muted-foreground truncate">
                 Trong tất cả departments
               </p>
@@ -380,7 +469,9 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
 
           <Card className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">Tổng Lương</CardTitle>
+              <CardTitle className="text-sm font-medium truncate">
+                Tổng Lương
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
@@ -395,12 +486,20 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
 
           <Card className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">Đã Ký</CardTitle>
+              <CardTitle className="text-sm font-medium truncate">
+                Đã Ký
+              </CardTitle>
               <FileCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent>
               <div className="text-xl sm:text-2xl font-bold">
-                {totalStats.totalPayroll > 0 ? ((totalStats.totalSigned / totalStats.totalPayroll) * 100).toFixed(1) : 0}%
+                {totalStats.totalPayroll > 0
+                  ? (
+                      (totalStats.totalSigned / totalStats.totalPayroll) *
+                      100
+                    ).toFixed(1)
+                  : 0}
+                %
               </div>
               <p className="text-xs text-muted-foreground truncate">
                 {totalStats.totalSigned}/{totalStats.totalPayroll} bảng lương
@@ -411,15 +510,24 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
 
         <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
+            <TabsTrigger
+              value="overview"
+              className="text-xs sm:text-sm px-2 py-2"
+            >
               <span className="hidden sm:inline">Tổng Quan</span>
               <span className="sm:hidden">Tổng Quan</span>
             </TabsTrigger>
-            <TabsTrigger value="departments" className="text-xs sm:text-sm px-2 py-2">
+            <TabsTrigger
+              value="departments"
+              className="text-xs sm:text-sm px-2 py-2"
+            >
               <span className="hidden sm:inline">Chi Tiết Các Bộ Phận</span>
               <span className="sm:hidden">Departments</span>
             </TabsTrigger>
-            <TabsTrigger value="payroll" className="text-xs sm:text-sm px-2 py-2">
+            <TabsTrigger
+              value="payroll"
+              className="text-xs sm:text-sm px-2 py-2"
+            >
               <span className="hidden sm:inline">Dữ Liệu Lương</span>
               <span className="sm:hidden">Lương</span>
             </TabsTrigger>
@@ -429,11 +537,19 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Thống Kê Theo Department</CardTitle>
-                  <CardDescription className="text-sm">Số lượng nhân viên và tỷ lệ ký</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">
+                    Thống Kê Theo Department
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    Số lượng nhân viên và tỷ lệ ký
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+                  <ResponsiveContainer
+                    width="100%"
+                    height={250}
+                    className="sm:h-[300px]"
+                  >
                     <BarChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
@@ -449,12 +565,16 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                       />
                       <Tooltip
                         contentStyle={{
-                          fontSize: '12px',
-                          padding: '8px',
-                          borderRadius: '6px'
+                          fontSize: "12px",
+                          padding: "8px",
+                          borderRadius: "6px",
                         }}
                       />
-                      <Bar dataKey="employees" fill="#8884d8" name="Nhân viên" />
+                      <Bar
+                        dataKey="employees"
+                        fill="#8884d8"
+                        name="Nhân viên"
+                      />
                       <Bar dataKey="signed" fill="#82ca9d" name="Đã ký" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -463,33 +583,48 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Phân Bố Lương Theo Bộ Phận</CardTitle>
-                  <CardDescription className="text-sm">Tỷ lệ tổng lương theo từng Bộ Phận</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">
+                    Phân Bố Lương Theo Bộ Phận
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    Tỷ lệ tổng lương theo từng Bộ Phận
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+                  <ResponsiveContainer
+                    width="100%"
+                    height={250}
+                    className="sm:h-[300px]"
+                  >
                     <PieChart>
                       <Pie
                         data={pieData}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percentage }) => `${name}: ${percentage}%`}
+                        label={({ name, percentage }) =>
+                          `${name}: ${percentage}%`
+                        }
                         outerRadius={60}
                         className="sm:outerRadius-80"
                         fill="#8884d8"
                         dataKey="value"
                       >
                         {pieData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number) => `${(value / 1000000).toFixed(1)}M VND`}
+                        formatter={(value: number) =>
+                          `${(value / 1000000).toFixed(1)}M VND`
+                        }
                         contentStyle={{
-                          fontSize: '12px',
-                          padding: '8px',
-                          borderRadius: '6px'
+                          fontSize: "12px",
+                          padding: "8px",
+                          borderRadius: "6px",
                         }}
                       />
                     </PieChart>
@@ -502,12 +637,21 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
           <TabsContent value="departments" className="space-y-4 sm:space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {departments.map((dept) => (
-                <Card key={dept.name} className="hover:shadow-md transition-shadow duration-200">
+                <Card
+                  key={dept.name}
+                  className="hover:shadow-md transition-shadow duration-200"
+                >
                   <CardHeader className="pb-3">
                     <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <span className="truncate text-sm sm:text-base">{dept.name}</span>
+                      <span className="truncate text-sm sm:text-base">
+                        {dept.name}
+                      </span>
                       <Badge
-                        variant={parseInt(dept.signedPercentage) >= 80 ? "default" : "secondary"}
+                        variant={
+                          parseInt(dept.signedPercentage) >= 80
+                            ? "default"
+                            : "secondary"
+                        }
                         className="self-start sm:self-center"
                       >
                         {dept.signedPercentage}% ký
@@ -517,20 +661,36 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                   <CardContent className="space-y-3 sm:space-y-4">
                     <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
                       <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">Nhân viên</p>
-                        <p className="font-semibold text-sm sm:text-base">{dept.employeeCount}</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">
+                          Nhân viên
+                        </p>
+                        <p className="font-semibold text-sm sm:text-base">
+                          {dept.employeeCount}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">Bảng lương</p>
-                        <p className="font-semibold text-sm sm:text-base">{dept.payrollCount}</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">
+                          Bảng lương
+                        </p>
+                        <p className="font-semibold text-sm sm:text-base">
+                          {dept.payrollCount}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">Tổng lương</p>
-                        <p className="font-semibold text-sm sm:text-base">{(dept.totalSalary / 1000000).toFixed(1)}M</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">
+                          Tổng lương
+                        </p>
+                        <p className="font-semibold text-sm sm:text-base">
+                          {(dept.totalSalary / 1000000).toFixed(1)}M
+                        </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">TB/người</p>
-                        <p className="font-semibold text-sm sm:text-base">{(dept.averageSalary / 1000).toFixed(0)}K</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">
+                          TB/người
+                        </p>
+                        <p className="font-semibold text-sm sm:text-base">
+                          {(dept.averageSalary / 1000).toFixed(0)}K
+                        </p>
                       </div>
                     </div>
                     <div className="flex flex-row gap-2">
@@ -575,7 +735,10 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
           <TabsContent value="payroll" className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div className="flex items-center space-x-4">
-                <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <Select
+                  value={selectedDepartment}
+                  onValueChange={setSelectedDepartment}
+                >
                   <SelectTrigger className="w-full sm:w-48">
                     <SelectValue placeholder="Chọn department" />
                   </SelectTrigger>
@@ -613,8 +776,12 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
             {selectedDepartment !== "all" && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Dữ Liệu Lương - {selectedDepartment}</CardTitle>
-                  <CardDescription className="text-sm">Tháng {selectedMonth}</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">
+                    Dữ Liệu Lương - {selectedDepartment}
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    Tháng {selectedMonth}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {/* Mobile Card Layout */}
@@ -624,17 +791,28 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                         <div className="space-y-2">
                           <div className="flex justify-between items-start">
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm">{payroll.employees?.full_name}</p>
-                              <p className="text-xs text-muted-foreground">Mã: {payroll.employee_id}</p>
+                              <p className="font-semibold text-sm">
+                                {payroll.employees?.full_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Mã: {payroll.employee_id}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge variant={payroll.is_signed ? "default" : "secondary"} className="text-xs">
+                              <Badge
+                                variant={
+                                  payroll.is_signed ? "default" : "secondary"
+                                }
+                                className="text-xs"
+                              >
                                 {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                               </Badge>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewEmployee(payroll.employee_id)}
+                                onClick={() =>
+                                  handleViewEmployee(payroll.employee_id)
+                                }
                                 className="h-8 w-8 p-0 touch-manipulation"
                               >
                                 <Eye className="h-3 w-3" />
@@ -644,16 +822,31 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                           <div className="pt-2 border-t">
                             <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                               <div>
-                                <span className="text-muted-foreground">Khen thưởng:</span>
-                                <p className="font-medium">{(payroll.tien_khen_thuong_chuyen_can || 0).toLocaleString()} VND</p>
+                                <span className="text-muted-foreground">
+                                  Khen thưởng:
+                                </span>
+                                <p className="font-medium">
+                                  {(
+                                    payroll.tien_khen_thuong_chuyen_can || 0
+                                  ).toLocaleString()}{" "}
+                                  VND
+                                </p>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Hệ số LV:</span>
-                                <p className="font-medium">{(payroll.he_so_lam_viec || 0).toFixed(2)}</p>
+                                <span className="text-muted-foreground">
+                                  Hệ số LV:
+                                </span>
+                                <p className="font-medium">
+                                  {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                                </p>
                               </div>
                             </div>
                             <p className="text-sm font-semibold">
-                              Lương thực nhận: {(payroll.tien_luong_thuc_nhan_cuoi_ky || 0).toLocaleString()} VND
+                              Lương thực nhận:{" "}
+                              {(
+                                payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                              ).toLocaleString()}{" "}
+                              VND
                             </p>
                           </div>
                         </div>
@@ -666,31 +859,62 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left p-2 sm:p-3 min-w-[100px]">Mã NV</th>
-                          <th className="text-left p-2 sm:p-3 min-w-[150px]">Họ Tên</th>
-                          <th className="text-right p-2 sm:p-3 min-w-[120px]">Khen Thưởng</th>
-                          <th className="text-center p-2 sm:p-3 min-w-[80px]">Hệ Số LV</th>
-                          <th className="text-right p-2 sm:p-3 min-w-[140px]">Lương Thực Nhận</th>
-                          <th className="text-center p-2 sm:p-3 min-w-[100px]">Trạng Thái</th>
-                          <th className="text-center p-2 sm:p-3 min-w-[80px]">Thao Tác</th>
+                          <th className="text-left p-2 sm:p-3 min-w-[100px]">
+                            Mã NV
+                          </th>
+                          <th className="text-left p-2 sm:p-3 min-w-[150px]">
+                            Họ Tên
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                            Khen Thưởng
+                          </th>
+                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                            Hệ Số LV
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                            Lương Thực Nhận
+                          </th>
+                          <th className="text-center p-2 sm:p-3 min-w-[100px]">
+                            Trạng Thái
+                          </th>
+                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                            Thao Tác
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {payrollData.map((payroll) => (
-                          <tr key={payroll.id} className="border-b hover:bg-gray-50">
-                            <td className="p-2 sm:p-3 font-mono text-xs sm:text-sm">{payroll.employee_id}</td>
-                            <td className="p-2 sm:p-3">{payroll.employees?.full_name}</td>
+                          <tr
+                            key={payroll.id}
+                            className="border-b hover:bg-gray-50"
+                          >
+                            <td className="p-2 sm:p-3 font-mono text-xs sm:text-sm">
+                              {payroll.employee_id}
+                            </td>
+                            <td className="p-2 sm:p-3">
+                              {payroll.employees?.full_name}
+                            </td>
                             <td className="p-2 sm:p-3 text-right font-medium">
-                              {(payroll.tien_khen_thuong_chuyen_can || 0).toLocaleString()} VND
+                              {(
+                                payroll.tien_khen_thuong_chuyen_can || 0
+                              ).toLocaleString()}{" "}
+                              VND
                             </td>
                             <td className="p-2 sm:p-3 text-center font-medium">
                               {(payroll.he_so_lam_viec || 0).toFixed(2)}
                             </td>
                             <td className="p-2 sm:p-3 text-right font-semibold">
-                              {(payroll.tien_luong_thuc_nhan_cuoi_ky || 0).toLocaleString()} VND
+                              {(
+                                payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                              ).toLocaleString()}{" "}
+                              VND
                             </td>
                             <td className="p-2 sm:p-3 text-center">
-                              <Badge variant={payroll.is_signed ? "default" : "secondary"}>
+                              <Badge
+                                variant={
+                                  payroll.is_signed ? "default" : "secondary"
+                                }
+                              >
                                 {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                               </Badge>
                             </td>
@@ -698,7 +922,9 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewEmployee(payroll.employee_id)}
+                                onClick={() =>
+                                  handleViewEmployee(payroll.employee_id)
+                                }
                                 className="h-8 w-8 p-0"
                               >
                                 <Eye className="h-4 w-4" />
@@ -730,8 +956,8 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
         <PayrollDetailModal
           isOpen={showPayrollModal}
           onClose={() => {
-            setShowPayrollModal(false)
-            setSelectedPayrollData(null)
+            setShowPayrollModal(false);
+            setSelectedPayrollData(null);
           }}
           payrollData={selectedPayrollData}
         />
@@ -742,12 +968,12 @@ export default function ManagerDashboard({ user, onLogout }: ManagerDashboardPro
         <PayrollDetailModal
           isOpen={showDepartmentPayrollModal}
           onClose={() => {
-            setShowDepartmentPayrollModal(false)
-            setSelectedDepartmentPayrollData(null)
+            setShowDepartmentPayrollModal(false);
+            setSelectedDepartmentPayrollData(null);
           }}
           payrollData={selectedDepartmentPayrollData}
         />
       )}
     </div>
-  )
+  );
 }

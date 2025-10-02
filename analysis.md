@@ -7,14 +7,16 @@ Hệ thống cho phép nhân viên tra cứu chi tiết lương của mình bằ
 ## Cách Hoạt Động
 
 ### 1. Nhân Viên Truy Cập
+
 - **URL**: `/employee/lookup`
 - Nhập 2 thông tin:
-  - **Mã nhân viên**: 
+  - **Mã nhân viên**:
     - Nhân viên chính thức: `DB0` + mã số (VD: `DB01234`)
     - Nhân viên thử việc: `DBT0` + mã số (VD: `DBT01234`)
   - **Số CCCD**: Nhập vào ô password để bảo mật
 
 ### 2. Xác Thực & Bảo Mật
+
 - CCCD được mã hóa (hash) bằng bcrypt trước khi lưu trong database
 - Khi tra cứu, hệ thống so sánh CCCD nhập vào với hash đã lưu
 - Nếu khớp → Hiển thị thông tin lương
@@ -23,7 +25,8 @@ Hệ thống cho phép nhân viên tra cứu chi tiết lương của mình bằ
 ### 3. Dữ Liệu Lương Hiển Thị
 
 #### Màn Hình Chính - 6 Thông Tin Quan Trọng:
-1. **Hệ Số Làm Việc** 
+
+1. **Hệ Số Làm Việc**
 2. **Hệ Số Phụ Cấp Kết Quả**
 3. **Tiền Khen Thưởng Chuyên Cần**
 4. **Lương Học Việc PC**
@@ -31,6 +34,7 @@ Hệ thống cho phép nhân viên tra cứu chi tiết lương của mình bằ
 6. **Lương Thực Nhận Cuối Kỳ** (số tiền cuối cùng nhân viên nhận)
 
 #### Xem Chi Tiết Đầy Đủ - 39 Cột Dữ Liệu:
+
 Khi click "Xem Chi Tiết Đầy Đủ", hiển thị đầy đủ 39 cột dữ liệu được chia thành 8 nhóm:
 
 1. **Hệ Số và Thông Số Cơ Bản** (4 cột)
@@ -43,6 +47,7 @@ Khi click "Xem Chi Tiết Đầy Đủ", hiển thị đầy đủ 39 cột dữ
 8. **Thuế và Khấu Trừ** (5 cột)
 
 ### 4. Ký Nhận Lương
+
 - Nhân viên có thể ký xác nhận đã xem thông tin lương
 - Hệ thống lưu lại:
   - Thời gian ký
@@ -53,18 +58,21 @@ Khi click "Xem Chi Tiết Đầy Đủ", hiển thị đầy đủ 39 cột dữ
 ## Cấu Trúc Kỹ Thuật
 
 ### Frontend (Giao Diện)
+
 - **Framework**: Next.js với TypeScript
 - **UI Components**: shadcn/ui
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 
 ### Backend (API)
+
 - **API Routes**: Next.js App Router
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: bcrypt cho hash CCCD
 - **Security**: Row Level Security (RLS)
 
 ### Database Tables
+
 1. **employees**: Thông tin nhân viên
    - employee_id (mã nhân viên)
    - full_name (họ tên)
@@ -80,19 +88,23 @@ Khi click "Xem Chi Tiết Đầy Đủ", hiển thị đầy đủ 39 cột dữ
 ## Đường Dẫn File Quan Trọng
 
 ### Giao Diện
+
 - Trang tra cứu: `/app/employee/lookup/page.tsx`
 - Component chính: `/app/employee/lookup/employee-lookup.tsx`
 - Modal chi tiết: `/app/employee/lookup/payroll-detail-modal.tsx`
 
 ### API
+
 - Tra cứu lương: `/app/api/employee/lookup/route.ts`
 - Ký nhận lương: `/app/api/employee/sign-salary/route.ts`
 
 ### Database
+
 - Schema employees: `/scripts/supabase-setup/01-create-employees-table.sql`
 - Schema payrolls: `/scripts/supabase-setup/02-create-payrolls-table.sql`
 
 ### Utilities
+
 - Format tiền tệ: `/lib/utils/date-formatter.ts`
 - Supabase client: `/utils/supabase/server.ts`
 
@@ -113,4 +125,4 @@ Khi click "Xem Chi Tiết Đầy Đủ", hiển thị đầy đủ 39 cột dữ
 
 ---
 
-*Tài liệu này phân tích hệ thống tra cứu lương dựa trên codebase hiện tại. Để biết thêm chi tiết kỹ thuật, xem file `/docs/payroll-lookup-system-analysis.md`*
+_Tài liệu này phân tích hệ thống tra cứu lương dựa trên codebase hiện tại. Để biết thêm chi tiết kỹ thuật, xem file `/docs/payroll-lookup-system-analysis.md`_

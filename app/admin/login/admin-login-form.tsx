@@ -1,28 +1,35 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Shield } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Shield } from "lucide-react";
+import Link from "next/link";
 
 export function AdminLoginForm() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const router = useRouter()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
       const response = await fetch("/api/admin/login", {
@@ -31,54 +38,57 @@ export function AdminLoginForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         // Lưu token và user info vào localStorage
-        localStorage.setItem("admin_token", data.token)
-        localStorage.setItem("user_info", JSON.stringify(data.user))
+        localStorage.setItem("admin_token", data.token);
+        localStorage.setItem("user_info", JSON.stringify(data.user));
 
         // Redirect based on user role
-        const userRole = data.user?.role
+        const userRole = data.user?.role;
         switch (userRole) {
-          case 'admin':
-            router.push("/admin/dashboard")
-            break
-          case 'giam_doc':
-            router.push("/director/dashboard")
-            break
-          case 'ke_toan':
-            router.push("/accountant/dashboard")
-            break
-          case 'nguoi_lap_bieu':
-            router.push("/reporter/dashboard")
-            break
-          case 'truong_phong':
-            router.push("/manager/dashboard")
-            break
-          case 'to_truong':
-            router.push("/supervisor/dashboard")
-            break
-          case 'nhan_vien':
-            router.push("/employee/dashboard")
-            break
-          case 'van_phong':
-            router.push("/admin/employee-management")
-            break
+          case "admin":
+            router.push("/admin/dashboard");
+            break;
+          case "giam_doc":
+            router.push("/director/dashboard");
+            break;
+          case "ke_toan":
+            router.push("/accountant/dashboard");
+            break;
+          case "nguoi_lap_bieu":
+            router.push("/reporter/dashboard");
+            break;
+          case "truong_phong":
+            router.push("/manager/dashboard");
+            break;
+          case "to_truong":
+            router.push("/supervisor/dashboard");
+            break;
+          case "nhan_vien":
+            router.push("/employee/dashboard");
+            break;
+          case "van_phong":
+            router.push("/admin/employee-management");
+            break;
           default:
-            router.push("/admin/dashboard") // Fallback to admin dashboard
+            router.push("/admin/dashboard"); // Fallback to admin dashboard
         }
       } else {
-        setError(data.error || "Đăng nhập thất bại, liên hệ ban Chuyển Đổi Số để được hỗ trợ.")
+        setError(
+          data.error ||
+            "Đăng nhập thất bại, liên hệ ban Chuyển Đổi Số để được hỗ trợ.",
+        );
       }
     } catch (error) {
-      setError("Có lỗi xảy ra khi đăng nhập")
+      setError("Có lỗi xảy ra khi đăng nhập");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -88,7 +98,8 @@ export function AdminLoginForm() {
         </div>
         <CardTitle>Đăng Nhập Hệ Thống</CardTitle>
         <CardDescription>
-          Hỗ trợ tất cả roles: Admin, Giám Đốc, Kế Toán, Người Lập Biểu, Trưởng Phòng, Tổ Trưởng, Nhân Viên
+          Hỗ trợ tất cả roles: Admin, Giám Đốc, Kế Toán, Người Lập Biểu, Trưởng
+          Phòng, Tổ Trưởng, Nhân Viên
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -136,5 +147,5 @@ export function AdminLoginForm() {
         </CardFooter>
       </form>
     </Card>
-  )
+  );
 }

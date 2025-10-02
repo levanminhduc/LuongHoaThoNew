@@ -9,19 +9,23 @@ Hệ thống cho phép nhân viên tra cứu thông tin lương chi tiết của
 ### 1. Frontend - Giao Diện Người Dùng
 
 #### 1.1 Trang Tra Cứu (`app/employee/lookup/page.tsx`)
+
 - **URL**: `/employee/lookup`
 - **Tiêu đề**: "Tra Cứu Lương & Ký Xác Nhận Lương - CÔNG TY MAY HÒA THỌ ĐIỆN BÀN"
 - **Component chính**: `<EmployeeLookup />`
 
 #### 1.2 Component EmployeeLookup (`app/employee/lookup/employee-lookup.tsx`)
+
 **Chức năng chính:**
+
 - Form nhập liệu với 2 trường:
-  - **Mã nhân viên**: 
+  - **Mã nhân viên**:
     - Nhân viên chính thức: `DB0` + mã số (VD: DB01234)
     - Nhân viên thử việc: `DBT0` + mã số (VD: DBT01234)
   - **Số CCCD**: Hiển thị dạng password, có nút ẩn/hiện
 
 **State quản lý:**
+
 ```typescript
 - employeeId: string          // Mã nhân viên
 - cccd: string               // Số CCCD
@@ -41,6 +45,7 @@ Hệ thống cho phép nhân viên tra cứu thông tin lương chi tiết của
 **Endpoint**: `POST /api/employee/lookup`
 
 **Request Body:**
+
 ```json
 {
   "employee_id": "DB01234",
@@ -51,22 +56,25 @@ Hệ thống cho phép nhân viên tra cứu thông tin lương chi tiết của
 **Quy trình xử lý:**
 
 1. **Xác thực nhân viên:**
+
    ```typescript
    // Tìm nhân viên trong database
    const { data: employee } = await supabase
      .from("employees")
      .select("employee_id, full_name, cccd_hash, department, chuc_vu")
      .eq("employee_id", employee_id.trim())
-     .single()
+     .single();
    ```
 
 2. **Verify CCCD:**
+
    ```typescript
    // So sánh CCCD với hash đã lưu
-   const isValidCCCD = await bcrypt.compare(cccd.trim(), employee.cccd_hash)
+   const isValidCCCD = await bcrypt.compare(cccd.trim(), employee.cccd_hash);
    ```
 
 3. **Lấy dữ liệu lương mới nhất:**
+
    ```typescript
    const { data: payroll } = await supabase
      .from("payrolls")
@@ -74,7 +82,7 @@ Hệ thống cho phép nhân viên tra cứu thông tin lương chi tiết của
      .eq("employee_id", employee_id.trim())
      .order("created_at", { ascending: false })
      .limit(1)
-     .single()
+     .single();
    ```
 
 4. **Trả về dữ liệu:**
@@ -85,6 +93,7 @@ Hệ thống cho phép nhân viên tra cứu thông tin lương chi tiết của
 **Endpoint**: `POST /api/employee/sign-salary`
 
 **Chức năng:**
+
 - Xác nhận lại CCCD
 - Ghi nhận thông tin ký: thời gian, IP, thiết bị
 - Cập nhật trạng thái `is_signed = true` trong database
@@ -92,6 +101,7 @@ Hệ thống cho phép nhân viên tra cứu thông tin lương chi tiết của
 ### 3. Database Schema
 
 #### 3.1 Bảng `employees`
+
 ```sql
 CREATE TABLE employees (
   id SERIAL PRIMARY KEY,
@@ -105,24 +115,25 @@ CREATE TABLE employees (
 ```
 
 #### 3.2 Bảng `payrolls`
+
 ```sql
 CREATE TABLE payrolls (
   -- Metadata
   id SERIAL PRIMARY KEY,
   employee_id VARCHAR(50) NOT NULL,
   salary_month VARCHAR(20) NOT NULL,           -- "2024-07"
-  
+
   -- Thông tin ký
   is_signed BOOLEAN DEFAULT false,
   signed_at TIMESTAMP NULL,
   signed_by_name VARCHAR(255) NULL,
-  
+
   -- 39 cột dữ liệu lương
   he_so_lam_viec DECIMAL(5,2),
   he_so_phu_cap_ket_qua DECIMAL(5,2),
   -- ... 37 cột khác
   tien_luong_thuc_nhan_cuoi_ky DECIMAL(15,2), -- Lương thực nhận
-  
+
   FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 ```
@@ -130,14 +141,17 @@ CREATE TABLE payrolls (
 ### 4. Hiển Thị Dữ Liệu
 
 #### 4.1 Hiển Thị Tổng Quan
+
 Sau khi tra cứu thành công, hiển thị:
 
 **Thông tin cá nhân:**
+
 - Họ tên, Mã NV
 - Chức vụ, Phòng ban
 - Tháng lương
 
 **6 Card thông tin quan trọng:**
+
 1. **Hệ Số Làm Việc** (màu xanh dương)
 2. **Hệ Số Phụ Cấp KQ** (màu xanh lá)
 3. **Tiền Khen Thưởng Chuyên Cần** (màu tím)
@@ -146,6 +160,7 @@ Sau khi tra cứu thành công, hiển thị:
 6. **Lương Thực Nhận Cuối Kỳ** (màu xanh ngọc - số tiền cuối cùng)
 
 #### 4.2 Modal Chi Tiết (`payroll-detail-modal.tsx`)
+
 Khi click "Xem Chi Tiết Đầy Đủ", hiển thị modal với 8 nhóm thông tin:
 
 1. **Hệ Số và Thông Số Cơ Bản** (4 chỉ số)
@@ -198,12 +213,14 @@ Khi click "Xem Chi Tiết Đầy Đủ", hiển thị modal với 8 nhóm thông
    - BHXH BHTN BHYT Total
    - Truy Thu Thẻ BHYT
 
-**Kết quả cuối cùng:** 
+**Kết quả cuối cùng:**
+
 - **Tiền Lương Thực Nhận Cuối Kỳ** (highlighted trong card màu xanh lá)
 
 ### 5. Tính Năng Ký Nhận Lương
 
 #### 5.1 Trạng Thái Ký
+
 - **Chưa ký**: Hiển thị nút "Ký Nhận Lương" màu xanh lá
 - **Đã ký**: Hiển thị thông tin:
   - Người ký (tên nhân viên)
@@ -211,6 +228,7 @@ Khi click "Xem Chi Tiết Đầy Đủ", hiển thị modal với 8 nhóm thông
   - Badge "Đã ký" màu xanh
 
 #### 5.2 Quy Trình Ký
+
 1. Nhân viên click nút "Ký Nhận Lương"
 2. Hệ thống gọi API `/api/employee/sign-salary`
 3. Xác thực lại CCCD
@@ -228,12 +246,14 @@ Khi click "Xem Chi Tiết Đầy Đủ", hiển thị modal với 8 nhóm thông
 ### 7. Utilities và Helpers
 
 #### 7.1 Format Functions (`lib/utils/date-formatter.ts`)
+
 - `formatCurrency()`: Format tiền VND (VD: 5.000.000 ₫)
 - `formatNumber()`: Format số với dấu phân cách hàng nghìn
 - `formatSalaryMonth()`: Format tháng lương (VD: "Tháng 7/2024")
 - `formatSignatureTime()`: Format thời gian ký
 
 #### 7.2 Supabase Client (`utils/supabase/server.ts`)
+
 - `createClient()`: Client thông thường
 - `createServiceClient()`: Client với Service Role Key cho API
 

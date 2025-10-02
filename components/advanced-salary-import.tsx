@@ -1,19 +1,38 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Settings, FileSpreadsheet, Database, Save, Download } from "lucide-react"
-import { ColumnMappingDialog } from "./column-mapping-dialog"
-import { AdvancedImportResults } from "./advanced-import-results"
-import { MappingConfigOverrideDialog } from "./mapping-config-override-dialog"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Loader2,
+  Settings,
+  FileSpreadsheet,
+  Database,
+  Save,
+  Download,
+} from "lucide-react";
+import { ColumnMappingDialog } from "./column-mapping-dialog";
+import { AdvancedImportResults } from "./advanced-import-results";
+import { MappingConfigOverrideDialog } from "./mapping-config-override-dialog";
 import {
   type ColumnMapping,
   type ImportResult,
@@ -21,47 +40,54 @@ import {
   detectColumns,
   autoMapColumns,
   autoMapColumnsWithAliases,
-} from "@/lib/advanced-excel-parser"
+} from "@/lib/advanced-excel-parser";
 import {
   type ColumnAlias,
   type EnhancedColumnMapping,
   type ImportMappingResult,
-  type MappingConfiguration
-} from "@/lib/column-alias-config"
+  type MappingConfiguration,
+} from "@/lib/column-alias-config";
 import {
   EnhancedImportValidator,
-  type ValidationResult
-} from "@/lib/enhanced-import-validation"
+  type ValidationResult,
+} from "@/lib/enhanced-import-validation";
 import {
   useMappingConfig,
   useAutoLoadConfigurations,
-  useCurrentMappingConfig
-} from "@/lib/hooks/use-mapping-config"
-import { useMappingConfigSync } from "@/lib/sync/mapping-config-sync"
+  useCurrentMappingConfig,
+} from "@/lib/hooks/use-mapping-config";
+import { useMappingConfigSync } from "@/lib/sync/mapping-config-sync";
 
 interface AdvancedSalaryImportProps {
-  onImportComplete?: (result: ImportResult) => void
+  onImportComplete?: (result: ImportResult) => void;
 }
 
-export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportProps) {
+export function AdvancedSalaryImport({
+  onImportComplete,
+}: AdvancedSalaryImportProps) {
   // Existing state
-  const [files, setFiles] = useState<FileList | null>(null)
-  const [importing, setImporting] = useState(false)
-  const [showColumnMapping, setShowColumnMapping] = useState(false)
-  const [detectedColumns, setDetectedColumns] = useState<string[]>([])
-  const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([])
-  const [importResult, setImportResult] = useState<ImportResult | null>(null)
-  const [message, setMessage] = useState("")
-  const [aliases, setAliases] = useState<ColumnAlias[]>([])
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null)
-  const [enhancedMappingResult, setEnhancedMappingResult] = useState<ImportMappingResult | null>(null)
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [showColumnMapping, setShowColumnMapping] = useState(false);
+  const [detectedColumns, setDetectedColumns] = useState<string[]>([]);
+  const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([]);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [message, setMessage] = useState("");
+  const [aliases, setAliases] = useState<ColumnAlias[]>([]);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
+  const [enhancedMappingResult, setEnhancedMappingResult] =
+    useState<ImportMappingResult | null>(null);
 
   // New mapping configuration state
-  const [selectedConfigId, setSelectedConfigId] = useState<number | null>(null)
-  const [showSaveConfigDialog, setShowSaveConfigDialog] = useState(false)
-  const [showOverrideDialog, setShowOverrideDialog] = useState(false)
-  const [previewMapping, setPreviewMapping] = useState<ColumnMapping | null>(null)
-  const [autoAppliedConfig, setAutoAppliedConfig] = useState<MappingConfiguration | null>(null)
+  const [selectedConfigId, setSelectedConfigId] = useState<number | null>(null);
+  const [showSaveConfigDialog, setShowSaveConfigDialog] = useState(false);
+  const [showOverrideDialog, setShowOverrideDialog] = useState(false);
+  const [previewMapping, setPreviewMapping] = useState<ColumnMapping | null>(
+    null,
+  );
+  const [autoAppliedConfig, setAutoAppliedConfig] =
+    useState<MappingConfiguration | null>(null);
 
   // Mapping configuration hooks
   const {
@@ -73,134 +99,156 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
     applyConfiguration,
     hasConfigurations,
     hasDefaultConfig,
-    configById
-  } = useMappingConfig()
+    configById,
+  } = useMappingConfig();
 
-  const { currentConfig, applyDefaultConfig, hasCurrentConfig } = useCurrentMappingConfig()
-  const { isConnected: syncConnected } = useMappingConfigSync()
+  const { currentConfig, applyDefaultConfig, hasCurrentConfig } =
+    useCurrentMappingConfig();
+  const { isConnected: syncConnected } = useMappingConfigSync();
 
   // Auto-load configurations on mount
-  useAutoLoadConfigurations()
+  useAutoLoadConfigurations();
 
   // Auto-apply default configuration when available
   useEffect(() => {
     if (hasDefaultConfig && defaultConfig && !hasCurrentConfig) {
-      applyDefaultConfig()
-      setAutoAppliedConfig(defaultConfig)
-      setSelectedConfigId(defaultConfig.id!)
+      applyDefaultConfig();
+      setAutoAppliedConfig(defaultConfig);
+      setSelectedConfigId(defaultConfig.id!);
     }
-  }, [hasDefaultConfig, defaultConfig, hasCurrentConfig, applyDefaultConfig])
+  }, [hasDefaultConfig, defaultConfig, hasCurrentConfig, applyDefaultConfig]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files
+    const selectedFiles = e.target.files;
     if (selectedFiles) {
-      setFiles(selectedFiles)
-      setImportResult(null)
-      setMessage("")
-      setPreviewMapping(null)
+      setFiles(selectedFiles);
+      setImportResult(null);
+      setMessage("");
+      setPreviewMapping(null);
     }
-  }
+  };
 
   const handleAnalyzeFiles = async () => {
     if (!files || files.length === 0) {
-      setMessage("Vui lòng chọn ít nhất một file Excel")
-      return
+      setMessage("Vui lòng chọn ít nhất một file Excel");
+      return;
     }
 
     try {
-      setImporting(true)
+      setImporting(true);
 
       // Read first file to detect columns
-      const firstFile = files[0]
-      const buffer = await firstFile.arrayBuffer()
-      const workbook = await import("xlsx").then((XLSX) => XLSX.read(buffer, { type: "buffer" }))
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+      const firstFile = files[0];
+      const buffer = await firstFile.arrayBuffer();
+      const workbook = await import("xlsx").then((XLSX) =>
+        XLSX.read(buffer, { type: "buffer" }),
+      );
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-      const detected = detectColumns(worksheet)
-      setDetectedColumns(detected)
+      const detected = detectColumns(worksheet);
+      setDetectedColumns(detected);
 
       // Try to apply saved mapping configuration first
-      let appliedMapping: ColumnMapping | null = null
+      let appliedMapping: ColumnMapping | null = null;
 
       if (currentConfig && currentConfig.field_mappings) {
         // Apply saved configuration
-        appliedMapping = applySavedConfiguration(detected, currentConfig)
-        setMessage(`Đã áp dụng configuration "${currentConfig.config_name}" với ${detected.length} cột`)
+        appliedMapping = applySavedConfiguration(detected, currentConfig);
+        setMessage(
+          `Đã áp dụng configuration "${currentConfig.config_name}" với ${detected.length} cột`,
+        );
       } else {
         // Fallback to auto-mapping
-        appliedMapping = autoMapColumns(detected)
-        setMessage(`Phát hiện ${detected.length} cột trong file Excel (sử dụng auto-mapping)`)
+        appliedMapping = autoMapColumns(detected);
+        setMessage(
+          `Phát hiện ${detected.length} cột trong file Excel (sử dụng auto-mapping)`,
+        );
       }
 
       // Set preview mapping
-      setPreviewMapping(appliedMapping)
-      setColumnMappings(Array.from({ length: files.length }, () => appliedMapping!))
+      setPreviewMapping(appliedMapping);
+      setColumnMappings(
+        Array.from({ length: files.length }, () => appliedMapping!),
+      );
 
-      setShowColumnMapping(true)
+      setShowColumnMapping(true);
     } catch (error) {
-      setMessage("Lỗi khi phân tích file Excel")
-      console.error("File analysis error:", error)
+      setMessage("Lỗi khi phân tích file Excel");
+      console.error("File analysis error:", error);
     } finally {
-      setImporting(false)
+      setImporting(false);
     }
-  }
+  };
 
   // Helper function to apply saved configuration
-  const applySavedConfiguration = (detectedColumns: string[], config: MappingConfiguration): ColumnMapping => {
-    const mapping: ColumnMapping = {}
+  const applySavedConfiguration = (
+    detectedColumns: string[],
+    config: MappingConfiguration,
+  ): ColumnMapping => {
+    const mapping: ColumnMapping = {};
 
     // Start with auto-mapping as base
-    const autoMapping = autoMapColumns(detectedColumns)
+    const autoMapping = autoMapColumns(detectedColumns);
 
     // Apply saved field mappings
     if (config.field_mappings) {
-      config.field_mappings.forEach(fieldMapping => {
+      config.field_mappings.forEach((fieldMapping) => {
         // Find matching detected column
-        const matchingColumn = detectedColumns.find(col =>
-          col.toLowerCase() === fieldMapping.excel_column_name.toLowerCase() ||
-          col.toLowerCase().includes(fieldMapping.excel_column_name.toLowerCase()) ||
-          fieldMapping.excel_column_name.toLowerCase().includes(col.toLowerCase())
-        )
+        const matchingColumn = detectedColumns.find(
+          (col) =>
+            col.toLowerCase() ===
+              fieldMapping.excel_column_name.toLowerCase() ||
+            col
+              .toLowerCase()
+              .includes(fieldMapping.excel_column_name.toLowerCase()) ||
+            fieldMapping.excel_column_name
+              .toLowerCase()
+              .includes(col.toLowerCase()),
+        );
 
         if (matchingColumn) {
-          mapping[fieldMapping.database_field] = matchingColumn
+          mapping[fieldMapping.database_field] = matchingColumn;
         }
-      })
+      });
     }
 
     // Fill in any missing mappings with auto-mapping
-    Object.keys(autoMapping).forEach(dbField => {
+    Object.keys(autoMapping).forEach((dbField) => {
       if (!mapping[dbField]) {
-        mapping[dbField] = autoMapping[dbField]
+        mapping[dbField] = autoMapping[dbField];
       }
-    })
+    });
 
-    return mapping
-  }
+    return mapping;
+  };
 
   const handleMappingSave = async (
     mapping: ColumnMapping,
     shouldSaveConfig?: boolean,
-    newAliases?: Array<{database_field: string, alias_name: string, confidence_score: number}>
+    newAliases?: Array<{
+      database_field: string;
+      alias_name: string;
+      confidence_score: number;
+    }>,
   ) => {
-    setShowColumnMapping(false)
+    setShowColumnMapping(false);
 
-    if (!files) return
+    if (!files) return;
 
     try {
-      setImporting(true)
-      setMessage("Đang xử lý import dữ liệu...")
+      setImporting(true);
+      setMessage("Đang xử lý import dữ liệu...");
 
       // Prepare file data
-      const fileData = []
+      const fileData = [];
       for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const buffer = Buffer.from(await file.arrayBuffer())
-        fileData.push({ buffer, filename: file.name })
+        const file = files[i];
+        const buffer = Buffer.from(await file.arrayBuffer());
+        fileData.push({ buffer, filename: file.name });
       }
 
       // Parse files with column mapping
-      const result = parseAdvancedExcelFiles(fileData, [mapping])
+      const result = parseAdvancedExcelFiles(fileData, [mapping]);
 
       if (result.successCount > 0) {
         // Send to backend
@@ -215,53 +263,70 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
             columnMappings: result.columnMappings,
             summary: result.summary,
           }),
-        })
+        });
 
-        const backendResult = await response.json()
+        const backendResult = await response.json();
 
         if (response.ok) {
-          setMessage(`Import hoàn tất! Đã xử lý ${result.successCount} bản ghi thành công`)
+          setMessage(
+            `Import hoàn tất! Đã xử lý ${result.successCount} bản ghi thành công`,
+          );
 
           // Save successful mapping configuration if requested
           if (shouldSaveConfig) {
-            await handleSaveSuccessfulMapping(mapping, undefined, undefined, newAliases)
+            await handleSaveSuccessfulMapping(
+              mapping,
+              undefined,
+              undefined,
+              newAliases,
+            );
           }
 
-          onImportComplete?.(result)
+          onImportComplete?.(result);
         } else {
-          setMessage(`Lỗi backend: ${backendResult.error}`)
+          setMessage(`Lỗi backend: ${backendResult.error}`);
         }
       } else {
-        setMessage("Không có dữ liệu hợp lệ để import")
+        setMessage("Không có dữ liệu hợp lệ để import");
       }
 
-      setImportResult(result)
+      setImportResult(result);
     } catch (error) {
-      setMessage("Có lỗi xảy ra khi import dữ liệu")
-      console.error("Import error:", error)
+      setMessage("Có lỗi xảy ra khi import dữ liệu");
+      console.error("Import error:", error);
     } finally {
-      setImporting(false)
+      setImporting(false);
     }
-  }
+  };
 
   // Handle saving successful mapping as configuration
   const handleSaveSuccessfulMapping = async (
     mapping: ColumnMapping,
     configName?: string,
     description?: string,
-    aliasesToSave?: Array<{database_field: string, alias_name: string, confidence_score: number}>
+    aliasesToSave?: Array<{
+      database_field: string;
+      alias_name: string;
+      confidence_score: number;
+    }>,
   ) => {
     try {
-      const fieldMappings = Object.entries(mapping).map(([dbField, excelColumn]) => ({
-        database_field: dbField,
-        excel_column_name: excelColumn,
-        confidence_score: 100, // High confidence for successful mapping
-        mapping_type: 'manual' as const,
-        validation_passed: true
-      }))
+      const fieldMappings = Object.entries(mapping).map(
+        ([dbField, excelColumn]) => ({
+          database_field: dbField,
+          excel_column_name: excelColumn,
+          confidence_score: 100, // High confidence for successful mapping
+          mapping_type: "manual" as const,
+          validation_passed: true,
+        }),
+      );
 
-      const finalConfigName = configName || `Import Success ${new Date().toLocaleDateString('vi-VN')}`
-      const finalDescription = description || `Successful mapping configuration from import on ${new Date().toLocaleString('vi-VN')}`
+      const finalConfigName =
+        configName ||
+        `Import Success ${new Date().toLocaleDateString("vi-VN")}`;
+      const finalDescription =
+        description ||
+        `Successful mapping configuration from import on ${new Date().toLocaleString("vi-VN")}`;
 
       // Save configuration first
       const savedConfig = await saveConfiguration({
@@ -270,29 +335,39 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
         field_mappings: fieldMappings,
         is_default: false,
         is_active: true,
-        created_by: 'admin'
-      })
+        created_by: "admin",
+      });
 
       // Save aliases if provided
       if (aliasesToSave && aliasesToSave.length > 0) {
-        await saveAliasesForConfiguration(aliasesToSave, savedConfig.id!)
+        await saveAliasesForConfiguration(aliasesToSave, savedConfig.id!);
       }
 
-      setMessage(prev => `${prev} - Configuration đã được lưu thành "${finalConfigName}"${aliasesToSave?.length ? ` với ${aliasesToSave.length} aliases` : ''}`)
+      setMessage(
+        (prev) =>
+          `${prev} - Configuration đã được lưu thành "${finalConfigName}"${aliasesToSave?.length ? ` với ${aliasesToSave.length} aliases` : ""}`,
+      );
     } catch (error) {
-      console.error('Failed to save mapping configuration:', error)
-      setMessage(prev => `${prev} - Lỗi khi lưu configuration: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error("Failed to save mapping configuration:", error);
+      setMessage(
+        (prev) =>
+          `${prev} - Lỗi khi lưu configuration: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
-  }
+  };
 
   // Helper function to save aliases for a configuration
   const saveAliasesForConfiguration = async (
-    aliases: Array<{database_field: string, alias_name: string, confidence_score: number}>,
-    configId: number
+    aliases: Array<{
+      database_field: string;
+      alias_name: string;
+      confidence_score: number;
+    }>,
+    configId: number,
   ) => {
     try {
-      const token = localStorage.getItem("admin_token")
-      if (!token) throw new Error("No admin token")
+      const token = localStorage.getItem("admin_token");
+      if (!token) throw new Error("No admin token");
 
       for (const alias of aliases) {
         const response = await fetch("/api/admin/column-aliases", {
@@ -305,90 +380,105 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
             database_field: alias.database_field,
             alias_name: alias.alias_name,
             confidence_score: alias.confidence_score,
-            config_id: configId // Link alias to configuration
+            config_id: configId, // Link alias to configuration
           }),
-        })
+        });
 
         if (!response.ok) {
-          const error = await response.json()
-          console.warn(`Failed to save alias "${alias.alias_name}":`, error.message)
+          const error = await response.json();
+          console.warn(
+            `Failed to save alias "${alias.alias_name}":`,
+            error.message,
+          );
         }
       }
     } catch (error) {
-      console.error('Failed to save aliases:', error)
+      console.error("Failed to save aliases:", error);
     }
-  }
+  };
 
   const handleMappingCancel = () => {
-    setShowColumnMapping(false)
-    setMessage("")
-  }
+    setShowColumnMapping(false);
+    setMessage("");
+  };
 
   // Handle configuration override
   const handleConfigOverride = (config: MappingConfiguration) => {
     if (detectedColumns.length > 0) {
-      const appliedMapping = applySavedConfiguration(detectedColumns, config)
-      setPreviewMapping(appliedMapping)
-      setColumnMappings(Array.from({ length: files?.length || 1 }, () => appliedMapping))
-      setAutoAppliedConfig(config)
-      setSelectedConfigId(config.id!)
-      setMessage(`Đã áp dụng configuration "${config.config_name}"`)
+      const appliedMapping = applySavedConfiguration(detectedColumns, config);
+      setPreviewMapping(appliedMapping);
+      setColumnMappings(
+        Array.from({ length: files?.length || 1 }, () => appliedMapping),
+      );
+      setAutoAppliedConfig(config);
+      setSelectedConfigId(config.id!);
+      setMessage(`Đã áp dụng configuration "${config.config_name}"`);
     }
-  }
+  };
 
   // Handle save current mapping as configuration
-  const handleSaveCurrentAsConfig = (configName: string, description?: string) => {
+  const handleSaveCurrentAsConfig = (
+    configName: string,
+    description?: string,
+  ) => {
     if (previewMapping) {
-      handleSaveSuccessfulMapping(previewMapping, configName, description)
+      handleSaveSuccessfulMapping(previewMapping, configName, description);
     }
-  }
+  };
 
   // Handle download template based on current configuration
   const handleDownloadTemplate = async () => {
-    if (!currentConfig?.id) return
+    if (!currentConfig?.id) return;
 
     try {
-      setMessage("Đang tạo template...")
+      setMessage("Đang tạo template...");
 
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        setMessage("Không tìm thấy token xác thực")
-        return
+        setMessage("Không tìm thấy token xác thực");
+        return;
       }
 
-      const response = await fetch(`/api/admin/generate-import-template?configId=${currentConfig.id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/admin/generate-import-template?configId=${currentConfig.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      })
+      );
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Lỗi khi tạo template")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Lỗi khi tạo template");
       }
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
 
-      const configName = response.headers.get("X-Config-Name") || currentConfig.config_name
-      const timestamp = new Date().toISOString().slice(0, 10)
-      a.download = `import-template-${configName.replace(/\s+/g, '-')}-${timestamp}.xlsx`
+      const configName =
+        response.headers.get("X-Config-Name") || currentConfig.config_name;
+      const timestamp = new Date().toISOString().slice(0, 10);
+      a.download = `import-template-${configName.replace(/\s+/g, "-")}-${timestamp}.xlsx`;
 
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-      setMessage(`Đã tải template cho configuration "${configName}" thành công!`)
-
+      setMessage(
+        `Đã tải template cho configuration "${configName}" thành công!`,
+      );
     } catch (error) {
-      console.error("Download template error:", error)
-      setMessage(error instanceof Error ? error.message : "Lỗi khi tải template")
+      console.error("Download template error:", error);
+      setMessage(
+        error instanceof Error ? error.message : "Lỗi khi tải template",
+      );
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -398,14 +488,19 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
             <Database className="h-5 w-5" />
             Import Dữ Liệu Lương Nâng Cao
           </CardTitle>
-          <CardDescription>Upload và cấu hình ánh xạ cột từ nhiều file Excel để import dữ liệu lương</CardDescription>
+          <CardDescription>
+            Upload và cấu hình ánh xạ cột từ nhiều file Excel để import dữ liệu
+            lương
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
           {/* File Selection */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="salary-files">Chọn File Excel (.xlsx, .xls)</Label>
+              <Label htmlFor="salary-files">
+                Chọn File Excel (.xlsx, .xls)
+              </Label>
               <Input
                 id="salary-files"
                 type="file"
@@ -416,13 +511,20 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
               />
               {files && files.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Đã chọn {files.length} file(s):</p>
+                  <p className="text-sm text-gray-600">
+                    Đã chọn {files.length} file(s):
+                  </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {Array.from(files).map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm text-gray-600 p-2 bg-gray-50 rounded">
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm text-gray-600 p-2 bg-gray-50 rounded"
+                      >
                         <FileSpreadsheet className="h-4 w-4" />
                         <span className="flex-1 truncate">{file.name}</span>
-                        <Badge variant="outline">{(file.size / 1024).toFixed(1)} KB</Badge>
+                        <Badge variant="outline">
+                          {(file.size / 1024).toFixed(1)} KB
+                        </Badge>
                       </div>
                     ))}
                   </div>
@@ -436,9 +538,14 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Settings className="h-4 w-4 text-blue-600" />
-                    <h3 className="font-medium text-blue-900">Column Mapping Configuration</h3>
+                    <h3 className="font-medium text-blue-900">
+                      Column Mapping Configuration
+                    </h3>
                     {syncConnected && (
-                      <Badge variant="outline" className="text-xs text-green-600 border-green-300">
+                      <Badge
+                        variant="outline"
+                        className="text-xs text-green-600 border-green-300"
+                      >
                         Sync Active
                       </Badge>
                     )}
@@ -461,10 +568,10 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
                     <Select
                       value={selectedConfigId?.toString() || ""}
                       onValueChange={(value) => {
-                        const configId = parseInt(value)
-                        setSelectedConfigId(configId)
+                        const configId = parseInt(value);
+                        setSelectedConfigId(configId);
                         if (configId) {
-                          applyConfiguration(configId)
+                          applyConfiguration(configId);
                         }
                       }}
                     >
@@ -473,11 +580,16 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
                       </SelectTrigger>
                       <SelectContent>
                         {configurations.map((config) => (
-                          <SelectItem key={config.id} value={config.id!.toString()}>
+                          <SelectItem
+                            key={config.id}
+                            value={config.id!.toString()}
+                          >
                             <div className="flex items-center gap-2">
                               <span>{config.config_name}</span>
                               {config.is_default && (
-                                <Badge variant="secondary" className="text-xs">Default</Badge>
+                                <Badge variant="secondary" className="text-xs">
+                                  Default
+                                </Badge>
                               )}
                             </div>
                           </SelectItem>
@@ -491,16 +603,23 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
                       <Label>Configuration hiện tại</Label>
                       <div className="p-2 bg-white rounded border">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">{currentConfig.config_name}</span>
+                          <span className="font-medium">
+                            {currentConfig.config_name}
+                          </span>
                           {currentConfig.is_default && (
-                            <Badge variant="secondary" className="text-xs">Default</Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              Default
+                            </Badge>
                           )}
                         </div>
                         {currentConfig.description && (
-                          <p className="text-sm text-gray-600 mt-1">{currentConfig.description}</p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {currentConfig.description}
+                          </p>
                         )}
                         <p className="text-xs text-gray-500 mt-1">
-                          {currentConfig.field_mappings?.length || 0} field mappings
+                          {currentConfig.field_mappings?.length || 0} field
+                          mappings
                         </p>
                       </div>
                     </div>
@@ -511,7 +630,8 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
                   <Alert>
                     <Settings className="h-4 w-4" />
                     <AlertDescription>
-                      Đã tự động áp dụng configuration "{autoAppliedConfig.config_name}" làm mặc định.
+                      Đã tự động áp dụng configuration "
+                      {autoAppliedConfig.config_name}" làm mặc định.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -554,8 +674,18 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
 
           {/* Status Message */}
           {message && (
-            <Alert className={message.includes("Lỗi") ? "border-red-200 bg-red-50" : "border-blue-200 bg-blue-50"}>
-              <AlertDescription className={message.includes("Lỗi") ? "text-red-800" : "text-blue-800"}>
+            <Alert
+              className={
+                message.includes("Lỗi")
+                  ? "border-red-200 bg-red-50"
+                  : "border-blue-200 bg-blue-50"
+              }
+            >
+              <AlertDescription
+                className={
+                  message.includes("Lỗi") ? "text-red-800" : "text-blue-800"
+                }
+              >
                 {message}
               </AlertDescription>
             </Alert>
@@ -563,7 +693,9 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
 
           {/* Instructions */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Hướng Dẫn Sử Dụng:</h4>
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">
+              Hướng Dẫn Sử Dụng:
+            </h4>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Chọn một hoặc nhiều file Excel chứa dữ liệu lương</li>
               <li>• Click "Phân Tích & Cấu Hình" để xem cấu trúc file</li>
@@ -580,7 +712,9 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
         <ColumnMappingDialog
           detectedColumns={detectedColumns}
           initialMapping={columnMappings[0] || {}}
-          onSave={(mapping, shouldSaveConfig, newAliases) => handleMappingSave(mapping, shouldSaveConfig, newAliases)}
+          onSave={(mapping, shouldSaveConfig, newAliases) =>
+            handleMappingSave(mapping, shouldSaveConfig, newAliases)
+          }
           onCancel={handleMappingCancel}
           fileName={files?.[0]?.name}
           enableAliasMapping={true}
@@ -603,5 +737,5 @@ export function AdvancedSalaryImport({ onImportComplete }: AdvancedSalaryImportP
         onSaveAsConfig={handleSaveCurrentAsConfig}
       />
     </div>
-  )
+  );
 }

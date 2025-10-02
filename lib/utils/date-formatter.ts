@@ -9,26 +9,26 @@
  * @returns Vietnamese formatted month (e.g., "Tháng 7 - 2024" or "07/2024")
  */
 export function formatSalaryMonth(salaryMonth: string): string {
-  if (!salaryMonth || typeof salaryMonth !== 'string') {
-    return salaryMonth || ''
+  if (!salaryMonth || typeof salaryMonth !== "string") {
+    return salaryMonth || "";
   }
 
   // Validate format YYYY-MM
-  const monthPattern = /^\d{4}-\d{2}$/
+  const monthPattern = /^\d{4}-\d{2}$/;
   if (!monthPattern.test(salaryMonth)) {
-    return salaryMonth // Return original if invalid format
+    return salaryMonth; // Return original if invalid format
   }
 
-  const [year, month] = salaryMonth.split('-')
-  const monthNumber = parseInt(month, 10)
-  
+  const [year, month] = salaryMonth.split("-");
+  const monthNumber = parseInt(month, 10);
+
   // Validate month range
   if (monthNumber < 1 || monthNumber > 12) {
-    return salaryMonth // Return original if invalid month
+    return salaryMonth; // Return original if invalid month
   }
 
   // Return Vietnamese format: "Tháng MM - YYYY"
-  return `Tháng ${monthNumber} - ${year}`
+  return `Tháng ${monthNumber} - ${year}`;
 }
 
 /**
@@ -37,20 +37,20 @@ export function formatSalaryMonth(salaryMonth: string): string {
  * @returns Short format (e.g., "07/2024")
  */
 export function formatSalaryMonthShort(salaryMonth: string): string {
-  if (!salaryMonth || typeof salaryMonth !== 'string') {
-    return salaryMonth || ''
+  if (!salaryMonth || typeof salaryMonth !== "string") {
+    return salaryMonth || "";
   }
 
   // Validate format YYYY-MM
-  const monthPattern = /^\d{4}-\d{2}$/
+  const monthPattern = /^\d{4}-\d{2}$/;
   if (!monthPattern.test(salaryMonth)) {
-    return salaryMonth // Return original if invalid format
+    return salaryMonth; // Return original if invalid format
   }
 
-  const [year, month] = salaryMonth.split('-')
-  
+  const [year, month] = salaryMonth.split("-");
+
   // Return MM/YYYY format
-  return `${month}/${year}`
+  return `${month}/${year}`;
 }
 
 /**
@@ -59,28 +59,28 @@ export function formatSalaryMonthShort(salaryMonth: string): string {
  * @returns Vietnamese formatted date time in format "HH:MM DD/MM/YYYY"
  */
 export function formatDateTime(dateString: string): string {
-  if (!dateString) return ''
+  if (!dateString) return "";
 
   try {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
 
     // ✅ FINAL FIX: Force Vietnam timezone để đảm bảo consistency
     const vietnamTime = date.toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",  // Force Vietnam timezone
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    })
+      timeZone: "Asia/Ho_Chi_Minh", // Force Vietnam timezone
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
     // Convert from "DD/MM/YYYY, HH:MM" to "HH:MM DD/MM/YYYY"
-    const [datePart, timePart] = vietnamTime.split(', ')
-    return `${timePart} ${datePart}`
+    const [datePart, timePart] = vietnamTime.split(", ");
+    return `${timePart} ${datePart}`;
   } catch (error) {
-    console.error('Error formatting date:', error)
-    return dateString
+    console.error("Error formatting date:", error);
+    return dateString;
   }
 }
 
@@ -90,26 +90,28 @@ export function formatDateTime(dateString: string): string {
  * @returns Vietnamese formatted signature time in format "HH:MM DD/MM/YYYY"
  */
 export function formatSignatureTime(dateString: string): string {
-  if (!dateString) return ''
+  if (!dateString) return "";
 
   try {
     // ✅ FINAL FIX: Database lưu Vietnam time (UTC+7), hiển thị trực tiếp
     // Không cần timezone conversion, chỉ format string
-    const date = new Date(dateString)
+    const date = new Date(dateString);
 
     // HIỂN THỊ THEO GIỜ VIỆT NAM NHƯ DB ĐÃ LƯU: KHÔNG ÉP TIMEZONE TRÁNH DOUBLE CONVERSION
-    return date.toLocaleString("vi-VN", {
-      // Không set timeZone ở đây vì DB đã lưu Vietnam time (UTC+7)
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2})/, '$4:$5 $1/$2/$3')
+    return date
+      .toLocaleString("vi-VN", {
+        // Không set timeZone ở đây vì DB đã lưu Vietnam time (UTC+7)
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      .replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2})/, "$4:$5 $1/$2/$3");
   } catch (error) {
-    console.error('Error formatting signature time:', error)
-    return dateString
+    console.error("Error formatting signature time:", error);
+    return dateString;
   }
 }
 
@@ -119,12 +121,12 @@ export function formatSignatureTime(dateString: string): string {
  * @returns Vietnamese formatted currency
  */
 export function formatCurrency(amount: number): string {
-  if (amount === undefined || amount === null) return "0 ₫"
+  if (amount === undefined || amount === null) return "0 ₫";
 
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-  }).format(amount)
+  }).format(amount);
 }
 
 /**
@@ -133,6 +135,6 @@ export function formatCurrency(amount: number): string {
  * @returns Formatted number string
  */
 export function formatNumber(value: number): string {
-  if (value === undefined || value === null) return "0"
-  return value.toFixed(2)
+  if (value === undefined || value === null) return "0";
+  return value.toFixed(2);
 }

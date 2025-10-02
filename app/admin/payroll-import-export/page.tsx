@@ -1,16 +1,28 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Download,
   Upload,
@@ -21,234 +33,259 @@ import {
   ArrowLeft,
   RefreshCw,
   Eye,
-  Search
-} from "lucide-react"
-import { ExportConfigurationDialog, type ExportOptions } from "@/components/export-configuration-dialog"
-import { ColumnMappingAnalysis, type AnalysisResult, type ColumnAnalysis } from "@/components/column-mapping-analysis"
-import { detectColumns, autoMapColumnsWithAliases } from "@/lib/advanced-excel-parser"
-import { useMappingConfig, useAutoLoadConfigurations } from "@/lib/hooks/use-mapping-config"
-import { ImportPreviewSection } from "./components/ImportPreviewSection"
-import * as XLSX from "xlsx"
+  Search,
+} from "lucide-react";
+import {
+  ExportConfigurationDialog,
+  type ExportOptions,
+} from "@/components/export-configuration-dialog";
+import {
+  ColumnMappingAnalysis,
+  type AnalysisResult,
+  type ColumnAnalysis,
+} from "@/components/column-mapping-analysis";
+import {
+  detectColumns,
+  autoMapColumnsWithAliases,
+} from "@/lib/advanced-excel-parser";
+import {
+  useMappingConfig,
+  useAutoLoadConfigurations,
+} from "@/lib/hooks/use-mapping-config";
+import { ImportPreviewSection } from "./components/ImportPreviewSection";
+import * as XLSX from "xlsx";
 
 interface ImportResult {
-  success: boolean
-  totalRecords: number
-  successCount: number
-  errorCount: number
-  overwriteCount?: number
-  errors?: any[]
-  processingTime: string
-  importBatchId?: string
+  success: boolean;
+  totalRecords: number;
+  successCount: number;
+  errorCount: number;
+  overwriteCount?: number;
+  errors?: any[];
+  processingTime: string;
+  importBatchId?: string;
 }
 
 export default function PayrollImportExportPage() {
-  const [loading, setLoading] = useState(false)
-  const [exportLoading, setExportLoading] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [message, setMessage] = useState("")
-  const [error, setError] = useState("")
-  const [results, setResults] = useState<ImportResult | null>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [exportType, setExportType] = useState<"template" | "data">("template")
-  const [importBatchId, setImportBatchId] = useState<string>("")
-  const [salaryMonth, setSalaryMonth] = useState("")
-  const [showExportDialog, setShowExportDialog] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [results, setResults] = useState<ImportResult | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [exportType, setExportType] = useState<"template" | "data">("template");
+  const [importBatchId, setImportBatchId] = useState<string>("");
+  const [salaryMonth, setSalaryMonth] = useState("");
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   // Analysis states
-  const [analysisFile, setAnalysisFile] = useState<File | null>(null)
-  const [analysisLoading, setAnalysisLoading] = useState(false)
-  const [analysisResults, setAnalysisResults] = useState<AnalysisResult | null>(null)
-  const [analysisError, setAnalysisError] = useState("")
+  const [analysisFile, setAnalysisFile] = useState<File | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<AnalysisResult | null>(
+    null,
+  );
+  const [analysisError, setAnalysisError] = useState("");
 
-  const router = useRouter()
-  const { configurations, defaultConfig } = useMappingConfig()
+  const router = useRouter();
+  const { configurations, defaultConfig } = useMappingConfig();
 
   // Auto-load configurations
-  useAutoLoadConfigurations()
+  useAutoLoadConfigurations();
 
   useEffect(() => {
     // Check authentication
-    const token = localStorage.getItem("admin_token")
+    const token = localStorage.getItem("admin_token");
     if (!token) {
-      router.push("/admin/login")
-      return
+      router.push("/admin/login");
+      return;
     }
-  }, [router])
+  }, [router]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file)
-      setError("")
-      setResults(null)
+      setSelectedFile(file);
+      setError("");
+      setResults(null);
     }
-  }
+  };
 
   const handleExport = async (options?: ExportOptions) => {
     if (!options) {
       // Open export dialog if no options provided
-      setShowExportDialog(true)
-      return
+      setShowExportDialog(true);
+      return;
     }
 
-    setExportLoading(true)
-    setError("")
-    setMessage("")
+    setExportLoading(true);
+    setError("");
+    setMessage("");
 
     try {
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        throw new Error("Không tìm thấy token xác thực")
+        throw new Error("Không tìm thấy token xác thực");
       }
 
       const params = new URLSearchParams({
-        includeData: options.includeData ? "true" : "false"
-      })
+        includeData: options.includeData ? "true" : "false",
+      });
 
       if (options.includeData && options.salaryMonth) {
-        params.append("salaryMonth", options.salaryMonth)
+        params.append("salaryMonth", options.salaryMonth);
       }
 
       if (options.configId) {
-        params.append("configId", options.configId.toString())
+        params.append("configId", options.configId.toString());
       }
 
-      const response = await fetch(`/api/admin/payroll-export-template?${params}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/admin/payroll-export-template?${params}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      })
+      );
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Lỗi khi tải template")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Lỗi khi tải template");
       }
 
       // Download file
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
 
       // Use custom filename if provided, otherwise generate one
-      const filename = options.customFilename || (() => {
-        const timestamp = new Date().toISOString().slice(0, 10)
-        const configSuffix = options.configId ? '-with-config' : ''
-        return options.includeData
-          ? `luong-export-${options.salaryMonth || 'all'}${configSuffix}-${timestamp}.xlsx`
-          : `template-luong${configSuffix}-${timestamp}.xlsx`
-      })()
+      const filename =
+        options.customFilename ||
+        (() => {
+          const timestamp = new Date().toISOString().slice(0, 10);
+          const configSuffix = options.configId ? "-with-config" : "";
+          return options.includeData
+            ? `luong-export-${options.salaryMonth || "all"}${configSuffix}-${timestamp}.xlsx`
+            : `template-luong${configSuffix}-${timestamp}.xlsx`;
+        })();
 
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-      const configInfo = options.configId ? " với mapping configuration" : ""
-      setMessage(`Đã tải ${options.includeData ? "dữ liệu" : "template"}${configInfo} thành công!`)
-
+      const configInfo = options.configId ? " với mapping configuration" : "";
+      setMessage(
+        `Đã tải ${options.includeData ? "dữ liệu" : "template"}${configInfo} thành công!`,
+      );
     } catch (error) {
-      console.error("Export error:", error)
-      setError(error instanceof Error ? error.message : "Lỗi khi export")
+      console.error("Export error:", error);
+      setError(error instanceof Error ? error.message : "Lỗi khi export");
     } finally {
-      setExportLoading(false)
+      setExportLoading(false);
     }
-  }
+  };
 
   // Legacy export function for backward compatibility
   const handleLegacyExport = async () => {
     const options: ExportOptions = {
       includeData: exportType === "data",
-      salaryMonth: exportType === "data" ? salaryMonth : undefined
-    }
-    await handleExport(options)
-  }
+      salaryMonth: exportType === "data" ? salaryMonth : undefined,
+    };
+    await handleExport(options);
+  };
 
   // Handle generate template from configuration
   const handleGenerateConfigTemplate = () => {
-    setShowExportDialog(true)
-  }
+    setShowExportDialog(true);
+  };
 
   // Generate template from Column Aliases
   const handleGenerateAliasTemplate = async () => {
     try {
-      setExportLoading(true)
-      setError("")
+      setExportLoading(true);
+      setError("");
 
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        setError("Không tìm thấy token xác thực")
-        return
+        setError("Không tìm thấy token xác thực");
+        return;
       }
 
       const response = await fetch("/api/admin/generate-alias-template", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Lỗi khi tạo template từ aliases")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Lỗi khi tạo template từ aliases");
       }
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
 
-      const timestamp = new Date().toISOString().slice(0, 10)
-      a.download = `template-luong-aliases-${timestamp}.xlsx`
+      const timestamp = new Date().toISOString().slice(0, 10);
+      a.download = `template-luong-aliases-${timestamp}.xlsx`;
 
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
       // Get alias statistics from response headers
-      const totalAliases = response.headers.get("X-Total-Aliases") || "0"
-      const fieldsWithAliases = response.headers.get("X-Fields-With-Aliases") || "0"
-      const aliasCoverage = response.headers.get("X-Alias-Coverage") || "0%"
+      const totalAliases = response.headers.get("X-Total-Aliases") || "0";
+      const fieldsWithAliases =
+        response.headers.get("X-Fields-With-Aliases") || "0";
+      const aliasCoverage = response.headers.get("X-Alias-Coverage") || "0%";
 
       setMessage(`Template từ Column Aliases đã được tạo thành công!
-        Sử dụng ${totalAliases} aliases cho ${fieldsWithAliases} fields (${aliasCoverage} coverage)`)
-
+        Sử dụng ${totalAliases} aliases cho ${fieldsWithAliases} fields (${aliasCoverage} coverage)`);
     } catch (error) {
-      console.error("Generate alias template error:", error)
-      setError(error instanceof Error ? error.message : "Lỗi khi tạo template từ Column Aliases")
+      console.error("Generate alias template error:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Lỗi khi tạo template từ Column Aliases",
+      );
     } finally {
-      setExportLoading(false)
+      setExportLoading(false);
     }
-  }
+  };
 
   const handleImport = async () => {
     if (!selectedFile) {
-      setError("Vui lòng chọn file để import")
-      return
+      setError("Vui lòng chọn file để import");
+      return;
     }
 
-    setLoading(true)
-    setError("")
-    setMessage("")
-    setProgress(0)
-    setResults(null)
-    setImportBatchId("")
+    setLoading(true);
+    setError("");
+    setMessage("");
+    setProgress(0);
+    setResults(null);
+    setImportBatchId("");
 
     try {
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        throw new Error("Không tìm thấy token xác thực")
+        throw new Error("Không tìm thấy token xác thực");
       }
 
       // Simulate progress
       const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 10, 90))
-      }, 200)
+        setProgress((prev) => Math.min(prev + 10, 90));
+      }, 200);
 
-      const formData = new FormData()
-      formData.append("file", selectedFile)
+      const formData = new FormData();
+      formData.append("file", selectedFile);
 
       const response = await fetch("/api/admin/payroll-import", {
         method: "POST",
@@ -256,146 +293,170 @@ export default function PayrollImportExportPage() {
           Authorization: `Bearer ${token}`,
         },
         body: formData,
-      })
+      });
 
-      clearInterval(progressInterval)
-      setProgress(100)
+      clearInterval(progressInterval);
+      setProgress(100);
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (response.ok) {
         if (result.success) {
-          setResults(result.data || result)
-          setMessage(result.message || "Import thành công!")
+          setResults(result.data || result);
+          setMessage(result.message || "Import thành công!");
           // Set batch ID from response - check multiple locations
-          const batchId = result.data?.importBatchId || result.importBatchId || result.metadata?.importBatchId
+          const batchId =
+            result.data?.importBatchId ||
+            result.importBatchId ||
+            result.metadata?.importBatchId;
           if (batchId) {
-            setImportBatchId(batchId)
+            setImportBatchId(batchId);
           }
         } else {
           // Partial success with errors
-          setResults(result.data || result)
-          setMessage(result.message || "Import hoàn tất với một số lỗi")
+          setResults(result.data || result);
+          setMessage(result.message || "Import hoàn tất với một số lỗi");
           // Set batch ID from response even with errors - check multiple locations
-          const batchId = result.data?.importBatchId || result.importBatchId || result.metadata?.importBatchId
+          const batchId =
+            result.data?.importBatchId ||
+            result.importBatchId ||
+            result.metadata?.importBatchId;
           if (batchId) {
-            setImportBatchId(batchId)
+            setImportBatchId(batchId);
           }
         }
       } else {
-        throw new Error(result.error?.message || result.message || "Import thất bại")
+        throw new Error(
+          result.error?.message || result.message || "Import thất bại",
+        );
       }
-
     } catch (error) {
-      console.error("Import error:", error)
-      setError(error instanceof Error ? error.message : "Lỗi khi import")
-      setProgress(0)
+      console.error("Import error:", error);
+      setError(error instanceof Error ? error.message : "Lỗi khi import");
+      setProgress(0);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const resetForm = () => {
-    setSelectedFile(null)
-    setResults(null)
-    setError("")
-    setMessage("")
-    setProgress(0)
+    setSelectedFile(null);
+    setResults(null);
+    setError("");
+    setMessage("");
+    setProgress(0);
     // Reset file input
-    const fileInput = document.getElementById("file-input") as HTMLInputElement
+    const fileInput = document.getElementById("file-input") as HTMLInputElement;
     if (fileInput) {
-      fileInput.value = ""
+      fileInput.value = "";
     }
-  }
+  };
 
   // Analysis functions
-  const handleAnalysisFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const handleAnalysisFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
     if (file) {
-      setAnalysisFile(file)
-      setAnalysisError("")
-      setAnalysisResults(null)
+      setAnalysisFile(file);
+      setAnalysisError("");
+      setAnalysisResults(null);
     }
-  }
+  };
 
   // Load Column Aliases from API
   const loadColumnAliasesFromAPI = async () => {
     try {
       // Check if we're in browser environment
-      if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-        return []
+      if (
+        typeof window === "undefined" ||
+        typeof localStorage === "undefined"
+      ) {
+        return [];
       }
 
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        console.warn("No admin token found for loading aliases")
-        return []
+        console.warn("No admin token found for loading aliases");
+        return [];
       }
 
-      const response = await fetch("/api/admin/column-aliases?limit=200&is_active=true", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        "/api/admin/column-aliases?limit=200&is_active=true",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      })
+      );
 
       if (!response.ok) {
-        throw new Error(`API call failed: ${response.status} ${response.statusText}`)
+        throw new Error(
+          `API call failed: ${response.status} ${response.statusText}`,
+        );
       }
 
-      const result = await response.json()
+      const result = await response.json();
       if (result.success) {
-        console.log(`Loaded ${result.data?.length || 0} column aliases for analysis`)
-        return result.data || []
+        console.log(
+          `Loaded ${result.data?.length || 0} column aliases for analysis`,
+        );
+        return result.data || [];
       } else {
-        throw new Error(result.message || "Failed to load aliases")
+        throw new Error(result.message || "Failed to load aliases");
       }
     } catch (error) {
-      console.error("Error loading column aliases:", error)
+      console.error("Error loading column aliases:", error);
       // Return empty array instead of throwing to allow analysis to continue
-      return []
+      return [];
     }
-  }
+  };
 
   const analyzeFile = async (file: File) => {
-    setAnalysisLoading(true)
-    setAnalysisError("")
-    setAnalysisResults(null)
+    setAnalysisLoading(true);
+    setAnalysisError("");
+    setAnalysisResults(null);
 
     try {
       // Read Excel file
-      const buffer = await file.arrayBuffer()
-      const workbook = XLSX.read(buffer, { type: "array" })
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
 
       // Detect columns
-      const detectedColumns = detectColumns(worksheet)
+      const detectedColumns = detectColumns(worksheet);
 
       if (detectedColumns.length === 0) {
-        throw new Error("Không tìm thấy cột nào trong file Excel")
+        throw new Error("Không tìm thấy cột nào trong file Excel");
       }
 
       // Load Column Aliases from API
-      const aliases = await loadColumnAliasesFromAPI()
+      const aliases = await loadColumnAliasesFromAPI();
 
       // Get current mapping configuration
-      const currentConfig = defaultConfig || configurations.find(c => c.is_default)
+      const currentConfig =
+        defaultConfig || configurations.find((c) => c.is_default);
 
       // Auto-map columns with loaded aliases
       const mappingResult = await autoMapColumnsWithAliases(
         detectedColumns,
         aliases, // Use loaded aliases instead of empty array
-        currentConfig
-      )
+        currentConfig,
+      );
 
       // Process results into analysis format
-      const columnDetails: ColumnAnalysis[] = detectedColumns.map(column => {
-        const mapping = mappingResult.mapping[column]
+      const columnDetails: ColumnAnalysis[] = detectedColumns.map((column) => {
+        const mapping = mappingResult.mapping[column];
 
         if (mapping) {
-          const status = mapping.confidence_score >= 80 ? 'mapped' :
-                        mapping.confidence_score >= 50 ? 'needs_review' : 'unmapped'
+          const status =
+            mapping.confidence_score >= 80
+              ? "mapped"
+              : mapping.confidence_score >= 50
+                ? "needs_review"
+                : "unmapped";
 
           return {
             excelColumn: column,
@@ -404,29 +465,48 @@ export default function PayrollImportExportPage() {
             status,
             mappingType: mapping.mapping_type,
             matchedAlias: mapping.matched_alias?.alias_name,
-            suggestedAction: getSuggestedAction(status, mapping.confidence_score, mapping.mapping_type)
-          }
+            suggestedAction: getSuggestedAction(
+              status,
+              mapping.confidence_score,
+              mapping.mapping_type,
+            ),
+          };
         } else {
           return {
             excelColumn: column,
             confidence: 0,
-            status: 'unmapped',
-            suggestedAction: 'Create manual mapping or add column alias'
-          }
+            status: "unmapped",
+            suggestedAction: "Create manual mapping or add column alias",
+          };
         }
-      })
+      });
 
       // Calculate detailed statistics
-      const mappedColumnsCount = columnDetails.filter(c => c.status === 'mapped').length
-      const needsReviewColumnsCount = columnDetails.filter(c => c.status === 'needs_review').length
-      const unmappedColumnsCount = columnDetails.filter(c => c.status === 'unmapped').length
-      const mappingSuccessRate = (mappedColumnsCount / detectedColumns.length) * 100
+      const mappedColumnsCount = columnDetails.filter(
+        (c) => c.status === "mapped",
+      ).length;
+      const needsReviewColumnsCount = columnDetails.filter(
+        (c) => c.status === "needs_review",
+      ).length;
+      const unmappedColumnsCount = columnDetails.filter(
+        (c) => c.status === "unmapped",
+      ).length;
+      const mappingSuccessRate =
+        (mappedColumnsCount / detectedColumns.length) * 100;
 
       // Calculate mapping type statistics for better insights
-      const exactMatches = columnDetails.filter(c => c.mappingType === 'exact').length
-      const aliasMatches = columnDetails.filter(c => c.mappingType === 'alias').length
-      const fuzzyMatches = columnDetails.filter(c => c.mappingType === 'fuzzy').length
-      const manualMatches = columnDetails.filter(c => c.mappingType === 'manual').length
+      const exactMatches = columnDetails.filter(
+        (c) => c.mappingType === "exact",
+      ).length;
+      const aliasMatches = columnDetails.filter(
+        (c) => c.mappingType === "alias",
+      ).length;
+      const fuzzyMatches = columnDetails.filter(
+        (c) => c.mappingType === "fuzzy",
+      ).length;
+      const manualMatches = columnDetails.filter(
+        (c) => c.mappingType === "manual",
+      ).length;
 
       const analysisResult: AnalysisResult = {
         totalColumns: detectedColumns.length,
@@ -442,67 +522,76 @@ export default function PayrollImportExportPage() {
           exactMatches,
           aliasMatches,
           fuzzyMatches,
-          manualMatches
+          manualMatches,
         },
-        aliasesUsed: aliases.length
-      }
+        aliasesUsed: aliases.length,
+      };
 
-      setAnalysisResults(analysisResult)
-
+      setAnalysisResults(analysisResult);
     } catch (error) {
-      console.error("Analysis error:", error)
-      setAnalysisError(error instanceof Error ? error.message : "Lỗi khi phân tích file")
+      console.error("Analysis error:", error);
+      setAnalysisError(
+        error instanceof Error ? error.message : "Lỗi khi phân tích file",
+      );
     } finally {
-      setAnalysisLoading(false)
+      setAnalysisLoading(false);
     }
-  }
+  };
 
-  const getSuggestedAction = (status: string, confidence: number, mappingType?: string): string => {
+  const getSuggestedAction = (
+    status: string,
+    confidence: number,
+    mappingType?: string,
+  ): string => {
     switch (status) {
-      case 'mapped':
-        if (mappingType === 'alias') {
-          return confidence >= 95 ? 'Perfect alias match - ready to import' : 'Good alias match - verify if needed'
-        } else if (mappingType === 'exact') {
-          return 'Exact field match - ready to import'
-        } else if (mappingType === 'configuration') {
-          return 'Configuration match - ready to import'
+      case "mapped":
+        if (mappingType === "alias") {
+          return confidence >= 95
+            ? "Perfect alias match - ready to import"
+            : "Good alias match - verify if needed";
+        } else if (mappingType === "exact") {
+          return "Exact field match - ready to import";
+        } else if (mappingType === "configuration") {
+          return "Configuration match - ready to import";
         }
-        return confidence >= 95 ? 'Perfect match - ready to import' : 'Good match - verify if needed'
-      case 'needs_review':
-        if (mappingType === 'fuzzy') {
-          return 'Fuzzy match - review accuracy before import'
+        return confidence >= 95
+          ? "Perfect match - ready to import"
+          : "Good match - verify if needed";
+      case "needs_review":
+        if (mappingType === "fuzzy") {
+          return "Fuzzy match - review accuracy before import";
         }
-        return 'Review mapping accuracy before import'
-      case 'unmapped':
-        return 'Create manual mapping or add column alias'
+        return "Review mapping accuracy before import";
+      case "unmapped":
+        return "Create manual mapping or add column alias";
       default:
-        return 'Unknown status'
+        return "Unknown status";
     }
-  }
+  };
 
   const handleAnalyzeFile = () => {
     if (analysisFile) {
-      analyzeFile(analysisFile)
+      analyzeFile(analysisFile);
     }
-  }
+  };
 
   const handleFixMapping = () => {
     // TODO: Open mapping configuration dialog
-    setMessage("Mapping configuration dialog will be implemented")
-  }
+    setMessage("Mapping configuration dialog will be implemented");
+  };
 
   const handleProceedImport = () => {
     if (analysisFile) {
-      setSelectedFile(analysisFile)
-      setMessage("File moved to import tab - ready for import")
+      setSelectedFile(analysisFile);
+      setMessage("File moved to import tab - ready for import");
     }
-  }
+  };
 
   const handleReanalyze = () => {
     if (analysisFile) {
-      analyzeFile(analysisFile)
+      analyzeFile(analysisFile);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -519,9 +608,12 @@ export default function PayrollImportExportPage() {
               Quay lại Dashboard
             </Button>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Import/Export Lương Nhân Viên</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Import/Export Lương Nhân Viên
+          </h1>
           <p className="text-gray-600 mt-2">
-            Quản lý dữ liệu lương: Tải template, export dữ liệu và import file Excel
+            Quản lý dữ liệu lương: Tải template, export dữ liệu và import file
+            Excel
           </p>
         </div>
 
@@ -559,7 +651,12 @@ export default function PayrollImportExportPage() {
                   {/* Export Type Selection */}
                   <div className="space-y-4">
                     <Label htmlFor="export-type">Loại Export</Label>
-                    <Select value={exportType} onValueChange={(value: "template" | "data") => setExportType(value)}>
+                    <Select
+                      value={exportType}
+                      onValueChange={(value: "template" | "data") =>
+                        setExportType(value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Chọn loại export" />
                       </SelectTrigger>
@@ -567,13 +664,17 @@ export default function PayrollImportExportPage() {
                         <SelectItem value="template">
                           <div className="flex flex-col">
                             <span className="font-medium">Template Trống</span>
-                            <span className="text-xs text-gray-500">File mẫu với 2 dòng dữ liệu ví dụ</span>
+                            <span className="text-xs text-gray-500">
+                              File mẫu với 2 dòng dữ liệu ví dụ
+                            </span>
                           </div>
                         </SelectItem>
                         <SelectItem value="data">
                           <div className="flex flex-col">
                             <span className="font-medium">Export Dữ Liệu</span>
-                            <span className="text-xs text-gray-500">Xuất dữ liệu lương hiện có</span>
+                            <span className="text-xs text-gray-500">
+                              Xuất dữ liệu lương hiện có
+                            </span>
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -583,7 +684,9 @@ export default function PayrollImportExportPage() {
                   {/* Salary Month Selection (for data export) */}
                   {exportType === "data" && (
                     <div className="space-y-4">
-                      <Label htmlFor="salary-month">Tháng Lương (Tùy chọn)</Label>
+                      <Label htmlFor="salary-month">
+                        Tháng Lương (Tùy chọn)
+                      </Label>
                       <Input
                         id="salary-month"
                         type="month"
@@ -610,7 +713,9 @@ export default function PayrollImportExportPage() {
                     ) : (
                       <Download className="h-4 w-4" />
                     )}
-                    {exportLoading ? "Đang tạo file..." : `Tải ${exportType === "template" ? "Template" : "Dữ Liệu"}`}
+                    {exportLoading
+                      ? "Đang tạo file..."
+                      : `Tải ${exportType === "template" ? "Template" : "Dữ Liệu"}`}
                   </Button>
 
                   <Button
@@ -640,11 +745,21 @@ export default function PayrollImportExportPage() {
                   <AlertDescription>
                     <strong>Lưu ý:</strong>
                     <ul className="mt-2 space-y-1 text-sm">
-                      <li>• Template chỉ chứa các cột có dữ liệu trong hệ thống</li>
+                      <li>
+                        • Template chỉ chứa các cột có dữ liệu trong hệ thống
+                      </li>
                       <li>• File Excel sử dụng headers tiếng Việt dễ hiểu</li>
-                      <li>• Template có 2 dòng dữ liệu mẫu để tham khảo format</li>
-                      <li>• Export dữ liệu sẽ bao gồm tất cả records hoặc theo tháng được chọn</li>
-                      <li>• <strong>Template từ Aliases</strong>: Sử dụng Column Aliases đã cấu hình để tạo headers thân thiện</li>
+                      <li>
+                        • Template có 2 dòng dữ liệu mẫu để tham khảo format
+                      </li>
+                      <li>
+                        • Export dữ liệu sẽ bao gồm tất cả records hoặc theo
+                        tháng được chọn
+                      </li>
+                      <li>
+                        • <strong>Template từ Aliases</strong>: Sử dụng Column
+                        Aliases đã cấu hình để tạo headers thân thiện
+                      </li>
                     </ul>
                   </AlertDescription>
                 </Alert>
@@ -661,13 +776,16 @@ export default function PayrollImportExportPage() {
                   Column Mapping Analysis
                 </CardTitle>
                 <CardDescription>
-                  Upload and analyze your Excel file to preview column mapping before import
+                  Upload and analyze your Excel file to preview column mapping
+                  before import
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* File Upload Section */}
                 <div className="space-y-4">
-                  <Label htmlFor="analysis-file-input">Select Excel File for Analysis</Label>
+                  <Label htmlFor="analysis-file-input">
+                    Select Excel File for Analysis
+                  </Label>
                   <Input
                     id="analysis-file-input"
                     type="file"
@@ -679,7 +797,9 @@ export default function PayrollImportExportPage() {
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <FileSpreadsheet className="h-4 w-4" />
                       <span>{analysisFile.name}</span>
-                      <Badge variant="outline">{(analysisFile.size / 1024 / 1024).toFixed(2)} MB</Badge>
+                      <Badge variant="outline">
+                        {(analysisFile.size / 1024 / 1024).toFixed(2)} MB
+                      </Badge>
                     </div>
                   )}
                 </div>
@@ -696,7 +816,9 @@ export default function PayrollImportExportPage() {
                     ) : (
                       <Search className="h-4 w-4" />
                     )}
-                    {analysisLoading ? "Analyzing..." : "Analyze Column Mapping"}
+                    {analysisLoading
+                      ? "Analyzing..."
+                      : "Analyze Column Mapping"}
                   </Button>
                 </div>
 
@@ -726,10 +848,22 @@ export default function PayrollImportExportPage() {
                   <AlertDescription>
                     <strong>Analysis Features:</strong>
                     <ul className="mt-2 space-y-1 text-sm">
-                      <li>• <strong>Column Detection:</strong> Automatically detect all columns in your Excel file</li>
-                      <li>• <strong>Smart Mapping:</strong> Use AI-powered mapping with confidence scores</li>
-                      <li>• <strong>Quality Assessment:</strong> Get detailed analysis of mapping quality</li>
-                      <li>• <strong>Issue Identification:</strong> Identify columns that need manual review</li>
+                      <li>
+                        • <strong>Column Detection:</strong> Automatically
+                        detect all columns in your Excel file
+                      </li>
+                      <li>
+                        • <strong>Smart Mapping:</strong> Use AI-powered mapping
+                        with confidence scores
+                      </li>
+                      <li>
+                        • <strong>Quality Assessment:</strong> Get detailed
+                        analysis of mapping quality
+                      </li>
+                      <li>
+                        • <strong>Issue Identification:</strong> Identify
+                        columns that need manual review
+                      </li>
                     </ul>
                   </AlertDescription>
                 </Alert>
@@ -764,7 +898,9 @@ export default function PayrollImportExportPage() {
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <FileSpreadsheet className="h-4 w-4" />
                       <span>{selectedFile.name}</span>
-                      <Badge variant="outline">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</Badge>
+                      <Badge variant="outline">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </Badge>
                     </div>
                   )}
                 </div>
@@ -814,10 +950,21 @@ export default function PayrollImportExportPage() {
                   <AlertDescription>
                     <strong>Quy tắc Import:</strong>
                     <ul className="mt-2 space-y-1 text-sm">
-                      <li>• <strong>Overwrite Logic:</strong> Nếu record đã tồn tại (cùng mã NV + tháng lương) sẽ được ghi đè hoàn toàn</li>
-                      <li>• <strong>Validation:</strong> Mã nhân viên phải tồn tại trong hệ thống</li>
-                      <li>• <strong>Format:</strong> Tháng lương phải có định dạng YYYY-MM (ví dụ: 2024-01)</li>
-                      <li>• <strong>File Size:</strong> Hỗ trợ tối đa 5000 rows</li>
+                      <li>
+                        • <strong>Overwrite Logic:</strong> Nếu record đã tồn
+                        tại (cùng mã NV + tháng lương) sẽ được ghi đè hoàn toàn
+                      </li>
+                      <li>
+                        • <strong>Validation:</strong> Mã nhân viên phải tồn tại
+                        trong hệ thống
+                      </li>
+                      <li>
+                        • <strong>Format:</strong> Tháng lương phải có định dạng
+                        YYYY-MM (ví dụ: 2024-01)
+                      </li>
+                      <li>
+                        • <strong>File Size:</strong> Hỗ trợ tối đa 5000 rows
+                      </li>
                     </ul>
                   </AlertDescription>
                 </Alert>
@@ -866,19 +1013,27 @@ export default function PayrollImportExportPage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{results.totalRecords}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {results.totalRecords}
+                  </div>
                   <div className="text-sm text-gray-600">Tổng Records</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{results.successCount}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {results.successCount}
+                  </div>
                   <div className="text-sm text-gray-600">Thành Công</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{results.errorCount}</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {results.errorCount}
+                  </div>
                   <div className="text-sm text-gray-600">Lỗi</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{results.overwriteCount || 0}</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {results.overwriteCount || 0}
+                  </div>
                   <div className="text-sm text-gray-600">Ghi Đè</div>
                 </div>
               </div>
@@ -893,16 +1048,24 @@ export default function PayrollImportExportPage() {
               {/* Error Details */}
               {results.errors && results.errors.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="font-medium text-red-700 mb-3">Chi Tiết Lỗi:</h4>
+                  <h4 className="font-medium text-red-700 mb-3">
+                    Chi Tiết Lỗi:
+                  </h4>
                   <div className="max-h-60 overflow-y-auto space-y-2">
-                    {results.errors.slice(0, 10).map((error: any, index: number) => (
-                      <div key={index} className="p-3 bg-red-50 border-l-4 border-red-300 rounded text-sm">
-                        <div className="font-medium text-red-800">
-                          Row {error.row}: {error.employee_id || "UNKNOWN"} - {error.salary_month || "UNKNOWN"}
+                    {results.errors
+                      .slice(0, 10)
+                      .map((error: any, index: number) => (
+                        <div
+                          key={index}
+                          className="p-3 bg-red-50 border-l-4 border-red-300 rounded text-sm"
+                        >
+                          <div className="font-medium text-red-800">
+                            Row {error.row}: {error.employee_id || "UNKNOWN"} -{" "}
+                            {error.salary_month || "UNKNOWN"}
+                          </div>
+                          <div className="text-red-700 mt-1">{error.error}</div>
                         </div>
-                        <div className="text-red-700 mt-1">{error.error}</div>
-                      </div>
-                    ))}
+                      ))}
                     {results.errors.length > 10 && (
                       <div className="text-center text-sm text-gray-500 py-2">
                         Và {results.errors.length - 10} lỗi khác...
@@ -930,21 +1093,48 @@ export default function PayrollImportExportPage() {
           onOpenChange={setShowExportDialog}
           onExport={handleExport}
           availableFields={[
-            "employee_id", "salary_month", "he_so_lam_viec", "he_so_phu_cap_ket_qua",
-            "he_so_luong_co_ban", "luong_toi_thieu_cty", "ngay_cong_trong_gio",
-            "gio_cong_tang_ca", "gio_an_ca", "tong_gio_lam_viec", "tong_he_so_quy_doi",
-            "ngay_cong_chu_nhat", "tong_luong_san_pham_cong_doan", "don_gia_tien_luong_tren_gio",
-            "tien_luong_san_pham_trong_gio", "tien_luong_tang_ca", "tien_luong_30p_an_ca",
-            "tien_luong_chu_nhat", "thuong_hieu_qua_lam_viec", "thuong_chuyen_can",
-            "thuong_khac", "phu_cap_tien_an", "phu_cap_xang_xe", "phu_cap_dien_thoai",
-            "phu_cap_khac", "luong_cnkcp_vuot", "tien_tang_ca_vuot", "ngay_cong_phep_le",
-            "tien_phep_le", "tong_cong_tien_luong", "tien_boc_vac", "ho_tro_xang_xe",
-            "thue_tncn_nam_2024", "tam_ung", "thue_tncn", "bhxh_bhtn_bhyt_total",
-            "truy_thu_the_bhyt", "tien_luong_thuc_nhan_cuoi_ky"
+            "employee_id",
+            "salary_month",
+            "he_so_lam_viec",
+            "he_so_phu_cap_ket_qua",
+            "he_so_luong_co_ban",
+            "luong_toi_thieu_cty",
+            "ngay_cong_trong_gio",
+            "gio_cong_tang_ca",
+            "gio_an_ca",
+            "tong_gio_lam_viec",
+            "tong_he_so_quy_doi",
+            "ngay_cong_chu_nhat",
+            "tong_luong_san_pham_cong_doan",
+            "don_gia_tien_luong_tren_gio",
+            "tien_luong_san_pham_trong_gio",
+            "tien_luong_tang_ca",
+            "tien_luong_30p_an_ca",
+            "tien_luong_chu_nhat",
+            "thuong_hieu_qua_lam_viec",
+            "thuong_chuyen_can",
+            "thuong_khac",
+            "phu_cap_tien_an",
+            "phu_cap_xang_xe",
+            "phu_cap_dien_thoai",
+            "phu_cap_khac",
+            "luong_cnkcp_vuot",
+            "tien_tang_ca_vuot",
+            "ngay_cong_phep_le",
+            "tien_phep_le",
+            "tong_cong_tien_luong",
+            "tien_boc_vac",
+            "ho_tro_xang_xe",
+            "thue_tncn_nam_2024",
+            "tam_ung",
+            "thue_tncn",
+            "bhxh_bhtn_bhyt_total",
+            "truy_thu_the_bhyt",
+            "tien_luong_thuc_nhan_cuoi_ky",
           ]}
           defaultSalaryMonth={salaryMonth}
         />
       </div>
     </div>
-  )
+  );
 }

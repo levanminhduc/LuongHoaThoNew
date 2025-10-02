@@ -1,27 +1,33 @@
 // DEBUG API: Kiểm tra departments trong database
-import { type NextRequest, NextResponse } from "next/server"
-import { createServiceClient } from "@/utils/supabase/server"
-import { verifyToken } from "@/lib/auth-middleware"
+import { type NextRequest, NextResponse } from "next/server";
+import { createServiceClient } from "@/utils/supabase/server";
+import { verifyToken } from "@/lib/auth-middleware";
 
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication (admin only for debug)
-    const auth = verifyToken(request)
-    if (!auth || !auth.isRole('admin')) {
-      return NextResponse.json({ error: "Chỉ admin mới có quyền debug" }, { status: 403 })
+    const auth = verifyToken(request);
+    if (!auth || !auth.isRole("admin")) {
+      return NextResponse.json(
+        { error: "Chỉ admin mới có quyền debug" },
+        { status: 403 },
+      );
     }
 
-    const supabase = createServiceClient()
+    const supabase = createServiceClient();
 
     // 1. Get ALL departments (including inactive employees)
     const { data: allDepartments, error: allDeptError } = await supabase
       .from("employees")
       .select("department, is_active")
-      .order("department")
+      .order("department");
 
     if (allDeptError) {
-      console.error("All departments query error:", allDeptError)
-      return NextResponse.json({ error: "Lỗi truy vấn all departments" }, { status: 500 })
+      console.error("All departments query error:", allDeptError);
+      return NextResponse.json(
+        { error: "Lỗi truy vấn all departments" },
+        { status: 500 },
+      );
     }
 
     // 2. Get departments with ACTIVE employees only (current API logic)
@@ -29,21 +35,24 @@ export async function GET(request: NextRequest) {
       .from("employees")
       .select("department")
       .eq("is_active", true)
-      .order("department")
+      .order("department");
 
     if (activeDeptError) {
-      console.error("Active departments query error:", activeDeptError)
-      return NextResponse.json({ error: "Lỗi truy vấn active departments" }, { status: 500 })
+      console.error("Active departments query error:", activeDeptError);
+      return NextResponse.json(
+        { error: "Lỗi truy vấn active departments" },
+        { status: 500 },
+      );
     }
 
     // 3. Get employees with null/empty departments
     const { data: nullDepartments, error: nullDeptError } = await supabase
       .from("employees")
       .select("employee_id, full_name, department, is_active")
-      .or("department.is.null,department.eq.")
+      .or("department.is.null,department.eq.");
 
     if (nullDeptError) {
-      console.error("Null departments query error:", nullDeptError)
+      console.error("Null departments query error:", nullDeptError);
     }
 
     // 4. Get department statistics
@@ -51,17 +60,17 @@ export async function GET(request: NextRequest) {
       .from("employees")
       .select("department, is_active, chuc_vu")
       .not("department", "is", null)
-      .neq("department", "")
+      .neq("department", "");
 
     if (statsError) {
-      console.error("Department stats query error:", statsError)
+      console.error("Department stats query error:", statsError);
     }
 
     // 5. Get department permissions
     // Updated query syntax: Use exact constraint name to resolve ambiguous relationships
-    const { data: permissions, error: permError } = await supabase
-      .from("department_permissions")
-      .select(`
+    const { data: permissions, error: permError } = await supabase.from(
+      "department_permissions",
+    ).select(`
         department,
         employee_id,
         is_active,
@@ -69,73 +78,87 @@ export async function GET(request: NextRequest) {
           full_name,
           chuc_vu
         )
-      `)
+      `);
 
     if (permError) {
-      console.error("Permissions query error:", permError)
+      console.error("Permissions query error:", permError);
     }
 
     // Process data
-    const allDeptList = allDepartments?.map(d => d.department).filter(Boolean) || []
-    const activeDeptList = activeDepartments?.map(d => d.department).filter(Boolean) || []
-    const uniqueAllDepts = [...new Set(allDeptList)]
-    const uniqueActiveDepts = [...new Set(activeDeptList)]
+    const allDeptList =
+      allDepartments?.map((d) => d.department).filter(Boolean) || [];
+    const activeDeptList =
+      activeDepartments?.map((d) => d.department).filter(Boolean) || [];
+    const uniqueAllDepts = [...new Set(allDeptList)];
+    const uniqueActiveDepts = [...new Set(activeDeptList)];
 
     // Department statistics
-    const deptStatsMap = deptStats?.reduce((acc, emp) => {
-      const dept = emp.department
-      if (!acc[dept]) {
-        acc[dept] = {
-          total: 0,
-          active: 0,
-          inactive: 0,
-          managers: 0,
-          supervisors: 0,
-          employees: 0
-        }
-      }
-      
-      acc[dept].total++
-      if (emp.is_active) {
-        acc[dept].active++
-      } else {
-        acc[dept].inactive++
-      }
+    const deptStatsMap =
+      deptStats?.reduce(
+        (acc, emp) => {
+          const dept = emp.department;
+          if (!acc[dept]) {
+            acc[dept] = {
+              total: 0,
+              active: 0,
+              inactive: 0,
+              managers: 0,
+              supervisors: 0,
+              employees: 0,
+            };
+          }
 
-      if (emp.chuc_vu === 'truong_phong') acc[dept].managers++
-      else if (emp.chuc_vu === 'to_truong') acc[dept].supervisors++
-      else acc[dept].employees++
+          acc[dept].total++;
+          if (emp.is_active) {
+            acc[dept].active++;
+          } else {
+            acc[dept].inactive++;
+          }
 
-      return acc
-    }, {} as Record<string, any>) || {}
+          if (emp.chuc_vu === "truong_phong") acc[dept].managers++;
+          else if (emp.chuc_vu === "to_truong") acc[dept].supervisors++;
+          else acc[dept].employees++;
+
+          return acc;
+        },
+        {} as Record<string, any>,
+      ) || {};
 
     // Permission statistics
-    const permStatsMap = permissions?.reduce((acc, perm) => {
-      const dept = perm.department
-      if (!acc[dept]) {
-        acc[dept] = {
-          total: 0,
-          active: 0,
-          employees: []
-        }
-      }
-      
-      acc[dept].total++
-      if (perm.is_active) {
-        acc[dept].active++
-        acc[dept].employees.push({
-          employee_id: perm.employee_id,
-          full_name: (perm.employees as any)?.full_name,
-          chuc_vu: (perm.employees as any)?.chuc_vu
-        })
-      }
+    const permStatsMap =
+      permissions?.reduce(
+        (acc, perm) => {
+          const dept = perm.department;
+          if (!acc[dept]) {
+            acc[dept] = {
+              total: 0,
+              active: 0,
+              employees: [],
+            };
+          }
 
-      return acc
-    }, {} as Record<string, any>) || {}
+          acc[dept].total++;
+          if (perm.is_active) {
+            acc[dept].active++;
+            acc[dept].employees.push({
+              employee_id: perm.employee_id,
+              full_name: (perm.employees as any)?.full_name,
+              chuc_vu: (perm.employees as any)?.chuc_vu,
+            });
+          }
+
+          return acc;
+        },
+        {} as Record<string, any>,
+      ) || {};
 
     // Find missing departments
-    const missingFromActive = uniqueAllDepts.filter(dept => !uniqueActiveDepts.includes(dept))
-    const onlyInActive = uniqueActiveDepts.filter(dept => !uniqueAllDepts.includes(dept))
+    const missingFromActive = uniqueAllDepts.filter(
+      (dept) => !uniqueActiveDepts.includes(dept),
+    );
+    const onlyInActive = uniqueActiveDepts.filter(
+      (dept) => !uniqueAllDepts.includes(dept),
+    );
 
     return NextResponse.json({
       success: true,
@@ -145,27 +168,33 @@ export async function GET(request: NextRequest) {
           active_departments_count: activeDeptList.length,
           unique_all_departments: uniqueAllDepts.length,
           unique_active_departments: uniqueActiveDepts.length,
-          null_empty_departments: nullDepartments?.length || 0
+          null_empty_departments: nullDepartments?.length || 0,
         },
         departments: {
           all_unique: uniqueAllDepts,
           active_unique: uniqueActiveDepts,
           missing_from_active: missingFromActive,
-          only_in_active: onlyInActive
+          only_in_active: onlyInActive,
         },
         employees_with_null_departments: nullDepartments || [],
         department_statistics: deptStatsMap,
         permission_statistics: permStatsMap,
         analysis: {
           departments_with_only_inactive_employees: missingFromActive,
-          departments_without_permissions: uniqueActiveDepts.filter(dept => !permStatsMap[dept]),
-          departments_with_permissions_but_no_employees: Object.keys(permStatsMap).filter(dept => !uniqueActiveDepts.includes(dept))
-        }
-      }
-    })
-
+          departments_without_permissions: uniqueActiveDepts.filter(
+            (dept) => !permStatsMap[dept],
+          ),
+          departments_with_permissions_but_no_employees: Object.keys(
+            permStatsMap,
+          ).filter((dept) => !uniqueActiveDepts.includes(dept)),
+        },
+      },
+    });
   } catch (error) {
-    console.error("Debug departments error:", error)
-    return NextResponse.json({ error: "Có lỗi xảy ra trong debug" }, { status: 500 })
+    console.error("Debug departments error:", error);
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra trong debug" },
+      { status: 500 },
+    );
   }
 }

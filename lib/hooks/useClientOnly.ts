@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 export function useClientOnly<T>(
   clientValue: T,
-  serverValue?: T
+  serverValue?: T,
 ): T | undefined {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
-  return mounted ? clientValue : serverValue
+  return mounted ? clientValue : serverValue;
 }
 
 export function isClient(): boolean {
-  return typeof window !== 'undefined'
+  return typeof window !== "undefined";
 }
 
 export function isServer(): boolean {
-  return typeof window === 'undefined'
+  return typeof window === "undefined";
 }

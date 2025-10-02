@@ -3,16 +3,16 @@
 
 // Used for __tests__/testing-library.js
 // Learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom'
+import "@testing-library/jest-dom";
 
 // Mock Next.js router
-jest.mock('next/router', () => ({
+jest.mock("next/router", () => ({
   useRouter() {
     return {
-      route: '/',
-      pathname: '/',
+      route: "/",
+      pathname: "/",
       query: {},
-      asPath: '/',
+      asPath: "/",
       push: jest.fn(),
       pop: jest.fn(),
       reload: jest.fn(),
@@ -25,12 +25,12 @@ jest.mock('next/router', () => ({
         emit: jest.fn(),
       },
       isFallback: false,
-    }
+    };
   },
-}))
+}));
 
 // Mock Next.js navigation (App Router)
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useRouter() {
     return {
       push: jest.fn(),
@@ -39,15 +39,15 @@ jest.mock('next/navigation', () => ({
       back: jest.fn(),
       forward: jest.fn(),
       refresh: jest.fn(),
-    }
+    };
   },
   useSearchParams() {
-    return new URLSearchParams()
+    return new URLSearchParams();
   },
   usePathname() {
-    return '/'
+    return "/";
   },
-}))
+}));
 
 // Mock localStorage
 const localStorageMock = {
@@ -55,8 +55,8 @@ const localStorageMock = {
   setItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
-}
-global.localStorage = localStorageMock
+};
+global.localStorage = localStorageMock;
 
 // Mock sessionStorage
 const sessionStorageMock = {
@@ -64,13 +64,13 @@ const sessionStorageMock = {
   setItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
-}
-global.sessionStorage = sessionStorageMock
+};
+global.sessionStorage = sessionStorageMock;
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -80,7 +80,7 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
-})
+});
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -88,7 +88,7 @@ global.IntersectionObserver = class IntersectionObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-}
+};
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -96,10 +96,10 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-}
+};
 
 // Mock fetch
-global.fetch = jest.fn()
+global.fetch = jest.fn();
 
 // Suppress console errors during tests (optional)
 // global.console = {
@@ -109,8 +109,8 @@ global.fetch = jest.fn()
 // }
 
 // Set up environment variables for tests
-process.env.NODE_ENV = 'test'
-process.env.JWT_SECRET = 'test-jwt-secret'
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
+process.env.NODE_ENV = "test";
+process.env.JWT_SECRET = "test-jwt-secret";
+process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
+process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";

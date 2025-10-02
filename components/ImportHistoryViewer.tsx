@@ -1,58 +1,72 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  History, 
-  CheckCircle, 
-  AlertTriangle, 
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  History,
+  CheckCircle,
+  AlertTriangle,
   XCircle,
   Clock,
   FileSpreadsheet,
   BarChart3,
   Download,
   Trash2,
-  RefreshCw
-} from "lucide-react"
+  RefreshCw,
+} from "lucide-react";
 
 interface ImportHistoryRecord {
-  id: string
-  session_id: string
-  import_type: "single" | "dual"
-  file_names: string[]
-  total_records: number
-  success_count: number
-  error_count: number
-  auto_fix_count: number
-  processing_time_ms: number
+  id: string;
+  session_id: string;
+  import_type: "single" | "dual";
+  file_names: string[];
+  total_records: number;
+  success_count: number;
+  error_count: number;
+  auto_fix_count: number;
+  processing_time_ms: number;
   error_summary: {
-    validation: number
-    format: number
-    duplicate: number
-    database: number
-    system: number
-  }
-  auto_fixes: any[]
-  detailed_errors: any[]
-  user_id: string
-  created_at: string
-  status: "completed" | "failed" | "partial"
+    validation: number;
+    format: number;
+    duplicate: number;
+    database: number;
+    system: number;
+  };
+  auto_fixes: any[];
+  detailed_errors: any[];
+  user_id: string;
+  created_at: string;
+  status: "completed" | "failed" | "partial";
 }
 
 interface ImportHistoryViewerProps {
-  className?: string
+  className?: string;
 }
 
-export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps) {
-  const [history, setHistory] = useState<ImportHistoryRecord[]>([])
-  const [loading, setLoading] = useState(true)
+export function ImportHistoryViewer({
+  className = "",
+}: ImportHistoryViewerProps) {
+  const [history, setHistory] = useState<ImportHistoryRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({
     total_imports: 0,
     total_records_processed: 0,
@@ -64,117 +78,125 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
     status_breakdown: {
       completed: 0,
       failed: 0,
-      partial: 0
-    }
-  })
-  
+      partial: 0,
+    },
+  });
+
   // Filters
-  const [statusFilter, setStatusFilter] = useState<string>("")
-  const [typeFilter, setTypeFilter] = useState<string>("")
-  const [dateFromFilter, setDateFromFilter] = useState<string>("")
-  const [dateToFilter, setDateToFilter] = useState<string>("")
-  const [page, setPage] = useState(1)
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [dateFromFilter, setDateFromFilter] = useState<string>("");
+  const [dateToFilter, setDateToFilter] = useState<string>("");
+  const [page, setPage] = useState(1);
 
   const fetchHistory = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const token = localStorage.getItem("admin_token")
-      if (!token) return
+      const token = localStorage.getItem("admin_token");
+      if (!token) return;
 
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "20"
-      })
+        limit: "20",
+      });
 
-      if (statusFilter) params.append("status", statusFilter)
-      if (typeFilter) params.append("import_type", typeFilter)
-      if (dateFromFilter) params.append("date_from", dateFromFilter)
-      if (dateToFilter) params.append("date_to", dateToFilter)
+      if (statusFilter) params.append("status", statusFilter);
+      if (typeFilter) params.append("import_type", typeFilter);
+      if (dateFromFilter) params.append("date_from", dateFromFilter);
+      if (dateToFilter) params.append("date_to", dateToFilter);
 
       const response = await fetch(`/api/admin/import-history?${params}`, {
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setHistory(data.data || [])
-        setSummary(data.summary || summary)
+        const data = await response.json();
+        setHistory(data.data || []);
+        setSummary(data.summary || summary);
       }
     } catch (error) {
-      console.error("Error fetching import history:", error)
+      console.error("Error fetching import history:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchHistory()
-  }, [page, statusFilter, typeFilter, dateFromFilter, dateToFilter])
+    fetchHistory();
+  }, [page, statusFilter, typeFilter, dateFromFilter, dateToFilter]);
 
   const deleteHistoryRecord = async (id: string) => {
     try {
-      const token = localStorage.getItem("admin_token")
-      if (!token) return
+      const token = localStorage.getItem("admin_token");
+      if (!token) return;
 
       const response = await fetch(`/api/admin/import-history?id=${id}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        fetchHistory() // Refresh the list
+        fetchHistory(); // Refresh the list
       }
     } catch (error) {
-      console.error("Error deleting history record:", error)
+      console.error("Error deleting history record:", error);
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "text-green-600 bg-green-50 border-green-200"
-      case "failed": return "text-red-600 bg-red-50 border-red-200"
-      case "partial": return "text-yellow-600 bg-yellow-50 border-yellow-200"
-      default: return "text-gray-600 bg-gray-50 border-gray-200"
+      case "completed":
+        return "text-green-600 bg-green-50 border-green-200";
+      case "failed":
+        return "text-red-600 bg-red-50 border-red-200";
+      case "partial":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "completed": return <CheckCircle className="h-4 w-4" />
-      case "failed": return <XCircle className="h-4 w-4" />
-      case "partial": return <AlertTriangle className="h-4 w-4" />
-      default: return <Clock className="h-4 w-4" />
+      case "completed":
+        return <CheckCircle className="h-4 w-4" />;
+      case "failed":
+        return <XCircle className="h-4 w-4" />;
+      case "partial":
+        return <AlertTriangle className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
     }
-  }
+  };
 
   const formatDuration = (ms: number) => {
-    if (ms < 1000) return `${ms}ms`
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
-    return `${(ms / 60000).toFixed(1)}m`
-  }
+    if (ms < 1000) return `${ms}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    return `${(ms / 60000).toFixed(1)}m`;
+  };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return ''
+    if (!dateString) return "";
 
     try {
-      const date = new Date(dateString)
-      const day = String(date.getDate()).padStart(2, '0')
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const year = date.getFullYear()
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
 
       // Format: "HH:MM DD/MM/YYYY" (time first, then date)
-      return `${hours}:${minutes} ${day}/${month}/${year}`
+      return `${hours}:${minutes} ${day}/${month}/${year}`;
     } catch (error) {
-      console.error('Error formatting date:', error)
-      return dateString
+      console.error("Error formatting date:", error);
+      return dateString;
     }
-  }
+  };
 
   // Mock data for demonstration since we don't have the table yet
   const mockHistory: ImportHistoryRecord[] = [
@@ -188,12 +210,18 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
       error_count: 5,
       auto_fix_count: 12,
       processing_time_ms: 2300,
-      error_summary: { validation: 2, format: 2, duplicate: 1, database: 0, system: 0 },
+      error_summary: {
+        validation: 2,
+        format: 2,
+        duplicate: 1,
+        database: 0,
+        system: 0,
+      },
       auto_fixes: [],
       detailed_errors: [],
       user_id: "admin",
       created_at: new Date(Date.now() - 86400000).toISOString(),
-      status: "completed"
+      status: "completed",
     },
     {
       id: "hist_2",
@@ -205,17 +233,23 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
       error_count: 5,
       auto_fix_count: 8,
       processing_time_ms: 1800,
-      error_summary: { validation: 3, format: 1, duplicate: 1, database: 0, system: 0 },
+      error_summary: {
+        validation: 3,
+        format: 1,
+        duplicate: 1,
+        database: 0,
+        system: 0,
+      },
       auto_fixes: [],
       detailed_errors: [],
       user_id: "admin",
       created_at: new Date(Date.now() - 172800000).toISOString(),
-      status: "partial"
-    }
-  ]
+      status: "partial",
+    },
+  ];
 
   // Use mock data if no real data
-  const displayHistory = history.length > 0 ? history : mockHistory
+  const displayHistory = history.length > 0 ? history : mockHistory;
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -227,7 +261,8 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
             Import History & Analytics
           </CardTitle>
           <CardDescription>
-            Track and analyze all import operations with detailed metrics and error patterns
+            Track and analyze all import operations with detailed metrics and
+            error patterns
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -237,7 +272,9 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
               disabled={loading}
               className="flex items-center gap-2"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
           </div>
@@ -255,19 +292,27 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-700">{summary.total_imports}</p>
+              <p className="text-2xl font-bold text-blue-700">
+                {summary.total_imports}
+              </p>
               <p className="text-sm text-blue-600">Total Imports</p>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-700">{summary.total_records_processed}</p>
+              <p className="text-2xl font-bold text-green-700">
+                {summary.total_records_processed}
+              </p>
               <p className="text-sm text-green-600">Records Processed</p>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <p className="text-2xl font-bold text-purple-700">{summary.success_rate.toFixed(1)}%</p>
+              <p className="text-2xl font-bold text-purple-700">
+                {summary.success_rate.toFixed(1)}%
+              </p>
               <p className="text-sm text-purple-600">Success Rate</p>
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <p className="text-2xl font-bold text-orange-700">{formatDuration(summary.average_processing_time)}</p>
+              <p className="text-2xl font-bold text-orange-700">
+                {formatDuration(summary.average_processing_time)}
+              </p>
               <p className="text-sm text-orange-600">Avg Processing Time</p>
             </div>
           </div>
@@ -351,12 +396,17 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
                   <div key={record.id} className="border rounded-lg p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <Badge variant="outline" className={getStatusColor(record.status)}>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(record.status)}
+                        >
                           {getStatusIcon(record.status)}
                           {record.status}
                         </Badge>
                         <Badge variant="secondary">
-                          {record.import_type === "dual" ? "Dual File" : "Single File"}
+                          {record.import_type === "dual"
+                            ? "Dual File"
+                            : "Single File"}
                         </Badge>
                         <span className="text-sm text-gray-600">
                           {formatDate(record.created_at)}
@@ -375,7 +425,9 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                       <div>
                         <p className="text-sm text-gray-600">Files</p>
-                        <p className="font-medium">{record.file_names.join(", ")}</p>
+                        <p className="font-medium">
+                          {record.file_names.join(", ")}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Records</p>
@@ -384,12 +436,20 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
                       <div>
                         <p className="text-sm text-gray-600">Success Rate</p>
                         <p className="font-medium">
-                          {record.total_records > 0 ? ((record.success_count / record.total_records) * 100).toFixed(1) : 0}%
+                          {record.total_records > 0
+                            ? (
+                                (record.success_count / record.total_records) *
+                                100
+                              ).toFixed(1)
+                            : 0}
+                          %
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Processing Time</p>
-                        <p className="font-medium">{formatDuration(record.processing_time_ms)}</p>
+                        <p className="font-medium">
+                          {formatDuration(record.processing_time_ms)}
+                        </p>
                       </div>
                     </div>
 
@@ -415,5 +475,5 @@ export function ImportHistoryViewer({ className = "" }: ImportHistoryViewerProps
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

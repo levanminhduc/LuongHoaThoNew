@@ -26,7 +26,9 @@
 /* Card hover effects with hardware acceleration */
 .card-hover {
   will-change: transform, box-shadow;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card-hover:hover {
@@ -51,12 +53,12 @@
   .modal-content {
     padding: 1rem;
   }
-  
+
   .touch-button {
     min-height: 48px;
     padding: 0.75rem 1rem;
   }
-  
+
   .card-spacing {
     gap: 0.75rem;
   }
@@ -67,7 +69,7 @@
   .card-hover {
     transition: none;
   }
-  
+
   .modal-scroll-area {
     scroll-behavior: auto;
   }
@@ -92,11 +94,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
-    opacity: .5;
+    opacity: 0.5;
   }
 }
 
@@ -132,7 +135,8 @@
 
 /* Exception for Radix UI ScrollArea viewport - Fix mobile scroll at scrollTop = 0 */
 /* Use attribute selector with higher specificity to override universal selector */
-.modal-event-isolation [data-radix-scroll-area-viewport][data-radix-scroll-area-viewport] {
+.modal-event-isolation
+  [data-radix-scroll-area-viewport][data-radix-scroll-area-viewport] {
   overscroll-behavior-y: contain;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

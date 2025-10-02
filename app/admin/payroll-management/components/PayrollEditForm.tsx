@@ -1,187 +1,227 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Loader2, Save, ChevronDown, ChevronRight, AlertTriangle, Calculator } from "lucide-react"
-import { formatCurrency } from "@/lib/utils/date-formatter"
-import type { PayrollData, PayrollUpdateRequest } from "../types"
-import { PAYROLL_FIELD_GROUPS } from "../types"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Loader2,
+  Save,
+  ChevronDown,
+  ChevronRight,
+  AlertTriangle,
+  Calculator,
+} from "lucide-react";
+import { formatCurrency } from "@/lib/utils/date-formatter";
+import type { PayrollData, PayrollUpdateRequest } from "../types";
+import { PAYROLL_FIELD_GROUPS } from "../types";
 
 interface PayrollEditFormProps {
-  payrollData: PayrollData | null
-  onSave: (updateRequest: PayrollUpdateRequest) => Promise<void>
-  loading?: boolean
+  payrollData: PayrollData | null;
+  onSave: (updateRequest: PayrollUpdateRequest) => Promise<void>;
+  loading?: boolean;
 }
 
-export function PayrollEditForm({ payrollData, onSave, loading = false }: PayrollEditFormProps) {
-  const [formData, setFormData] = useState<Partial<PayrollData>>({})
-  const [changeReason, setChangeReason] = useState("")
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
-  const [hasChanges, setHasChanges] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+export function PayrollEditForm({
+  payrollData,
+  onSave,
+  loading = false,
+}: PayrollEditFormProps) {
+  const [formData, setFormData] = useState<Partial<PayrollData>>({});
+  const [changeReason, setChangeReason] = useState("");
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [hasChanges, setHasChanges] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   // Initialize form data when payrollData changes
   useEffect(() => {
     if (payrollData) {
-      setFormData({ ...payrollData })
+      setFormData({ ...payrollData });
       // Open first section by default
-      setOpenSections({ [PAYROLL_FIELD_GROUPS[0].title]: true })
+      setOpenSections({ [PAYROLL_FIELD_GROUPS[0].title]: true });
     }
-  }, [payrollData])
+  }, [payrollData]);
 
   // Check for changes
   useEffect(() => {
-    if (!payrollData) return
+    if (!payrollData) return;
 
-    const hasAnyChanges = PAYROLL_FIELD_GROUPS.some(group =>
-      group.fields.some(field => {
-        const currentValue = formData[field.key]
-        const originalValue = payrollData[field.key]
-        return currentValue !== originalValue
-      })
-    )
+    const hasAnyChanges = PAYROLL_FIELD_GROUPS.some((group) =>
+      group.fields.some((field) => {
+        const currentValue = formData[field.key];
+        const originalValue = payrollData[field.key];
+        return currentValue !== originalValue;
+      }),
+    );
 
-    setHasChanges(hasAnyChanges)
-  }, [formData, payrollData])
+    setHasChanges(hasAnyChanges);
+  }, [formData, payrollData]);
 
   const handleFieldChange = (fieldKey: keyof PayrollData, value: string) => {
     // Handle empty string as null/undefined for optional fields, 0 for required fields
-    let processedValue: number | undefined
+    let processedValue: number | undefined;
 
     if (value === "" || value === null || value === undefined) {
-      processedValue = undefined
+      processedValue = undefined;
     } else {
-      const numericValue = parseFloat(value)
-      processedValue = isNaN(numericValue) ? 0 : numericValue
+      const numericValue = parseFloat(value);
+      processedValue = isNaN(numericValue) ? 0 : numericValue;
     }
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [fieldKey]: processedValue
-    }))
+      [fieldKey]: processedValue,
+    }));
 
     // Clear validation error for this field
     if (validationErrors[fieldKey]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[fieldKey]
-        return newErrors
-      })
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldKey];
+        return newErrors;
+      });
     }
-  }
+  };
 
   const validateForm = (): boolean => {
-    const errors: Record<string, string> = {}
+    const errors: Record<string, string> = {};
 
-    PAYROLL_FIELD_GROUPS.forEach(group => {
-      group.fields.forEach(field => {
-        const value = formData[field.key]
+    PAYROLL_FIELD_GROUPS.forEach((group) => {
+      group.fields.forEach((field) => {
+        const value = formData[field.key];
 
         // Type-safe validation with proper null/undefined handling
-        if (field.required && (value === undefined || value === null || (typeof value === 'number' && value === 0))) {
-          errors[field.key] = `${field.label} là bắt buộc`
+        if (
+          field.required &&
+          (value === undefined ||
+            value === null ||
+            (typeof value === "number" && value === 0))
+        ) {
+          errors[field.key] = `${field.label} là bắt buộc`;
         }
 
-        if (field.min !== undefined && value !== undefined && value !== null && typeof value === 'number' && value < field.min) {
-          errors[field.key] = `${field.label} phải >= ${field.min}`
+        if (
+          field.min !== undefined &&
+          value !== undefined &&
+          value !== null &&
+          typeof value === "number" &&
+          value < field.min
+        ) {
+          errors[field.key] = `${field.label} phải >= ${field.min}`;
         }
 
-        if (field.max !== undefined && value !== undefined && value !== null && typeof value === 'number' && value > field.max) {
-          errors[field.key] = `${field.label} phải <= ${field.max}`
+        if (
+          field.max !== undefined &&
+          value !== undefined &&
+          value !== null &&
+          typeof value === "number" &&
+          value > field.max
+        ) {
+          errors[field.key] = `${field.label} phải <= ${field.max}`;
         }
 
         if (field.validation && value !== undefined && value !== null) {
-          const validationError = field.validation(value)
+          const validationError = field.validation(value);
           if (validationError) {
-            errors[field.key] = validationError
+            errors[field.key] = validationError;
           }
         }
-      })
-    })
+      });
+    });
 
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSave = async () => {
-    if (!payrollData || !hasChanges) return
+    if (!payrollData || !hasChanges) return;
 
     if (!changeReason.trim()) {
-      alert("Vui lòng nhập lý do thay đổi")
-      return
+      alert("Vui lòng nhập lý do thay đổi");
+      return;
     }
 
     if (!validateForm()) {
-      alert("Vui lòng sửa các lỗi validation trước khi lưu")
-      return
+      alert("Vui lòng sửa các lỗi validation trước khi lưu");
+      return;
     }
 
     // Prepare updates (only changed fields)
-    const updates: Record<string, any> = {}
-    PAYROLL_FIELD_GROUPS.forEach(group => {
-      group.fields.forEach(field => {
-        const currentValue = formData[field.key]
-        const originalValue = payrollData[field.key]
+    const updates: Record<string, any> = {};
+    PAYROLL_FIELD_GROUPS.forEach((group) => {
+      group.fields.forEach((field) => {
+        const currentValue = formData[field.key];
+        const originalValue = payrollData[field.key];
         if (currentValue !== originalValue) {
-          updates[field.key] = currentValue
+          updates[field.key] = currentValue;
         }
-      })
-    })
+      });
+    });
 
     const updateRequest: PayrollUpdateRequest = {
       updates,
-      changeReason: changeReason.trim()
-    }
+      changeReason: changeReason.trim(),
+    };
 
-    await onSave(updateRequest)
-    setChangeReason("")
-  }
+    await onSave(updateRequest);
+    setChangeReason("");
+  };
 
   const toggleSection = (sectionTitle: string) => {
-    setOpenSections(prev => ({
+    setOpenSections((prev) => ({
       ...prev,
-      [sectionTitle]: !prev[sectionTitle]
-    }))
-  }
+      [sectionTitle]: !prev[sectionTitle],
+    }));
+  };
 
   const calculateTotalIncome = () => {
     const incomeFields = [
-      'tong_cong_tien_luong_san_pham',
-      'tien_khen_thuong_chuyen_can',
-      'ho_tro_thoi_tiet_nong',
-      'bo_sung_luong',
-      'tien_boc_vac',
-      'ho_tro_xang_xe',
-      'tien_phep_le'
-    ]
-    
+      "tong_cong_tien_luong_san_pham",
+      "tien_khen_thuong_chuyen_can",
+      "ho_tro_thoi_tiet_nong",
+      "bo_sung_luong",
+      "tien_boc_vac",
+      "ho_tro_xang_xe",
+      "tien_phep_le",
+    ];
+
     return incomeFields.reduce((total, field) => {
-      const value = formData[field as keyof PayrollData] as number || 0
-      return total + value
-    }, 0)
-  }
+      const value = (formData[field as keyof PayrollData] as number) || 0;
+      return total + value;
+    }, 0);
+  };
 
   const calculateTotalDeductions = () => {
     const deductionFields = [
-      'thue_tncn',
-      'bhxh_bhtn_bhyt_total',
-      'tam_ung',
-      'truy_thu_the_bhyt'
-    ]
-    
+      "thue_tncn",
+      "bhxh_bhtn_bhyt_total",
+      "tam_ung",
+      "truy_thu_the_bhyt",
+    ];
+
     return deductionFields.reduce((total, field) => {
-      const value = formData[field as keyof PayrollData] as number || 0
-      return total + value
-    }, 0)
-  }
+      const value = (formData[field as keyof PayrollData] as number) || 0;
+      return total + value;
+    }, 0);
+  };
 
   if (!payrollData) {
     return (
@@ -191,12 +231,12 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
           <p>Vui lòng chọn nhân viên để chỉnh sửa thông tin lương</p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const totalIncome = calculateTotalIncome()
-  const totalDeductions = calculateTotalDeductions()
-  const netSalary = formData.tien_luong_thuc_nhan_cuoi_ky || 0
+  const totalIncome = calculateTotalIncome();
+  const totalDeductions = calculateTotalDeductions();
+  const netSalary = formData.tien_luong_thuc_nhan_cuoi_ky || 0;
 
   return (
     <div className="space-y-6">
@@ -208,9 +248,9 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
             <Badge variant="outline">{payrollData.employee_id}</Badge>
           </CardTitle>
           <CardDescription>
-            {payrollData.employees?.department} - {payrollData.employees?.chuc_vu} | 
-            Tháng: {payrollData.salary_month} | 
-            Nguồn: {payrollData.source_file}
+            {payrollData.employees?.department} -{" "}
+            {payrollData.employees?.chuc_vu} | Tháng: {payrollData.salary_month}{" "}
+            | Nguồn: {payrollData.source_file}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -272,20 +312,34 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {group.fields.map((field) => (
                       <div key={field.key} className="space-y-2">
-                        <Label htmlFor={field.key} className="flex items-center gap-2">
+                        <Label
+                          htmlFor={field.key}
+                          className="flex items-center gap-2"
+                        >
                           {field.label}
-                          {field.required && <span className="text-red-500">*</span>}
+                          {field.required && (
+                            <span className="text-red-500">*</span>
+                          )}
                         </Label>
                         <Input
                           id={field.key}
                           type="number"
-                          value={formData[field.key] !== undefined && formData[field.key] !== null ? String(formData[field.key]) : ""}
-                          onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                          value={
+                            formData[field.key] !== undefined &&
+                            formData[field.key] !== null
+                              ? String(formData[field.key])
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleFieldChange(field.key, e.target.value)
+                          }
                           min={field.min}
                           max={field.max}
                           step={field.step || 1}
                           disabled={loading}
-                          className={validationErrors[field.key] ? "border-red-500" : ""}
+                          className={
+                            validationErrors[field.key] ? "border-red-500" : ""
+                          }
                         />
                         {validationErrors[field.key] && (
                           <p className="text-sm text-red-500 flex items-center gap-1">
@@ -294,7 +348,9 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
                           </p>
                         )}
                         {field.description && (
-                          <p className="text-xs text-gray-500">{field.description}</p>
+                          <p className="text-xs text-gray-500">
+                            {field.description}
+                          </p>
                         )}
                       </div>
                     ))}
@@ -327,11 +383,15 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
                 rows={3}
               />
             </div>
-            
+
             <div className="flex gap-3">
               <Button
                 onClick={handleSave}
-                disabled={loading || !changeReason.trim() || Object.keys(validationErrors).length > 0}
+                disabled={
+                  loading ||
+                  !changeReason.trim() ||
+                  Object.keys(validationErrors).length > 0
+                }
                 className="bg-orange-600 hover:bg-orange-700"
               >
                 {loading ? (
@@ -346,12 +406,12 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
                   </>
                 )}
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => {
-                  setFormData({ ...payrollData })
-                  setChangeReason("")
+                  setFormData({ ...payrollData });
+                  setChangeReason("");
                 }}
                 disabled={loading}
               >
@@ -362,5 +422,5 @@ export function PayrollEditForm({ payrollData, onSave, loading = false }: Payrol
         </Card>
       )}
     </div>
-  )
+  );
 }

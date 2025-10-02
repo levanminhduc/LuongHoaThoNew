@@ -1,86 +1,95 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { 
-  Bug, 
-  User, 
-  Building2, 
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Bug,
+  User,
+  Building2,
   Database,
   Eye,
   EyeOff,
-  RefreshCw
-} from "lucide-react"
+  RefreshCw,
+} from "lucide-react";
 
 interface DebugInfo {
-  userInfo: any
-  apiResponse: any
-  debugApiResponse: any
-  countApiResponse: any
-  rawDepartments: any[]
-  filteredDepartments: any[]
-  permissions: any[]
+  userInfo: any;
+  apiResponse: any;
+  debugApiResponse: any;
+  countApiResponse: any;
+  rawDepartments: any[];
+  filteredDepartments: any[];
+  permissions: any[];
 }
 
 export default function DepartmentDebugInfo() {
-  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [showDebug, setShowDebug] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadDebugInfo = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      
-      const token = localStorage.getItem("admin_token")
-      const userStr = localStorage.getItem("user_info")
-      
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("admin_token");
+      const userStr = localStorage.getItem("user_info");
+
       if (!token || !userStr) {
-        setError("Không tìm thấy thông tin đăng nhập")
-        return
+        setError("Không tìm thấy thông tin đăng nhập");
+        return;
       }
 
-      const userInfo = JSON.parse(userStr)
+      const userInfo = JSON.parse(userStr);
 
       // Call departments API (only active employees)
-      const deptResponse = await fetch('/api/admin/departments?include_stats=true', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const deptResponse = await fetch(
+        "/api/admin/departments?include_stats=true",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-      const apiResponse = await deptResponse.json()
+      const apiResponse = await deptResponse.json();
 
       // Call permissions API
-      const permResponse = await fetch('/api/admin/department-permissions', {
+      const permResponse = await fetch("/api/admin/department-permissions", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const permData = await permResponse.json()
+      const permData = await permResponse.json();
 
       // Call debug API
-      const debugResponse = await fetch('/api/debug/departments', {
+      const debugResponse = await fetch("/api/debug/departments", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const debugData = await debugResponse.json()
+      const debugData = await debugResponse.json();
 
       // Call count API
-      const countResponse = await fetch('/api/debug/count-departments', {
+      const countResponse = await fetch("/api/debug/count-departments", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const countData = await countResponse.json()
+      const countData = await countResponse.json();
 
       setDebugInfo({
         userInfo,
@@ -89,22 +98,21 @@ export default function DepartmentDebugInfo() {
         countApiResponse: countData,
         rawDepartments: apiResponse.departments || [],
         filteredDepartments: apiResponse.departments || [],
-        permissions: permData.permissions || []
-      })
-
+        permissions: permData.permissions || [],
+      });
     } catch (error) {
-      console.error("Debug info error:", error)
-      setError("Có lỗi xảy ra khi tải debug info")
+      console.error("Debug info error:", error);
+      setError("Có lỗi xảy ra khi tải debug info");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (showDebug) {
-      loadDebugInfo()
+      loadDebugInfo();
     }
-  }, [showDebug])
+  }, [showDebug]);
 
   if (!showDebug) {
     return (
@@ -119,7 +127,7 @@ export default function DepartmentDebugInfo() {
           Debug Departments
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -138,7 +146,9 @@ export default function DepartmentDebugInfo() {
                 variant="outline"
                 size="sm"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                />
                 Refresh
               </Button>
               <Button
@@ -180,32 +190,56 @@ export default function DepartmentDebugInfo() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="text-center p-3 bg-blue-50 rounded">
                         <p className="text-2xl font-bold text-blue-600">
-                          {debugInfo.countApiResponse.summary.total_departments_all}
+                          {
+                            debugInfo.countApiResponse.summary
+                              .total_departments_all
+                          }
                         </p>
-                        <p className="text-blue-800 font-medium">Total Departments</p>
-                        <p className="text-xs text-blue-600">Trong toàn bộ database</p>
+                        <p className="text-blue-800 font-medium">
+                          Total Departments
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          Trong toàn bộ database
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded">
                         <p className="text-2xl font-bold text-green-600">
-                          {debugInfo.countApiResponse.summary.total_departments_active_only}
+                          {
+                            debugInfo.countApiResponse.summary
+                              .total_departments_active_only
+                          }
                         </p>
-                        <p className="text-green-800 font-medium">Active Departments</p>
-                        <p className="text-xs text-green-600">Hiển thị trong API hiện tại</p>
+                        <p className="text-green-800 font-medium">
+                          Active Departments
+                        </p>
+                        <p className="text-xs text-green-600">
+                          Hiển thị trong API hiện tại
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-red-50 rounded">
                         <p className="text-2xl font-bold text-red-600">
-                          {debugInfo.countApiResponse.summary.departments_with_only_inactive_employees}
+                          {
+                            debugInfo.countApiResponse.summary
+                              .departments_with_only_inactive_employees
+                          }
                         </p>
-                        <p className="text-red-800 font-medium">Hidden Departments</p>
-                        <p className="text-xs text-red-600">Chỉ có nhân viên inactive</p>
+                        <p className="text-red-800 font-medium">
+                          Hidden Departments
+                        </p>
+                        <p className="text-xs text-red-600">
+                          Chỉ có nhân viên inactive
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-yellow-50 rounded">
                         <p className="text-2xl font-bold text-yellow-600">
                           {debugInfo.countApiResponse.summary.total_employees}
                         </p>
-                        <p className="text-yellow-800 font-medium">Total Employees</p>
+                        <p className="text-yellow-800 font-medium">
+                          Total Employees
+                        </p>
                         <p className="text-xs text-yellow-600">
-                          {debugInfo.countApiResponse.summary.active_employees} active
+                          {debugInfo.countApiResponse.summary.active_employees}{" "}
+                          active
                         </p>
                       </div>
                     </div>
@@ -213,10 +247,20 @@ export default function DepartmentDebugInfo() {
                     {debugInfo.countApiResponse.analysis.is_55_limit_issue && (
                       <Alert className="mt-4">
                         <AlertDescription>
-                          <strong>🚨 Phát hiện vấn đề:</strong> Database có {debugInfo.countApiResponse.analysis.actual_department_count} departments
-                          nhưng chỉ {debugInfo.countApiResponse.analysis.visible_in_current_api} departments hiển thị trong API.
+                          <strong>🚨 Phát hiện vấn đề:</strong> Database có{" "}
+                          {
+                            debugInfo.countApiResponse.analysis
+                              .actual_department_count
+                          }{" "}
+                          departments nhưng chỉ{" "}
+                          {
+                            debugInfo.countApiResponse.analysis
+                              .visible_in_current_api
+                          }{" "}
+                          departments hiển thị trong API.
                           <br />
-                          <strong>Nguyên nhân:</strong> API chỉ lấy departments có nhân viên active (is_active = true).
+                          <strong>Nguyên nhân:</strong> API chỉ lấy departments
+                          có nhân viên active (is_active = true).
                         </AlertDescription>
                       </Alert>
                     )}
@@ -236,7 +280,9 @@ export default function DepartmentDebugInfo() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="font-medium">Employee ID:</p>
-                      <p className="text-gray-600">{debugInfo.userInfo.employee_id}</p>
+                      <p className="text-gray-600">
+                        {debugInfo.userInfo.employee_id}
+                      </p>
                     </div>
                     <div>
                       <p className="font-medium">Role:</p>
@@ -244,12 +290,15 @@ export default function DepartmentDebugInfo() {
                     </div>
                     <div>
                       <p className="font-medium">Department:</p>
-                      <p className="text-gray-600">{debugInfo.userInfo.department}</p>
+                      <p className="text-gray-600">
+                        {debugInfo.userInfo.department}
+                      </p>
                     </div>
                     <div>
                       <p className="font-medium">Allowed Departments:</p>
                       <p className="text-gray-600">
-                        {debugInfo.userInfo.allowed_departments?.join(', ') || 'None'}
+                        {debugInfo.userInfo.allowed_departments?.join(", ") ||
+                          "None"}
                       </p>
                     </div>
                   </div>
@@ -268,22 +317,34 @@ export default function DepartmentDebugInfo() {
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="font-medium">Success:</p>
-                      <Badge variant={debugInfo.apiResponse.success ? "default" : "destructive"}>
+                      <Badge
+                        variant={
+                          debugInfo.apiResponse.success
+                            ? "default"
+                            : "destructive"
+                        }
+                      >
                         {debugInfo.apiResponse.success ? "Yes" : "No"}
                       </Badge>
                     </div>
                     <div>
                       <p className="font-medium">Total Departments:</p>
-                      <p className="text-gray-600">{debugInfo.apiResponse.total_departments || 0}</p>
+                      <p className="text-gray-600">
+                        {debugInfo.apiResponse.total_departments || 0}
+                      </p>
                     </div>
                     <div>
                       <p className="font-medium">Month:</p>
-                      <p className="text-gray-600">{debugInfo.apiResponse.month}</p>
+                      <p className="text-gray-600">
+                        {debugInfo.apiResponse.month}
+                      </p>
                     </div>
                   </div>
                   {debugInfo.apiResponse.error && (
                     <Alert className="mt-4">
-                      <AlertDescription>{debugInfo.apiResponse.error}</AlertDescription>
+                      <AlertDescription>
+                        {debugInfo.apiResponse.error}
+                      </AlertDescription>
                     </Alert>
                   )}
                 </CardContent>
@@ -299,20 +360,26 @@ export default function DepartmentDebugInfo() {
                 </CardHeader>
                 <CardContent>
                   {debugInfo.rawDepartments.length === 0 ? (
-                    <p className="text-gray-500 italic">No departments returned from API</p>
+                    <p className="text-gray-500 italic">
+                      No departments returned from API
+                    </p>
                   ) : (
                     <div className="space-y-3">
                       {debugInfo.rawDepartments.map((dept, index) => (
                         <div key={index} className="border rounded p-3">
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium">{dept.name}</h4>
-                            <Badge variant="outline">{dept.employeeCount} employees</Badge>
+                            <Badge variant="outline">
+                              {dept.employeeCount} employees
+                            </Badge>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                             <div>Payrolls: {dept.payrollCount}</div>
                             <div>Signed: {dept.signedPercentage}%</div>
                             <div>Managers: {dept.managers?.length || 0}</div>
-                            <div>Supervisors: {dept.supervisors?.length || 0}</div>
+                            <div>
+                              Supervisors: {dept.supervisors?.length || 0}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -335,38 +402,74 @@ export default function DepartmentDebugInfo() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="font-medium">All Departments (DB):</p>
-                          <p className="text-gray-600">{debugInfo.debugApiResponse.debug_info.query_results.unique_all_departments}</p>
+                          <p className="text-gray-600">
+                            {
+                              debugInfo.debugApiResponse.debug_info
+                                .query_results.unique_all_departments
+                            }
+                          </p>
                         </div>
                         <div>
-                          <p className="font-medium">Active Departments (API):</p>
-                          <p className="text-gray-600">{debugInfo.debugApiResponse.debug_info.query_results.unique_active_departments}</p>
+                          <p className="font-medium">
+                            Active Departments (API):
+                          </p>
+                          <p className="text-gray-600">
+                            {
+                              debugInfo.debugApiResponse.debug_info
+                                .query_results.unique_active_departments
+                            }
+                          </p>
                         </div>
                         <div>
                           <p className="font-medium">Missing from Active:</p>
-                          <p className="text-red-600">{debugInfo.debugApiResponse.debug_info.departments.missing_from_active.length}</p>
+                          <p className="text-red-600">
+                            {
+                              debugInfo.debugApiResponse.debug_info.departments
+                                .missing_from_active.length
+                            }
+                          </p>
                         </div>
                         <div>
                           <p className="font-medium">Null/Empty Departments:</p>
-                          <p className="text-yellow-600">{debugInfo.debugApiResponse.debug_info.query_results.null_empty_departments}</p>
+                          <p className="text-yellow-600">
+                            {
+                              debugInfo.debugApiResponse.debug_info
+                                .query_results.null_empty_departments
+                            }
+                          </p>
                         </div>
                       </div>
 
-                      {debugInfo.debugApiResponse.debug_info.departments.missing_from_active.length > 0 && (
+                      {debugInfo.debugApiResponse.debug_info.departments
+                        .missing_from_active.length > 0 && (
                         <Alert>
                           <AlertDescription>
-                            <strong>Departments missing from active list:</strong><br />
-                            {debugInfo.debugApiResponse.debug_info.departments.missing_from_active.join(', ')}
-                            <br /><br />
-                            <em>These departments have employees but all employees are inactive (is_active = false)</em>
+                            <strong>
+                              Departments missing from active list:
+                            </strong>
+                            <br />
+                            {debugInfo.debugApiResponse.debug_info.departments.missing_from_active.join(
+                              ", ",
+                            )}
+                            <br />
+                            <br />
+                            <em>
+                              These departments have employees but all employees
+                              are inactive (is_active = false)
+                            </em>
                           </AlertDescription>
                         </Alert>
                       )}
 
-                      {debugInfo.debugApiResponse.debug_info.analysis.departments_without_permissions.length > 0 && (
+                      {debugInfo.debugApiResponse.debug_info.analysis
+                        .departments_without_permissions.length > 0 && (
                         <Alert>
                           <AlertDescription>
-                            <strong>Departments without permissions:</strong><br />
-                            {debugInfo.debugApiResponse.debug_info.analysis.departments_without_permissions.join(', ')}
+                            <strong>Departments without permissions:</strong>
+                            <br />
+                            {debugInfo.debugApiResponse.debug_info.analysis.departments_without_permissions.join(
+                              ", ",
+                            )}
                           </AlertDescription>
                         </Alert>
                       )}
@@ -405,5 +508,5 @@ export default function DepartmentDebugInfo() {
         </div>
       </div>
     </div>
-  )
+  );
 }

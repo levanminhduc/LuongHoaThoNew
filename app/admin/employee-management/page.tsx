@@ -1,40 +1,85 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { Plus, Search, Edit, Trash2, Users, UserCheck, UserX, FileText } from "lucide-react"
-import { toast } from "sonner"
-import EmployeeForm from "./components/EmployeeForm"
-import EmployeeAuditLogs from "./components/EmployeeAuditLogs"
-import SecurityNotice from "./components/SecurityNotice"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Users,
+  UserCheck,
+  UserX,
+  FileText,
+} from "lucide-react";
+import { toast } from "sonner";
+import EmployeeForm from "./components/EmployeeForm";
+import EmployeeAuditLogs from "./components/EmployeeAuditLogs";
+import SecurityNotice from "./components/SecurityNotice";
 
 interface Employee {
-  employee_id: string
-  full_name: string
-  department: string | null
-  chuc_vu: string
-  phone_number: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  employee_id: string;
+  full_name: string;
+  department: string | null;
+  chuc_vu: string;
+  phone_number: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface EmployeeResponse {
-  employees: Employee[]
+  employees: Employee[];
   pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
-  departments: string[]
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  departments: string[];
 }
 
 const roleLabels = {
@@ -45,125 +90,135 @@ const roleLabels = {
   truong_phong: "Trưởng Phòng",
   to_truong: "Tổ Trưởng",
   nhan_vien: "Nhân Viên",
-  van_phong: "Văn Phòng"
-}
+  van_phong: "Văn Phòng",
+};
 
 export default function EmployeeManagementPage() {
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [departments, setDepartments] = useState<string[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
     total: 0,
-    totalPages: 0
-  })
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
-  const [selectedDepartment, setSelectedDepartment] = useState("all_departments")
-  const [selectedRole, setSelectedRole] = useState("all_roles")
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [auditLogsEmployee, setAuditLogsEmployee] = useState<Employee | null>(null)
+    totalPages: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedDepartment, setSelectedDepartment] =
+    useState("all_departments");
+  const [selectedRole, setSelectedRole] = useState("all_roles");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [auditLogsEmployee, setAuditLogsEmployee] = useState<Employee | null>(
+    null,
+  );
 
   const fetchEmployees = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(search && { search }),
-        ...(selectedDepartment && selectedDepartment !== "all_departments" && { department: selectedDepartment }),
-        ...(selectedRole && selectedRole !== "all_roles" && { role: selectedRole })
-      })
+        ...(selectedDepartment &&
+          selectedDepartment !== "all_departments" && {
+            department: selectedDepartment,
+          }),
+        ...(selectedRole &&
+          selectedRole !== "all_roles" && { role: selectedRole }),
+      });
 
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       const response = await fetch(`/api/admin/employees?${params}`, {
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch employees")
+        throw new Error("Failed to fetch employees");
       }
 
-      const data: EmployeeResponse = await response.json()
-      setEmployees(data.employees)
-      setPagination(data.pagination)
-      setDepartments(data.departments)
+      const data: EmployeeResponse = await response.json();
+      setEmployees(data.employees);
+      setPagination(data.pagination);
+      setDepartments(data.departments);
     } catch (error) {
-      console.error("Error fetching employees:", error)
-      toast.error("Lỗi khi tải danh sách nhân viên")
+      console.error("Error fetching employees:", error);
+      toast.error("Lỗi khi tải danh sách nhân viên");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchEmployees()
-    }, search ? 500 : 0)
+    const timeoutId = setTimeout(
+      () => {
+        fetchEmployees();
+      },
+      search ? 500 : 0,
+    );
 
-    return () => clearTimeout(timeoutId)
-  }, [pagination.page, search, selectedDepartment, selectedRole])
+    return () => clearTimeout(timeoutId);
+  }, [pagination.page, search, selectedDepartment, selectedRole]);
 
   const handleSearch = (value: string) => {
-    setSearch(value)
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
+    setSearch(value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
 
   const handleFilterChange = (type: "department" | "role", value: string) => {
     if (type === "department") {
-      setSelectedDepartment(value)
+      setSelectedDepartment(value);
     } else {
-      setSelectedRole(value)
+      setSelectedRole(value);
     }
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
 
   const handleDelete = async (employeeId: string) => {
     try {
-      setDeletingId(employeeId)
-      const token = localStorage.getItem("admin_token")
+      setDeletingId(employeeId);
+      const token = localStorage.getItem("admin_token");
       const response = await fetch(`/api/admin/employees/${employeeId}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete employee")
+        throw new Error("Failed to delete employee");
       }
 
-      const result = await response.json()
-      toast.success(result.message)
-      fetchEmployees()
+      const result = await response.json();
+      toast.success(result.message);
+      fetchEmployees();
     } catch (error) {
-      console.error("Error deleting employee:", error)
-      toast.error("Lỗi khi xóa nhân viên")
+      console.error("Error deleting employee:", error);
+      toast.error("Lỗi khi xóa nhân viên");
     } finally {
-      setDeletingId(null)
+      setDeletingId(null);
     }
-  }
+  };
 
   const handleEmployeeCreated = () => {
-    setIsCreateDialogOpen(false)
-    fetchEmployees()
-    toast.success("Tạo nhân viên thành công")
-  }
+    setIsCreateDialogOpen(false);
+    fetchEmployees();
+    toast.success("Tạo nhân viên thành công");
+  };
 
   const handleEmployeeUpdated = () => {
-    setEditingEmployee(null)
-    fetchEmployees()
-    toast.success("Cập nhật nhân viên thành công")
-  }
+    setEditingEmployee(null);
+    fetchEmployees();
+    toast.success("Cập nhật nhân viên thành công");
+  };
 
-  const activeEmployees = employees.filter(emp => emp.is_active).length
-  const inactiveEmployees = employees.filter(emp => !emp.is_active).length
+  const activeEmployees = employees.filter((emp) => emp.is_active).length;
+  const inactiveEmployees = employees.filter((emp) => !emp.is_active).length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -172,7 +227,9 @@ export default function EmployeeManagementPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Quản Lý Nhân Viên</h1>
-          <p className="text-muted-foreground">Quản lý thông tin nhân viên trong hệ thống</p>
+          <p className="text-muted-foreground">
+            Quản lý thông tin nhân viên trong hệ thống
+          </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -196,7 +253,9 @@ export default function EmployeeManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng Nhân Viên</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Tổng Nhân Viên
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -205,20 +264,28 @@ export default function EmployeeManagementPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang Hoạt Động</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Đang Hoạt Động
+            </CardTitle>
             <UserCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {activeEmployees}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Không Hoạt Động</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Không Hoạt Động
+            </CardTitle>
             <UserX className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{inactiveEmployees}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {inactiveEmployees}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -236,25 +303,37 @@ export default function EmployeeManagementPage() {
                 className="pl-10"
               />
             </div>
-            <Select value={selectedDepartment} onValueChange={(value) => handleFilterChange("department", value)}>
+            <Select
+              value={selectedDepartment}
+              onValueChange={(value) => handleFilterChange("department", value)}
+            >
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Chọn phòng ban" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all_departments">Tất cả phòng ban</SelectItem>
-                {departments.map(dept => (
-                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                <SelectItem value="all_departments">
+                  Tất cả phòng ban
+                </SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedRole} onValueChange={(value) => handleFilterChange("role", value)}>
+            <Select
+              value={selectedRole}
+              onValueChange={(value) => handleFilterChange("role", value)}
+            >
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Chọn chức vụ" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_roles">Tất cả chức vụ</SelectItem>
                 {Object.entries(roleLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -282,17 +361,25 @@ export default function EmployeeManagementPage() {
                 <TableBody>
                   {employees.map((employee) => (
                     <TableRow key={employee.employee_id}>
-                      <TableCell className="font-medium">{employee.employee_id}</TableCell>
+                      <TableCell className="font-medium">
+                        {employee.employee_id}
+                      </TableCell>
                       <TableCell>{employee.full_name}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {roleLabels[employee.chuc_vu as keyof typeof roleLabels]}
+                          {
+                            roleLabels[
+                              employee.chuc_vu as keyof typeof roleLabels
+                            ]
+                          }
                         </Badge>
                       </TableCell>
                       <TableCell>{employee.department || "-"}</TableCell>
                       <TableCell>{employee.phone_number || "-"}</TableCell>
                       <TableCell>
-                        <Badge variant={employee.is_active ? "default" : "secondary"}>
+                        <Badge
+                          variant={employee.is_active ? "default" : "secondary"}
+                        >
                           {employee.is_active ? "Hoạt động" : "Không hoạt động"}
                         </Badge>
                       </TableCell>
@@ -300,7 +387,11 @@ export default function EmployeeManagementPage() {
                         <div className="flex gap-2">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => setEditingEmployee(employee)}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingEmployee(employee)}
+                              >
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
@@ -308,20 +399,25 @@ export default function EmployeeManagementPage() {
                               <DialogHeader>
                                 <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
                                 <DialogDescription>
-                                  Cập nhật thông tin nhân viên {employee.full_name}
+                                  Cập nhật thông tin nhân viên{" "}
+                                  {employee.full_name}
                                 </DialogDescription>
                               </DialogHeader>
                               {editingEmployee && (
-                                <EmployeeForm 
-                                  employee={editingEmployee} 
-                                  onSuccess={handleEmployeeUpdated} 
+                                <EmployeeForm
+                                  employee={editingEmployee}
+                                  onSuccess={handleEmployeeUpdated}
                                 />
                               )}
                             </DialogContent>
                           </Dialog>
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => setAuditLogsEmployee(employee)}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setAuditLogsEmployee(employee)}
+                              >
                                 <FileText className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
@@ -356,15 +452,22 @@ export default function EmployeeManagementPage() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                  Xác nhận xóa
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Bạn có chắc chắn muốn xóa nhân viên <strong>{employee.full_name}</strong>?
-                                  Hành động này không thể hoàn tác.
+                                  Bạn có chắc chắn muốn xóa nhân viên{" "}
+                                  <strong>{employee.full_name}</strong>? Hành
+                                  động này không thể hoàn tác.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Hủy</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(employee.employee_id)}>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    handleDelete(employee.employee_id)
+                                  }
+                                >
                                   Xóa
                                 </AlertDialogAction>
                               </AlertDialogFooter>
@@ -381,7 +484,12 @@ export default function EmployeeManagementPage() {
                 <div className="flex justify-center gap-2 mt-4">
                   <Button
                     variant="outline"
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        page: prev.page - 1,
+                      }))
+                    }
                     disabled={pagination.page === 1}
                   >
                     Trước
@@ -391,7 +499,12 @@ export default function EmployeeManagementPage() {
                   </span>
                   <Button
                     variant="outline"
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                    onClick={() =>
+                      setPagination((prev) => ({
+                        ...prev,
+                        page: prev.page + 1,
+                      }))
+                    }
                     disabled={pagination.page === pagination.totalPages}
                   >
                     Sau
@@ -403,5 +516,5 @@ export default function EmployeeManagementPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

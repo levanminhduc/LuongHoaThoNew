@@ -1,12 +1,26 @@
-"use client"
+"use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Loader2 } from "lucide-react"
-import { formatCurrency, formatDateVietnam } from "@/lib/utils/payroll-formatting"
-import type { ImportPreviewTableProps } from "@/lib/types/payroll-preview"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
+import {
+  formatCurrency,
+  formatDateVietnam,
+} from "@/lib/utils/payroll-formatting";
+import type { ImportPreviewTableProps } from "@/lib/types/payroll-preview";
 
-export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableProps) {
+export function ImportPreviewTable({
+  data,
+  loading,
+  error,
+}: ImportPreviewTableProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -14,11 +28,11 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
         <span className="ml-2">Đang tải dữ liệu...</span>
         {data.length > 500 && (
           <div className="text-xs text-gray-400 mt-1">
-            (Đang tải {data.length > 1000 ? 'nhiều' : 'một số'} records...)
+            (Đang tải {data.length > 1000 ? "nhiều" : "một số"} records...)
           </div>
         )}
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -26,7 +40,7 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
       <div className="text-center py-8 text-red-600">
         <p>Lỗi: {error}</p>
       </div>
-    )
+    );
   }
 
   if (data.length === 0) {
@@ -34,7 +48,7 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
       <div className="text-center py-8 text-gray-500">
         <p>Không có dữ liệu để hiển thị</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -43,7 +57,10 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2 text-yellow-800 text-sm">
             <span className="font-medium">⚠️ Lưu ý:</span>
-            <span>Đang hiển thị {data.length} records. Có thể mất vài giây để render hoàn toàn.</span>
+            <span>
+              Đang hiển thị {data.length} records. Có thể mất vài giây để render
+              hoàn toàn.
+            </span>
           </div>
         </div>
       )}
@@ -66,7 +83,9 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
               <TableCell className="text-center font-medium text-gray-500">
                 {index + 1}
               </TableCell>
-              <TableCell className="font-medium">{record.employee_id}</TableCell>
+              <TableCell className="font-medium">
+                {record.employee_id}
+              </TableCell>
               <TableCell>{record.employees.full_name}</TableCell>
               <TableCell>{record.employees.department}</TableCell>
               <TableCell>
@@ -76,8 +95,16 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
                 {formatCurrency(record.tien_luong_thuc_nhan_cuoi_ky)}
               </TableCell>
               <TableCell>
-                <Badge variant={record.import_status === "imported" ? "default" : "secondary"}>
-                  {record.import_status === "imported" ? "Đã import" : record.import_status}
+                <Badge
+                  variant={
+                    record.import_status === "imported"
+                      ? "default"
+                      : "secondary"
+                  }
+                >
+                  {record.import_status === "imported"
+                    ? "Đã import"
+                    : record.import_status}
                 </Badge>
               </TableCell>
               <TableCell className="text-sm text-gray-600">
@@ -87,10 +114,12 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
           ))}
         </TableBody>
       </Table>
-      
+
       <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
         <div>
-          Hiển thị <span className="font-medium text-gray-700">{data.length}</span> records
+          Hiển thị{" "}
+          <span className="font-medium text-gray-700">{data.length}</span>{" "}
+          records
         </div>
         {data.length >= 1700 && (
           <div className="text-orange-600">
@@ -99,5 +128,5 @@ export function ImportPreviewTable({ data, loading, error }: ImportPreviewTableP
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,6 +1,9 @@
-"use client"
+"use client";
 
-import { HoverDropdownMenu, type DropdownMenuItem } from "@/components/ui/hover-dropdown-menu"
+import {
+  HoverDropdownMenu,
+  type DropdownMenuItem,
+} from "@/components/ui/hover-dropdown-menu";
 import {
   Menu,
   Home,
@@ -11,17 +14,19 @@ import {
   Database,
   Calendar,
   Mail,
-} from "lucide-react"
+} from "lucide-react";
 
 interface NavigationMenuExampleProps {
-  className?: string
+  className?: string;
 }
 
-export function NavigationMenuExample({ className }: NavigationMenuExampleProps) {
+export function NavigationMenuExample({
+  className,
+}: NavigationMenuExampleProps) {
   const handleNavigation = (path: string) => {
-    console.log(`Navigating to: ${path}`)
+    console.log(`Navigating to: ${path}`);
     // Implement navigation logic
-  }
+  };
 
   const mainItems: DropdownMenuItem[] = [
     {
@@ -51,7 +56,7 @@ export function NavigationMenuExample({ className }: NavigationMenuExampleProps)
       iconColorClass: "text-purple-600",
       onClick: () => handleNavigation("/users"),
     },
-  ]
+  ];
 
   const toolsItems: DropdownMenuItem[] = [
     {
@@ -82,7 +87,7 @@ export function NavigationMenuExample({ className }: NavigationMenuExampleProps)
       description: "Quản lý dữ liệu",
       onClick: () => handleNavigation("/database"),
     },
-  ]
+  ];
 
   const systemItems: DropdownMenuItem[] = [
     {
@@ -94,7 +99,7 @@ export function NavigationMenuExample({ className }: NavigationMenuExampleProps)
       iconColorClass: "text-gray-600",
       onClick: () => handleNavigation("/system/settings"),
     },
-  ]
+  ];
 
   return (
     <HoverDropdownMenu
@@ -111,17 +116,17 @@ export function NavigationMenuExample({ className }: NavigationMenuExampleProps)
         {
           title: "Chức Năng Chính",
           description: "Các tính năng cốt lõi của hệ thống",
-          items: mainItems
+          items: mainItems,
         },
         {
           title: "Công Cụ",
           description: "Các công cụ hỗ trợ",
-          items: toolsItems
+          items: toolsItems,
         },
         {
           title: "Hệ Thống",
-          items: systemItems
-        }
+          items: systemItems,
+        },
       ]}
       menuWidth="w-80"
       menuAlign="start"
@@ -130,5 +135,5 @@ export function NavigationMenuExample({ className }: NavigationMenuExampleProps)
       footerText="Navigation Menu v1.0"
       variant="default"
     />
-  )
+  );
 }

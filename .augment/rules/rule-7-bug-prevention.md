@@ -2,6 +2,7 @@
 type: "manual"
 description: "Example description"
 ---
+
 # 🛡️ **RULE SET 7: BUG PREVENTION & QUALITY ASSURANCE**
 
 ## 📋 **OVERVIEW**
@@ -13,11 +14,13 @@ Rule Set này đảm bảo AI Assistant luôn code với chất lượng cao, h�
 ## 🔍 **RULE 7.1: MANDATORY PRE-CODING ANALYSIS**
 
 ### **Quy tắc:**
+
 ```
 BEFORE ANY CODE CHANGE → COMPLETE ANALYSIS REQUIRED
 ```
 
 ### **Pre-Coding Checklist (MANDATORY):**
+
 ```
 □ Requirement clarity: 100% hiểu yêu cầu?
 □ Business context: Hiểu impact business?
@@ -31,6 +34,7 @@ BEFORE ANY CODE CHANGE → COMPLETE ANALYSIS REQUIRED
 ```
 
 ### **Risk Assessment Template:**
+
 ```
 🎯 **IMPACT ANALYSIS:**
 - **Complexity Level**: [1-10]
@@ -46,69 +50,71 @@ BEFORE ANY CODE CHANGE → COMPLETE ANALYSIS REQUIRED
 ## 🛡️ **RULE 7.2: DEFENSIVE CODING PRINCIPLES**
 
 ### **Quy tắc:**
+
 ```
 ✅ ALWAYS: Input validation, error handling, graceful fallbacks
 ❌ NEVER: Assume inputs are valid, ignore error cases
 ```
 
 ### **Input Validation Pattern:**
+
 ```typescript
 function safeFunction(input: any): ReturnType {
   // 1. Type validation
-  if (!input || typeof input !== 'expected_type') {
-    console.warn('Invalid input:', input)
-    return defaultValue
+  if (!input || typeof input !== "expected_type") {
+    console.warn("Invalid input:", input);
+    return defaultValue;
   }
-  
+
   // 2. Format validation
   if (!validationPattern.test(input)) {
-    console.warn('Invalid format:', input)
-    return input // Return original if invalid
+    console.warn("Invalid format:", input);
+    return input; // Return original if invalid
   }
-  
+
   // 3. Try-catch execution
   try {
-    const result = processInput(input)
-    return result
+    const result = processInput(input);
+    return result;
   } catch (error) {
-    console.error('Processing error:', error)
-    return fallbackValue
+    console.error("Processing error:", error);
+    return fallbackValue;
   }
 }
 ```
 
 ### **Error Handling Pattern:**
+
 ```typescript
 async function apiCall(endpoint: string, data: any) {
   try {
     // Validate inputs
     if (!endpoint || !data) {
-      throw new Error('Missing required parameters')
+      throw new Error("Missing required parameters");
     }
-    
+
     // Make request with timeout
     const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-      signal: AbortSignal.timeout(10000) // 10s timeout
-    })
-    
+      signal: AbortSignal.timeout(10000), // 10s timeout
+    });
+
     // Check response
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(`API Error: ${response.status} - ${errorData.message}`)
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`API Error: ${response.status} - ${errorData.message}`);
     }
-    
-    return await response.json()
-    
+
+    return await response.json();
   } catch (error) {
-    console.error(`API call failed for ${endpoint}:`, error)
+    console.error(`API call failed for ${endpoint}:`, error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      data: null
-    }
+      error: error instanceof Error ? error.message : "Unknown error",
+      data: null,
+    };
   }
 }
 ```
@@ -118,6 +124,7 @@ async function apiCall(endpoint: string, data: any) {
 ## 📋 **RULE 7.3: STEP-BY-STEP IMPLEMENTATION**
 
 ### **Mandatory Implementation Flow:**
+
 ```
 Step 1: 🔍 ANALYZE
 - Understand requirement 100%
@@ -146,6 +153,7 @@ Step 5: ✅ VERIFY
 ```
 
 ### **Small Steps Principle:**
+
 ```
 ✅ DO: Make incremental changes
 ✅ DO: Test after each step
@@ -160,6 +168,7 @@ Step 5: ✅ VERIFY
 ## 🧪 **RULE 7.4: COMPREHENSIVE TESTING STRATEGY**
 
 ### **Testing Requirements (MANDATORY):**
+
 ```
 □ Unit tests for new functions
 □ Integration tests for API changes
@@ -170,6 +179,7 @@ Step 5: ✅ VERIFY
 ```
 
 ### **Test Coverage Requirements:**
+
 ```typescript
 // A. Happy Path Tests
 test('valid input produces expected output', () => {
@@ -200,11 +210,13 @@ test('component interaction', () => {
 ## 🔄 **RULE 7.5: ROLLBACK STRATEGY**
 
 ### **Quy tắc:**
+
 ```
 EVERY CHANGE → MUST HAVE ROLLBACK PLAN
 ```
 
 ### **Rollback Documentation Template:**
+
 ```
 📝 **ROLLBACK INSTRUCTIONS:**
 
@@ -233,6 +245,7 @@ Verification after rollback:
 ## ⚠️ **RULE 7.6: QUALITY GATES**
 
 ### **Code KHÔNG được deploy nếu:**
+
 ```
 ❌ Không có error handling
 ❌ Không có input validation
@@ -245,6 +258,7 @@ Verification after rollback:
 ```
 
 ### **Pre-Deployment Checklist:**
+
 ```
 □ All tests pass
 □ No console errors
@@ -261,34 +275,37 @@ Verification after rollback:
 ## 🎯 **RULE 7.7: COMMUNICATION PROTOCOL**
 
 ### **Before Implementation:**
+
 ```
-🤔 "Tôi hiểu bạn muốn [X]. 
+🤔 "Tôi hiểu bạn muốn [X].
    - Technical scope: [Y]
    - Business impact: [Z]
    - Risk level: [Low/Medium/High]
    - Estimated time: [duration]
-   
+
    Có đúng không? Có gì cần bổ sung?"
 ```
 
 ### **During Implementation:**
+
 ```
 📋 "Implementation plan:
    1. [Step 1] - [expected outcome]
    2. [Step 2] - [expected outcome]
    3. [Step 3] - [expected outcome]
-   
+
    Rollback strategy: [plan]
    Testing approach: [strategy]"
 ```
 
 ### **After Implementation:**
+
 ```
 ✅ "Completed:
    - Changes made: [summary]
    - Tests passed: [list]
    - Rollback available: [instructions]
-   
+
    Please test: [specific scenarios]"
 ```
 
@@ -297,6 +314,7 @@ Verification after rollback:
 ## 🚨 **EMERGENCY PROTOCOLS**
 
 ### **If Bug Detected:**
+
 ```
 1. 🛑 STOP: Don't make more changes
 2. 🔍 ASSESS: What exactly broke?
@@ -307,6 +325,7 @@ Verification after rollback:
 ```
 
 ### **Bug Prevention Mindset:**
+
 ```
 - Assume everything can fail
 - Validate all inputs

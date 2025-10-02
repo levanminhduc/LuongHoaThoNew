@@ -1,44 +1,54 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createServiceClient } from "@/utils/supabase/server"
-import bcrypt from "bcryptjs"
-import { formatSalaryMonth, formatSignatureTime } from "@/lib/utils/date-formatter"
+import { type NextRequest, NextResponse } from "next/server";
+import { createServiceClient } from "@/utils/supabase/server";
+import bcrypt from "bcryptjs";
+import {
+  formatSalaryMonth,
+  formatSignatureTime,
+} from "@/lib/utils/date-formatter";
 
 export async function POST(request: NextRequest) {
   try {
-    const { employee_id, cccd } = await request.json()
+    const { employee_id, cccd } = await request.json();
 
     if (!employee_id || !cccd) {
-      return NextResponse.json({ error: "Thiếu mã nhân viên hoặc số CCCD" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Thiếu mã nhân viên hoặc số CCCD" },
+        { status: 400 },
+      );
     }
 
-    const supabase = createServiceClient()
+    const supabase = createServiceClient();
 
     // Bước 1: Tìm nhân viên và verify CCCD
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select("employee_id, full_name, department, chuc_vu, cccd_hash, password_hash, last_password_change_at")
+      .select(
+        "employee_id, full_name, department, chuc_vu, cccd_hash, password_hash, last_password_change_at",
+      )
       .eq("employee_id", employee_id.trim())
-      .single()
+      .single();
 
     if (employeeError || !employee) {
       return NextResponse.json(
         { error: "Không tìm thấy nhân viên với mã nhân viên đã nhập" },
         { status: 404 },
-      )
+      );
     }
 
     // Bước 2: Verify password based on last_password_change_at
     // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
     // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
-    const hasChangedPassword = employee.last_password_change_at !== null
-    const hashToVerify = hasChangedPassword ? employee.password_hash : employee.cccd_hash
-    const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify)
-    
+    const hasChangedPassword = employee.last_password_change_at !== null;
+    const hashToVerify = hasChangedPassword
+      ? employee.password_hash
+      : employee.cccd_hash;
+    const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify);
+
     if (!isValidPassword) {
       return NextResponse.json(
         { error: "Mật khẩu không đúng" },
         { status: 401 },
-      )
+      );
     }
 
     // Bước 3: Tìm thông tin lương mới nhất
@@ -48,13 +58,13 @@ export async function POST(request: NextRequest) {
       .eq("employee_id", employee_id.trim())
       .order("created_at", { ascending: false })
       .limit(1)
-      .single()
+      .single();
 
     if (payrollError || !payroll) {
       return NextResponse.json(
         { error: "Không tìm thấy thông tin lương cho nhân viên này" },
         { status: 404 },
-      )
+      );
     }
 
     // Bước 4: Tạo response với thông tin đầy đủ (bao gồm tất cả 39 cột + thông tin ký)
@@ -68,10 +78,11 @@ export async function POST(request: NextRequest) {
       salary_month: payroll.salary_month, // Keep original for processing
       salary_month_display: formatSalaryMonth(payroll.salary_month), // Formatted for display
       total_income: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
-      deductions: (payroll.bhxh_bhtn_bhyt_total || 0) + (payroll.thue_tncn || 0),
+      deductions:
+        (payroll.bhxh_bhtn_bhyt_total || 0) + (payroll.thue_tncn || 0),
       net_salary: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
       source_file: payroll.source_file || "Unknown",
-      
+
       // Password change status based on last_password_change_at
       must_change_password: employee.last_password_change_at === null,
 
@@ -133,16 +144,21 @@ export async function POST(request: NextRequest) {
       // Thông tin ký nhận
       is_signed: payroll.is_signed || false,
       signed_at: payroll.signed_at || null,
-      signed_at_display: payroll.signed_at ? formatSignatureTime(payroll.signed_at) : null,
+      signed_at_display: payroll.signed_at
+        ? formatSignatureTime(payroll.signed_at)
+        : null,
       signed_by_name: payroll.signed_by_name || null,
-    }
+    };
 
     return NextResponse.json({
       success: true,
       payroll: response,
-    })
+    });
   } catch (error) {
-    console.error("Employee lookup error:", error)
-    return NextResponse.json({ error: "Có lỗi xảy ra khi tra cứu thông tin" }, { status: 500 })
+    console.error("Employee lookup error:", error);
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra khi tra cứu thông tin" },
+      { status: 500 },
+    );
   }
 }

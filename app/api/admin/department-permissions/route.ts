@@ -1,30 +1,31 @@
 // API endpoints for managing department permissions for truong_phong
-import { type NextRequest, NextResponse } from "next/server"
-import { createServiceClient } from "@/utils/supabase/server"
-import { verifyToken, getAuditInfo } from "@/lib/auth-middleware"
+import { type NextRequest, NextResponse } from "next/server";
+import { createServiceClient } from "@/utils/supabase/server";
+import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
   try {
     // Only admin can manage department permissions
-    const auth = verifyToken(request)
-    if (!auth || !auth.isRole('admin')) {
-      return NextResponse.json({ error: "Chỉ admin mới có quyền quản lý phân quyền" }, { status: 403 })
+    const auth = verifyToken(request);
+    if (!auth || !auth.isRole("admin")) {
+      return NextResponse.json(
+        { error: "Chỉ admin mới có quyền quản lý phân quyền" },
+        { status: 403 },
+      );
     }
 
-    const supabase = createServiceClient()
-    const { searchParams } = new URL(request.url)
-    const employeeId = searchParams.get("employee_id")
-    const department = searchParams.get("department")
-    const isActive = searchParams.get("is_active")
+    const supabase = createServiceClient();
+    const { searchParams } = new URL(request.url);
+    const employeeId = searchParams.get("employee_id");
+    const department = searchParams.get("department");
+    const isActive = searchParams.get("is_active");
 
     // Updated query syntax: Use exact constraint names to resolve ambiguous relationships
     // Supabase detected 2 foreign key relationships between department_permissions and employees:
     // 1. fk_dept_perm_employee (employee_id -> employees.employee_id)
     // 2. department_permissions_granted_by_fkey (granted_by -> employees.employee_id)
-    let query = supabase
-      .from("department_permissions")
-      .select(`
+    let query = supabase.from("department_permissions").select(`
         *,
         employees!fk_dept_perm_employee(
           employee_id,
@@ -36,36 +37,40 @@ export async function GET(request: NextRequest) {
           employee_id,
           full_name
         )
-      `)
+      `);
 
     // Apply filters
     if (employeeId) {
-      query = query.eq("employee_id", employeeId)
+      query = query.eq("employee_id", employeeId);
     }
 
     if (department) {
-      query = query.eq("department", department)
+      query = query.eq("department", department);
     }
 
     if (isActive !== null) {
-      query = query.eq("is_active", isActive === "true")
+      query = query.eq("is_active", isActive === "true");
     }
 
-    const { data: permissions, error } = await query.order("granted_at", { ascending: false })
+    const { data: permissions, error } = await query.order("granted_at", {
+      ascending: false,
+    });
 
     if (error) {
-      console.error("Database error:", error)
-      return NextResponse.json({ error: "Lỗi truy vấn dữ liệu" }, { status: 500 })
+      console.error("Database error:", error);
+      return NextResponse.json(
+        { error: "Lỗi truy vấn dữ liệu" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
       success: true,
-      permissions
-    })
-
+      permissions,
+    });
   } catch (error) {
-    console.error("Get department permissions error:", error)
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 })
+    console.error("Get department permissions error:", error);
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
   }
 }
 
@@ -73,26 +78,32 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Only admin can grant department permissions
-    const auth = verifyToken(request)
-    if (!auth || !auth.isRole('admin')) {
-      return NextResponse.json({ error: "Chỉ admin mới có quyền cấp phân quyền" }, { status: 403 })
+    const auth = verifyToken(request);
+    if (!auth || !auth.isRole("admin")) {
+      return NextResponse.json(
+        { error: "Chỉ admin mới có quyền cấp phân quyền" },
+        { status: 403 },
+      );
     }
 
-    const { employee_id, department, notes } = await request.json()
+    const { employee_id, department, notes } = await request.json();
 
     // Debug logging
-    console.log("=== DEBUG DEPARTMENT PERMISSION REQUEST ===")
-    console.log("Request data:", { employee_id, department, notes })
-    console.log("Auth user:", auth.user)
-    console.log("Auth user employee_id:", auth.user.employee_id)
+    console.log("=== DEBUG DEPARTMENT PERMISSION REQUEST ===");
+    console.log("Request data:", { employee_id, department, notes });
+    console.log("Auth user:", auth.user);
+    console.log("Auth user employee_id:", auth.user.employee_id);
 
     if (!employee_id || !department) {
-      return NextResponse.json({
-        error: "Thiếu thông tin employee_id hoặc department"
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: "Thiếu thông tin employee_id hoặc department",
+        },
+        { status: 400 },
+      );
     }
 
-    const supabase = createServiceClient()
+    const supabase = createServiceClient();
 
     // Verify employee exists and is truong_phong
     const { data: employee, error: employeeError } = await supabase
@@ -100,18 +111,33 @@ export async function POST(request: NextRequest) {
       .select("employee_id, full_name, chuc_vu")
       .eq("employee_id", employee_id)
       .eq("is_active", true)
-      .single()
+      .single();
 
     if (employeeError || !employee) {
-      return NextResponse.json({ 
-        error: "Nhân viên không tồn tại hoặc đã bị khóa" 
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: "Nhân viên không tồn tại hoặc đã bị khóa",
+        },
+        { status: 400 },
+      );
     }
 
-    if (!['giam_doc', 'ke_toan', 'nguoi_lap_bieu', 'truong_phong', 'to_truong'].includes(employee.chuc_vu)) {
-      return NextResponse.json({
-        error: "Chỉ có thể cấp quyền cho nhân viên có chức vụ giám đốc, kế toán, người lập biểu, trưởng phòng hoặc tổ trưởng"
-      }, { status: 400 })
+    if (
+      ![
+        "giam_doc",
+        "ke_toan",
+        "nguoi_lap_bieu",
+        "truong_phong",
+        "to_truong",
+      ].includes(employee.chuc_vu)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Chỉ có thể cấp quyền cho nhân viên có chức vụ giám đốc, kế toán, người lập biểu, trưởng phòng hoặc tổ trưởng",
+        },
+        { status: 400 },
+      );
     }
 
     // Check if permission already exists
@@ -120,48 +146,54 @@ export async function POST(request: NextRequest) {
       .select("id, is_active")
       .eq("employee_id", employee_id)
       .eq("department", department)
-      .single()
+      .single();
 
     if (existingPermission) {
       if (existingPermission.is_active) {
-        return NextResponse.json({ 
-          error: "Quyền truy cập department này đã được cấp cho nhân viên" 
-        }, { status: 400 })
+        return NextResponse.json(
+          {
+            error: "Quyền truy cập department này đã được cấp cho nhân viên",
+          },
+          { status: 400 },
+        );
       } else {
         // Reactivate existing permission
         const { data: updatedPermission, error: updateError } = await supabase
           .from("department_permissions")
-          .update({ 
-            is_active: true, 
+          .update({
+            is_active: true,
             granted_by: auth.user.employee_id,
             granted_at: new Date().toISOString(),
-            notes 
+            notes,
           })
           .eq("id", existingPermission.id)
           .select()
-          .single()
+          .single();
 
         if (updateError) {
-          return NextResponse.json({ error: "Lỗi cập nhật quyền truy cập" }, { status: 500 })
+          return NextResponse.json(
+            { error: "Lỗi cập nhật quyền truy cập" },
+            { status: 500 },
+          );
         }
 
         return NextResponse.json({
           success: true,
           message: "Đã kích hoạt lại quyền truy cập department",
-          permission: updatedPermission
-        })
+          permission: updatedPermission,
+        });
       }
     }
 
     // Determine granted_by value
-    const grantedBy = auth.user.employee_id || 'admin'
+    const grantedBy = auth.user.employee_id || "admin";
 
     // Debug logging for insert
-    console.log("=== DEBUG INSERT VALUES ===")
-    console.log("employee_id:", employee_id)
-    console.log("department:", department)
-    console.log("granted_by:", grantedBy)
-    console.log("notes:", notes)
+    console.log("=== DEBUG INSERT VALUES ===");
+    console.log("employee_id:", employee_id);
+    console.log("department:", department);
+    console.log("granted_by:", grantedBy);
+    console.log("notes:", notes);
 
     // Create new permission
     const { data: newPermission, error: insertError } = await supabase
@@ -170,55 +202,69 @@ export async function POST(request: NextRequest) {
         employee_id,
         department,
         granted_by: grantedBy,
-        notes
+        notes,
       })
       .select()
-      .single()
+      .single();
 
     if (insertError) {
-      console.error("Insert error:", insertError)
+      console.error("Insert error:", insertError);
 
       // Provide more specific error messages
-      if (insertError.code === '23505') { // Unique constraint violation
-        return NextResponse.json({
-          error: "Nhân viên đã có quyền truy cập department này"
-        }, { status: 400 })
-      } else if (insertError.code === '23503') { // Foreign key constraint violation
-        return NextResponse.json({
-          error: "Dữ liệu tham chiếu không hợp lệ (employee_id hoặc granted_by)"
-        }, { status: 400 })
+      if (insertError.code === "23505") {
+        // Unique constraint violation
+        return NextResponse.json(
+          {
+            error: "Nhân viên đã có quyền truy cập department này",
+          },
+          { status: 400 },
+        );
+      } else if (insertError.code === "23503") {
+        // Foreign key constraint violation
+        return NextResponse.json(
+          {
+            error:
+              "Dữ liệu tham chiếu không hợp lệ (employee_id hoặc granted_by)",
+          },
+          { status: 400 },
+        );
       } else {
-        return NextResponse.json({
-          error: `Lỗi tạo quyền truy cập: ${insertError.message}`
-        }, { status: 500 })
+        return NextResponse.json(
+          {
+            error: `Lỗi tạo quyền truy cập: ${insertError.message}`,
+          },
+          { status: 500 },
+        );
       }
     }
 
     // Log the action
-    const auditInfo = getAuditInfo(request, auth)
-    await supabase.rpc('log_access', {
+    const auditInfo = getAuditInfo(request, auth);
+    await supabase.rpc("log_access", {
       p_user_id: auditInfo.user_id,
       p_user_role: auditInfo.user_role,
-      p_action: 'GRANT_PERMISSION',
-      p_resource: 'department_permissions',
+      p_action: "GRANT_PERMISSION",
+      p_resource: "department_permissions",
       p_department: department,
       p_employee_accessed: employee_id,
       p_ip_address: auditInfo.ip_address,
       p_user_agent: auditInfo.user_agent,
       p_request_method: auditInfo.request_method,
       p_request_url: auditInfo.request_url,
-      p_response_status: 201
-    })
+      p_response_status: 201,
+    });
 
-    return NextResponse.json({
-      success: true,
-      message: "Đã cấp quyền truy cập department thành công",
-      permission: newPermission
-    }, { status: 201 })
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Đã cấp quyền truy cập department thành công",
+        permission: newPermission,
+      },
+      { status: 201 },
+    );
   } catch (error) {
-    console.error("Create department permission error:", error)
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 })
+    console.error("Create department permission error:", error);
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
   }
 }
 
@@ -226,33 +272,39 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Only admin can revoke department permissions
-    const auth = verifyToken(request)
-    if (!auth || !auth.isRole('admin')) {
-      return NextResponse.json({ error: "Chỉ admin mới có quyền thu hồi phân quyền" }, { status: 403 })
+    const auth = verifyToken(request);
+    if (!auth || !auth.isRole("admin")) {
+      return NextResponse.json(
+        { error: "Chỉ admin mới có quyền thu hồi phân quyền" },
+        { status: 403 },
+      );
     }
 
-    const { searchParams } = new URL(request.url)
-    const permissionId = searchParams.get("id")
-    const employeeId = searchParams.get("employee_id")
-    const department = searchParams.get("department")
+    const { searchParams } = new URL(request.url);
+    const permissionId = searchParams.get("id");
+    const employeeId = searchParams.get("employee_id");
+    const department = searchParams.get("department");
 
     if (!permissionId && (!employeeId || !department)) {
-      return NextResponse.json({ 
-        error: "Cần cung cấp permission ID hoặc employee_id + department" 
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: "Cần cung cấp permission ID hoặc employee_id + department",
+        },
+        { status: 400 },
+      );
     }
 
-    const supabase = createServiceClient()
+    const supabase = createServiceClient();
 
     // Soft delete by setting is_active = false
-    let updateQuery
+    let updateQuery;
     if (permissionId) {
       updateQuery = supabase
         .from("department_permissions")
         .update({ is_active: false })
         .eq("id", parseInt(permissionId))
         .select()
-        .single()
+        .single();
     } else {
       updateQuery = supabase
         .from("department_permissions")
@@ -260,44 +312,49 @@ export async function DELETE(request: NextRequest) {
         .eq("employee_id", employeeId)
         .eq("department", department)
         .select()
-        .single()
+        .single();
     }
 
-    const { data: revokedPermission, error } = await updateQuery
+    const { data: revokedPermission, error } = await updateQuery;
 
     if (error) {
-      console.error("Revoke permission error:", error)
-      return NextResponse.json({ error: "Lỗi thu hồi quyền truy cập" }, { status: 500 })
+      console.error("Revoke permission error:", error);
+      return NextResponse.json(
+        { error: "Lỗi thu hồi quyền truy cập" },
+        { status: 500 },
+      );
     }
 
     if (!revokedPermission) {
-      return NextResponse.json({ error: "Không tìm thấy quyền truy cập" }, { status: 404 })
+      return NextResponse.json(
+        { error: "Không tìm thấy quyền truy cập" },
+        { status: 404 },
+      );
     }
 
     // Log the action
-    const auditInfo = getAuditInfo(request, auth)
-    await supabase.rpc('log_access', {
+    const auditInfo = getAuditInfo(request, auth);
+    await supabase.rpc("log_access", {
       p_user_id: auditInfo.user_id,
       p_user_role: auditInfo.user_role,
-      p_action: 'REVOKE_PERMISSION',
-      p_resource: 'department_permissions',
+      p_action: "REVOKE_PERMISSION",
+      p_resource: "department_permissions",
       p_department: revokedPermission.department,
       p_employee_accessed: revokedPermission.employee_id,
       p_ip_address: auditInfo.ip_address,
       p_user_agent: auditInfo.user_agent,
       p_request_method: auditInfo.request_method,
       p_request_url: auditInfo.request_url,
-      p_response_status: 200
-    })
+      p_response_status: 200,
+    });
 
     return NextResponse.json({
       success: true,
       message: "Đã thu hồi quyền truy cập department thành công",
-      permission: revokedPermission
-    })
-
+      permission: revokedPermission,
+    });
   } catch (error) {
-    console.error("Delete department permission error:", error)
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 })
+    console.error("Delete department permission error:", error);
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
   }
 }

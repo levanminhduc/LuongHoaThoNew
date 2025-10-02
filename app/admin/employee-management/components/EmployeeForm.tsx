@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Eye, EyeOff, Search } from "lucide-react"
-import { toast } from "sonner"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Eye, EyeOff, Search } from "lucide-react";
+import { toast } from "sonner";
 
 interface Employee {
-  employee_id: string
-  full_name: string
-  department: string | null
-  chuc_vu: string
-  phone_number: string | null
-  is_active: boolean
+  employee_id: string;
+  full_name: string;
+  department: string | null;
+  chuc_vu: string;
+  phone_number: string | null;
+  is_active: boolean;
 }
 
 interface EmployeeFormProps {
-  employee?: Employee
-  onSuccess: () => void
+  employee?: Employee;
+  onSuccess: () => void;
 }
 
 const roleOptions = [
@@ -31,12 +37,13 @@ const roleOptions = [
   { value: "truong_phong", label: "Trưởng Phòng" },
   { value: "to_truong", label: "Tổ Trưởng" },
   { value: "nhan_vien", label: "Nhân Viên" },
-  { value: "van_phong", label: "Văn Phòng" }
-]
+  { value: "van_phong", label: "Văn Phòng" },
+];
 
-
-
-export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
+export default function EmployeeForm({
+  employee,
+  onSuccess,
+}: EmployeeFormProps) {
   const [formData, setFormData] = useState({
     employee_id: employee?.employee_id || "",
     full_name: employee?.full_name || "",
@@ -45,116 +52,125 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
     chuc_vu: employee?.chuc_vu || "",
     department: employee?.department ? employee.department : "none_selected",
     phone_number: employee?.phone_number || "",
-    is_active: employee?.is_active ?? true
-  })
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [showPassword, setShowPassword] = useState(false)
-  const [departments, setDepartments] = useState<string[]>([])
-  const [departmentSearch, setDepartmentSearch] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
-  const searchInputRef = useRef<HTMLInputElement>(null)
+    is_active: employee?.is_active ?? true,
+  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [departmentSearch, setDepartmentSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const token = localStorage.getItem("admin_token")
+        const token = localStorage.getItem("admin_token");
         const response = await fetch("/api/admin/employees?limit=1", {
           headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        })
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (response.ok) {
-          const data = await response.json()
-          setDepartments(data.departments || [])
+          const data = await response.json();
+          setDepartments(data.departments || []);
         }
       } catch (error) {
-        console.error("Error fetching departments:", error)
+        console.error("Error fetching departments:", error);
       }
-    }
+    };
 
-    fetchDepartments()
-  }, [])
+    fetchDepartments();
+  }, []);
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
+        clearTimeout(searchTimeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   // Debounced search để optimize performance
   useEffect(() => {
     if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
+      clearTimeout(searchTimeoutRef.current);
     }
 
     searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearch(departmentSearch)
+      setDebouncedSearch(departmentSearch);
 
       // Ensure focus is maintained after debounced update
       requestAnimationFrame(() => {
-        if (searchInputRef.current && document.activeElement !== searchInputRef.current) {
-          const wasActive = document.activeElement === searchInputRef.current
+        if (
+          searchInputRef.current &&
+          document.activeElement !== searchInputRef.current
+        ) {
+          const wasActive = document.activeElement === searchInputRef.current;
           if (wasActive || departmentSearch) {
-            searchInputRef.current.focus()
+            searchInputRef.current.focus();
           }
         }
-      })
-    }, 150) // 150ms debounce delay
+      });
+    }, 150); // 150ms debounce delay
 
     return () => {
       if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
+        clearTimeout(searchTimeoutRef.current);
       }
-    }
-  }, [departmentSearch])
+    };
+  }, [departmentSearch]);
 
   // Optimized filtering với useMemo và debounced search
   const filteredDepartments = useMemo(() => {
-    if (!debouncedSearch.trim()) return departments
+    if (!debouncedSearch.trim()) return departments;
 
-    const searchTerm = debouncedSearch.toLowerCase().trim()
-    return departments.filter(dept => {
-      const deptLower = dept.toLowerCase()
-      return deptLower.includes(searchTerm)
-    })
-  }, [departments, debouncedSearch])
+    const searchTerm = debouncedSearch.toLowerCase().trim();
+    return departments.filter((dept) => {
+      const deptLower = dept.toLowerCase();
+      return deptLower.includes(searchTerm);
+    });
+  }, [departments, debouncedSearch]);
 
   // Memoized search handler với focus preservation
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    const cursorPosition = e.target.selectionStart
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      const cursorPosition = e.target.selectionStart;
 
-    setDepartmentSearch(value)
+      setDepartmentSearch(value);
 
-    // Preserve focus và cursor position after state update
-    requestAnimationFrame(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus()
-        if (cursorPosition !== null) {
-          searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition)
+      // Preserve focus và cursor position after state update
+      requestAnimationFrame(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          if (cursorPosition !== null) {
+            searchInputRef.current.setSelectionRange(
+              cursorPosition,
+              cursorPosition,
+            );
+          }
         }
-      }
-    })
-  }, [])
+      });
+    },
+    [],
+  );
 
   // Memoized clear search handler
   const handleClearSearch = useCallback(() => {
-    setDepartmentSearch("")
-    setDebouncedSearch("")
+    setDepartmentSearch("");
+    setDebouncedSearch("");
     // Maintain focus after clearing
     requestAnimationFrame(() => {
       if (searchInputRef.current) {
-        searchInputRef.current.focus()
+        searchInputRef.current.focus();
       }
-    })
-  }, [])
+    });
+  }, []);
 
   // Auto-focus search input when Select opens
   const handleSelectOpenChange = useCallback((open: boolean) => {
@@ -162,121 +178,124 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
       // Focus search input when dropdown opens
       requestAnimationFrame(() => {
         if (searchInputRef.current) {
-          searchInputRef.current.focus()
+          searchInputRef.current.focus();
         }
-      })
+      });
     }
-  }, [])
+  }, []);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (!formData.employee_id.trim()) {
-      newErrors.employee_id = "Mã nhân viên là bắt buộc"
+      newErrors.employee_id = "Mã nhân viên là bắt buộc";
     }
 
     // Validate employee_id format (alphanumeric, no spaces)
     if (formData.employee_id && !/^[A-Za-z0-9]+$/.test(formData.employee_id)) {
-      newErrors.employee_id = "Mã nhân viên chỉ được chứa chữ và số, không có khoảng trắng"
+      newErrors.employee_id =
+        "Mã nhân viên chỉ được chứa chữ và số, không có khoảng trắng";
     }
 
     if (!formData.full_name.trim()) {
-      newErrors.full_name = "Họ và tên là bắt buộc"
+      newErrors.full_name = "Họ và tên là bắt buộc";
     }
 
     // CCCD validation (only for new employee creation)
     if (!employee && !formData.cccd.trim()) {
-      newErrors.cccd = "CCCD là bắt buộc khi tạo mới"
+      newErrors.cccd = "CCCD là bắt buộc khi tạo mới";
     }
 
     if (formData.cccd && !/^\d{12}$/.test(formData.cccd)) {
-      newErrors.cccd = "CCCD phải có đúng 12 chữ số"
+      newErrors.cccd = "CCCD phải có đúng 12 chữ số";
     }
 
     // Password validation (optional for updates, required for new if no CCCD)
     if (formData.password && formData.password.length < 6) {
-      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự"
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
     if (!formData.chuc_vu) {
-      newErrors.chuc_vu = "Chức vụ là bắt buộc"
+      newErrors.chuc_vu = "Chức vụ là bắt buộc";
     }
 
-    if (formData.phone_number && !/^[0-9]{10,11}$/.test(formData.phone_number)) {
-      newErrors.phone_number = "Số điện thoại không hợp lệ"
+    if (
+      formData.phone_number &&
+      !/^[0-9]{10,11}$/.test(formData.phone_number)
+    ) {
+      newErrors.phone_number = "Số điện thoại không hợp lệ";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const token = localStorage.getItem("admin_token")
-      const url = employee 
+      const token = localStorage.getItem("admin_token");
+      const url = employee
         ? `/api/admin/employees/${employee.employee_id}`
-        : "/api/admin/employees"
-      
-      const method = employee ? "PUT" : "POST"
-      
+        : "/api/admin/employees";
+
+      const method = employee ? "PUT" : "POST";
+
       const submitData = {
         ...formData,
         cccd: formData.cccd || undefined,
         password: formData.password || undefined,
-        department: formData.department === "none_selected" ? null : formData.department
-      }
+        department:
+          formData.department === "none_selected" ? null : formData.department,
+      };
 
       // Remove empty fields for updates
       if (employee) {
         if (!formData.cccd) {
-          delete submitData.cccd
+          delete submitData.cccd;
         }
         if (!formData.password) {
-          delete submitData.password
+          delete submitData.password;
         }
       }
 
       const response = await fetch(url, {
         method,
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(submitData)
-      })
+        body: JSON.stringify(submitData),
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Có lỗi xảy ra")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Có lỗi xảy ra");
       }
 
-      const result = await response.json()
-      toast.success(result.message)
-      onSuccess()
+      const result = await response.json();
+      toast.success(result.message);
+      onSuccess();
     } catch (error) {
-      console.error("Error submitting form:", error)
-      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra")
+      console.error("Error submitting form:", error);
+      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  }
-
-
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -297,13 +316,15 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
           {employee && (
             <div className="text-xs space-y-1">
               <p className="text-blue-600">
-                ℹ️ Thay đổi mã nhân viên sẽ tự động cập nhật tất cả dữ liệu liên quan
+                ℹ️ Thay đổi mã nhân viên sẽ tự động cập nhật tất cả dữ liệu liên
+                quan
               </p>
               <p className="text-amber-600">
                 ⚠️ Bao gồm: dữ liệu lương, chữ ký, quyền truy cập, và audit logs
               </p>
               <p className="text-green-600">
-                ✅ Hệ thống sử dụng database transaction để đảm bảo data integrity
+                ✅ Hệ thống sử dụng database transaction để đảm bảo data
+                integrity
               </p>
             </div>
           )}
@@ -359,7 +380,9 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
               disabled={loading}
-              placeholder={employee ? "Nhập mật khẩu mới" : "Nhập mật khẩu tùy chỉnh"}
+              placeholder={
+                employee ? "Nhập mật khẩu mới" : "Nhập mật khẩu tùy chỉnh"
+              }
               className={errors.password ? "border-red-500 pr-10" : "pr-10"}
             />
             <Button
@@ -383,8 +406,7 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
           <p className="text-xs text-muted-foreground">
             {employee
               ? "Để trống nếu không muốn thay đổi mật khẩu hiện tại"
-              : "Nếu để trống, CCCD sẽ được sử dụng làm mật khẩu mặc định"
-            }
+              : "Nếu để trống, CCCD sẽ được sử dụng làm mật khẩu mặc định"}
           </p>
         </div>
 
@@ -416,8 +438,8 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
           <Select
             value={formData.department}
             onValueChange={(value) => {
-              handleInputChange("department", value)
-              handleClearSearch() // Clear search after selection
+              handleInputChange("department", value);
+              handleClearSearch(); // Clear search after selection
             }}
             onOpenChange={handleSelectOpenChange}
             disabled={loading}
@@ -439,10 +461,13 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
                     spellCheck={false}
                     onBlur={(e) => {
                       // Prevent blur if clicking within SelectContent
-                      const relatedTarget = e.relatedTarget as HTMLElement
-                      if (relatedTarget && relatedTarget.closest('[role="option"]')) {
-                        e.preventDefault()
-                        searchInputRef.current?.focus()
+                      const relatedTarget = e.relatedTarget as HTMLElement;
+                      if (
+                        relatedTarget &&
+                        relatedTarget.closest('[role="option"]')
+                      ) {
+                        e.preventDefault();
+                        searchInputRef.current?.focus();
                       }
                     }}
                   />
@@ -507,5 +532,5 @@ export default function EmployeeForm({ employee, onSuccess }: EmployeeFormProps)
         </Button>
       </div>
     </form>
-  )
+  );
 }

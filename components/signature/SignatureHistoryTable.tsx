@@ -1,12 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import {
   FileSpreadsheet,
   Search,
@@ -16,54 +22,54 @@ import {
   Calendar,
   User,
   FileText,
-  Clock
-} from "lucide-react"
+  Clock,
+} from "lucide-react";
 
 interface SignatureRecord {
-  id: string
-  signature_type: 'giam_doc' | 'ke_toan' | 'nguoi_lap_bieu'
-  salary_month: string
-  signed_by_id: string
-  signed_by_name: string
-  department: string
-  signed_at: string
-  notes?: string
-  ip_address?: string
-  device_info?: string
+  id: string;
+  signature_type: "giam_doc" | "ke_toan" | "nguoi_lap_bieu";
+  salary_month: string;
+  signed_by_id: string;
+  signed_by_name: string;
+  department: string;
+  signed_at: string;
+  notes?: string;
+  ip_address?: string;
+  device_info?: string;
 }
 
 interface SignatureHistoryTableProps {
-  signatures: SignatureRecord[]
-  loading?: boolean
+  signatures: SignatureRecord[];
+  loading?: boolean;
   pagination?: {
-    total: number
-    limit: number
-    offset: number
-    has_more: boolean
-    current_page: number
-    total_pages: number
-  }
-  onPageChange?: (page: number) => void
+    total: number;
+    limit: number;
+    offset: number;
+    has_more: boolean;
+    current_page: number;
+    total_pages: number;
+  };
+  onPageChange?: (page: number) => void;
   onFilterChange?: (filters: {
-    search?: string
-    signature_type?: string
-    month?: string
-  }) => void
-  showFilters?: boolean
-  className?: string
+    search?: string;
+    signature_type?: string;
+    month?: string;
+  }) => void;
+  showFilters?: boolean;
+  className?: string;
 }
 
 const SIGNATURE_TYPE_LABELS = {
-  giam_doc: 'Giám Đốc',
-  ke_toan: 'Kế Toán',
-  nguoi_lap_bieu: 'Người Lập Biểu'
-}
+  giam_doc: "Giám Đốc",
+  ke_toan: "Kế Toán",
+  nguoi_lap_bieu: "Người Lập Biểu",
+};
 
 const SIGNATURE_TYPE_COLORS = {
-  giam_doc: 'bg-blue-100 text-blue-800',
-  ke_toan: 'bg-green-100 text-green-800',
-  nguoi_lap_bieu: 'bg-purple-100 text-purple-800'
-}
+  giam_doc: "bg-blue-100 text-blue-800",
+  ke_toan: "bg-green-100 text-green-800",
+  nguoi_lap_bieu: "bg-purple-100 text-purple-800",
+};
 
 export default function SignatureHistoryTable({
   signatures,
@@ -72,43 +78,43 @@ export default function SignatureHistoryTable({
   onPageChange,
   onFilterChange,
   showFilters = true,
-  className = ""
+  className = "",
 }: SignatureHistoryTableProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedType, setSelectedType] = useState<string>("")
-  const [selectedMonth, setSelectedMonth] = useState<string>("")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
 
   const handleFilterChange = () => {
     if (onFilterChange) {
       onFilterChange({
         search: searchTerm || undefined,
         signature_type: selectedType || undefined,
-        month: selectedMonth || undefined
-      })
+        month: selectedMonth || undefined,
+      });
     }
-  }
+  };
 
   const clearFilters = () => {
-    setSearchTerm("")
-    setSelectedType("")
-    setSelectedMonth("")
+    setSearchTerm("");
+    setSelectedType("");
+    setSelectedMonth("");
     if (onFilterChange) {
-      onFilterChange({})
+      onFilterChange({});
     }
-  }
+  };
 
   // Use centralized Vietnam timezone formatting
-  const formatDateTime = formatVietnamTimestamp
+  const formatDateTime = formatVietnamTimestamp;
 
   const formatMonth = (monthString: string) => {
-    const [year, month] = monthString.split('-')
-    return `${month}/${year}`
-  }
+    const [year, month] = monthString.split("-");
+    return `${month}/${year}`;
+  };
 
   const getUniqueMonths = () => {
-    const months = [...new Set(signatures.map(sig => sig.salary_month))]
-    return months.sort().reverse()
-  }
+    const months = [...new Set(signatures.map((sig) => sig.salary_month))];
+    return months.sort().reverse();
+  };
 
   return (
     <Card className={`${className}`}>
@@ -123,7 +129,7 @@ export default function SignatureHistoryTable({
           )}
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {showFilters && (
           <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
@@ -140,7 +146,7 @@ export default function SignatureHistoryTable({
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Loại chữ ký:</label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
@@ -151,11 +157,13 @@ export default function SignatureHistoryTable({
                     <SelectItem value="">Tất cả</SelectItem>
                     <SelectItem value="giam_doc">Giám Đốc</SelectItem>
                     <SelectItem value="ke_toan">Kế Toán</SelectItem>
-                    <SelectItem value="nguoi_lap_bieu">Người Lập Biểu</SelectItem>
+                    <SelectItem value="nguoi_lap_bieu">
+                      Người Lập Biểu
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tháng:</label>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -164,7 +172,7 @@ export default function SignatureHistoryTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Tất cả</SelectItem>
-                    {getUniqueMonths().map(month => (
+                    {getUniqueMonths().map((month) => (
                       <SelectItem key={month} value={month}>
                         {formatMonth(month)}
                       </SelectItem>
@@ -172,7 +180,7 @@ export default function SignatureHistoryTable({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Hành động:</label>
                 <div className="flex gap-2">
@@ -202,29 +210,43 @@ export default function SignatureHistoryTable({
         ) : (
           <div className="space-y-3">
             {signatures.map((signature) => (
-              <div key={signature.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div
+                key={signature.id}
+                className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-3">
-                      <Badge className={SIGNATURE_TYPE_COLORS[signature.signature_type]}>
+                      <Badge
+                        className={
+                          SIGNATURE_TYPE_COLORS[signature.signature_type]
+                        }
+                      >
                         {SIGNATURE_TYPE_LABELS[signature.signature_type]}
                       </Badge>
-                      <Badge variant="outline" className="flex items-center gap-1">
+                      <Badge
+                        variant="outline"
+                        className="flex items-center gap-1"
+                      >
                         <Calendar className="h-3 w-3" />
                         {formatMonth(signature.salary_month)}
                       </Badge>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium">{signature.signed_by_name}</span>
-                      <span className="text-gray-500">({signature.signed_by_id})</span>
+                      <span className="font-medium">
+                        {signature.signed_by_name}
+                      </span>
+                      <span className="text-gray-500">
+                        ({signature.signed_by_id})
+                      </span>
                     </div>
-                    
+
                     <div className="text-sm text-gray-600">
                       <span>{signature.department}</span>
                     </div>
-                    
+
                     {signature.notes && (
                       <div className="flex items-start gap-2 text-sm">
                         <FileText className="h-4 w-4 text-gray-400 mt-0.5" />
@@ -232,7 +254,7 @@ export default function SignatureHistoryTable({
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="text-right space-y-1">
                     <div className="flex items-center gap-1 text-sm text-gray-600">
                       <Clock className="h-3 w-3" />
@@ -253,10 +275,10 @@ export default function SignatureHistoryTable({
         {pagination && pagination.total_pages > 1 && (
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="text-sm text-gray-600">
-              Trang {pagination.current_page} / {pagination.total_pages} 
-              ({pagination.total} bản ghi)
+              Trang {pagination.current_page} / {pagination.total_pages}(
+              {pagination.total} bản ghi)
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -267,24 +289,31 @@ export default function SignatureHistoryTable({
                 <ChevronLeft className="h-4 w-4" />
                 Trước
               </Button>
-              
+
               <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                  const page = i + 1
-                  return (
-                    <Button
-                      key={page}
-                      variant={page === pagination.current_page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => onPageChange?.(page)}
-                      className="w-8 h-8 p-0"
-                    >
-                      {page}
-                    </Button>
-                  )
-                })}
+                {Array.from(
+                  { length: Math.min(5, pagination.total_pages) },
+                  (_, i) => {
+                    const page = i + 1;
+                    return (
+                      <Button
+                        key={page}
+                        variant={
+                          page === pagination.current_page
+                            ? "default"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() => onPageChange?.(page)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  },
+                )}
               </div>
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -299,5 +328,5 @@ export default function SignatureHistoryTable({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

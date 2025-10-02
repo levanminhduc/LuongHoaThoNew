@@ -7,6 +7,7 @@ Hệ thống cấu hình import Excel linh hoạt cho dự án MAY HÒA THỌ Đ
 ## 🎯 **FEATURES CHÍNH**
 
 ### **1. Admin Configuration Management**
+
 - ✅ Trang admin riêng biệt `/admin/column-mapping-config`
 - ✅ Quản lý 39 database fields với labels hiện tại
 - ✅ Định nghĩa multiple aliases cho mỗi cột
@@ -14,6 +15,7 @@ Hệ thống cấu hình import Excel linh hoạt cho dự án MAY HÒA THỌ Đ
 - ✅ Lưu trữ configuration trong database
 
 ### **2. Enhanced Auto-Mapping System**
+
 - ✅ Auto-mapping sử dụng aliases từ database
 - ✅ Confidence levels cho mỗi mapping match
 - ✅ Fuzzy matching cho tên cột tương tự
@@ -21,6 +23,7 @@ Hệ thống cấu hình import Excel linh hoạt cho dự án MAY HÒA THỌ Đ
 - ✅ Auto-save successful mappings
 
 ### **3. Comprehensive Validation**
+
 - ✅ Đảm bảo mỗi database field chỉ map với 1 Excel column
 - ✅ Warning cho ambiguous mappings
 - ✅ Preview data trước khi import
@@ -28,6 +31,7 @@ Hệ thống cấu hình import Excel linh hoạt cho dự án MAY HÒA THỌ Đ
 - ✅ Error prevention và conflict detection
 
 ### **4. Backward Compatibility**
+
 - ✅ Maintain compatibility với auto-mapping hiện tại
 - ✅ Existing components vẫn hoạt động bình thường
 - ✅ Progressive enhancement approach
@@ -35,6 +39,7 @@ Hệ thống cấu hình import Excel linh hoạt cho dự án MAY HÒA THỌ Đ
 ## 🏗️ **ARCHITECTURE**
 
 ### **Database Schema:**
+
 ```sql
 -- Column aliases storage
 CREATE TABLE column_aliases (
@@ -69,6 +74,7 @@ CREATE TABLE configuration_field_mappings (
 ```
 
 ### **API Endpoints:**
+
 ```
 GET    /api/admin/column-aliases              # List aliases with filters
 POST   /api/admin/column-aliases              # Create new alias
@@ -83,6 +89,7 @@ PUT    /api/admin/mapping-configurations      # Save successful mapping
 ```
 
 ### **Key Components:**
+
 ```
 lib/column-alias-config.ts                   # TypeScript interfaces
 lib/advanced-excel-parser.ts                 # Enhanced auto-mapping
@@ -101,7 +108,7 @@ app/admin/test-column-mapping/page.tsx       # Testing interface
 // Auto-mapping với aliases support
 export async function autoMapColumnsWithAliases(
   detectedColumns: string[],
-  aliases: ColumnAlias[] = []
+  aliases: ColumnAlias[] = [],
 ): Promise<ImportMappingResult> {
   // 1. Exact alias matches (highest priority)
   // 2. Exact field name matches
@@ -112,6 +119,7 @@ export async function autoMapColumnsWithAliases(
 ```
 
 **Confidence Scoring:**
+
 - **100%**: Exact field name match
 - **95-100%**: Exact alias match (based on alias confidence)
 - **60-80%**: Fuzzy alias match
@@ -134,6 +142,7 @@ export class EnhancedImportValidator {
 ```
 
 **Validation Levels:**
+
 - **Critical Errors**: Missing required fields, duplicate mappings
 - **High Errors**: Very low confidence mappings (<30%)
 - **Warnings**: Low confidence mappings (30-50%)
@@ -142,6 +151,7 @@ export class EnhancedImportValidator {
 ### **3. Column Mapping Dialog Enhancements**
 
 **New Features:**
+
 - Confidence level display với color coding
 - Mapping type indicators (exact, alias, fuzzy, manual)
 - Advanced view với detailed information
@@ -149,6 +159,7 @@ export class EnhancedImportValidator {
 - Real-time validation feedback
 
 **UI Improvements:**
+
 - Progress indicators cho confidence levels
 - Conflict detection và resolution
 - Suggestion system cho unmapped columns
@@ -157,17 +168,31 @@ export class EnhancedImportValidator {
 ## 📊 **USAGE EXAMPLES**
 
 ### **Example 1: Basic Alias Setup**
+
 ```typescript
 // Admin tạo aliases cho employee_id field
 const aliases = [
-  { database_field: "employee_id", alias_name: "Mã Nhân Viên", confidence_score: 95 },
+  {
+    database_field: "employee_id",
+    alias_name: "Mã Nhân Viên",
+    confidence_score: 95,
+  },
   { database_field: "employee_id", alias_name: "Mã NV", confidence_score: 90 },
-  { database_field: "employee_id", alias_name: "Employee ID", confidence_score: 85 },
-  { database_field: "employee_id", alias_name: "ID Nhân Viên", confidence_score: 85 }
-]
+  {
+    database_field: "employee_id",
+    alias_name: "Employee ID",
+    confidence_score: 85,
+  },
+  {
+    database_field: "employee_id",
+    alias_name: "ID Nhân Viên",
+    confidence_score: 85,
+  },
+];
 ```
 
 ### **Example 2: Auto-Mapping Process**
+
 ```typescript
 // Excel columns detected
 const excelColumns = ["Mã NV", "Tháng Lương", "Lương CB", "Thực Nhận"]
@@ -178,15 +203,15 @@ const result = await autoMapColumnsWithAliases(excelColumns, aliases)
 // Result:
 {
   mapping: {
-    "Mã NV": { 
-      database_field: "employee_id", 
-      confidence_score: 90, 
-      mapping_type: "alias" 
+    "Mã NV": {
+      database_field: "employee_id",
+      confidence_score: 90,
+      mapping_type: "alias"
     },
-    "Tháng Lương": { 
-      database_field: "salary_month", 
-      confidence_score: 95, 
-      mapping_type: "alias" 
+    "Tháng Lương": {
+      database_field: "salary_month",
+      confidence_score: 95,
+      mapping_type: "alias"
     }
     // ...
   },
@@ -200,6 +225,7 @@ const result = await autoMapColumnsWithAliases(excelColumns, aliases)
 ```
 
 ### **Example 3: Validation Results**
+
 ```typescript
 const validator = new EnhancedImportValidator(aliases)
 const validation = validator.validateMapping(excelColumns, mapping)
@@ -229,6 +255,7 @@ const validation = validator.validateMapping(excelColumns, mapping)
 ## 🎯 **BENEFITS**
 
 ### **For Admins:**
+
 - ✅ **No Developer Dependency**: Tự quản lý column mapping
 - ✅ **Flexible Configuration**: Thêm aliases mới dễ dàng
 - ✅ **Visual Feedback**: Confidence levels và validation
@@ -236,6 +263,7 @@ const validation = validator.validateMapping(excelColumns, mapping)
 - ✅ **Learning System**: Auto-save successful mappings
 
 ### **For System:**
+
 - ✅ **Improved Accuracy**: Smart auto-mapping với aliases
 - ✅ **Reduced Errors**: Validation và conflict detection
 - ✅ **Better UX**: Clear feedback và suggestions
@@ -243,6 +271,7 @@ const validation = validator.validateMapping(excelColumns, mapping)
 - ✅ **Scalability**: Easy to add new fields và aliases
 
 ### **For Business:**
+
 - ✅ **Time Savings**: Faster import process
 - ✅ **Reduced Downtime**: No waiting for developer fixes
 - ✅ **Data Accuracy**: Better mapping accuracy
@@ -251,18 +280,21 @@ const validation = validator.validateMapping(excelColumns, mapping)
 ## 🚀 **DEPLOYMENT GUIDE**
 
 ### **1. Database Setup**
+
 ```sql
 -- Run migration script
 \i scripts/supabase-setup/12-create-column-alias-tables.sql
 ```
 
 ### **2. Default Data**
+
 ```sql
 -- Default aliases được tự động insert
 -- Có thể thêm more aliases qua admin interface
 ```
 
 ### **3. Feature Activation**
+
 ```typescript
 // Enable enhanced mapping trong components
 <ColumnMappingDialog
@@ -273,6 +305,7 @@ const validation = validator.validateMapping(excelColumns, mapping)
 ```
 
 ### **4. Admin Access**
+
 ```
 1. Login as admin
 2. Navigate to /admin/column-mapping-config
@@ -283,11 +316,13 @@ const validation = validator.validateMapping(excelColumns, mapping)
 ## 🧪 **TESTING**
 
 ### **Test Pages:**
+
 - `/admin/test-column-mapping` - Comprehensive testing interface
 - Test scenarios: Basic, Problematic, Validation
 - Real-time feedback và results
 
 ### **Test Cases:**
+
 1. **Basic Test**: Vietnamese column names
 2. **Problematic Test**: English và non-standard names
 3. **Validation Test**: Error detection và prevention
@@ -296,6 +331,7 @@ const validation = validator.validateMapping(excelColumns, mapping)
 ## 📈 **FUTURE ENHANCEMENTS**
 
 ### **Phase 2 Features:**
+
 - [ ] Machine learning cho auto-improvement
 - [ ] Bulk alias import từ Excel
 - [ ] Advanced analytics cho mapping success rates
@@ -303,6 +339,7 @@ const validation = validator.validateMapping(excelColumns, mapping)
 - [ ] API integration với external systems
 
 ### **Advanced Features:**
+
 - [ ] Column data type detection
 - [ ] Smart suggestions based on data content
 - [ ] Automated alias generation

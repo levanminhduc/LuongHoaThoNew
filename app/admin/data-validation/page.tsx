@@ -1,194 +1,201 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table"
-import { 
-  RefreshCw, 
-  AlertTriangle, 
-  CheckCircle, 
-  Users, 
-  UserCheck, 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle,
+  Users,
+  UserCheck,
   UserX,
   Calendar,
-  Database
-} from "lucide-react"
+  Database,
+} from "lucide-react";
 
 interface ValidationStats {
-  totalEmployees: number
-  employeesWithPayroll: number
-  missingEmployees: number
-  percentage: number
+  totalEmployees: number;
+  employeesWithPayroll: number;
+  missingEmployees: number;
+  percentage: number;
 }
 
 interface MissingEmployee {
-  employee_id: string
-  full_name: string
-  department: string
-  chuc_vu: string
-  is_active: boolean
+  employee_id: string;
+  full_name: string;
+  department: string;
+  chuc_vu: string;
+  is_active: boolean;
 }
 
 interface ValidationData {
-  success: boolean
-  stats: ValidationStats
-  missingEmployees: MissingEmployee[]
-  selectedMonth: string
-  cacheTimestamp?: string
+  success: boolean;
+  stats: ValidationStats;
+  missingEmployees: MissingEmployee[];
+  selectedMonth: string;
+  cacheTimestamp?: string;
 }
 
 export default function DataValidationPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [data, setData] = useState<ValidationData | null>(null)
-  const [selectedMonth, setSelectedMonth] = useState("")
-  const [error, setError] = useState("")
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [data, setData] = useState<ValidationData | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [error, setError] = useState("");
 
   // Generate month options (current month and previous 12 months)
   const generateMonthOptions = () => {
-    const options = []
-    const now = new Date()
-    
-    for (let i = 0; i < 13; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const value = `${year}-${month}`
-      const label = `${month}/${year}`
-      
-      options.push({ value, label })
-    }
-    
-    return options
-  }
+    const options = [];
+    const now = new Date();
 
-  const monthOptions = generateMonthOptions()
+    for (let i = 0; i < 13; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const value = `${year}-${month}`;
+      const label = `${month}/${year}`;
+
+      options.push({ value, label });
+    }
+
+    return options;
+  };
+
+  const monthOptions = generateMonthOptions();
 
   useEffect(() => {
     // Check authentication
-    const token = localStorage.getItem("admin_token")
-    const userStr = localStorage.getItem("user_info")
+    const token = localStorage.getItem("admin_token");
+    const userStr = localStorage.getItem("user_info");
 
     if (!token || !userStr) {
-      router.push("/admin/login")
-      return
+      router.push("/admin/login");
+      return;
     }
 
     try {
-      const userData = JSON.parse(userStr)
-      if (userData.role !== 'admin') {
-        router.push("/admin/login")
-        return
+      const userData = JSON.parse(userStr);
+      if (userData.role !== "admin") {
+        router.push("/admin/login");
+        return;
       }
     } catch (error) {
-      console.error("Error parsing user info:", error)
-      router.push("/admin/login")
-      return
+      console.error("Error parsing user info:", error);
+      router.push("/admin/login");
+      return;
     }
 
     // Set default month to current month
     if (!selectedMonth) {
-      const currentMonth = getCurrentMonth()
-      setSelectedMonth(currentMonth)
+      const currentMonth = getCurrentMonth();
+      setSelectedMonth(currentMonth);
     }
-  }, [router, selectedMonth])
+  }, [router, selectedMonth]);
 
   useEffect(() => {
     if (selectedMonth) {
-      fetchValidationData(false)
+      fetchValidationData(false);
     }
-  }, [selectedMonth])
+  }, [selectedMonth]);
 
   const getCurrentMonth = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    return `${year}-${month}`
-  }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  };
 
   const fetchValidationData = async (forceRefresh = false) => {
-    if (!selectedMonth) return
+    if (!selectedMonth) return;
 
     try {
-      setLoading(!forceRefresh)
-      setRefreshing(forceRefresh)
-      setError("")
+      setLoading(!forceRefresh);
+      setRefreshing(forceRefresh);
+      setError("");
 
-      const token = localStorage.getItem("admin_token")
-      const url = `/api/admin/data-validation?month=${selectedMonth}${forceRefresh ? '&force_refresh=true' : ''}`
-      
+      const token = localStorage.getItem("admin_token");
+      const url = `/api/admin/data-validation?month=${selectedMonth}${forceRefresh ? "&force_refresh=true" : ""}`;
+
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
 
       if (response.ok) {
-        const result = await response.json()
-        setData(result)
+        const result = await response.json();
+        setData(result);
       } else if (response.status === 401) {
-        localStorage.removeItem("admin_token")
-        localStorage.removeItem("user_info")
-        router.push("/admin/login")
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("user_info");
+        router.push("/admin/login");
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || "Lỗi khi tải dữ liệu")
+        const errorData = await response.json();
+        setError(errorData.error || "Lỗi khi tải dữ liệu");
       }
     } catch (error) {
-      console.error("Error fetching validation data:", error)
-      setError("Lỗi kết nối server")
+      console.error("Error fetching validation data:", error);
+      setError("Lỗi kết nối server");
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   const handleRefresh = () => {
-    fetchValidationData(true)
-  }
+    fetchValidationData(true);
+  };
 
   const getStatusColor = (percentage: number) => {
-    if (percentage >= 95) return "text-green-600"
-    if (percentage >= 80) return "text-yellow-600"
-    return "text-red-600"
-  }
+    if (percentage >= 95) return "text-green-600";
+    if (percentage >= 80) return "text-yellow-600";
+    return "text-red-600";
+  };
 
   const getStatusIcon = (percentage: number) => {
-    if (percentage >= 95) return <CheckCircle className="h-5 w-5 text-green-600" />
-    return <AlertTriangle className="h-5 w-5 text-yellow-600" />
-  }
+    if (percentage >= 95)
+      return <CheckCircle className="h-5 w-5 text-green-600" />;
+    return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+  };
 
   const formatChucVu = (chucVu: string) => {
     const mapping: { [key: string]: string } = {
-      'admin': 'Admin',
-      'giam_doc': 'Giám Đốc',
-      'ke_toan': 'Kế Toán',
-      'nguoi_lap_bieu': 'Người Lập Biểu',
-      'truong_phong': 'Trưởng Phòng',
-      'to_truong': 'Tổ Trưởng',
-      'nhan_vien': 'Nhân Viên'
-    }
-    return mapping[chucVu] || chucVu
-  }
+      admin: "Admin",
+      giam_doc: "Giám Đốc",
+      ke_toan: "Kế Toán",
+      nguoi_lap_bieu: "Người Lập Biểu",
+      truong_phong: "Trưởng Phòng",
+      to_truong: "Tổ Trưởng",
+      nhan_vien: "Nhân Viên",
+    };
+    return mapping[chucVu] || chucVu;
+  };
 
   if (loading) {
     return (
@@ -200,7 +207,7 @@ export default function DataValidationPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -208,12 +215,14 @@ export default function DataValidationPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Kiểm Tra Dữ Liệu Lương</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Kiểm Tra Dữ Liệu Lương
+          </h1>
           <p className="text-muted-foreground">
             So sánh danh sách nhân viên với dữ liệu lương để phát hiện thiếu sót
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-[140px]">
@@ -228,14 +237,16 @@ export default function DataValidationPage() {
               ))}
             </SelectContent>
           </Select>
-          
-          <Button 
-            onClick={handleRefresh} 
+
+          <Button
+            onClick={handleRefresh}
             disabled={refreshing}
             variant="outline"
             size="sm"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+            />
             Làm mới
           </Button>
         </div>
@@ -255,11 +266,15 @@ export default function DataValidationPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Tổng Nhân Viên</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Tổng Nhân Viên
+                </CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.stats.totalEmployees}</div>
+                <div className="text-2xl font-bold">
+                  {data.stats.totalEmployees}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Nhân viên đang hoạt động
                 </p>
@@ -268,7 +283,9 @@ export default function DataValidationPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Có Dữ Liệu Lương</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Có Dữ Liệu Lương
+                </CardTitle>
                 <UserCheck className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -276,14 +293,17 @@ export default function DataValidationPage() {
                   {data.stats.employeesWithPayroll}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Đã có lương tháng {selectedMonth.split('-')[1]}/{selectedMonth.split('-')[0]}
+                  Đã có lương tháng {selectedMonth.split("-")[1]}/
+                  {selectedMonth.split("-")[0]}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Thiếu Dữ Liệu</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Thiếu Dữ Liệu
+                </CardTitle>
                 <UserX className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
@@ -298,11 +318,15 @@ export default function DataValidationPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Tỷ Lệ Hoàn Thành</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Tỷ Lệ Hoàn Thành
+                </CardTitle>
                 {getStatusIcon(data.stats.percentage)}
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${getStatusColor(data.stats.percentage)}`}>
+                <div
+                  className={`text-2xl font-bold ${getStatusColor(data.stats.percentage)}`}
+                >
                   {data.stats.percentage}%
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -317,8 +341,9 @@ export default function DataValidationPage() {
             <Alert>
               <Database className="h-4 w-4" />
               <AlertDescription>
-                Dữ liệu được cache lúc: {new Date(data.cacheTimestamp).toLocaleString('vi-VN')}
-                {' '}(Cache 24h để tối ưu hiệu suất)
+                Dữ liệu được cache lúc:{" "}
+                {new Date(data.cacheTimestamp).toLocaleString("vi-VN")} (Cache
+                24h để tối ưu hiệu suất)
               </AlertDescription>
             </Alert>
           )}
@@ -334,7 +359,8 @@ export default function DataValidationPage() {
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Những nhân viên chưa có dữ liệu lương cho tháng {selectedMonth.split('-')[1]}/{selectedMonth.split('-')[0]}
+                Những nhân viên chưa có dữ liệu lương cho tháng{" "}
+                {selectedMonth.split("-")[1]}/{selectedMonth.split("-")[0]}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -357,7 +383,9 @@ export default function DataValidationPage() {
                         <TableHead>Họ Tên</TableHead>
                         <TableHead>Phòng Ban</TableHead>
                         <TableHead>Chức Vụ</TableHead>
-                        <TableHead className="text-center">Trạng Thái</TableHead>
+                        <TableHead className="text-center">
+                          Trạng Thái
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -376,17 +404,29 @@ export default function DataValidationPage() {
                           </TableCell>
                           <TableCell>
                             <Badge
-                              variant={employee.chuc_vu === 'nhan_vien' ? 'secondary' : 'default'}
+                              variant={
+                                employee.chuc_vu === "nhan_vien"
+                                  ? "secondary"
+                                  : "default"
+                              }
                             >
                               {formatChucVu(employee.chuc_vu)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge
-                              variant={employee.is_active ? 'default' : 'destructive'}
-                              className={employee.is_active ? 'bg-green-100 text-green-800' : ''}
+                              variant={
+                                employee.is_active ? "default" : "destructive"
+                              }
+                              className={
+                                employee.is_active
+                                  ? "bg-green-100 text-green-800"
+                                  : ""
+                              }
                             >
-                              {employee.is_active ? 'Hoạt động' : 'Không hoạt động'}
+                              {employee.is_active
+                                ? "Hoạt động"
+                                : "Không hoạt động"}
                             </Badge>
                           </TableCell>
                         </TableRow>
@@ -408,10 +448,28 @@ export default function DataValidationPage() {
                 <div className="space-y-2">
                   <h4 className="font-semibold">Thống Kê Chi Tiết:</h4>
                   <ul className="text-sm space-y-1">
-                    <li>• Tổng số nhân viên: <strong>{data.stats.totalEmployees}</strong></li>
-                    <li>• Đã có lương: <strong className="text-green-600">{data.stats.employeesWithPayroll}</strong></li>
-                    <li>• Chưa có lương: <strong className="text-red-600">{data.stats.missingEmployees}</strong></li>
-                    <li>• Tỷ lệ hoàn thành: <strong className={getStatusColor(data.stats.percentage)}>{data.stats.percentage}%</strong></li>
+                    <li>
+                      • Tổng số nhân viên:{" "}
+                      <strong>{data.stats.totalEmployees}</strong>
+                    </li>
+                    <li>
+                      • Đã có lương:{" "}
+                      <strong className="text-green-600">
+                        {data.stats.employeesWithPayroll}
+                      </strong>
+                    </li>
+                    <li>
+                      • Chưa có lương:{" "}
+                      <strong className="text-red-600">
+                        {data.stats.missingEmployees}
+                      </strong>
+                    </li>
+                    <li>
+                      • Tỷ lệ hoàn thành:{" "}
+                      <strong className={getStatusColor(data.stats.percentage)}>
+                        {data.stats.percentage}%
+                      </strong>
+                    </li>
                   </ul>
                 </div>
 
@@ -421,7 +479,9 @@ export default function DataValidationPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push('/admin/payroll-import-export')}
+                      onClick={() =>
+                        router.push("/admin/payroll-import-export")
+                      }
                       className="w-full justify-start"
                     >
                       📁 Nhập Dữ Liệu Lương
@@ -429,7 +489,7 @@ export default function DataValidationPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push('/admin/payroll-management')}
+                      onClick={() => router.push("/admin/payroll-management")}
                       className="w-full justify-start"
                     >
                       📊 Quản Lý Lương
@@ -437,7 +497,7 @@ export default function DataValidationPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push('/admin/dashboard')}
+                      onClick={() => router.push("/admin/dashboard")}
                       className="w-full justify-start"
                     >
                       🏠 Về Dashboard
@@ -450,5 +510,5 @@ export default function DataValidationPage() {
         </>
       )}
     </div>
-  )
+  );
 }

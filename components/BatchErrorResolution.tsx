@@ -1,223 +1,261 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  CheckCircle, 
-  AlertTriangle, 
+import { useState, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  CheckCircle,
+  AlertTriangle,
   XCircle,
   Wand2,
   Undo2,
   Redo2,
   Download,
-  Upload
-} from "lucide-react"
+  Upload,
+} from "lucide-react";
 
 interface ImportError {
-  row: number
-  column?: string
-  field?: string
-  value?: any
-  errorType: "validation" | "format" | "duplicate" | "database" | "system"
-  severity: "low" | "medium" | "high" | "critical"
-  message: string
-  suggestion?: string
-  expectedFormat?: string
-  currentValue?: string
+  row: number;
+  column?: string;
+  field?: string;
+  value?: any;
+  errorType: "validation" | "format" | "duplicate" | "database" | "system";
+  severity: "low" | "medium" | "high" | "critical";
+  message: string;
+  suggestion?: string;
+  expectedFormat?: string;
+  currentValue?: string;
 }
 
 interface ErrorFix {
-  errorIndex: number
-  originalError: ImportError
-  fixType: "manual" | "auto" | "pattern"
-  newValue: any
-  confidence: "high" | "medium" | "low"
-  applied: boolean
+  errorIndex: number;
+  originalError: ImportError;
+  fixType: "manual" | "auto" | "pattern";
+  newValue: any;
+  confidence: "high" | "medium" | "low";
+  applied: boolean;
 }
 
 interface BatchErrorResolutionProps {
-  errors: ImportError[]
-  onApplyFixes?: (fixes: ErrorFix[]) => void
-  onExportErrors?: () => void
-  className?: string
+  errors: ImportError[];
+  onApplyFixes?: (fixes: ErrorFix[]) => void;
+  onExportErrors?: () => void;
+  className?: string;
 }
 
 export function BatchErrorResolution({
   errors,
   onApplyFixes,
   onExportErrors,
-  className = ""
+  className = "",
 }: BatchErrorResolutionProps) {
-  const [selectedErrors, setSelectedErrors] = useState<Set<number>>(new Set())
-  const [fixes, setFixes] = useState<ErrorFix[]>([])
-  const [undoStack, setUndoStack] = useState<ErrorFix[][]>([])
-  const [redoStack, setRedoStack] = useState<ErrorFix[][]>([])
-  const [batchFixValue, setBatchFixValue] = useState("")
-  const [activeTab, setActiveTab] = useState("errors")
+  const [selectedErrors, setSelectedErrors] = useState<Set<number>>(new Set());
+  const [fixes, setFixes] = useState<ErrorFix[]>([]);
+  const [undoStack, setUndoStack] = useState<ErrorFix[][]>([]);
+  const [redoStack, setRedoStack] = useState<ErrorFix[][]>([]);
+  const [batchFixValue, setBatchFixValue] = useState("");
+  const [activeTab, setActiveTab] = useState("errors");
 
   // Group errors by type and field
   const errorGroups = {
-    byType: errors.reduce((acc, error, index) => {
-      if (!acc[error.errorType]) acc[error.errorType] = []
-      acc[error.errorType].push({ ...error, index })
-      return acc
-    }, {} as Record<string, (ImportError & { index: number })[]>),
-    
-    byField: errors.reduce((acc, error, index) => {
-      const field = error.field || "unknown"
-      if (!acc[field]) acc[field] = []
-      acc[field].push({ ...error, index })
-      return acc
-    }, {} as Record<string, (ImportError & { index: number })[]>),
-    
-    bySeverity: errors.reduce((acc, error, index) => {
-      if (!acc[error.severity]) acc[error.severity] = []
-      acc[error.severity].push({ ...error, index })
-      return acc
-    }, {} as Record<string, (ImportError & { index: number })[]>)
-  }
+    byType: errors.reduce(
+      (acc, error, index) => {
+        if (!acc[error.errorType]) acc[error.errorType] = [];
+        acc[error.errorType].push({ ...error, index });
+        return acc;
+      },
+      {} as Record<string, (ImportError & { index: number })[]>,
+    ),
+
+    byField: errors.reduce(
+      (acc, error, index) => {
+        const field = error.field || "unknown";
+        if (!acc[field]) acc[field] = [];
+        acc[field].push({ ...error, index });
+        return acc;
+      },
+      {} as Record<string, (ImportError & { index: number })[]>,
+    ),
+
+    bySeverity: errors.reduce(
+      (acc, error, index) => {
+        if (!acc[error.severity]) acc[error.severity] = [];
+        acc[error.severity].push({ ...error, index });
+        return acc;
+      },
+      {} as Record<string, (ImportError & { index: number })[]>,
+    ),
+  };
 
   const toggleErrorSelection = useCallback((errorIndex: number) => {
-    setSelectedErrors(prev => {
-      const newSet = new Set(prev)
+    setSelectedErrors((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(errorIndex)) {
-        newSet.delete(errorIndex)
+        newSet.delete(errorIndex);
       } else {
-        newSet.add(errorIndex)
+        newSet.add(errorIndex);
       }
-      return newSet
-    })
-  }, [])
+      return newSet;
+    });
+  }, []);
 
   const selectAllInGroup = useCallback((errorIndices: number[]) => {
-    setSelectedErrors(prev => {
-      const newSet = new Set(prev)
-      errorIndices.forEach(index => newSet.add(index))
-      return newSet
-    })
-  }, [])
+    setSelectedErrors((prev) => {
+      const newSet = new Set(prev);
+      errorIndices.forEach((index) => newSet.add(index));
+      return newSet;
+    });
+  }, []);
 
   const clearSelection = useCallback(() => {
-    setSelectedErrors(new Set())
-  }, [])
+    setSelectedErrors(new Set());
+  }, []);
 
-  const applyBatchFix = useCallback((fixType: "manual" | "auto" | "pattern", value?: any) => {
-    const newFixes: ErrorFix[] = []
-    
-    selectedErrors.forEach(errorIndex => {
-      const error = errors[errorIndex]
-      if (error) {
-        let newValue = value
-        let confidence: "high" | "medium" | "low" = "medium"
-        
-        // Auto-generate fixes based on error type
-        if (fixType === "auto") {
-          switch (error.errorType) {
-            case "format":
-              if (error.field?.includes("date") || error.message.toLowerCase().includes("date")) {
-                newValue = "2024-01" // Default date format
-                confidence = "low"
-              } else if (error.field?.includes("number") || error.message.toLowerCase().includes("number")) {
-                newValue = 0
-                confidence = "low"
-              }
-              break
-            case "validation":
-              if (error.message.toLowerCase().includes("missing")) {
-                newValue = error.field?.includes("id") ? "AUTO_GENERATED" : "DEFAULT_VALUE"
-                confidence = "low"
-              }
-              break
-            case "duplicate":
-              newValue = `${error.value}_${Date.now()}`
-              confidence = "medium"
-              break
+  const applyBatchFix = useCallback(
+    (fixType: "manual" | "auto" | "pattern", value?: any) => {
+      const newFixes: ErrorFix[] = [];
+
+      selectedErrors.forEach((errorIndex) => {
+        const error = errors[errorIndex];
+        if (error) {
+          let newValue = value;
+          let confidence: "high" | "medium" | "low" = "medium";
+
+          // Auto-generate fixes based on error type
+          if (fixType === "auto") {
+            switch (error.errorType) {
+              case "format":
+                if (
+                  error.field?.includes("date") ||
+                  error.message.toLowerCase().includes("date")
+                ) {
+                  newValue = "2024-01"; // Default date format
+                  confidence = "low";
+                } else if (
+                  error.field?.includes("number") ||
+                  error.message.toLowerCase().includes("number")
+                ) {
+                  newValue = 0;
+                  confidence = "low";
+                }
+                break;
+              case "validation":
+                if (error.message.toLowerCase().includes("missing")) {
+                  newValue = error.field?.includes("id")
+                    ? "AUTO_GENERATED"
+                    : "DEFAULT_VALUE";
+                  confidence = "low";
+                }
+                break;
+              case "duplicate":
+                newValue = `${error.value}_${Date.now()}`;
+                confidence = "medium";
+                break;
+            }
           }
+
+          newFixes.push({
+            errorIndex,
+            originalError: error,
+            fixType,
+            newValue,
+            confidence,
+            applied: false,
+          });
         }
-        
-        newFixes.push({
-          errorIndex,
-          originalError: error,
-          fixType,
-          newValue,
-          confidence,
-          applied: false
-        })
-      }
-    })
-    
-    // Save current state for undo
-    setUndoStack(prev => [...prev, fixes])
-    setRedoStack([]) // Clear redo stack when new action is performed
-    
-    setFixes(prev => [...prev, ...newFixes])
-    setSelectedErrors(new Set()) // Clear selection after applying fixes
-  }, [selectedErrors, errors, fixes])
+      });
+
+      // Save current state for undo
+      setUndoStack((prev) => [...prev, fixes]);
+      setRedoStack([]); // Clear redo stack when new action is performed
+
+      setFixes((prev) => [...prev, ...newFixes]);
+      setSelectedErrors(new Set()); // Clear selection after applying fixes
+    },
+    [selectedErrors, errors, fixes],
+  );
 
   const applyPatternFix = useCallback(() => {
-    if (!batchFixValue.trim()) return
-    
-    applyBatchFix("pattern", batchFixValue.trim())
-    setBatchFixValue("")
-  }, [batchFixValue, applyBatchFix])
+    if (!batchFixValue.trim()) return;
 
-  const removeFix = useCallback((fixIndex: number) => {
-    setUndoStack(prev => [...prev, fixes])
-    setRedoStack([])
-    setFixes(prev => prev.filter((_, index) => index !== fixIndex))
-  }, [fixes])
+    applyBatchFix("pattern", batchFixValue.trim());
+    setBatchFixValue("");
+  }, [batchFixValue, applyBatchFix]);
+
+  const removeFix = useCallback(
+    (fixIndex: number) => {
+      setUndoStack((prev) => [...prev, fixes]);
+      setRedoStack([]);
+      setFixes((prev) => prev.filter((_, index) => index !== fixIndex));
+    },
+    [fixes],
+  );
 
   const undo = useCallback(() => {
     if (undoStack.length > 0) {
-      const previousState = undoStack[undoStack.length - 1]
-      setRedoStack(prev => [...prev, fixes])
-      setFixes(previousState)
-      setUndoStack(prev => prev.slice(0, -1))
+      const previousState = undoStack[undoStack.length - 1];
+      setRedoStack((prev) => [...prev, fixes]);
+      setFixes(previousState);
+      setUndoStack((prev) => prev.slice(0, -1));
     }
-  }, [undoStack, fixes])
+  }, [undoStack, fixes]);
 
   const redo = useCallback(() => {
     if (redoStack.length > 0) {
-      const nextState = redoStack[redoStack.length - 1]
-      setUndoStack(prev => [...prev, fixes])
-      setFixes(nextState)
-      setRedoStack(prev => prev.slice(0, -1))
+      const nextState = redoStack[redoStack.length - 1];
+      setUndoStack((prev) => [...prev, fixes]);
+      setFixes(nextState);
+      setRedoStack((prev) => prev.slice(0, -1));
     }
-  }, [redoStack, fixes])
+  }, [redoStack, fixes]);
 
   const applyAllFixes = useCallback(() => {
     if (onApplyFixes) {
-      onApplyFixes(fixes)
+      onApplyFixes(fixes);
     }
-  }, [fixes, onApplyFixes])
+  }, [fixes, onApplyFixes]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "critical":
-      case "high": return "text-red-600 bg-red-50 border-red-200"
-      case "medium": return "text-yellow-600 bg-yellow-50 border-yellow-200"
-      case "low": return "text-blue-600 bg-blue-50 border-blue-200"
-      default: return "text-gray-600 bg-gray-50 border-gray-200"
+      case "high":
+        return "text-red-600 bg-red-50 border-red-200";
+      case "medium":
+        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "low":
+        return "text-blue-600 bg-blue-50 border-blue-200";
+      default:
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
-  }
+  };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "validation": return "text-red-600"
-      case "format": return "text-orange-600"
-      case "duplicate": return "text-purple-600"
-      case "database": return "text-blue-600"
-      default: return "text-gray-600"
+      case "validation":
+        return "text-red-600";
+      case "format":
+        return "text-orange-600";
+      case "duplicate":
+        return "text-purple-600";
+      case "database":
+        return "text-blue-600";
+      default:
+        return "text-gray-600";
     }
-  }
+  };
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -229,7 +267,8 @@ export function BatchErrorResolution({
             Batch Error Resolution
           </CardTitle>
           <CardDescription>
-            Resolve multiple errors at once with batch operations and pattern matching
+            Resolve multiple errors at once with batch operations and pattern
+            matching
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -304,55 +343,73 @@ export function BatchErrorResolution({
 
               {/* Error Groups */}
               <div className="space-y-4">
-                {Object.entries(errorGroups.byType).map(([type, typeErrors]) => (
-                  <div key={type} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className={`font-semibold ${getTypeColor(type)}`}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)} Errors ({typeErrors.length})
-                      </h4>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => selectAllInGroup(typeErrors.map(e => e.index))}
-                      >
-                        Select All {type}
-                      </Button>
-                    </div>
-                    
-                    <ScrollArea className="h-[200px]">
-                      <div className="space-y-2">
-                        {typeErrors.map((error) => (
-                          <div
-                            key={error.index}
-                            className={`flex items-start gap-3 p-2 rounded border ${
-                              selectedErrors.has(error.index) ? "bg-blue-50 border-blue-200" : "bg-gray-50"
-                            }`}
-                          >
-                            <Checkbox
-                              checked={selectedErrors.has(error.index)}
-                              onCheckedChange={() => toggleErrorSelection(error.index)}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="outline" className={getSeverityColor(error.severity)}>
-                                  {error.severity}
-                                </Badge>
-                                <span className="text-sm text-gray-600">Row {error.row}</span>
-                                {error.field && (
-                                  <span className="text-sm text-gray-600">Field: {error.field}</span>
+                {Object.entries(errorGroups.byType).map(
+                  ([type, typeErrors]) => (
+                    <div key={type} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className={`font-semibold ${getTypeColor(type)}`}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)} Errors
+                          ({typeErrors.length})
+                        </h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            selectAllInGroup(typeErrors.map((e) => e.index))
+                          }
+                        >
+                          Select All {type}
+                        </Button>
+                      </div>
+
+                      <ScrollArea className="h-[200px]">
+                        <div className="space-y-2">
+                          {typeErrors.map((error) => (
+                            <div
+                              key={error.index}
+                              className={`flex items-start gap-3 p-2 rounded border ${
+                                selectedErrors.has(error.index)
+                                  ? "bg-blue-50 border-blue-200"
+                                  : "bg-gray-50"
+                              }`}
+                            >
+                              <Checkbox
+                                checked={selectedErrors.has(error.index)}
+                                onCheckedChange={() =>
+                                  toggleErrorSelection(error.index)
+                                }
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Badge
+                                    variant="outline"
+                                    className={getSeverityColor(error.severity)}
+                                  >
+                                    {error.severity}
+                                  </Badge>
+                                  <span className="text-sm text-gray-600">
+                                    Row {error.row}
+                                  </span>
+                                  {error.field && (
+                                    <span className="text-sm text-gray-600">
+                                      Field: {error.field}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm">{error.message}</p>
+                                {error.suggestion && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    💡 {error.suggestion}
+                                  </p>
                                 )}
                               </div>
-                              <p className="text-sm">{error.message}</p>
-                              {error.suggestion && (
-                                <p className="text-xs text-gray-500 mt-1">💡 {error.suggestion}</p>
-                              )}
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                ))}
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  ),
+                )}
               </div>
             </CardContent>
           </Card>
@@ -361,13 +418,16 @@ export function BatchErrorResolution({
         <TabsContent value="fixes" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Applied Fixes ({fixes.length})</CardTitle>
+              <CardTitle className="text-lg">
+                Applied Fixes ({fixes.length})
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {fixes.length === 0 ? (
                 <Alert>
                   <AlertDescription>
-                    No fixes applied yet. Go to Error Selection tab to select errors and apply fixes.
+                    No fixes applied yet. Go to Error Selection tab to select
+                    errors and apply fixes.
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -378,14 +438,22 @@ export function BatchErrorResolution({
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline">Row {fix.originalError.row}</Badge>
+                              <Badge variant="outline">
+                                Row {fix.originalError.row}
+                              </Badge>
                               <Badge variant="secondary">{fix.fixType}</Badge>
-                              <Badge 
-                                variant={fix.confidence === "high" ? "default" : "outline"}
+                              <Badge
+                                variant={
+                                  fix.confidence === "high"
+                                    ? "default"
+                                    : "outline"
+                                }
                                 className={
-                                  fix.confidence === "high" ? "bg-green-100 text-green-800" :
-                                  fix.confidence === "medium" ? "bg-yellow-100 text-yellow-800" :
-                                  "bg-red-100 text-red-800"
+                                  fix.confidence === "high"
+                                    ? "bg-green-100 text-green-800"
+                                    : fix.confidence === "medium"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : "bg-red-100 text-red-800"
                                 }
                               >
                                 {fix.confidence} confidence
@@ -395,7 +463,8 @@ export function BatchErrorResolution({
                               Original: {fix.originalError.message}
                             </p>
                             <p className="text-sm">
-                              <span className="font-medium">Fix:</span> {fix.newValue}
+                              <span className="font-medium">Fix:</span>{" "}
+                              {fix.newValue}
                             </p>
                           </div>
                           <Button
@@ -442,7 +511,9 @@ export function BatchErrorResolution({
 
               {/* Pattern Fix */}
               <div className="space-y-2">
-                <Label htmlFor="batch-value">Apply Same Value to All Selected</Label>
+                <Label htmlFor="batch-value">
+                  Apply Same Value to All Selected
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="batch-value"
@@ -452,7 +523,9 @@ export function BatchErrorResolution({
                   />
                   <Button
                     onClick={applyPatternFix}
-                    disabled={selectedErrors.size === 0 || !batchFixValue.trim()}
+                    disabled={
+                      selectedErrors.size === 0 || !batchFixValue.trim()
+                    }
                   >
                     Apply
                   </Button>
@@ -483,5 +556,5 @@ export function BatchErrorResolution({
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

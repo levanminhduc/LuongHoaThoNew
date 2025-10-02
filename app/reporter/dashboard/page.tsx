@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import EmployeeListModal from "@/components/EmployeeListModal"
-import OverviewModal from "@/components/OverviewModal"
-import { getPreviousMonth } from "@/utils/dateUtils"
-import { type JWTPayload } from "@/lib/auth"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import EmployeeListModal from "@/components/EmployeeListModal";
+import OverviewModal from "@/components/OverviewModal";
+import { getPreviousMonth } from "@/utils/dateUtils";
+import { type JWTPayload } from "@/lib/auth";
 import {
   FileText,
   BarChart3,
@@ -23,132 +29,132 @@ import {
   PenTool,
   FileSpreadsheet,
   LogOut,
-  Eye
-} from "lucide-react"
-import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone"
-
+  Eye,
+} from "lucide-react";
+import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
 interface MonthStatus {
-  month: string
+  month: string;
   employee_completion: {
-    total_employees: number
-    signed_employees: number
-    completion_percentage: number
-    is_100_percent_complete: boolean
-  }
+    total_employees: number;
+    signed_employees: number;
+    completion_percentage: number;
+    is_100_percent_complete: boolean;
+  };
   management_signatures: {
-    giam_doc: any
-    ke_toan: any
-    nguoi_lap_bieu: any
-  }
+    giam_doc: any;
+    ke_toan: any;
+    nguoi_lap_bieu: any;
+  };
   summary: {
-    completed_signatures: number
-    remaining_signatures: string[]
-    is_fully_signed: boolean
-  }
+    completed_signatures: number;
+    remaining_signatures: string[];
+    is_fully_signed: boolean;
+  };
 }
 
 export default function ReporterDashboard() {
-  const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState<string>(getPreviousMonth())
-  const [monthStatus, setMonthStatus] = useState<MonthStatus | null>(null)
-  const [signatureHistory, setSignatureHistory] = useState<any[]>([])
-  const [message, setMessage] = useState("")
-  const [showEmployeeModal, setShowEmployeeModal] = useState(false)
-  const [showOverviewModal, setShowOverviewModal] = useState(false)
-  const [user, setUser] = useState<JWTPayload | null>(null)
-  const [isSigning, setIsSigning] = useState(false)
-  const router = useRouter()
+  const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] =
+    useState<string>(getPreviousMonth());
+  const [monthStatus, setMonthStatus] = useState<MonthStatus | null>(null);
+  const [signatureHistory, setSignatureHistory] = useState<any[]>([]);
+  const [message, setMessage] = useState("");
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [showOverviewModal, setShowOverviewModal] = useState(false);
+  const [user, setUser] = useState<JWTPayload | null>(null);
+  const [isSigning, setIsSigning] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Load user info from localStorage
-    const userStr = localStorage.getItem("user_info")
+    const userStr = localStorage.getItem("user_info");
     if (userStr) {
       try {
-        const userData = JSON.parse(userStr)
-        setUser(userData)
+        const userData = JSON.parse(userStr);
+        setUser(userData);
       } catch (error) {
-        console.error("Error parsing user info:", error)
+        console.error("Error parsing user info:", error);
       }
     }
 
-    fetchDashboardData()
-  }, [selectedMonth])
+    fetchDashboardData();
+  }, [selectedMonth]);
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true)
-      const token = localStorage.getItem("admin_token")
+      setLoading(true);
+      const token = localStorage.getItem("admin_token");
 
       const [statusResponse, historyResponse] = await Promise.all([
         fetch(`/api/signature-status/${selectedMonth}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`/api/signature-history?signature_type=nguoi_lap_bieu&limit=10`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ])
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
       if (statusResponse.ok) {
-        const statusData = await statusResponse.json()
-        setMonthStatus(statusData)
+        const statusData = await statusResponse.json();
+        setMonthStatus(statusData);
       }
 
       if (historyResponse.ok) {
-        const historyData = await historyResponse.json()
-        setSignatureHistory(historyData.signatures || [])
+        const historyData = await historyResponse.json();
+        setSignatureHistory(historyData.signatures || []);
       }
 
       if (statusResponse.status === 401 || historyResponse.status === 401) {
-        localStorage.removeItem("admin_token")
-        router.push("/admin/login")
+        localStorage.removeItem("admin_token");
+        router.push("/admin/login");
       }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error)
-      setMessage("Lỗi khi tải dữ liệu dashboard")
+      console.error("Error fetching dashboard data:", error);
+      setMessage("Lỗi khi tải dữ liệu dashboard");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSignature = async () => {
-    if (isSigning) return
+    if (isSigning) return;
 
-    setIsSigning(true)
+    setIsSigning(true);
     try {
-      const token = localStorage.getItem("admin_token")
+      const token = localStorage.getItem("admin_token");
       const response = await fetch("/api/management-signature", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           salary_month: selectedMonth,
           signature_type: "nguoi_lap_bieu",
           notes: "Xác nhận báo cáo và thống kê lương tháng",
-          device_info: navigator.userAgent
-        })
-      })
+          device_info: navigator.userAgent,
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (data.success) {
-        setMessage("Ký xác nhận báo cáo thành công!")
-        fetchDashboardData()
+        setMessage("Ký xác nhận báo cáo thành công!");
+        fetchDashboardData();
       } else {
-        setMessage(data.error || "Có lỗi xảy ra khi ký")
+        setMessage(data.error || "Có lỗi xảy ra khi ký");
       }
     } catch (error) {
-      setMessage("Lỗi kết nối khi ký xác nhận")
+      setMessage("Lỗi kết nối khi ký xác nhận");
     } finally {
-      setIsSigning(false)
+      setIsSigning(false);
     }
-  }
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_token")
-    router.push("/admin/login")
-  }
+    localStorage.removeItem("admin_token");
+    router.push("/admin/login");
+  };
 
   if (loading) {
     return (
@@ -158,16 +164,14 @@ export default function ReporterDashboard() {
           <p className="mt-4 text-gray-600">Đang tải dashboard báo cáo...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 space-y-4 sm:space-y-0">
-            
             <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                 Dashboard Người Lập Biểu
@@ -176,7 +180,7 @@ export default function ReporterDashboard() {
                 MAY HÒA THỌ ĐIỆN BÀN - Xác nhận báo cáo và thống kê
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <Button
                 variant="outline"
@@ -201,14 +205,17 @@ export default function ReporterDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date()
-                    date.setMonth(date.getMonth() - i)
-                    const value = date.toISOString().slice(0, 7)
+                    const date = new Date();
+                    date.setMonth(date.getMonth() - i);
+                    const value = date.toISOString().slice(0, 7);
                     return (
                       <SelectItem key={value} value={value}>
-                        {date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long' })}
+                        {date.toLocaleDateString("vi-VN", {
+                          year: "numeric",
+                          month: "long",
+                        })}
                       </SelectItem>
-                    )
+                    );
                   })}
                 </SelectContent>
               </Select>
@@ -236,54 +243,79 @@ export default function ReporterDashboard() {
               onClick={() => setShowEmployeeModal(true)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Tổng Dữ Liệu</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Tổng Dữ Liệu
+                </CardTitle>
                 <Database className="h-4 w-4" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{monthStatus.employee_completion.total_employees}</div>
-                <p className="text-xs text-purple-100">Bản ghi cần báo cáo • Click để xem chi tiết</p>
+                <div className="text-2xl font-bold">
+                  {monthStatus.employee_completion.total_employees}
+                </div>
+                <p className="text-xs text-purple-100">
+                  Bản ghi cần báo cáo • Click để xem chi tiết
+                </p>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Đã Hoàn Thành</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Đã Hoàn Thành
+                </CardTitle>
                 <CheckCircle className="h-4 w-4" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{monthStatus.employee_completion.signed_employees}</div>
+                <div className="text-2xl font-bold">
+                  {monthStatus.employee_completion.signed_employees}
+                </div>
                 <p className="text-xs text-blue-100">
-                  {monthStatus.employee_completion.completion_percentage.toFixed(1)}% hoàn thành
+                  {monthStatus.employee_completion.completion_percentage.toFixed(
+                    1,
+                  )}
+                  % hoàn thành
                 </p>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Xác Nhận BC</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Xác Nhận BC
+                </CardTitle>
                 <PenTool className="h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {monthStatus.management_signatures.nguoi_lap_bieu ? "✅" : "⏳"}
+                  {monthStatus.management_signatures.nguoi_lap_bieu
+                    ? "✅"
+                    : "⏳"}
                 </div>
                 <p className="text-xs text-green-100">
-                  {monthStatus.management_signatures.nguoi_lap_bieu ? "Đã ký" : "Chờ ký"}
+                  {monthStatus.management_signatures.nguoi_lap_bieu
+                    ? "Đã ký"
+                    : "Chờ ký"}
                 </p>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Độ Chính Xác</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Độ Chính Xác
+                </CardTitle>
                 <BarChart3 className="h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {monthStatus.employee_completion.is_100_percent_complete ? "100%" : "CHƯA"}
+                  {monthStatus.employee_completion.is_100_percent_complete
+                    ? "100%"
+                    : "CHƯA"}
                 </div>
                 <p className="text-xs text-orange-100">
-                  {monthStatus.summary.is_fully_signed ? "Hoàn thành" : "Đang xử lý"}
+                  {monthStatus.summary.is_fully_signed
+                    ? "Hoàn thành"
+                    : "Đang xử lý"}
                 </p>
               </CardContent>
             </Card>
@@ -319,28 +351,47 @@ export default function ReporterDashboard() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-green-500" />
-                      <span className="text-green-700">100% dữ liệu đã hoàn thành - Sẵn sàng xác nhận báo cáo</span>
+                      <span className="text-green-700">
+                        100% dữ liệu đã hoàn thành - Sẵn sàng xác nhận báo cáo
+                      </span>
                     </div>
 
                     {monthStatus.management_signatures.nguoi_lap_bieu ? (
                       <div className="p-4 bg-green-50 rounded-lg">
-                        <p className="text-green-800 font-medium">✅ Đã xác nhận báo cáo</p>
-                        <p className="text-sm text-green-600">
-                          Ký bởi: {monthStatus.management_signatures.nguoi_lap_bieu.signed_by_name}
+                        <p className="text-green-800 font-medium">
+                          ✅ Đã xác nhận báo cáo
                         </p>
                         <p className="text-sm text-green-600">
-                          Thời gian: {formatTimestampFromDBRaw(monthStatus.management_signatures.nguoi_lap_bieu.signed_at)}
+                          Ký bởi:{" "}
+                          {
+                            monthStatus.management_signatures.nguoi_lap_bieu
+                              .signed_by_name
+                          }
                         </p>
-                        {monthStatus.management_signatures.nguoi_lap_bieu.notes && (
+                        <p className="text-sm text-green-600">
+                          Thời gian:{" "}
+                          {formatTimestampFromDBRaw(
+                            monthStatus.management_signatures.nguoi_lap_bieu
+                              .signed_at,
+                          )}
+                        </p>
+                        {monthStatus.management_signatures.nguoi_lap_bieu
+                          .notes && (
                           <p className="text-sm text-green-600 mt-2">
-                            Ghi chú: {monthStatus.management_signatures.nguoi_lap_bieu.notes}
+                            Ghi chú:{" "}
+                            {
+                              monthStatus.management_signatures.nguoi_lap_bieu
+                                .notes
+                            }
                           </p>
                         )}
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <div className="p-4 bg-blue-50 rounded-lg">
-                          <h4 className="font-medium text-blue-800 mb-2">Checklist Xác Nhận Báo Cáo:</h4>
+                          <h4 className="font-medium text-blue-800 mb-2">
+                            Checklist Xác Nhận Báo Cáo:
+                          </h4>
                           <ul className="text-sm text-blue-700 space-y-1">
                             <li>✅ Kiểm tra tính đầy đủ của dữ liệu</li>
                             <li>✅ Xác minh tính chính xác thống kê</li>
@@ -372,14 +423,23 @@ export default function ReporterDashboard() {
                   <div className="p-4 bg-yellow-50 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="h-5 w-5 text-yellow-500" />
-                      <span className="text-yellow-800 font-medium">Chờ dữ liệu hoàn thành</span>
+                      <span className="text-yellow-800 font-medium">
+                        Chờ dữ liệu hoàn thành
+                      </span>
                     </div>
                     <p className="text-sm text-yellow-700">
-                      Hiện tại: {monthStatus?.employee_completion.signed_employees}/{monthStatus?.employee_completion.total_employees} bản ghi đã hoàn thành
-                      ({monthStatus?.employee_completion.completion_percentage.toFixed(1)}%)
+                      Hiện tại:{" "}
+                      {monthStatus?.employee_completion.signed_employees}/
+                      {monthStatus?.employee_completion.total_employees} bản ghi
+                      đã hoàn thành (
+                      {monthStatus?.employee_completion.completion_percentage.toFixed(
+                        1,
+                      )}
+                      %)
                     </p>
                     <p className="text-sm text-yellow-700 mt-2">
-                      Cần đợi 100% dữ liệu hoàn thành trước khi có thể xác nhận báo cáo.
+                      Cần đợi 100% dữ liệu hoàn thành trước khi có thể xác nhận
+                      báo cáo.
                     </p>
                   </div>
                 )}
@@ -396,40 +456,68 @@ export default function ReporterDashboard() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-purple-50 rounded-lg">
-                      <h4 className="font-medium mb-2 text-purple-800">Tổng Quan Dữ Liệu</h4>
+                      <h4 className="font-medium mb-2 text-purple-800">
+                        Tổng Quan Dữ Liệu
+                      </h4>
                       <p className="text-sm text-purple-600">
-                        Tổng bản ghi: {monthStatus?.employee_completion.total_employees}
+                        Tổng bản ghi:{" "}
+                        {monthStatus?.employee_completion.total_employees}
                       </p>
                       <p className="text-sm text-purple-600">
-                        Đã xử lý: {monthStatus?.employee_completion.signed_employees}
+                        Đã xử lý:{" "}
+                        {monthStatus?.employee_completion.signed_employees}
                       </p>
                       <p className="text-sm text-purple-600">
-                        Tỷ lệ: {monthStatus?.employee_completion.completion_percentage.toFixed(1)}%
+                        Tỷ lệ:{" "}
+                        {monthStatus?.employee_completion.completion_percentage.toFixed(
+                          1,
+                        )}
+                        %
                       </p>
                     </div>
                     {/* Updated to green color scheme to match signature cards */}
                     <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium mb-2 text-green-800">Trạng Thái Xác Nhận</h4>
+                      <h4 className="font-medium mb-2 text-green-800">
+                        Trạng Thái Xác Nhận
+                      </h4>
                       <p className="text-sm text-green-700">
-                        Giám đốc: {monthStatus?.management_signatures.giam_doc ? "✅" : "⏳"}
+                        Giám đốc:{" "}
+                        {monthStatus?.management_signatures.giam_doc
+                          ? "✅"
+                          : "⏳"}
                       </p>
                       <p className="text-sm text-green-700">
-                        Kế toán: {monthStatus?.management_signatures.ke_toan ? "✅" : "⏳"}
+                        Kế toán:{" "}
+                        {monthStatus?.management_signatures.ke_toan
+                          ? "✅"
+                          : "⏳"}
                       </p>
                       <p className="text-sm text-green-700">
-                        Báo cáo: {monthStatus?.management_signatures.nguoi_lap_bieu ? "✅" : "⏳"}
+                        Báo cáo:{" "}
+                        {monthStatus?.management_signatures.nguoi_lap_bieu
+                          ? "✅"
+                          : "⏳"}
                       </p>
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg">
-                      <h4 className="font-medium mb-2 text-green-800">Tiến Độ Hoàn Thành</h4>
+                      <h4 className="font-medium mb-2 text-green-800">
+                        Tiến Độ Hoàn Thành
+                      </h4>
                       <p className="text-sm text-green-600">
-                        Dữ liệu: {monthStatus?.employee_completion.is_100_percent_complete ? "✅ Hoàn thành" : "⏳ Đang xử lý"}
+                        Dữ liệu:{" "}
+                        {monthStatus?.employee_completion
+                          .is_100_percent_complete
+                          ? "✅ Hoàn thành"
+                          : "⏳ Đang xử lý"}
                       </p>
                       <p className="text-sm text-green-600">
                         Xác nhận: {monthStatus?.summary.completed_signatures}/3
                       </p>
                       <p className="text-sm text-green-600">
-                        Tổng thể: {monthStatus?.summary.is_fully_signed ? "✅ Hoàn thành" : "⏳ Đang xử lý"}
+                        Tổng thể:{" "}
+                        {monthStatus?.summary.is_fully_signed
+                          ? "✅ Hoàn thành"
+                          : "⏳ Đang xử lý"}
                       </p>
                     </div>
                   </div>
@@ -447,14 +535,21 @@ export default function ReporterDashboard() {
                 <div className="space-y-3">
                   {signatureHistory.length > 0 ? (
                     signatureHistory.map((signature) => (
-                      <div key={signature.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div
+                        key={signature.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
                         <div>
-                          <p className="font-medium">{signature.signed_by_name}</p>
+                          <p className="font-medium">
+                            {signature.signed_by_name}
+                          </p>
                           <p className="text-sm text-gray-600">
                             Tháng {signature.salary_month}
                           </p>
                           {signature.notes && (
-                            <p className="text-sm text-gray-500 mt-1">{signature.notes}</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {signature.notes}
+                            </p>
                           )}
                         </div>
                         <Badge variant="secondary">
@@ -494,5 +589,5 @@ export default function ReporterDashboard() {
         />
       )}
     </div>
-  )
+  );
 }

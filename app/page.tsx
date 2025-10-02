@@ -1,14 +1,22 @@
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AnimatedGradientButton } from "@/components/ui/animated-gradient-button"
-import { Users, Shield } from "lucide-react"
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AnimatedGradientButton } from "@/components/ui/animated-gradient-button";
+import { Users, Shield } from "lucide-react";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Tra Cứu Lương và Ký Xác Nhận</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Tra Cứu Lương và Ký Xác Nhận
+          </h1>
           <p className="text-xl text-gray-600">MAY HÒA THỌ ĐIỆN BÀN</p>
         </div>
 
@@ -20,7 +28,9 @@ export default function HomePage() {
                 <Shield className="w-8 h-8 text-blue-600" />
               </div>
               <CardTitle className="text-2xl">Quản Lý Các Bộ Phận</CardTitle>
-              <CardDescription>Đăng nhập để quản lý dữ liệu lương</CardDescription>
+              <CardDescription>
+                Đăng nhập để quản lý dữ liệu lương
+              </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <div className="space-y-4">
@@ -68,9 +78,12 @@ export default function HomePage() {
         </div>
 
         <div className="mt-12 text-center text-gray-500">
-          <p className="text-sm">Coppyright © 2025 Hệ thống tra cứu lương <strong>Công Ty May Hòa Thọ Điện Bàn</strong></p>
+          <p className="text-sm">
+            Coppyright © 2025 Hệ thống tra cứu lương{" "}
+            <strong>Công Ty May Hòa Thọ Điện Bàn</strong>
+          </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

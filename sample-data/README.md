@@ -3,6 +3,7 @@
 ## 🎯 **TỔNG QUAN**
 
 Hệ thống import lương đã được nâng cấp với comprehensive validation system, hỗ trợ:
+
 - ✅ **Real-time validation** với detailed error reporting
 - ✅ **Auto-fix suggestions** cho common errors
 - ✅ **Data preview** trước khi import
@@ -12,6 +13,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 ## 📁 **FILE MẪU HOÀN CHỈNH**
 
 ### **File 1 - Dữ liệu lương đầy đủ 37 cột:**
+
 - `salary_sample_file1.csv` - **TEMPLATE CHUẨN** với tất cả 37 cột database
 - **20 records realistic** không có validation errors
 - **Required fields:** `employee_id`, `salary_month`
@@ -19,6 +21,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 - **Format:** CSV (có thể convert sang Excel .xlsx)
 
 **37 cột bao gồm:**
+
 1. **Metadata:** employee_id, salary_month
 2. **Hệ số cơ bản (4 cột):** he_so_lam_viec, he_so_phu_cap_ket_qua, he_so_luong_co_ban, luong_toi_thieu_cty
 3. **Thời gian làm việc (5 cột):** ngay_cong_trong_gio, gio_cong_tang_ca, gio_an_ca, tong_gio_lam_viec, tong_he_so_quy_doi
@@ -31,6 +34,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 10. **Lương thực nhận (1 cột):** tien_luong_thuc_nhan_cuoi_ky
 
 ### **File 2 - Khấu trừ bổ sung (Optional):**
+
 - `salary_sample_file2.csv` - Dữ liệu BHXH chi tiết, thuế, khấu trừ
 - **20 records tương ứng** với File 1
 - **Format:** CSV (có thể convert sang Excel .xlsx)
@@ -38,6 +42,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 ## 🔧 **CÁCH SỬ DỤNG**
 
 ### **Bước 1: Chuẩn bị dữ liệu**
+
 1. **Download template chuẩn:** `salary_sample_file1.csv` từ thư mục `sample-data/`
 2. **Copy data thực** của bạn vào format tương tự (giữ nguyên header row)
 3. **Đảm bảo data quality:**
@@ -48,6 +53,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
    - Tất cả 37 cột phải có (có thể để 0 cho optional fields)
 
 ### **Bước 2: Import qua hệ thống**
+
 1. Truy cập Admin Dashboard
 2. Chọn tab "New Dual Import"
 3. Follow workflow:
@@ -58,6 +64,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
    - **Process** → Import vào database
 
 ### **Bước 3: Xử lý lỗi (nếu có)**
+
 1. Review **Validation Summary** để hiểu data quality
 2. Sử dụng **Auto-fix** cho common errors
 3. **Export error report** để fix offline
@@ -67,6 +74,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 ## ⚠️ **LƯU Ý QUAN TRỌNG**
 
 ### **Data Format Requirements:**
+
 - **employee_id:** Text, không được trống, unique per month (VD: NV001, NV002)
 - **salary_month:** YYYY-MM format (2024-01, 2024-02, etc.) - REQUIRED
 - **Numbers:** Dùng dot (.) cho decimal (1000.50), auto-fix hỗ trợ comma format
@@ -74,6 +82,7 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 - **Ranges:** Hệ số 0-10, lương 0-1 tỷ VND, giờ làm việc 0-744/tháng
 
 ### **Common Errors & Solutions:**
+
 1. **"Missing required field 'employee_id'"**
    - ✅ Fix: Đảm bảo cột employee_id có data
    - ✅ Auto-fix: Hệ thống sẽ suggest default values
@@ -93,26 +102,31 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 ## 📈 **FEATURES MỚI**
 
 ### **1. Data Preview Mode**
+
 - Preview 10 rows đầu tiên của mỗi file
 - Real-time validation với color coding
 - Data quality metrics và recommendations
 
 ### **2. Auto-fix Capabilities**
+
 - Tự động fix date formats (DD/MM/YYYY → YYYY-MM)
 - Clean number formats (remove spaces, fix decimals)
 - Trim whitespace và normalize text
 
 ### **3. Advanced Error Handling**
+
 - Structured error objects với severity levels
 - Actionable suggestions cho mỗi error
 - Export detailed error reports (Excel/CSV)
 
 ### **4. Batch Operations**
+
 - Select multiple errors để fix cùng lúc
 - Apply same value to multiple rows
 - Undo/redo functionality
 
 ### **5. Import History**
+
 - Track tất cả import attempts
 - Performance metrics và success rates
 - Audit trail cho compliance
@@ -128,14 +142,16 @@ Hệ thống import lương đã được nâng cấp với comprehensive valida
 ## 📞 **HỖ TRỢ**
 
 Nếu gặp vấn đề:
+
 1. Check **Validation Summary** để hiểu issues
-2. Use **Auto-fix suggestions** 
+2. Use **Auto-fix suggestions**
 3. Export **Error Report** để analyze offline
 4. Contact IT support với detailed error information
 
 ## ✅ **TEMPLATE VALIDATION GUARANTEE**
 
 ### **File Template Đã Được Kiểm Tra:**
+
 - ✅ **100% Pass Validation** - Không có errors khi import
 - ✅ **Tất cả 37 cột database** được map correctly
 - ✅ **20 records realistic** với data đa dạng
@@ -145,6 +161,7 @@ Nếu gặp vấn đề:
 - ✅ **Edge cases included** - test validation system thoroughly
 
 ### **Expected Import Results:**
+
 ```
 ✅ Total Records: 20
 ✅ Success Count: 20
@@ -155,6 +172,7 @@ Nếu gặp vấn đề:
 ```
 
 ### **Template Usage:**
+
 1. **Direct Import:** File có thể import trực tiếp mà không cần sửa
 2. **Reference Standard:** Dùng làm chuẩn để format data thực
 3. **Testing:** Verify hệ thống import hoạt động correctly

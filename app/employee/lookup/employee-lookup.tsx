@@ -1,128 +1,159 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Loader2, Search, User, CreditCard, DollarSign, Calendar, Eye, EyeOff, PenTool, CheckCircle, Clock, Timer, FileText, Lock, AlertTriangle, History } from "lucide-react"
-import Link from "next/link"
-import { PayrollDetailModal } from "./payroll-detail-modal"
-import { ResetPasswordModal } from "./reset-password-modal"
-import { SalaryHistoryModal } from "./salary-history-modal"
-import { formatSalaryMonth, formatSignatureTime, formatCurrency, formatNumber } from "@/lib/utils/date-formatter"
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone"
-
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Loader2,
+  Search,
+  User,
+  CreditCard,
+  DollarSign,
+  Calendar,
+  Eye,
+  EyeOff,
+  PenTool,
+  CheckCircle,
+  Clock,
+  Timer,
+  FileText,
+  Lock,
+  AlertTriangle,
+  History,
+} from "lucide-react";
+import Link from "next/link";
+import { PayrollDetailModal } from "./payroll-detail-modal";
+import { ResetPasswordModal } from "./reset-password-modal";
+import { SalaryHistoryModal } from "./salary-history-modal";
+import {
+  formatSalaryMonth,
+  formatSignatureTime,
+  formatCurrency,
+  formatNumber,
+} from "@/lib/utils/date-formatter";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface PayrollResult {
-  employee_id: string
-  full_name: string
-  cccd: string
-  position: string
-  salary_month: string
-  salary_month_display?: string // Optional formatted display
-  total_income: number
-  deductions: number
-  net_salary: number
-  source_file: string
+  employee_id: string;
+  full_name: string;
+  cccd: string;
+  position: string;
+  salary_month: string;
+  salary_month_display?: string; // Optional formatted display
+  total_income: number;
+  deductions: number;
+  net_salary: number;
+  source_file: string;
 
   // Hệ số và thông số cơ bản
-  he_so_lam_viec?: number
-  he_so_phu_cap_ket_qua?: number
-  he_so_luong_co_ban?: number
-  luong_toi_thieu_cty?: number
+  he_so_lam_viec?: number;
+  he_so_phu_cap_ket_qua?: number;
+  he_so_luong_co_ban?: number;
+  luong_toi_thieu_cty?: number;
 
   // Thời gian làm việc
-  ngay_cong_trong_gio?: number
-  gio_cong_tang_ca?: number
-  gio_an_ca?: number
-  tong_gio_lam_viec?: number
-  tong_he_so_quy_doi?: number
-  ngay_cong_chu_nhat?: number
+  ngay_cong_trong_gio?: number;
+  gio_cong_tang_ca?: number;
+  gio_an_ca?: number;
+  tong_gio_lam_viec?: number;
+  tong_he_so_quy_doi?: number;
+  ngay_cong_chu_nhat?: number;
 
   // Lương sản phẩm và đơn giá
-  tong_luong_san_pham_cong_doan?: number
-  don_gia_tien_luong_tren_gio?: number
-  tien_luong_san_pham_trong_gio?: number
-  tien_luong_tang_ca?: number
-  tien_luong_30p_an_ca?: number
-  tien_tang_ca_vuot?: number
-  tien_luong_chu_nhat?: number
+  tong_luong_san_pham_cong_doan?: number;
+  don_gia_tien_luong_tren_gio?: number;
+  tien_luong_san_pham_trong_gio?: number;
+  tien_luong_tang_ca?: number;
+  tien_luong_30p_an_ca?: number;
+  tien_tang_ca_vuot?: number;
+  tien_luong_chu_nhat?: number;
 
   // Thưởng và phụ cấp
-  tien_khen_thuong_chuyen_can?: number
-  luong_hoc_viec_pc_luong?: number
-  tong_cong_tien_luong_san_pham?: number
-  ho_tro_thoi_tiet_nong?: number
-  bo_sung_luong?: number
-  luong_cnkcp_vuot?: number
+  tien_khen_thuong_chuyen_can?: number;
+  luong_hoc_viec_pc_luong?: number;
+  tong_cong_tien_luong_san_pham?: number;
+  ho_tro_thoi_tiet_nong?: number;
+  bo_sung_luong?: number;
+  luong_cnkcp_vuot?: number;
 
   // Bảo hiểm và phúc lợi
-  bhxh_21_5_percent?: number
-  pc_cdcs_pccc_atvsv?: number
-  luong_phu_nu_hanh_kinh?: number
-  tien_con_bu_thai_7_thang?: number
-  ho_tro_gui_con_nha_tre?: number
+  bhxh_21_5_percent?: number;
+  pc_cdcs_pccc_atvsv?: number;
+  luong_phu_nu_hanh_kinh?: number;
+  tien_con_bu_thai_7_thang?: number;
+  ho_tro_gui_con_nha_tre?: number;
 
   // Phép và lễ
-  ngay_cong_phep_le?: number
-  tien_phep_le?: number
+  ngay_cong_phep_le?: number;
+  tien_phep_le?: number;
 
   // Tổng lương và phụ cấp khác
-  tong_cong_tien_luong?: number
-  tien_boc_vac?: number
-  ho_tro_xang_xe?: number
+  tong_cong_tien_luong?: number;
+  tien_boc_vac?: number;
+  ho_tro_xang_xe?: number;
 
   // Thuế và khấu trừ
-  thue_tncn_nam_2024?: number
-  tam_ung?: number
-  thue_tncn?: number
-  bhxh_bhtn_bhyt_total?: number
-  truy_thu_the_bhyt?: number
+  thue_tncn_nam_2024?: number;
+  tam_ung?: number;
+  thue_tncn?: number;
+  bhxh_bhtn_bhyt_total?: number;
+  truy_thu_the_bhyt?: number;
 
   // Lương thực nhận
-  tien_luong_thuc_nhan_cuoi_ky?: number
+  tien_luong_thuc_nhan_cuoi_ky?: number;
 
   // Thông tin ký nhận
-  is_signed?: boolean
-  signed_at?: string
-  signed_at_display?: string // Formatted display timestamp
-  signed_by_name?: string
+  is_signed?: boolean;
+  signed_at?: string;
+  signed_at_display?: string; // Formatted display timestamp
+  signed_by_name?: string;
 }
 
 export function EmployeeLookup() {
-  const [employeeId, setEmployeeId] = useState("")
-  const [cccd, setCccd] = useState("")
-  const [showCccd, setShowCccd] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<PayrollResult | null>(null)
-  const [error, setError] = useState("")
-  const [signingLoading, setSigningLoading] = useState(false)
-  const [signSuccess, setSignSuccess] = useState(false)
-  const [showDetailModal, setShowDetailModal] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [showHistoryModal, setShowHistoryModal] = useState(false)
-  const [mustChangePassword, setMustChangePassword] = useState(false)
-  const salaryInfoRef = useRef<HTMLDivElement>(null) // Ref để scroll đến phần thông tin lương
-  
+  const [employeeId, setEmployeeId] = useState("");
+  const [cccd, setCccd] = useState("");
+  const [showCccd, setShowCccd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<PayrollResult | null>(null);
+  const [error, setError] = useState("");
+  const [signingLoading, setSigningLoading] = useState(false);
+  const [signSuccess, setSignSuccess] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const salaryInfoRef = useRef<HTMLDivElement>(null); // Ref để scroll đến phần thông tin lương
+
+  // Refs for auto-uppercase employee ID with cursor position preservation
+  const employeeIdInputRef = useRef<HTMLInputElement>(null);
+  const cursorPositionRef = useRef<number | null>(null);
+
   // State mới cho label động
   const [authFieldConfig, setAuthFieldConfig] = useState({
     label: "Số CCCD",
     placeholder: "Nhập số CCCD",
-    type: "text" as "text" | "password"
-  })
-  const [checkingStatus, setCheckingStatus] = useState(false)
+    type: "text" as "text" | "password",
+  });
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-    setResult(null)
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setResult(null);
 
     try {
       const response = await fetch("/api/employee/lookup", {
@@ -134,46 +165,46 @@ export function EmployeeLookup() {
           employee_id: employeeId.trim(),
           cccd: cccd.trim(),
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setResult(data.payroll)
+        setResult(data.payroll);
         // Don't force password change - let users decide
         // if (data.payroll.must_change_password) {
         //   setMustChangePassword(true)
         //   setShowPasswordModal(true)
         // }
-        
+
         // Auto-scroll đến phần thông tin lương sau khi có kết quả
         setTimeout(() => {
           if (salaryInfoRef.current) {
-            salaryInfoRef.current.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'start'
-            })
+            salaryInfoRef.current.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
           }
-        }, 100) // Đợi 100ms để đảm bảo DOM đã render
+        }, 100); // Đợi 100ms để đảm bảo DOM đã render
       } else {
-        setError(data.error || "Không tìm thấy thông tin lương")
+        setError(data.error || "Không tìm thấy thông tin lương");
       }
     } catch (error) {
-      setError("Có lỗi xảy ra khi tra cứu thông tin")
+      setError("Có lỗi xảy ra khi tra cứu thông tin");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSignSalary = async () => {
-    if (!result || !employeeId || !cccd) return
+    if (!result || !employeeId || !cccd) return;
 
-    setSigningLoading(true)
-    setError("")
+    setSigningLoading(true);
+    setError("");
 
     try {
       // Tạo timestamp theo timezone Việt Nam để tránh timezone issues trên Vercel
-      const vietnamTime = getVietnamTimestamp()
+      const vietnamTime = getVietnamTimestamp();
 
       const response = await fetch("/api/employee/sign-salary", {
         method: "POST",
@@ -186,43 +217,55 @@ export function EmployeeLookup() {
           salary_month: result.salary_month,
           client_timestamp: vietnamTime, // Gửi thời gian Việt Nam
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setSignSuccess(true)
+        setSignSuccess(true);
         // Cập nhật result với thông tin ký
         setResult({
           ...result,
           is_signed: true,
           signed_at: data.data.signed_at,
           signed_at_display: data.data.signed_at_display, // Use formatted display from API
-          signed_by_name: data.data.employee_name || data.data.signed_by // ✅ Fix: Support both field names
-        })
-        setTimeout(() => setSignSuccess(false), 5000) // Ẩn thông báo sau 5s
+          signed_by_name: data.data.employee_name || data.data.signed_by, // ✅ Fix: Support both field names
+        });
+        setTimeout(() => setSignSuccess(false), 5000); // Ẩn thông báo sau 5s
       } else {
         // ✅ FIX: Hiển thị chính xác error message từ API
-        console.error("Sign salary API error:", response.status, data)
+        console.error("Sign salary API error:", response.status, data);
 
         // Handle specific error cases
         if (data.error && data.error.includes("đã ký nhận lương")) {
-          setError("Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.")
+          setError(
+            "Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.",
+          );
         } else if (data.error && data.error.includes("CCCD không đúng")) {
-          setError(`${authFieldConfig.label} không đúng. Vui lòng kiểm tra lại ${authFieldConfig.label.toLowerCase()}.`)
-        } else if (data.error && data.error.includes("không tìm thấy nhân viên")) {
-          setError("Không tìm thấy nhân viên với mã nhân viên đã nhập.")
+          setError(
+            `${authFieldConfig.label} không đúng. Vui lòng kiểm tra lại ${authFieldConfig.label.toLowerCase()}.`,
+          );
+        } else if (
+          data.error &&
+          data.error.includes("không tìm thấy nhân viên")
+        ) {
+          setError("Không tìm thấy nhân viên với mã nhân viên đã nhập.");
         } else {
-          setError(data.error || `Không thể ký nhận lương (Mã lỗi: ${response.status})`)
+          setError(
+            data.error ||
+              `Không thể ký nhận lương (Mã lỗi: ${response.status})`,
+          );
         }
       }
     } catch (error) {
-      console.error("Network error:", error)
-      setError("Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.")
+      console.error("Network error:", error);
+      setError(
+        "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.",
+      );
     } finally {
-      setSigningLoading(false)
+      setSigningLoading(false);
     }
-  }
+  };
 
   // Kiểm tra trạng thái mật khẩu khi người dùng nhập mã nhân viên
   useEffect(() => {
@@ -233,12 +276,12 @@ export function EmployeeLookup() {
         setAuthFieldConfig({
           label: "Số CCCD",
           placeholder: "Nhập số CCCD",
-          type: "text"
-        })
-        return
+          type: "text",
+        });
+        return;
       }
 
-      setCheckingStatus(true)
+      setCheckingStatus(true);
       try {
         const response = await fetch("/api/employee/check-password-status", {
           method: "POST",
@@ -248,33 +291,48 @@ export function EmployeeLookup() {
           body: JSON.stringify({
             employee_id: employeeId.trim(),
           }),
-        })
+        });
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (response.ok && data.authField) {
-          setAuthFieldConfig(data.authField)
+          setAuthFieldConfig(data.authField);
           // Clear CCCD field khi chuyển giữa các trạng thái khác nhau
-          if ((data.authField.label === "Mật khẩu" && authFieldConfig.label === "Số CCCD") ||
-              (data.authField.label === "Số CCCD" && authFieldConfig.label === "Mật khẩu")) {
-            setCccd("")
+          if (
+            (data.authField.label === "Mật khẩu" &&
+              authFieldConfig.label === "Số CCCD") ||
+            (data.authField.label === "Số CCCD" &&
+              authFieldConfig.label === "Mật khẩu")
+          ) {
+            setCccd("");
           }
         }
       } catch (error) {
-        console.error("Error checking password status:", error)
+        console.error("Error checking password status:", error);
       } finally {
-        setCheckingStatus(false)
+        setCheckingStatus(false);
       }
-    }
+    };
 
     // Debounce để tránh gọi API quá nhiều
-    const timeoutId = setTimeout(checkPasswordStatus, 500)
-    return () => clearTimeout(timeoutId)
-  }, [employeeId, authFieldConfig.label])
+    const timeoutId = setTimeout(checkPasswordStatus, 500);
+    return () => clearTimeout(timeoutId);
+  }, [employeeId, authFieldConfig.label]);
+
+  useLayoutEffect(() => {
+    if (cursorPositionRef.current === null || !employeeIdInputRef.current) {
+      return;
+    }
+
+    const input = employeeIdInputRef.current;
+    const position = cursorPositionRef.current;
+
+    input.setSelectionRange(position, position);
+
+    cursorPositionRef.current = null;
+  }, [employeeId]);
 
   // Using utility functions from date-formatter
-
-
 
   return (
     <div className="space-y-6">
@@ -285,11 +343,16 @@ export function EmployeeLookup() {
             <Search className="w-5 h-5" />
             Thông Tin Tra Cứu
           </CardTitle>
-          <CardDescription>Lưu ý*: Ở ô Nhập <strong>"Mã Nhân Viên"</strong> <br /> 
-            - Đối với nhân viên <strong>CHÍNH THỨC</strong> bạn cần nhập <strong>DB0 + mã nhân viên</strong> của mình. <br />
-            - Ví dụ: Nếu mã nhân viên của bạn là 1234, bạn cần nhập DB01234 vào ô "Mã Nhân Viên". <br />
-            - Đối với nhân viên <strong>THỬ VIỆC</strong> bạn cần nhập <strong>DBT0 + mã nhân viên</strong> của mình. <br />
-            - Ví dụ: Nếu mã nhân viên của bạn là 1234, bạn cần nhập DBT01234 vào ô "Mã Nhân Viên".
+          <CardDescription>
+            Lưu ý*: Ở ô Nhập <strong>"Mã Nhân Viên"</strong> <br />- Đối với
+            nhân viên <strong>CHÍNH THỨC</strong> bạn cần nhập{" "}
+            <strong>DB0 + mã nhân viên</strong> của mình. <br />
+            - Ví dụ: Nếu mã nhân viên của bạn là 1234, bạn cần nhập DB01234 vào
+            ô "Mã Nhân Viên". <br />- Đối với nhân viên{" "}
+            <strong>THỬ VIỆC</strong> bạn cần nhập{" "}
+            <strong>DBT0 + mã nhân viên</strong> của mình. <br />- Ví dụ: Nếu mã
+            nhân viên của bạn là 1234, bạn cần nhập DBT01234 vào ô "Mã Nhân
+            Viên".
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -301,9 +364,15 @@ export function EmployeeLookup() {
                   id="employee_id"
                   type="text"
                   value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const input = e.target;
+                    const newValue = input.value.toUpperCase();
+                    cursorPositionRef.current = input.selectionStart;
+                    setEmployeeId(newValue);
+                  }}
                   placeholder="Nhập mã nhân viên"
                   required
+                  ref={employeeIdInputRef}
                 />
               </div>
 
@@ -328,7 +397,11 @@ export function EmployeeLookup() {
                     type="button"
                     onClick={() => setShowCccd(!showCccd)}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-                    aria-label={showCccd ? `Ẩn ${authFieldConfig.label}` : `Hiển thị ${authFieldConfig.label}`}
+                    aria-label={
+                      showCccd
+                        ? `Ẩn ${authFieldConfig.label}`
+                        : `Hiển thị ${authFieldConfig.label}`
+                    }
                   >
                     {showCccd ? (
                       <EyeOff className="w-4 h-4" />
@@ -382,7 +455,9 @@ export function EmployeeLookup() {
               <User className="w-5 h-5" />
               Thông Tin Lương
             </CardTitle>
-            <CardDescription>Kết quả tra cứu cho mã nhân viên: {result.employee_id}</CardDescription>
+            <CardDescription>
+              Kết quả tra cứu cho mã nhân viên: {result.employee_id}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Personal Info */}
@@ -404,7 +479,9 @@ export function EmployeeLookup() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Chức vụ:</span>
-                  <Badge variant="outline">{result.position || "Không xác định"}</Badge>
+                  <Badge variant="outline">
+                    {result.position || "Không xác định"}
+                  </Badge>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -462,8 +539,12 @@ export function EmployeeLookup() {
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-blue-600">Hệ Số Làm Việc</p>
-                      <p className="text-lg md:text-2xl font-bold text-blue-700">{formatNumber(result.he_so_lam_viec || 0)}</p>
+                      <p className="text-sm font-medium text-blue-600">
+                        Hệ Số Làm Việc
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-blue-700">
+                        {formatNumber(result.he_so_lam_viec || 0)}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -471,8 +552,12 @@ export function EmployeeLookup() {
                 <Card className="bg-green-50 border-green-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-green-600">Hệ Số Phụ Cấp KQ</p>
-                      <p className="text-lg md:text-2xl font-bold text-green-700">{formatNumber(result.he_so_phu_cap_ket_qua || 0)}</p>
+                      <p className="text-sm font-medium text-green-600">
+                        Hệ Số Phụ Cấp KQ
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-green-700">
+                        {formatNumber(result.he_so_phu_cap_ket_qua || 0)}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -480,8 +565,14 @@ export function EmployeeLookup() {
                 <Card className="bg-purple-50 border-purple-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-purple-600">Tiền Khen Thưởng Chuyên Cần</p>
-                      <p className="text-lg md:text-2xl font-bold text-purple-700">{formatCurrency(result.tien_khen_thuong_chuyen_can || 0)}</p>
+                      <p className="text-sm font-medium text-purple-600">
+                        Tiền Khen Thưởng Chuyên Cần
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-purple-700">
+                        {formatCurrency(
+                          result.tien_khen_thuong_chuyen_can || 0,
+                        )}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -489,8 +580,12 @@ export function EmployeeLookup() {
                 <Card className="bg-orange-50 border-orange-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-orange-600">Lương Học Việc PC</p>
-                      <p className="text-lg md:text-2xl font-bold text-orange-700">{formatCurrency(result.luong_hoc_viec_pc_luong || 0)}</p>
+                      <p className="text-sm font-medium text-orange-600">
+                        Lương Học Việc PC
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-orange-700">
+                        {formatCurrency(result.luong_hoc_viec_pc_luong || 0)}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -498,8 +593,12 @@ export function EmployeeLookup() {
                 <Card className="bg-red-50 border-red-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-red-600">BHXH BHTN BHYT</p>
-                      <p className="text-lg md:text-2xl font-bold text-red-700">{formatCurrency(result.bhxh_bhtn_bhyt_total || 0)}</p>
+                      <p className="text-sm font-medium text-red-600">
+                        BHXH BHTN BHYT
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-red-700">
+                        {formatCurrency(result.bhxh_bhtn_bhyt_total || 0)}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -507,8 +606,14 @@ export function EmployeeLookup() {
                 <Card className="bg-emerald-50 border-emerald-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-emerald-600">Lương Thực Nhận Cuối Kỳ</p>
-                      <p className="text-lg md:text-2xl font-bold text-emerald-700">{formatCurrency(result.tien_luong_thuc_nhan_cuoi_ky || 0)}</p>
+                      <p className="text-sm font-medium text-emerald-600">
+                        Lương Thực Nhận Cuối Kỳ
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-emerald-700">
+                        {formatCurrency(
+                          result.tien_luong_thuc_nhan_cuoi_ky || 0,
+                        )}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -516,8 +621,12 @@ export function EmployeeLookup() {
                 <Card className="bg-cyan-50 border-cyan-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-cyan-600">Tiền Tăng Ca Vượt</p>
-                      <p className="text-lg md:text-2xl font-bold text-cyan-700">{formatCurrency(result.tien_tang_ca_vuot || 0)}</p>
+                      <p className="text-sm font-medium text-cyan-600">
+                        Tiền Tăng Ca Vượt
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-cyan-700">
+                        {formatCurrency(result.tien_tang_ca_vuot || 0)}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -525,8 +634,12 @@ export function EmployeeLookup() {
                 <Card className="bg-amber-50 border-amber-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm font-medium text-amber-600">Lương CNKCP Vượt</p>
-                      <p className="text-lg md:text-2xl font-bold text-amber-700">{formatCurrency(result.luong_cnkcp_vuot || 0)}</p>
+                      <p className="text-sm font-medium text-amber-600">
+                        Lương CNKCP Vượt
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-amber-700">
+                        {formatCurrency(result.luong_cnkcp_vuot || 0)}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -557,7 +670,9 @@ export function EmployeeLookup() {
                     <div className="flex items-center gap-3">
                       <CheckCircle className="w-6 h-6 text-green-600" />
                       <div>
-                        <p className="font-medium text-green-800">Đã ký nhận lương</p>
+                        <p className="font-medium text-green-800">
+                          Đã ký nhận lương
+                        </p>
                         <p className="text-sm text-green-600">
                           Người ký: {result.signed_by_name}
                         </p>
@@ -579,15 +694,18 @@ export function EmployeeLookup() {
                       <div className="flex items-center gap-3">
                         <Clock className="w-6 h-6 text-amber-600" />
                         <div>
-                          <p className="font-medium text-amber-800">Chưa ký nhận lương</p>
+                          <p className="font-medium text-amber-800">
+                            Chưa ký nhận lương
+                          </p>
                           <p className="text-sm text-amber-600">
-                            Vui lòng ký nhận để xác nhận bạn đã nhận thông tin lương tháng {result.salary_month}
+                            Vui lòng ký nhận để xác nhận bạn đã nhận thông tin
+                            lương tháng {result.salary_month}
                           </p>
                         </div>
                       </div>
-                      
-                      <Button 
-                        onClick={handleSignSalary} 
+
+                      <Button
+                        onClick={handleSignSalary}
                         disabled={signingLoading}
                         className="w-full bg-green-600 hover:bg-green-700"
                       >
@@ -599,7 +717,9 @@ export function EmployeeLookup() {
                         ) : (
                           <>
                             <PenTool className="mr-2 h-4 w-4" />
-                            Ký Nhận Lương {result.salary_month_display || formatSalaryMonth(result.salary_month)}
+                            Ký Nhận Lương{" "}
+                            {result.salary_month_display ||
+                              formatSalaryMonth(result.salary_month)}
                           </>
                         )}
                       </Button>
@@ -614,8 +734,8 @@ export function EmployeeLookup() {
             <div className="text-sm text-gray-500">
               <p>Nguồn dữ liệu: {result.source_file}</p>
               <p className="mt-1">
-                <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham khảo. Vui lòng liên hệ phòng Kế Toán Lương nếu
-                có thắc mắc.
+                <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham
+                khảo. Vui lòng liên hệ phòng Kế Toán Lương nếu có thắc mắc.
               </p>
             </div>
           </CardContent>
@@ -640,8 +760,8 @@ export function EmployeeLookup() {
           cccd={cccd}
           employeeName={result.full_name}
           onPasswordReset={() => {
-            setMustChangePassword(false)
-            setError("")
+            setMustChangePassword(false);
+            setError("");
           }}
         />
       )}
@@ -658,5 +778,5 @@ export function EmployeeLookup() {
         />
       )}
     </div>
-  )
+  );
 }

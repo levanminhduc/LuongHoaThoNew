@@ -5,7 +5,7 @@ import { tickerConfig } from "@/config/ticker";
 
 export default function TopMarquee() {
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -25,13 +25,20 @@ export default function TopMarquee() {
         aria-label="Thông báo chạy"
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Marquee speed={speed} gradient={false} pauseOnHover={tickerConfig.pauseOnHover}>
+          <Marquee
+            speed={speed}
+            gradient={false}
+            pauseOnHover={tickerConfig.pauseOnHover}
+          >
             <span>{tickerConfig.messages.join("  •  ")}</span>
-            <span aria-hidden className="inline-block md:hidden" style={{ width: tickerConfig.loopSpacingMobilePx }} />
+            <span
+              aria-hidden
+              className="inline-block md:hidden"
+              style={{ width: tickerConfig.loopSpacingMobilePx }}
+            />
           </Marquee>
         </div>
       </div>
     </div>
   );
 }
-

@@ -2,11 +2,13 @@
 type: "manual"
 description: "Example description"
 ---
+
 # ⚡ **QUICK REFERENCE GUIDE - AUGMENT CODE AI ASSISTANT**
 
 ## 🚀 **PRE-ACTION CHECKLIST**
 
 ### **BEFORE EVERY ACTION:**
+
 ```
 □ Hiểu rõ yêu cầu? (Rule 1)
 □ Đã call codebase-retrieval? (Rule 2)
@@ -16,6 +18,7 @@ description: "Example description"
 ```
 
 ### **FOR MAJOR CHANGES:**
+
 ```
 □ User confirmation obtained?
 □ Risk level assessed?
@@ -29,6 +32,7 @@ description: "Example description"
 ## 🎯 **QUICK TEMPLATES**
 
 ### **🤔 Clarification Questions:**
+
 ```
 "Tôi hiểu bạn muốn [X], nhưng có thể hiểu theo 2 cách:
 A) [Cách hiểu 1]
@@ -37,6 +41,7 @@ Bạn muốn tôi thực hiện theo cách nào?"
 ```
 
 ### **⚠️ Major Change Confirmation:**
+
 ```
 "Tôi sẽ thực hiện những thay đổi sau:
 1. [Thay đổi 1]
@@ -48,6 +53,7 @@ Bạn có muốn tôi tiếp tục không?"
 ```
 
 ### **🚫 Protected File Warning:**
+
 ```
 "Tôi không thể chỉnh sửa trực tiếp file [filename] vì:
 - [Lý do 1]
@@ -59,6 +65,7 @@ Thay vào đó, bạn cần:
 ```
 
 ### **🔧 Action Explanation:**
+
 ```
 "Tôi sẽ [action] bằng cách [method] vì [reason].
 
@@ -70,6 +77,7 @@ Kết quả mong đợi: [outcome]"
 ```
 
 ### **🔄 Rollback Instructions:**
+
 ```
 "ROLLBACK INSTRUCTIONS:
 What was changed:
@@ -99,6 +107,7 @@ To rollback:
 ```
 
 ### **Alternatives:**
+
 - **Dependencies**: Use `npm install [package]`
 - **Env vars**: Guide manual setup
 - **Config**: Provide step-by-step instructions
@@ -161,6 +170,7 @@ To rollback:
 ## 🧪 **TESTING TEMPLATES**
 
 ### **Basic Testing:**
+
 ```
 "Để test thay đổi này:
 1. Chạy: npm run dev
@@ -171,6 +181,7 @@ To rollback:
 ```
 
 ### **Feature Testing:**
+
 ```
 "Test scenarios:
 ✅ Happy path: [normal usage]
@@ -212,6 +223,7 @@ SAFER ALTERNATIVES:
 ## 🚨 **EMERGENCY PROTOCOLS**
 
 ### **When things go wrong:**
+
 ```
 1. 🛑 STOP: Don't make more changes
 2. 🔍 ASSESS: What broke?
@@ -222,6 +234,7 @@ SAFER ALTERNATIVES:
 ```
 
 ### **Escalation triggers:**
+
 - Multiple attempts fail
 - Unclear requirements persist
 - Critical systems at risk
@@ -262,6 +275,7 @@ SAFER ALTERNATIVES:
 ## 🛡️ **RULE SET 7: BUG PREVENTION CHECKLIST**
 
 ### **Pre-Coding Analysis (MANDATORY):**
+
 ```
 □ Requirement clarity: 100% hiểu yêu cầu?
 □ Business context: Hiểu impact business?
@@ -273,6 +287,7 @@ SAFER ALTERNATIVES:
 ```
 
 ### **Implementation Checklist:**
+
 ```
 □ Input validation: Validate tất cả inputs
 □ Error handling: Try-catch cho tất cả operations
@@ -283,6 +298,7 @@ SAFER ALTERNATIVES:
 ```
 
 ### **Quality Gates:**
+
 ```
 ❌ KHÔNG deploy nếu:
 - Không có error handling

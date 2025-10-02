@@ -2,6 +2,7 @@
 type: "manual"
 description: "Example description"
 ---
+
 # 💬 **RULE SET 5: GIAO TIẾP HIỆU QUẢ**
 
 ## 📋 **OVERVIEW**
@@ -13,6 +14,7 @@ Rule Set này đảm bảo giao tiếp rõ ràng, minh bạch và hiệu quả v
 ## 🗣️ **RULE 5.1: COMMUNICATION FRAMEWORK**
 
 ### **Core principles:**
+
 ```
 ✅ Always explain WHAT and WHY
 ✅ Use Vietnamese as configured
@@ -24,6 +26,7 @@ Rule Set này đảm bảo giao tiếp rõ ràng, minh bạch và hiệu quả v
 ```
 
 ### **Communication structure:**
+
 ```
 1. 🎯 WHAT: Clearly state what will be done
 2. 🤔 WHY: Explain the reasoning
@@ -37,6 +40,7 @@ Rule Set này đảm bảo giao tiếp rõ ràng, minh bạch và hiệu quả v
 ## 📝 **RULE 5.2: EXPLANATION TEMPLATES**
 
 ### **Standard Action Template:**
+
 ```
 🔧 "Tôi sẽ [action] bằng cách [method] vì [reason].
 
@@ -49,6 +53,7 @@ Kết quả mong đợi: [expected outcome]"
 ```
 
 ### **Risk Communication Template:**
+
 ```
 ⚠️ "Lưu ý: Thay đổi này có thể [potential impact].
 
@@ -60,6 +65,7 @@ Nếu có vấn đề: [recovery plan]"
 ```
 
 ### **Options Presentation Template:**
+
 ```
 💡 "Có [number] cách tiếp cận cho yêu cầu này:
 
@@ -77,6 +83,7 @@ B) [Approach 2]
 ```
 
 ### **Progress Update Template:**
+
 ```
 📊 "Tiến độ hiện tại:
 ✅ Hoàn thành: [completed items]
@@ -91,6 +98,7 @@ Estimated completion: [time estimate]"
 ## ⚠️ **RULE 5.3: WARNING PROTOCOLS**
 
 ### **Risk level indicators:**
+
 ```
 🟢 INFO: General information, no risk
 🟡 CAUTION: Minor risk, proceed with awareness
@@ -101,6 +109,7 @@ Estimated completion: [time estimate]"
 ### **Warning templates by risk level:**
 
 #### **🟡 CAUTION (Medium Risk):**
+
 ```
 🟡 "Lưu ý: [specific risk]
 
@@ -114,6 +123,7 @@ Estimated completion: [time estimate]"
 ```
 
 #### **🔴 WARNING (High Risk):**
+
 ```
 🔴 "⚠️ CẢNH BÁO: [detailed risk explanation]
 
@@ -131,6 +141,7 @@ Bạn có muốn tiếp tục không?"
 ```
 
 #### **⚫ DANGER (Critical Risk):**
+
 ```
 ⚫ "🚨 NGUY HIỂM: [critical warning]
 
@@ -156,6 +167,7 @@ Strongly recommend reconsidering this approach."
 ## 📚 **RULE 5.4: DOCUMENTATION STANDARDS**
 
 ### **Always provide:**
+
 ```
 □ Clear step-by-step instructions
 □ Code examples with explanations
@@ -166,6 +178,7 @@ Strongly recommend reconsidering this approach."
 ```
 
 ### **Documentation template:**
+
 ```
 📚 "DOCUMENTATION:
 
@@ -192,20 +205,23 @@ Strongly recommend reconsidering this approach."
 ```
 
 ### **Code explanation template:**
-```
+
+````
 💻 "Code Explanation:
 
 ```typescript
 // [Code block with comments]
-```
+````
 
 🔍 Breakdown:
+
 - Line [X]: [Explanation]
 - Line [Y]: [Explanation]
 - Function [Z]: [Purpose and usage]
 
 🎯 Purpose: [Overall purpose]
 🔗 Integration: [How it fits with existing code]"
+
 ```
 
 ---
@@ -214,29 +230,37 @@ Strongly recommend reconsidering this approach."
 
 ### **Adapt communication based on:**
 ```
+
 □ User's technical level
 □ Complexity of the task
 □ Risk level involved
 □ Time sensitivity
 □ Previous interactions
+
 ```
 
 ### **For technical users:**
 ```
+
 🔧 "Technical approach:
+
 - Implementation: [Technical details]
 - Architecture impact: [System implications]
 - Performance considerations: [Optimization notes]
 - Security implications: [Security aspects]"
+
 ```
 
 ### **For non-technical users:**
 ```
+
 🎯 "Simple explanation:
+
 - What this does: [Plain language explanation]
 - Why it's needed: [Business benefit]
 - What you'll see: [User-visible changes]
 - What to expect: [Timeline and outcomes]"
+
 ```
 
 ---
@@ -245,9 +269,11 @@ Strongly recommend reconsidering this approach."
 
 ### **Example 1: Explaining a complex change**
 ```
+
 🔧 "Tôi sẽ thêm authentication system bằng cách tích hợp JWT tokens vì đây là approach bảo mật và scalable nhất.
 
 Cụ thể sẽ thực hiện:
+
 - Tạo middleware kiểm tra token (middleware.ts)
 - Thêm login/logout API routes (app/api/auth/)
 - Protect các routes cần authentication
@@ -256,13 +282,16 @@ Cụ thể sẽ thực hiện:
 ⚠️ Lưu ý: Thay đổi này sẽ require users phải login để access protected pages.
 
 Kết quả: Hệ thống sẽ có bảo mật hoàn chỉnh với session management."
+
 ```
 
 ### **Example 2: Warning about risky operation**
 ```
+
 🔴 "⚠️ CẢNH BÁO: Thay đổi database schema có thể ảnh hưởng đến toàn bộ application.
 
 Rủi ro bao gồm:
+
 - Data loss nếu migration fails
 - Application downtime during update
 - Existing queries có thể break
@@ -274,23 +303,26 @@ Trước khi tiếp tục:
 □ Downtime window scheduled
 
 Bạn có muốn tiếp tục với full backup và testing không?"
+
 ```
 
 ### **Example 3: Providing alternatives**
 ```
+
 💡 "Có 2 cách để implement search functionality:
 
 A) Client-side filtering
-   ✅ Pros: Fast response, no server load
-   ❌ Cons: Limited to loaded data, memory usage
-   ⏱️ Time: 2 hours
+✅ Pros: Fast response, no server load
+❌ Cons: Limited to loaded data, memory usage
+⏱️ Time: 2 hours
 
 B) Server-side search API
-   ✅ Pros: Search all data, better performance
-   ❌ Cons: Network latency, server complexity
-   ⏱️ Time: 4 hours
+✅ Pros: Search all data, better performance
+❌ Cons: Network latency, server complexity
+⏱️ Time: 4 hours
 
 🎯 Tôi khuyến nghị Server-side API vì dataset lớn và cần search toàn bộ database."
+
 ```
 
 ---
@@ -312,3 +344,4 @@ B) Server-side search API
 - ✅ Instructions are actionable
 - ✅ Appropriate level of detail provided
 - ✅ Professional and helpful tone maintained
+```

@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Download, FileCheck, DollarSign, Users } from "lucide-react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Download, FileCheck, DollarSign, Users } from "lucide-react";
 
 interface DepartmentStats {
-  totalEmployees: number
-  payrollCount: number
-  signedCount: number
-  signedPercentage: string
-  totalSalary: number
-  averageSalary: number
+  totalEmployees: number;
+  payrollCount: number;
+  signedCount: number;
+  signedPercentage: string;
+  totalSalary: number;
+  averageSalary: number;
 }
 
 interface ExportTabProps {
-  departmentName: string
-  month: string
-  stats: DepartmentStats
-  onExport: (exportType?: 'full' | 'summary' | 'employees') => void
-  onQuickAction: (action: 'unsigned' | 'salary-desc' | 'signed') => void
-  onClose: () => void
-  exporting: boolean
+  departmentName: string;
+  month: string;
+  stats: DepartmentStats;
+  onExport: (exportType?: "full" | "summary" | "employees") => void;
+  onQuickAction: (action: "unsigned" | "salary-desc" | "signed") => void;
+  onClose: () => void;
+  exporting: boolean;
 }
 
 export default function ExportTab({
@@ -30,7 +36,7 @@ export default function ExportTab({
   onExport,
   onQuickAction,
   onClose,
-  exporting
+  exporting,
 }: ExportTabProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -68,19 +74,23 @@ export default function ExportTab({
 
           <div className="flex flex-col gap-3">
             <Button
-              onClick={() => onExport('full')}
+              onClick={() => onExport("full")}
               disabled={exporting}
               className="flex items-center gap-2 w-full h-10 sm:h-9 touch-manipulation"
             >
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">{exporting ? "Đang xuất..." : "Xuất Excel Đầy Đủ"}</span>
-              <span className="sm:hidden">{exporting ? "Xuất..." : "Xuất Đầy Đủ"}</span>
+              <span className="hidden sm:inline">
+                {exporting ? "Đang xuất..." : "Xuất Excel Đầy Đủ"}
+              </span>
+              <span className="sm:hidden">
+                {exporting ? "Xuất..." : "Xuất Đầy Đủ"}
+              </span>
             </Button>
 
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
-                onClick={() => onExport('summary')}
+                onClick={() => onExport("summary")}
                 disabled={exporting}
                 className="flex items-center gap-2 h-9 sm:h-8 touch-manipulation"
                 size="sm"
@@ -91,7 +101,7 @@ export default function ExportTab({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => onExport('employees')}
+                onClick={() => onExport("employees")}
                 disabled={exporting}
                 className="flex items-center gap-2 h-9 sm:h-8 touch-manipulation"
                 size="sm"
@@ -117,23 +127,30 @@ export default function ExportTab({
             <Button
               variant="outline"
               className="justify-start h-10 sm:h-9 touch-manipulation"
-              onClick={() => onQuickAction('unsigned')}
+              onClick={() => onQuickAction("unsigned")}
             >
               <FileCheck className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="truncate">
-                <span className="hidden sm:inline">Xem nhân viên chưa ký ({stats.payrollCount - stats.signedCount})</span>
-                <span className="sm:hidden">Chưa ký ({stats.payrollCount - stats.signedCount})</span>
+                <span className="hidden sm:inline">
+                  Xem nhân viên chưa ký (
+                  {stats.payrollCount - stats.signedCount})
+                </span>
+                <span className="sm:hidden">
+                  Chưa ký ({stats.payrollCount - stats.signedCount})
+                </span>
               </span>
             </Button>
 
             <Button
               variant="outline"
               className="justify-start h-10 sm:h-9 touch-manipulation"
-              onClick={() => onQuickAction('salary-desc')}
+              onClick={() => onQuickAction("salary-desc")}
             >
               <DollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="truncate">
-                <span className="hidden sm:inline">Sắp xếp theo lương cao nhất</span>
+                <span className="hidden sm:inline">
+                  Sắp xếp theo lương cao nhất
+                </span>
                 <span className="sm:hidden">Lương cao nhất</span>
               </span>
             </Button>
@@ -141,11 +158,13 @@ export default function ExportTab({
             <Button
               variant="outline"
               className="justify-start h-10 sm:h-9 touch-manipulation"
-              onClick={() => onQuickAction('signed')}
+              onClick={() => onQuickAction("signed")}
             >
               <Users className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="truncate">
-                <span className="hidden sm:inline">Xem nhân viên đã ký ({stats.signedCount})</span>
+                <span className="hidden sm:inline">
+                  Xem nhân viên đã ký ({stats.signedCount})
+                </span>
                 <span className="sm:hidden">Đã ký ({stats.signedCount})</span>
               </span>
             </Button>
@@ -164,5 +183,5 @@ export default function ExportTab({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

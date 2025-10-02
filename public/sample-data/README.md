@@ -5,9 +5,9 @@ Thư mục này chứa các file Excel mẫu để test hệ thống quản lý 
 ## Cách tạo file Excel mẫu:
 
 1. Chạy script tạo file:
-\`\`\`bash
-node scripts/generate-sample-excel.js
-\`\`\`
+   \`\`\`bash
+   node scripts/generate-sample-excel.js
+   \`\`\`
 
 2. Script sẽ tạo 2 file:
    - `bang-luong-thang-01-2024.xlsx` (10 nhân viên - tháng 1)
@@ -16,6 +16,7 @@ node scripts/generate-sample-excel.js
 ## Cấu trúc dữ liệu:
 
 ### File 1 (Tiếng Việt Headers):
+
 - Mã Nhân Viên
 - Họ Tên
 - CCCD
@@ -26,6 +27,7 @@ node scripts/generate-sample-excel.js
 - Lương Thực Lĩnh
 
 ### File 2 (English Headers):
+
 - Employee ID
 - Full Name
 - CCCD
@@ -38,6 +40,7 @@ node scripts/generate-sample-excel.js
 ## Dữ liệu test:
 
 ### Nhân viên có thể tra cứu:
+
 1. **Nguyễn Văn An**
    - Mã NV: NV001
    - CCCD: 001234567890

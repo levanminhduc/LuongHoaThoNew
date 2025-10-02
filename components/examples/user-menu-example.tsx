@@ -1,6 +1,9 @@
-"use client"
+"use client";
 
-import { HoverDropdownMenu, type DropdownMenuItem } from "@/components/ui/hover-dropdown-menu"
+import {
+  HoverDropdownMenu,
+  type DropdownMenuItem,
+} from "@/components/ui/hover-dropdown-menu";
 import {
   User,
   Settings,
@@ -9,47 +12,47 @@ import {
   HelpCircle,
   CreditCard,
   Shield,
-} from "lucide-react"
+} from "lucide-react";
 
 interface UserMenuExampleProps {
-  className?: string
+  className?: string;
 }
 
 export function UserMenuExample({ className }: UserMenuExampleProps) {
   const handleLogout = () => {
-    console.log("Logging out...")
+    console.log("Logging out...");
     // Implement logout logic
-  }
+  };
 
   const handleSettings = () => {
-    console.log("Opening settings...")
+    console.log("Opening settings...");
     // Navigate to settings
-  }
+  };
 
   const handleProfile = () => {
-    console.log("Opening profile...")
+    console.log("Opening profile...");
     // Navigate to profile
-  }
+  };
 
   const handleNotifications = () => {
-    console.log("Opening notifications...")
+    console.log("Opening notifications...");
     // Navigate to notifications
-  }
+  };
 
   const handleBilling = () => {
-    console.log("Opening billing...")
+    console.log("Opening billing...");
     // Navigate to billing
-  }
+  };
 
   const handleHelp = () => {
-    console.log("Opening help...")
+    console.log("Opening help...");
     // Navigate to help
-  }
+  };
 
   const handleSecurity = () => {
-    console.log("Opening security...")
+    console.log("Opening security...");
     // Navigate to security
-  }
+  };
 
   const accountItems: DropdownMenuItem[] = [
     {
@@ -66,7 +69,7 @@ export function UserMenuExample({ className }: UserMenuExampleProps) {
       description: "Quản lý thông báo và cảnh báo",
       onClick: handleNotifications,
     },
-  ]
+  ];
 
   const settingsItems: DropdownMenuItem[] = [
     {
@@ -90,7 +93,7 @@ export function UserMenuExample({ className }: UserMenuExampleProps) {
       description: "Quản lý thanh toán và hóa đơn",
       onClick: handleBilling,
     },
-  ]
+  ];
 
   const supportItems: DropdownMenuItem[] = [
     {
@@ -109,7 +112,7 @@ export function UserMenuExample({ className }: UserMenuExampleProps) {
       iconColorClass: "text-red-600",
       onClick: handleLogout,
     },
-  ]
+  ];
 
   return (
     <HoverDropdownMenu
@@ -126,17 +129,17 @@ export function UserMenuExample({ className }: UserMenuExampleProps) {
         {
           title: "Tài Khoản",
           description: "Quản lý thông tin cá nhân",
-          items: accountItems
+          items: accountItems,
         },
         {
           title: "Cài Đặt",
           description: "Tùy chỉnh và cấu hình",
-          items: settingsItems
+          items: settingsItems,
         },
         {
           title: "Hỗ Trợ",
-          items: supportItems
-        }
+          items: supportItems,
+        },
       ]}
       menuWidth="w-72"
       menuAlign="end"
@@ -145,5 +148,5 @@ export function UserMenuExample({ className }: UserMenuExampleProps) {
       footerText="© 2024 Your Company"
       variant="outline"
     />
-  )
+  );
 }

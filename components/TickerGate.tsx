@@ -1,26 +1,25 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import dynamic from "next/dynamic"
-import { ENABLE_TICKER } from "@/lib/features"
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { ENABLE_TICKER } from "@/lib/features";
 
-const TopMarqueeLazy = dynamic(() => import("./TopMarquee"), { 
+const TopMarqueeLazy = dynamic(() => import("./TopMarquee"), {
   ssr: false,
-  loading: () => null 
-})
+  loading: () => null,
+});
 
 export default function TickerGate() {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   // Don't render anything during SSR or if ticker is disabled
   if (!ENABLE_TICKER || !mounted) {
-    return null
+    return null;
   }
 
-  return <TopMarqueeLazy />
+  return <TopMarqueeLazy />;
 }
-

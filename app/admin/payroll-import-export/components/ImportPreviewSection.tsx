@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Eye, ChevronDown, ChevronUp } from "lucide-react"
-import { ImportPreviewTable } from "./ImportPreviewTable"
-import { useImportPreview } from "@/lib/hooks/useImportPreview"
-import type { ImportPreviewSectionProps } from "@/lib/types/payroll-preview"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Eye, ChevronDown, ChevronUp } from "lucide-react";
+import { ImportPreviewTable } from "./ImportPreviewTable";
+import { useImportPreview } from "@/lib/hooks/useImportPreview";
+import type { ImportPreviewSectionProps } from "@/lib/types/payroll-preview";
 
-export function ImportPreviewSection({ 
-  importBatchId, 
-  totalRecords, 
-  successCount 
+export function ImportPreviewSection({
+  importBatchId,
+  totalRecords,
+  successCount,
 }: ImportPreviewSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const { previewData, loading, error, loadPreview } = useImportPreview()
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { previewData, loading, error, loadPreview } = useImportPreview();
 
   const handleTogglePreview = async () => {
     if (!isExpanded && previewData.length === 0) {
-      await loadPreview(importBatchId)
+      await loadPreview(importBatchId);
     }
-    setIsExpanded(!isExpanded)
-  }
+    setIsExpanded(!isExpanded);
+  };
 
   return (
     <Card className="mt-6">
@@ -53,10 +53,10 @@ export function ImportPreviewSection({
           </Button>
         </CardTitle>
       </CardHeader>
-      
+
       {isExpanded && (
         <CardContent>
-          <ImportPreviewTable 
+          <ImportPreviewTable
             data={previewData}
             loading={loading}
             error={error}
@@ -64,5 +64,5 @@ export function ImportPreviewSection({
         </CardContent>
       )}
     </Card>
-  )
+  );
 }

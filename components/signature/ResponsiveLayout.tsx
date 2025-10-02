@@ -1,62 +1,62 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Menu, 
-  X, 
-  Home, 
-  PenTool, 
-  BarChart3, 
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import {
+  Menu,
+  X,
+  Home,
+  PenTool,
+  BarChart3,
   FileSpreadsheet,
   LogOut,
   User,
-  Building2
-} from "lucide-react"
+  Building2,
+} from "lucide-react";
 
 interface ResponsiveLayoutProps {
-  children: React.ReactNode
-  title: string
-  subtitle?: string
+  children: React.ReactNode;
+  title: string;
+  subtitle?: string;
   userInfo?: {
-    full_name: string
-    employee_id: string
-    department: string
-    role: string
-  }
-  onLogout?: () => void
+    full_name: string;
+    employee_id: string;
+    department: string;
+    role: string;
+  };
+  onLogout?: () => void;
   navigation?: Array<{
-    label: string
-    href?: string
-    icon?: React.ReactNode
-    active?: boolean
-    onClick?: () => void
-  }>
-  actions?: React.ReactNode
-  className?: string
+    label: string;
+    href?: string;
+    icon?: React.ReactNode;
+    active?: boolean;
+    onClick?: () => void;
+  }>;
+  actions?: React.ReactNode;
+  className?: string;
 }
 
 const ROLE_LABELS = {
-  admin: 'Quản Trị Viên',
-  giam_doc: 'Giám Đốc',
-  ke_toan: 'Kế Toán',
-  nguoi_lap_bieu: 'Người Lập Biểu',
-  truong_phong: 'Trưởng Phòng',
-  to_truong: 'Tổ Trưởng',
-  nhan_vien: 'Nhân Viên'
-}
+  admin: "Quản Trị Viên",
+  giam_doc: "Giám Đốc",
+  ke_toan: "Kế Toán",
+  nguoi_lap_bieu: "Người Lập Biểu",
+  truong_phong: "Trưởng Phòng",
+  to_truong: "Tổ Trưởng",
+  nhan_vien: "Nhân Viên",
+};
 
 const ROLE_COLORS = {
-  admin: 'bg-red-100 text-red-800',
-  giam_doc: 'bg-blue-100 text-blue-800',
-  ke_toan: 'bg-green-100 text-green-800',
-  nguoi_lap_bieu: 'bg-purple-100 text-purple-800',
-  truong_phong: 'bg-yellow-100 text-yellow-800',
-  to_truong: 'bg-orange-100 text-orange-800',
-  nhan_vien: 'bg-gray-100 text-gray-800'
-}
+  admin: "bg-red-100 text-red-800",
+  giam_doc: "bg-blue-100 text-blue-800",
+  ke_toan: "bg-green-100 text-green-800",
+  nguoi_lap_bieu: "bg-purple-100 text-purple-800",
+  truong_phong: "bg-yellow-100 text-yellow-800",
+  to_truong: "bg-orange-100 text-orange-800",
+  nhan_vien: "bg-gray-100 text-gray-800",
+};
 
 export default function ResponsiveLayout({
   children,
@@ -66,43 +66,43 @@ export default function ResponsiveLayout({
   onLogout,
   navigation = [],
   actions,
-  className = ""
+  className = "",
 }: ResponsiveLayoutProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const defaultNavigation = [
     {
-      label: 'Dashboard',
+      label: "Dashboard",
       icon: <Home className="h-4 w-4" />,
-      active: true
+      active: true,
     },
     {
-      label: 'Ký Xác Nhận',
-      icon: <PenTool className="h-4 w-4" />
+      label: "Ký Xác Nhận",
+      icon: <PenTool className="h-4 w-4" />,
     },
     {
-      label: 'Tiến Độ',
-      icon: <BarChart3 className="h-4 w-4" />
+      label: "Tiến Độ",
+      icon: <BarChart3 className="h-4 w-4" />,
     },
     {
-      label: 'Lịch Sử',
-      icon: <FileSpreadsheet className="h-4 w-4" />
-    }
-  ]
+      label: "Lịch Sử",
+      icon: <FileSpreadsheet className="h-4 w-4" />,
+    },
+  ];
 
-  const navItems = navigation.length > 0 ? navigation : defaultNavigation
+  const navItems = navigation.length > 0 ? navigation : defaultNavigation;
 
   const NavigationContent = () => (
     <nav className="space-y-1">
@@ -110,13 +110,13 @@ export default function ResponsiveLayout({
         <button
           key={index}
           onClick={() => {
-            (item as any).onClick?.()
-            setIsMobileMenuOpen(false)
+            (item as any).onClick?.();
+            setIsMobileMenuOpen(false);
           }}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             item.active
-              ? 'bg-blue-100 text-blue-700'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              ? "bg-blue-100 text-blue-700"
+              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
           {item.icon}
@@ -124,9 +124,9 @@ export default function ResponsiveLayout({
         </button>
       ))}
     </nav>
-  )
+  );
 
-  const UserInfo = () => (
+  const UserInfo = () =>
     userInfo && (
       <div className="space-y-3">
         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -142,7 +142,7 @@ export default function ResponsiveLayout({
             </p>
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-400" />
@@ -150,16 +150,21 @@ export default function ResponsiveLayout({
               {userInfo.department}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Badge className={ROLE_COLORS[userInfo.role as keyof typeof ROLE_COLORS] || 'bg-gray-100 text-gray-800'}>
-              {ROLE_LABELS[userInfo.role as keyof typeof ROLE_LABELS] || userInfo.role}
+            <Badge
+              className={
+                ROLE_COLORS[userInfo.role as keyof typeof ROLE_COLORS] ||
+                "bg-gray-100 text-gray-800"
+              }
+            >
+              {ROLE_LABELS[userInfo.role as keyof typeof ROLE_LABELS] ||
+                userInfo.role}
             </Badge>
           </div>
         </div>
       </div>
-    )
-  )
+    );
 
   return (
     <div className={`min-h-screen bg-gray-50 ${className}`}>
@@ -169,7 +174,10 @@ export default function ResponsiveLayout({
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-4">
               {isMobile && (
-                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <Sheet
+                  open={isMobileMenuOpen}
+                  onOpenChange={setIsMobileMenuOpen}
+                >
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="sm" className="md:hidden">
                       <Menu className="h-5 w-5" />
@@ -187,16 +195,16 @@ export default function ResponsiveLayout({
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <UserInfo />
                       <NavigationContent />
-                      
+
                       {onLogout && (
                         <Button
                           variant="outline"
                           onClick={() => {
-                            onLogout()
-                            setIsMobileMenuOpen(false)
+                            onLogout();
+                            setIsMobileMenuOpen(false);
                           }}
                           className="w-full"
                         >
@@ -208,7 +216,7 @@ export default function ResponsiveLayout({
                   </SheetContent>
                 </Sheet>
               )}
-              
+
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                   {title}
@@ -220,10 +228,10 @@ export default function ResponsiveLayout({
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {actions}
-              
+
               {!isMobile && userInfo && (
                 <div className="hidden md:flex items-center gap-3">
                   <div className="text-right">
@@ -231,7 +239,8 @@ export default function ResponsiveLayout({
                       {userInfo.full_name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {ROLE_LABELS[userInfo.role as keyof typeof ROLE_LABELS] || userInfo.role}
+                      {ROLE_LABELS[userInfo.role as keyof typeof ROLE_LABELS] ||
+                        userInfo.role}
                     </p>
                   </div>
                   <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -239,7 +248,7 @@ export default function ResponsiveLayout({
                   </div>
                 </div>
               )}
-              
+
               {!isMobile && onLogout && (
                 <Button variant="outline" onClick={onLogout} size="sm">
                   <LogOut className="h-4 w-4 mr-2" />
@@ -262,8 +271,8 @@ export default function ResponsiveLayout({
                   onClick={(item as any).onClick}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     item.active
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
                   {item.icon}
@@ -280,5 +289,5 @@ export default function ResponsiveLayout({
         {children}
       </main>
     </div>
-  )
+  );
 }

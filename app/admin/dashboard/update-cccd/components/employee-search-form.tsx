@@ -1,82 +1,87 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Search, Loader2, User, AlertCircle } from "lucide-react"
+import { useState, useEffect, useCallback } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Search, Loader2, User, AlertCircle } from "lucide-react";
 
 interface Employee {
-  employee_id: string
-  full_name: string
-  department: string
-  chuc_vu: string
-  is_active: boolean
+  employee_id: string;
+  full_name: string;
+  department: string;
+  chuc_vu: string;
+  is_active: boolean;
 }
 
 interface EmployeeSearchFormProps {
-  onEmployeeSelect: (employee: Employee) => void
+  onEmployeeSelect: (employee: Employee) => void;
 }
 
-export function EmployeeSearchForm({ onEmployeeSelect }: EmployeeSearchFormProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [hasSearched, setHasSearched] = useState(false)
+export function EmployeeSearchForm({
+  onEmployeeSelect,
+}: EmployeeSearchFormProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const searchEmployees = useCallback(async (query: string) => {
     if (query.length < 2) {
-      setEmployees([])
-      setHasSearched(false)
-      return
+      setEmployees([]);
+      setHasSearched(false);
+      return;
     }
 
-    setIsSearching(true)
-    setError(null)
+    setIsSearching(true);
+    setError(null);
 
     try {
-      const token = localStorage.getItem("admin_token")
-      const response = await fetch(`/api/employees/update-cccd?q=${encodeURIComponent(query)}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const token = localStorage.getItem("admin_token");
+      const response = await fetch(
+        `/api/employees/update-cccd?q=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      })
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        setEmployees(data.employees)
-        setHasSearched(true)
+        setEmployees(data.employees);
+        setHasSearched(true);
       } else {
-        setError(data.error || "Có lỗi xảy ra khi tìm kiếm")
-        setEmployees([])
+        setError(data.error || "Có lỗi xảy ra khi tìm kiếm");
+        setEmployees([]);
       }
     } catch (error) {
-      console.error("Error searching employees:", error)
-      setError("Lỗi kết nối. Vui lòng thử lại.")
-      setEmployees([])
+      console.error("Error searching employees:", error);
+      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setEmployees([]);
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      searchEmployees(searchQuery)
-    }, 300)
+      searchEmployees(searchQuery);
+    }, 300);
 
-    return () => clearTimeout(timeoutId)
-  }, [searchQuery, searchEmployees])
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchEmployees]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-  }
+    setSearchQuery(e.target.value);
+  };
 
   const handleEmployeeClick = (employee: Employee) => {
-    onEmployeeSelect(employee)
-  }
+    onEmployeeSelect(employee);
+  };
 
   return (
     <div className="space-y-4">
@@ -127,7 +132,9 @@ export function EmployeeSearchForm({ onEmployeeSelect }: EmployeeSearchFormProps
                     <User className="w-5 h-5 text-gray-400" />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{employee.full_name}</span>
+                        <span className="font-semibold">
+                          {employee.full_name}
+                        </span>
                         <Badge variant="outline" className="text-xs">
                           {employee.employee_id}
                         </Badge>
@@ -153,5 +160,5 @@ export function EmployeeSearchForm({ onEmployeeSelect }: EmployeeSearchFormProps
         </p>
       )}
     </div>
-  )
+  );
 }

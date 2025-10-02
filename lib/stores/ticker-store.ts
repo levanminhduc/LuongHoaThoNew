@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { create } from "zustand"
+import { create } from "zustand";
 
 export type TickerState = {
-  visible: boolean
-  show: () => void
-  hide: () => void
-  toggle: () => void
-  setVisible: (v: boolean) => void
-}
+  visible: boolean;
+  show: () => void;
+  hide: () => void;
+  toggle: () => void;
+  setVisible: (v: boolean) => void;
+};
 
 // Simple store without persistence to avoid localStorage issues
 export const useTickerStore = create<TickerState>((set) => ({
@@ -17,5 +17,4 @@ export const useTickerStore = create<TickerState>((set) => ({
   hide: () => set({ visible: false }),
   toggle: () => set((s) => ({ visible: !s.visible })),
   setVisible: (v) => set({ visible: v }),
-}))
-
+}));

@@ -1,56 +1,56 @@
-"use client"
+"use client";
 
-import { useState, useRef, ReactNode } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useRef, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { ChevronDown, LucideIcon } from "lucide-react"
-import React from "react"
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, LucideIcon } from "lucide-react";
+import React from "react";
 
 export interface DropdownMenuItem {
-  id: string
-  label: string
-  icon?: LucideIcon
-  description?: string
-  colorClass?: string
-  iconColorClass?: string
-  onClick: () => void
-  disabled?: boolean
+  id: string;
+  label: string;
+  icon?: LucideIcon;
+  description?: string;
+  colorClass?: string;
+  iconColorClass?: string;
+  onClick: () => void;
+  disabled?: boolean;
 }
 
 export interface DropdownMenuSection {
-  title?: string
-  description?: string
-  items: DropdownMenuItem[]
+  title?: string;
+  description?: string;
+  items: DropdownMenuItem[];
 }
 
 export interface HoverDropdownMenuProps {
   // Trigger button props
-  triggerLabel: string
-  triggerIcon?: LucideIcon
-  triggerClassName?: string
-  
+  triggerLabel: string;
+  triggerIcon?: LucideIcon;
+  triggerClassName?: string;
+
   // Menu props
-  menuItems?: DropdownMenuItem[]
-  menuSections?: DropdownMenuSection[]
-  menuWidth?: string
-  menuAlign?: "start" | "center" | "end"
-  sideOffset?: number
-  
+  menuItems?: DropdownMenuItem[];
+  menuSections?: DropdownMenuSection[];
+  menuWidth?: string;
+  menuAlign?: "start" | "center" | "end";
+  sideOffset?: number;
+
   // Behavior props
-  hoverDelay?: number
-  disabled?: boolean
-  
+  hoverDelay?: number;
+  disabled?: boolean;
+
   // Footer props
-  footerText?: string
-  
+  footerText?: string;
+
   // Styling props
-  variant?: "default" | "outline" | "ghost" | "secondary"
+  variant?: "default" | "outline" | "ghost" | "secondary";
 }
 
 export function HoverDropdownMenu({
@@ -65,66 +65,66 @@ export function HoverDropdownMenu({
   hoverDelay = 200,
   disabled = false,
   footerText,
-  variant = "outline"
+  variant = "outline",
 }: HoverDropdownMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Combine menuItems and menuSections into a unified structure
   const allSections: DropdownMenuSection[] = [
     ...(menuItems.length > 0 ? [{ items: menuItems }] : []),
-    ...menuSections
-  ]
+    ...menuSections,
+  ];
 
   const handleMenuItemClick = (onClick: () => void) => {
-    onClick()
-    setIsOpen(false)
-  }
+    onClick();
+    setIsOpen(false);
+  };
 
   // Hover handlers
   const handleMouseEnter = () => {
-    if (disabled) return
-    
+    if (disabled) return;
+
     // Clear any existing timeout
     if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
-      hoverTimeoutRef.current = null
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
     }
     // Open dropdown immediately on hover
-    setIsOpen(true)
-  }
+    setIsOpen(true);
+  };
 
   const handleMouseLeave = () => {
-    if (disabled) return
-    
+    if (disabled) return;
+
     // Clear any existing timeout
     if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
+      clearTimeout(hoverTimeoutRef.current);
     }
     // Set timeout to close dropdown with delay
     hoverTimeoutRef.current = setTimeout(() => {
-      setIsOpen(false)
-      hoverTimeoutRef.current = null
-    }, hoverDelay)
-  }
+      setIsOpen(false);
+      hoverTimeoutRef.current = null;
+    }, hoverDelay);
+  };
 
   // Keep menu open when hovering over content
   const handleContentMouseEnter = () => {
     // Clear any existing timeout to keep menu open
     if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
-      hoverTimeoutRef.current = null
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
     }
-  }
+  };
 
   // Cleanup timeout on unmount
   React.useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current)
+        clearTimeout(hoverTimeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
     <div className="relative">
@@ -143,15 +143,15 @@ export function HoverDropdownMenu({
           >
             {TriggerIcon && <TriggerIcon className="h-4 w-4" />}
             <span className="font-medium">{triggerLabel}</span>
-            <ChevronDown 
+            <ChevronDown
               className={`h-4 w-4 transition-transform duration-200 ease-in-out ${
                 isOpen ? "rotate-180" : "rotate-0"
-              }`} 
+              }`}
             />
           </Button>
         </DropdownMenuTrigger>
-      
-        <DropdownMenuContent 
+
+        <DropdownMenuContent
           className={`${menuWidth} p-2 bg-white border border-slate-200 shadow-lg rounded-lg`}
           align={menuAlign}
           sideOffset={sideOffset}
@@ -163,21 +163,25 @@ export function HoverDropdownMenu({
               {/* Section Header */}
               {section.title && (
                 <div className="px-2 py-1.5 mb-1">
-                  <p className="text-sm font-semibold text-slate-700">{section.title}</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    {section.title}
+                  </p>
                   {section.description && (
-                    <p className="text-xs text-slate-500">{section.description}</p>
+                    <p className="text-xs text-slate-500">
+                      {section.description}
+                    </p>
                   )}
                 </div>
               )}
-              
+
               {/* Section Separator */}
               {(section.title || sectionIndex > 0) && (
                 <DropdownMenuSeparator className="my-1" />
               )}
-              
+
               {/* Menu Items */}
               {section.items.map((item) => {
-                const IconComponent = item.icon
+                const IconComponent = item.icon;
                 return (
                   <DropdownMenuItem
                     key={item.id}
@@ -193,16 +197,20 @@ export function HoverDropdownMenu({
                     `}
                   >
                     {IconComponent && (
-                      <div className={`
+                      <div
+                        className={`
                         flex-shrink-0 mt-0.5 p-1.5 rounded-md 
                         bg-white border border-slate-200
                         group-hover:border-current group-hover:bg-current/5
                         transition-all duration-200
-                      `}>
-                        <IconComponent className={`h-4 w-4 ${item.iconColorClass || "text-slate-600"} group-hover:text-current`} />
+                      `}
+                      >
+                        <IconComponent
+                          className={`h-4 w-4 ${item.iconColorClass || "text-slate-600"} group-hover:text-current`}
+                        />
                       </div>
                     )}
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm leading-tight">
                         {item.label}
@@ -214,16 +222,16 @@ export function HoverDropdownMenu({
                       )}
                     </div>
                   </DropdownMenuItem>
-                )
+                );
               })}
-              
+
               {/* Section Separator after items (except last section) */}
               {sectionIndex < allSections.length - 1 && (
                 <DropdownMenuSeparator className="my-2" />
               )}
             </div>
           ))}
-          
+
           {/* Footer */}
           {footerText && (
             <>
@@ -238,5 +246,5 @@ export function HoverDropdownMenu({
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  )
+  );
 }

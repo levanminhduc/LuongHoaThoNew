@@ -2,6 +2,7 @@
 type: "manual"
 description: "Example description"
 ---
+
 # 🎯 **RULE SET 6: DOMAIN KNOWLEDGE & BUSINESS CONTEXT**
 
 ## 📋 **OVERVIEW**
@@ -13,6 +14,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ## 🏭 **RULE 6.1: HIỂU BUSINESS DOMAIN**
 
 ### **Quy tắc:**
+
 ```
 ✅ Luôn nhớ đây là Payroll Management System cho MAY HÒA THỌ ĐIỆN BÀN
 ✅ Hiểu 39-column payroll structure từ Excel imports
@@ -23,12 +25,14 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ### **Core Business Knowledge:**
 
 #### **Company Context:**
+
 - **Tên công ty**: MAY HÒA THỌ ĐIỆN BÀN
 - **Ngành nghề**: Sản xuất may mặc
 - **Quy mô**: Nhiều nhân viên với các chức vụ khác nhau
 - **Đặc điểm**: Công ty sản xuất với nhiều ca làm việc, tăng ca
 
 #### **Payroll Structure (43 Columns - Updated 2024-07-30):**
+
 ```
 📊 Metadata (5 cột):
 - employee_id, salary_month, source_file, import_batch_id, import_status
@@ -53,6 +57,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 #### **Key Business Concepts:**
+
 - **Ngày công trong giờ**: Số ngày làm việc trong giờ hành chính
 - **Hệ số làm việc**: Coefficient dựa trên performance
 - **Tăng ca**: Overtime work với rate khác nhau
@@ -66,6 +71,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ### **3 User Groups chính:**
 
 #### **👨‍💼 Admin Users:**
+
 ```
 🎯 Goals:
 - Import payroll data từ Excel files
@@ -82,6 +88,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 #### **👷‍♂️ Employee Users:**
+
 ```
 🎯 Goals:
 - Tra cứu thông tin lương cá nhân
@@ -98,6 +105,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 #### **🏢 Company Stakeholders:**
+
 ```
 🎯 Goals:
 - Ensure labor law compliance
@@ -120,6 +128,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ### **Data Classification:**
 
 #### **🔴 CRITICAL DATA (Highest Security):**
+
 ```
 - CCCD numbers (always hashed với bcrypt)
 - Salary amounts (all monetary fields)
@@ -129,6 +138,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 #### **🟡 SENSITIVE DATA (Medium Security):**
+
 ```
 - Working hours và attendance data
 - Performance coefficients
@@ -138,6 +148,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 #### **🟢 PUBLIC DATA (Low Security):**
+
 ```
 - Employee ID (public identifier)
 - Position titles
@@ -147,6 +158,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 ### **Security Protocols:**
+
 ```
 🔒 CCCD Hashing: Always use bcrypt, never store plain text
 🔒 API Authentication: JWT tokens cho admin, CCCD verification cho employees
@@ -161,16 +173,18 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ## 🇻🇳 **RULE 6.4: VIETNAMESE BUSINESS CONTEXT**
 
 ### **Labor Law Compliance:**
+
 ```
 📋 Required Elements:
 - BHXH (Bảo hiểm xã hội): Social insurance
-- BHTN (Bảo hiểm thất nghiệp): Unemployment insurance  
+- BHTN (Bảo hiểm thất nghiệp): Unemployment insurance
 - BHYT (Bảo hiểm y tế): Health insurance
 - Thuế TNCN: Personal income tax
 - Minimum wage compliance
 ```
 
 ### **Cultural Considerations:**
+
 ```
 🇻🇳 Language:
 - Professional Vietnamese terminology
@@ -186,6 +200,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 ### **Regulatory Requirements:**
+
 ```
 ⚖️ Compliance Areas:
 - Accurate record keeping
@@ -200,6 +215,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ## 📊 **RULE 6.5: TECHNICAL DOMAIN KNOWLEDGE**
 
 ### **Excel Import Patterns:**
+
 ```
 📁 File Types: .xlsx, .xls only
 📁 Structure: Header row + data rows
@@ -209,6 +225,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 ### **Database Design Principles:**
+
 ```
 🗄️ Core Tables: employees (nhân viên), payrolls (43 cột), signature_logs
 🗄️ New Config Tables: import_file_configs, mapping_configurations, payroll_audit_logs
@@ -223,6 +240,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 ### **Performance Considerations:**
+
 ```
 ⚡ Mobile-First: Responsive design cho factory workers
 ⚡ Fast Lookups: Optimized employee search
@@ -236,6 +254,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ## 🎯 **PRACTICAL APPLICATION**
 
 ### **When making decisions, consider:**
+
 ```
 □ Does this align với Vietnamese labor practices?
 □ Is data sensitivity properly handled?
@@ -245,6 +264,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ```
 
 ### **Common scenarios to anticipate:**
+
 ```
 🔄 Monthly payroll cycles
 🔄 Employee onboarding/offboarding
@@ -272,6 +292,7 @@ Rule Set này đảm bảo AI Assistant hiểu sâu về domain business và con
 ### **Recent Database Changes:**
 
 #### **4 New Payroll Columns Added:**
+
 ```sql
 -- Script 15: Add missing payroll columns (3 cột)
 ALTER TABLE payrolls ADD COLUMN ngay_cong_chu_nhat DECIMAL(5,2) DEFAULT 0;
@@ -283,6 +304,7 @@ ALTER TABLE payrolls ADD COLUMN tien_tang_ca_vuot DECIMAL(15,2) DEFAULT 0;
 ```
 
 #### **New Configuration Tables:**
+
 ```sql
 -- Import Configuration System (Scripts 11-12):
 - import_file_configs: Store import file configurations
@@ -298,6 +320,7 @@ ALTER TABLE payrolls ADD COLUMN tien_tang_ca_vuot DECIMAL(15,2) DEFAULT 0;
 ```
 
 #### **Enhanced Features:**
+
 ```
 🔧 Smart Column Mapping: Auto-detect Excel columns to database fields
 🔧 Dual-File Import: Process multiple Excel files simultaneously

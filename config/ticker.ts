@@ -1,11 +1,11 @@
 export type TickerConfig = {
-  messages: string[]
-  speed: number
-  pauseOnHover: boolean
-  showCloseButton: boolean
+  messages: string[];
+  speed: number;
+  pauseOnHover: boolean;
+  showCloseButton: boolean;
   /** Pixel width of the spacer inserted at the end of the marquee loop for small screens */
-  loopSpacingMobilePx?: number
-}
+  loopSpacingMobilePx?: number;
+};
 
 export const tickerConfig: TickerConfig = {
   messages: [
@@ -15,5 +15,4 @@ export const tickerConfig: TickerConfig = {
   pauseOnHover: true,
   showCloseButton: false, // Disable dismiss functionality
   loopSpacingMobilePx: 48,
-}
-
+};

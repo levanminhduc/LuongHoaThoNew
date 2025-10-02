@@ -1,46 +1,53 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createServiceClient } from "@/utils/supabase/server"
-import * as XLSX from "xlsx"
-import jwt from "jsonwebtoken"
+import { type NextRequest, NextResponse } from "next/server";
+import { createServiceClient } from "@/utils/supabase/server";
+import * as XLSX from "xlsx";
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization")
+  const authHeader = request.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null
+    return null;
   }
 
-  const token = authHeader.substring(7)
+  const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any
-    return decoded.role === "admin" ? decoded : null
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    return decoded.role === "admin" ? decoded : null;
   } catch {
-    return null
+    return null;
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
     // Verify admin authentication
-    const admin = verifyAdminToken(request)
+    const admin = verifyAdminToken(request);
     if (!admin) {
-      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 })
+      return NextResponse.json(
+        { error: "Không có quyền truy cập" },
+        { status: 401 },
+      );
     }
 
-    const supabase = createServiceClient()
+    const supabase = createServiceClient();
 
     // Get current salary data structure from database
     const { data: samplePayrolls, error } = await supabase
       .from("payrolls")
       .select("*")
       .limit(3)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching sample data:", error)
-      return NextResponse.json({ error: "Lỗi khi lấy dữ liệu mẫu" }, { status: 500 })
+      console.error("Error fetching sample data:", error);
+      return NextResponse.json(
+        { error: "Lỗi khi lấy dữ liệu mẫu" },
+        { status: 500 },
+      );
     }
 
     // Get available employees for realistic template
@@ -48,7 +55,7 @@ export async function GET(request: NextRequest) {
       .from("employees")
       .select("employee_id, full_name, department")
       .eq("is_active", true)
-      .limit(5)
+      .limit(5);
 
     // Create template based on current database structure
     const templateData = [
@@ -96,7 +103,7 @@ export async function GET(request: NextRequest) {
         "Truy Thu Thẻ BHYT",
         "Tiền Lương Thực Nhận Cuối Kỳ",
       ],
-    ]
+    ];
 
     // Add sample data rows based on current database or employees
     if (samplePayrolls && samplePayrolls.length > 0) {
@@ -143,12 +150,12 @@ export async function GET(request: NextRequest) {
           payroll.bhxh_bhtn_bhyt_total || 0,
           payroll.truy_thu_the_bhyt || 0,
           payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
-        ])
-      })
+        ]);
+      });
     } else if (employees && employees.length > 0) {
       // Generate sample data if no payrolls exist
       employees.forEach((employee, index) => {
-        const currentMonth = new Date().toISOString().substr(0, 7)
+        const currentMonth = new Date().toISOString().substr(0, 7);
         templateData.push([
           employee.employee_id,
           currentMonth,
@@ -191,23 +198,23 @@ export async function GET(request: NextRequest) {
           1500000,
           0,
           12000000,
-        ])
-      })
+        ]);
+      });
     }
 
     // Create workbook and worksheet
-    const workbook = XLSX.utils.book_new()
-    const worksheet = XLSX.utils.aoa_to_sheet(templateData)
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(templateData);
 
     // Set column widths (updated to 41 columns)
-    const columnWidths = Array(41).fill({ wch: 15 })
-    worksheet["!cols"] = columnWidths
+    const columnWidths = Array(41).fill({ wch: 15 });
+    worksheet["!cols"] = columnWidths;
 
     // Style header row
-    const headerRange = XLSX.utils.decode_range(worksheet["!ref"] || "A1:AK1")
+    const headerRange = XLSX.utils.decode_range(worksheet["!ref"] || "A1:AK1");
     for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
-      if (!worksheet[cellAddress]) continue
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!worksheet[cellAddress]) continue;
 
       worksheet[cellAddress].s = {
         font: { bold: true, color: { rgb: "FFFFFF" } },
@@ -219,36 +226,37 @@ export async function GET(request: NextRequest) {
           left: { style: "thin", color: { rgb: "000000" } },
           right: { style: "thin", color: { rgb: "000000" } },
         },
-      }
+      };
     }
 
     // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Template Lương Đồng Bộ")
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template Lương Đồng Bộ");
 
     // Create buffer
     const buffer = XLSX.write(workbook, {
       type: "buffer",
       bookType: "xlsx",
       cellStyles: true,
-    })
+    });
 
     // Return synchronized template
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename=template-luong-dong-bo-${new Date().toISOString().substr(0, 10)}.xlsx`,
         "Content-Length": buffer.length.toString(),
       },
-    })
+    });
   } catch (error) {
-    console.error("Sync template error:", error)
+    console.error("Sync template error:", error);
     return NextResponse.json(
       {
         error: "Có lỗi xảy ra khi tạo template đồng bộ",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
-    )
+    );
   }
 }

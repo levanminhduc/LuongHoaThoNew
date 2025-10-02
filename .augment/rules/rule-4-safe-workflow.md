@@ -2,6 +2,7 @@
 type: "manual"
 description: "Example description"
 ---
+
 # ⚡ **RULE SET 4: QUY TRÌNH LÀM VIỆC AN TOÀN**
 
 ## 📋 **OVERVIEW**
@@ -13,6 +14,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ## 🔧 **RULE 4.1: SAFE WORKFLOW PROTOCOL**
 
 ### **5-Step Safe Workflow:**
+
 ```
 1. 🔍 UNDERSTAND: Analyze current state
 2. 📋 PLAN: Break down into small steps
@@ -22,6 +24,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ```
 
 ### **Step 1: UNDERSTAND**
+
 ```
 □ Current functionality working?
 □ Dependencies identified?
@@ -31,6 +34,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ```
 
 ### **Step 2: PLAN**
+
 ```
 □ Break into small, testable steps
 □ Identify potential risks
@@ -40,6 +44,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ```
 
 ### **Step 3: IMPLEMENT**
+
 ```
 □ One logical change at a time
 □ Maintain working state between steps
@@ -49,6 +54,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ```
 
 ### **Step 4: TEST**
+
 ```
 □ Verify each step works
 □ Test affected functionality
@@ -58,6 +64,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ```
 
 ### **Step 5: DOCUMENT**
+
 ```
 □ Explain what was changed
 □ Provide rollback instructions
@@ -71,6 +78,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ## 📦 **RULE 4.2: INCREMENTAL CHANGES**
 
 ### **Quy tắc:**
+
 ```
 ✅ Make small, testable changes
 ✅ One feature/fix per iteration
@@ -80,6 +88,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ```
 
 ### **Change size guidelines:**
+
 ```
 🟢 SMALL (Preferred):
 - Single component modification
@@ -101,6 +110,7 @@ Rule Set này đảm bảo mọi thay đổi được thực hiện một cách 
 ```
 
 ### **Implementation strategy:**
+
 ```
 For LARGE changes:
 1. Break into SMALL/MEDIUM chunks
@@ -115,6 +125,7 @@ For LARGE changes:
 ## ✅ **RULE 4.3: TESTING PROTOCOLS**
 
 ### **After each significant change:**
+
 ```
 □ Suggest running the application
 □ Recommend testing affected features
@@ -126,6 +137,7 @@ For LARGE changes:
 ### **Testing templates:**
 
 #### **Basic Testing:**
+
 ```
 🧪 "Để test thay đổi này:
    1. Chạy: npm run dev
@@ -136,22 +148,24 @@ For LARGE changes:
 ```
 
 #### **Feature Testing:**
+
 ```
 🧪 "Test scenarios cho feature mới:
-   
+
    ✅ Happy path:
    - [Step 1]: [Expected result]
    - [Step 2]: [Expected result]
-   
+
    ⚠️ Edge cases:
    - [Edge case 1]: [Expected behavior]
    - [Edge case 2]: [Expected behavior]
-   
+
    🚫 Error cases:
    - [Error scenario]: [Expected error handling]"
 ```
 
 #### **Regression Testing:**
+
 ```
 🧪 "Kiểm tra không bị regression:
    1. [Existing feature 1]: Vẫn hoạt động bình thường
@@ -164,21 +178,22 @@ For LARGE changes:
 ## 🔄 **RULE 4.4: ROLLBACK PROCEDURES**
 
 ### **Always provide rollback information:**
+
 ```
 📝 "ROLLBACK INSTRUCTIONS:
-   
+
    What was changed:
    - [File 1]: [Specific changes]
    - [File 2]: [Specific changes]
-   
+
    To rollback:
    1. [Specific rollback step 1]
    2. [Specific rollback step 2]
    3. [Verification step]
-   
+
    Git rollback (if committed):
    git checkout HEAD~1 [filename]
-   
+
    Complete reset (nuclear option):
    git reset --hard HEAD~1"
 ```
@@ -186,6 +201,7 @@ For LARGE changes:
 ### **Rollback complexity levels:**
 
 #### **EASY Rollback:**
+
 ```
 🟢 Single file changes:
 - Copy-paste previous code
@@ -194,6 +210,7 @@ For LARGE changes:
 ```
 
 #### **MEDIUM Rollback:**
+
 ```
 🟡 Multiple file changes:
 - Revert each file individually
@@ -202,6 +219,7 @@ For LARGE changes:
 ```
 
 #### **HARD Rollback:**
+
 ```
 🔴 Complex changes:
 - Database rollback required
@@ -213,6 +231,7 @@ For LARGE changes:
 ### **Rollback templates:**
 
 #### **Simple Rollback:**
+
 ```
 🔄 "Để rollback thay đổi này:
    1. Trong file [filename], thay đổi dòng [line number]:
@@ -223,19 +242,20 @@ For LARGE changes:
 ```
 
 #### **Complex Rollback:**
+
 ```
 🔄 "COMPLEX ROLLBACK REQUIRED:
-   
+
    Files to revert:
    1. [File 1]: [Specific changes to undo]
    2. [File 2]: [Specific changes to undo]
-   
+
    Steps:
    1. [Detailed step 1]
    2. [Detailed step 2]
    3. Restart: npm run dev
    4. Test: [verification steps]
-   
+
    If issues persist:
    git checkout HEAD~1 [affected files]"
 ```
@@ -245,6 +265,7 @@ For LARGE changes:
 ## 🚨 **RULE 4.5: RISK ASSESSMENT**
 
 ### **Risk levels:**
+
 ```
 🟢 LOW RISK:
 - UI styling changes
@@ -274,15 +295,16 @@ For LARGE changes:
 ### **Risk mitigation strategies:**
 
 #### **For HIGH/CRITICAL risk:**
+
 ```
 ⚫ "HIGH RISK CHANGE DETECTED:
-   
+
    Mitigation required:
    1. ✅ Complete backup created
    2. ✅ Rollback plan documented
    3. ✅ Testing strategy defined
    4. ✅ User confirmation obtained
-   
+
    Proceed only after all checkboxes confirmed."
 ```
 
@@ -291,39 +313,41 @@ For LARGE changes:
 ## 📝 **PRACTICAL EXAMPLES**
 
 ### **Example 1: Safe component modification**
+
 ```
 🔧 "Tôi sẽ modify UserProfile component theo 3 steps:
-   
+
    Step 1: Add new prop interface
    - File: components/UserProfile.tsx
    - Change: Add 'avatar' prop to interface
    - Test: Component still renders correctly
-   
+
    Step 2: Implement avatar display
    - Add avatar rendering logic
    - Test: Avatar shows when provided
-   
+
    Step 3: Update parent components
    - Pass avatar prop from parent
    - Test: Full functionality working
-   
+
    Rollback: Revert each step in reverse order if issues"
 ```
 
 ### **Example 2: Database change workflow**
+
 ```
 🔧 "Database schema change - HIGH RISK:
-   
+
    Current state: users table has 5 columns
    Planned: Add 'avatar_url' column
-   
+
    Safe approach:
    1. Backup current database
    2. Add column with DEFAULT value
    3. Test existing queries still work
    4. Update application code
    5. Test new functionality
-   
+
    Rollback plan:
    1. Remove new column: ALTER TABLE users DROP COLUMN avatar_url
    2. Revert application code

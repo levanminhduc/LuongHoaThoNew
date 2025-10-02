@@ -3,24 +3,24 @@
 
 function createSimpleFavicon() {
   // Tạo canvas 32x32
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 32;
   canvas.height = 32;
-  const ctx = canvas.getContext('2d');
-  
+  const ctx = canvas.getContext("2d");
+
   // Background xanh dương
-  ctx.fillStyle = '#1e40af';
+  ctx.fillStyle = "#1e40af";
   ctx.fillRect(0, 0, 32, 32);
-  
+
   // Chữ "HT" màu trắng
-  ctx.fillStyle = 'white';
-  ctx.font = 'bold 18px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('HT', 16, 16);
-  
+  ctx.fillStyle = "white";
+  ctx.font = "bold 18px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("HT", 16, 16);
+
   // Convert to data URL
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL("image/png");
 }
 
 // Sử dụng:
