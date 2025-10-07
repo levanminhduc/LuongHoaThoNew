@@ -17,21 +17,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Eye,
   EyeOff,
-  Lock,
+  KeyRound,
   AlertCircle,
   CheckCircle2,
   Loader2,
-  ShieldCheck,
   Info,
 } from "lucide-react";
 
-interface ResetPasswordModalProps {
+interface ForgotPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employeeId: string;
-  cccd: string;
-  employeeName: string;
-  onPasswordReset?: () => void;
+  onSuccess?: () => void;
 }
 
 interface PasswordStrength {
@@ -41,15 +37,14 @@ interface PasswordStrength {
   issues: string[];
 }
 
-export function ResetPasswordModal({
+export function ForgotPasswordModal({
   isOpen,
   onClose,
-  employeeId,
-  cccd,
-  employeeName,
-  onPasswordReset,
-}: ResetPasswordModalProps) {
+  onSuccess,
+}: ForgotPasswordModalProps) {
   const [formData, setFormData] = useState({
+    employeeId: "",
+    cccd: "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -69,12 +64,10 @@ export function ResetPasswordModal({
     issues: [],
   });
 
-  // Check password strength
   const checkPasswordStrength = (password: string): PasswordStrength => {
     const issues: string[] = [];
     let score = 0;
 
-    // Length check
     if (password.length < 8) {
       issues.push("Ít nhất 8 ký tự");
     } else if (password.length >= 12) {
@@ -83,35 +76,30 @@ export function ResetPasswordModal({
       score += 1;
     }
 
-    // Lowercase check
     if (!/[a-z]/.test(password)) {
       issues.push("Cần có chữ thường");
     } else {
       score += 1;
     }
 
-    // Uppercase check
     if (!/[A-Z]/.test(password)) {
       issues.push("Cần có chữ hoa");
     } else {
       score += 1;
     }
 
-    // Number check
     if (!/[0-9]/.test(password)) {
       issues.push("Cần có số");
     } else {
       score += 1;
     }
 
-    // Special character check
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
       issues.push("Nên có ký tự đặc biệt");
     } else {
       score += 1;
     }
 
-    // Determine strength label and color
     let label = "";
     let color = "";
 
@@ -132,7 +120,6 @@ export function ResetPasswordModal({
     return { score: score * 20, label, color, issues };
   };
 
-  // Handle password input change
   const handlePasswordChange = (value: string) => {
     setFormData((prev) => ({ ...prev, newPassword: value }));
     if (value) {
@@ -142,8 +129,17 @@ export function ResetPasswordModal({
     }
   };
 
-  // Validate form
   const validateForm = (): boolean => {
+    if (!formData.employeeId.trim()) {
+      setError("Vui lòng nhập mã nhân viên");
+      return false;
+    }
+
+    if (!formData.cccd.trim()) {
+      setError("Vui lòng nhập số CCCD");
+      return false;
+    }
+
     if (!formData.newPassword) {
       setError("Vui lòng nhập mật khẩu mới");
       return false;
@@ -170,7 +166,6 @@ export function ResetPasswordModal({
     return true;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -180,14 +175,14 @@ export function ResetPasswordModal({
     setError("");
 
     try {
-      const response = await fetch("/api/auth/change-password-with-cccd", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          employee_code: employeeId,
-          cccd: cccd,
+          employee_code: formData.employeeId.trim(),
+          cccd: formData.cccd.trim(),
           new_password: formData.newPassword,
         }),
       });
@@ -197,32 +192,34 @@ export function ResetPasswordModal({
       if (response.ok && data.success) {
         setSuccess(true);
         setTimeout(() => {
-          onPasswordReset?.();
+          onSuccess?.();
           handleClose();
         }, 2000);
       } else {
-        // Handle error responses
         if (response.status === 429) {
           setError(data.error || "Quá nhiều lần thử. Vui lòng thử lại sau.");
-        } else if (response.status === 400) {
-          setError(data.error || "Thông tin không hợp lệ");
+        } else if (response.status === 403) {
+          setError(data.error);
+        } else if (response.status === 401 || response.status === 404) {
+          setError("Thông tin không hợp lệ. Vui lòng kiểm tra lại.");
         } else {
-          // Generic message for security (don't reveal if CCCD is wrong)
-          setError("Không thể đổi mật khẩu. Vui lòng kiểm tra lại thông tin.");
+          setError(
+            data.error || "Không thể đặt lại mật khẩu. Vui lòng thử lại.",
+          );
         }
       }
     } catch (err) {
-      console.error("Password reset error:", err);
+      console.error("Forgot password error:", err);
       setError("Lỗi kết nối. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle modal close
   const handleClose = () => {
-    // Reset form
     setFormData({
+      employeeId: "",
+      cccd: "",
       newPassword: "",
       confirmPassword: "",
     });
@@ -242,33 +239,55 @@ export function ResetPasswordModal({
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Lock className="w-5 h-5" />
-            Đổi Mật Khẩu
+            <KeyRound className="w-5 h-5" />
+            Quên Mật Khẩu
           </DialogTitle>
           <DialogDescription className="space-y-2">
             <span className="block">
-              Đặt mật khẩu mới cho tài khoản của bạn.
+              Đặt lại mật khẩu bằng cách xác thực số CCCD của bạn.
             </span>
-            <span className="block text-yellow-600 font-medium">
-              ⚠️ Đảm bảo bạn đang sử dụng thiết bị cá nhân
+            <span className="block text-amber-600 font-medium">
+              ⚠️ Bạn chỉ có thể sử dụng chức năng này sau 24 giờ kể từ lần đổi
+              mật khẩu trước
             </span>
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[65vh] pr-4">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Confirmation Alert */}
-            <Alert className="border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-sm text-blue-700">
-                <strong>Bạn đang đổi mật khẩu cho:</strong>
-                <div className="mt-1 font-medium">
-                  {employeeId} - {employeeName}
-                </div>
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-2">
+              <Label htmlFor="employee-id">Mã nhân viên</Label>
+              <Input
+                id="employee-id"
+                type="text"
+                value={formData.employeeId}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    employeeId: e.target.value.toUpperCase(),
+                  }))
+                }
+                placeholder="Nhập mã nhân viên"
+                disabled={loading}
+                required
+              />
+            </div>
 
-            {/* New Password */}
+            <div className="space-y-2">
+              <Label htmlFor="cccd">Số CCCD</Label>
+              <Input
+                id="cccd"
+                type="text"
+                value={formData.cccd}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, cccd: e.target.value }))
+                }
+                placeholder="Nhập số CCCD"
+                disabled={loading}
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="new-password">Mật khẩu mới</Label>
               <div className="relative">
@@ -297,7 +316,6 @@ export function ResetPasswordModal({
                 </button>
               </div>
 
-              {/* Password Strength Indicator */}
               {formData.newPassword && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -333,7 +351,6 @@ export function ResetPasswordModal({
               )}
             </div>
 
-            {/* Confirm Password */}
             <div className="space-y-2">
               <Label htmlFor="confirm-password">Xác nhận mật khẩu mới</Label>
               <div className="relative">
@@ -377,7 +394,6 @@ export function ResetPasswordModal({
                 )}
             </div>
 
-            {/* Error/Success Messages */}
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -389,22 +405,21 @@ export function ResetPasswordModal({
               <Alert className="border-green-200 bg-green-50">
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-700">
-                  Đổi mật khẩu thành công! Đang chuyển hướng...
+                  Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu
+                  mới.
                 </AlertDescription>
               </Alert>
             )}
 
-            {/* Security Tips */}
-            <Alert className="border-amber-200 bg-amber-50">
-              <ShieldCheck className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-xs text-amber-700">
-                <strong>Lưu ý bảo mật:</strong> Sử dụng mật khẩu mạnh với ít
-                nhất 8 ký tự, bao gồm chữ và số. Không chia sẻ mật khẩu với
-                người khác.
+            <Alert className="border-blue-200 bg-blue-50">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-xs text-blue-700">
+                <strong>Lưu ý:</strong> Vì lý do bảo mật, bạn chỉ có thể sử dụng
+                chức năng này sau 24 giờ kể từ lần đổi mật khẩu trước. Nếu cần
+                hỗ trợ ngay, vui lòng liên hệ admin.
               </AlertDescription>
             </Alert>
 
-            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
               <Button
                 type="button"
@@ -427,8 +442,8 @@ export function ResetPasswordModal({
                   </>
                 ) : (
                   <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Đổi Mật Khẩu
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Đặt Lại Mật Khẩu
                   </>
                 )}
               </Button>

@@ -12,6 +12,7 @@ import {
   Shield,
   Cog,
   Database,
+  KeyRound,
 } from "lucide-react";
 
 interface AdminSystemMenuProps {
@@ -66,6 +67,15 @@ export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
       colorClass: "text-orange-700 hover:text-orange-800 hover:bg-orange-50",
       iconColorClass: "text-orange-600",
       onClick: () => router.push("/admin/department-management"),
+    },
+    {
+      id: "password-reset-history",
+      label: "Lịch Sử Đổi Mật Khẩu",
+      icon: KeyRound,
+      description: "Theo dõi hoạt động đổi mật khẩu, phát hiện IP nghi ngờ",
+      colorClass: "text-red-700 hover:text-red-800 hover:bg-red-50",
+      iconColorClass: "text-red-600",
+      onClick: () => router.push("/admin/password-reset-history"),
     },
   ];
 

@@ -38,6 +38,7 @@ import Link from "next/link";
 import { PayrollDetailModal } from "./payroll-detail-modal";
 import { ResetPasswordModal } from "./reset-password-modal";
 import { SalaryHistoryModal } from "./salary-history-modal";
+import { ForgotPasswordModal } from "./forgot-password-modal";
 import {
   formatSalaryMonth,
   formatSignatureTime,
@@ -134,6 +135,7 @@ export function EmployeeLookup() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const salaryInfoRef = useRef<HTMLDivElement>(null); // Ref để scroll đến phần thông tin lương
 
@@ -442,6 +444,16 @@ export function EmployeeLookup() {
               <Button variant="outline" asChild>
                 <Link href="/">Quay Lại</Link>
               </Button>
+            </div>
+
+            <div className="flex justify-center mt-3">
+              <button
+                type="button"
+                onClick={() => setShowForgotPasswordModal(true)}
+                className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+              >
+                Quên mật khẩu?
+              </button>
             </div>
           </CardContent>
         </form>
@@ -777,6 +789,15 @@ export function EmployeeLookup() {
           employeeName={result.full_name}
         />
       )}
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onSuccess={() => {
+          setError("");
+        }}
+      />
     </div>
   );
 }

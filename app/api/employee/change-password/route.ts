@@ -53,7 +53,7 @@ async function logSecurityEvent(
       action,
       ip_address: ipAddress,
       details,
-      created_at: new Date().toISOString(),
+      // created_at sẽ tự động được set bởi database trigger với múi giờ Việt Nam
     });
   } catch (error) {
     console.error("Failed to log security event:", error);

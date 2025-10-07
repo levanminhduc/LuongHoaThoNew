@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Eye,
   EyeOff,
@@ -258,7 +259,7 @@ export function ChangePasswordModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="w-5 h-5" />
@@ -275,215 +276,217 @@ export function ChangePasswordModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Current Password */}
-          <div className="space-y-2">
-            <Label htmlFor="current-password">
-              Mật khẩu hiện tại
-              {mustChangePassword && (
-                <span className="text-xs text-muted-foreground ml-2">
-                  (Nhập số CCCD nếu chưa đổi lần nào)
-                </span>
-              )}
-            </Label>
-            <div className="relative">
-              <Input
-                id="current-password"
-                type={showPasswords.current ? "text" : "password"}
-                value={formData.currentPassword}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    currentPassword: e.target.value,
-                  }))
-                }
-                placeholder="Nhập mật khẩu hiện tại"
-                className="pr-10"
-                disabled={loading}
-                required
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPasswords((prev) => ({
-                    ...prev,
-                    current: !prev.current,
-                  }))
-                }
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPasswords.current ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* New Password */}
-          <div className="space-y-2">
-            <Label htmlFor="new-password">Mật khẩu mới</Label>
-            <div className="relative">
-              <Input
-                id="new-password"
-                type={showPasswords.new ? "text" : "password"}
-                value={formData.newPassword}
-                onChange={(e) => handlePasswordChange(e.target.value)}
-                placeholder="Nhập mật khẩu mới"
-                className="pr-10"
-                disabled={loading}
-                required
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
-                }
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPasswords.new ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-
-            {/* Password Strength Indicator */}
-            {formData.newPassword && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    Độ mạnh:
+        <ScrollArea className="max-h-[65vh] pr-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Current Password */}
+            <div className="space-y-2">
+              <Label htmlFor="current-password">
+                Mật khẩu hiện tại
+                {mustChangePassword && (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (Nhập số CCCD nếu chưa đổi lần nào)
                   </span>
-                  <span
-                    className={`text-xs font-medium ${
-                      passwordStrength.score <= 40
-                        ? "text-red-600"
-                        : passwordStrength.score <= 60
-                          ? "text-yellow-600"
-                          : passwordStrength.score <= 80
-                            ? "text-blue-600"
-                            : "text-green-600"
-                    }`}
-                  >
-                    {passwordStrength.label}
-                  </span>
-                </div>
-                <Progress value={passwordStrength.score} className="h-2" />
-
-                {passwordStrength.issues.length > 0 && (
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    {passwordStrength.issues.map((issue, idx) => (
-                      <li key={idx} className="flex items-center gap-1">
-                        <span className="text-yellow-600">•</span> {issue}
-                      </li>
-                    ))}
-                  </ul>
                 )}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="current-password"
+                  type={showPasswords.current ? "text" : "password"}
+                  value={formData.currentPassword}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      currentPassword: e.target.value,
+                    }))
+                  }
+                  placeholder="Nhập mật khẩu hiện tại"
+                  className="pr-10"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPasswords((prev) => ({
+                      ...prev,
+                      current: !prev.current,
+                    }))
+                  }
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showPasswords.current ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Xác nhận mật khẩu mới</Label>
-            <div className="relative">
-              <Input
-                id="confirm-password"
-                type={showPasswords.confirm ? "text" : "password"}
-                value={formData.confirmPassword}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    confirmPassword: e.target.value,
-                  }))
-                }
-                placeholder="Nhập lại mật khẩu mới"
-                className="pr-10"
-                disabled={loading}
-                required
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPasswords((prev) => ({
-                    ...prev,
-                    confirm: !prev.confirm,
-                  }))
-                }
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPasswords.confirm ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
             </div>
-            {formData.confirmPassword &&
-              (formData.newPassword === formData.confirmPassword ? (
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Mật khẩu khớp
-                </p>
-              ) : (
-                <p className="text-xs text-red-600">Mật khẩu không khớp</p>
-              ))}
-          </div>
 
-          {/* Error/Success Messages */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            {/* New Password */}
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Mật khẩu mới</Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showPasswords.new ? "text" : "password"}
+                  value={formData.newPassword}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  placeholder="Nhập mật khẩu mới"
+                  className="pr-10"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
+                  }
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showPasswords.new ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
 
-          {success && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-700">
-                Đổi mật khẩu thành công! Đang chuyển hướng...
+              {/* Password Strength Indicator */}
+              {formData.newPassword && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Độ mạnh:
+                    </span>
+                    <span
+                      className={`text-xs font-medium ${
+                        passwordStrength.score <= 40
+                          ? "text-red-600"
+                          : passwordStrength.score <= 60
+                            ? "text-yellow-600"
+                            : passwordStrength.score <= 80
+                              ? "text-blue-600"
+                              : "text-green-600"
+                      }`}
+                    >
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+                  <Progress value={passwordStrength.score} className="h-2" />
+
+                  {passwordStrength.issues.length > 0 && (
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      {passwordStrength.issues.map((issue, idx) => (
+                        <li key={idx} className="flex items-center gap-1">
+                          <span className="text-yellow-600">•</span> {issue}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Xác nhận mật khẩu mới</Label>
+              <div className="relative">
+                <Input
+                  id="confirm-password"
+                  type={showPasswords.confirm ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
+                  placeholder="Nhập lại mật khẩu mới"
+                  className="pr-10"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPasswords((prev) => ({
+                      ...prev,
+                      confirm: !prev.confirm,
+                    }))
+                  }
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showPasswords.confirm ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {formData.confirmPassword &&
+                (formData.newPassword === formData.confirmPassword ? (
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Mật khẩu khớp
+                  </p>
+                ) : (
+                  <p className="text-xs text-red-600">Mật khẩu không khớp</p>
+                ))}
+            </div>
+
+            {/* Error/Success Messages */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">
+                  Đổi mật khẩu thành công! Đang chuyển hướng...
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Security Tips */}
+            <Alert className="border-blue-200 bg-blue-50">
+              <ShieldCheck className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-xs text-blue-700">
+                <strong>Lưu ý bảo mật:</strong> Sử dụng mật khẩu mạnh với ít
+                nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
               </AlertDescription>
             </Alert>
-          )}
 
-          {/* Security Tips */}
-          <Alert className="border-blue-200 bg-blue-50">
-            <ShieldCheck className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-xs text-blue-700">
-              <strong>Lưu ý bảo mật:</strong> Sử dụng mật khẩu mạnh với ít nhất
-              8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
-            </AlertDescription>
-          </Alert>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={loading}
-            >
-              Hủy
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang xử lý...
-                </>
-              ) : (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Đổi Mật Khẩu
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={loading}
+              >
+                Hủy
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Đổi Mật Khẩu
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
