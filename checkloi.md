@@ -27,4 +27,4 @@ info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/d
 02:13:43.195 
  ELIFECYCLE  Command failed with exit code 1.
 02:13:43.222 
-Error: Command "pnpm run build" exited with 1
+Error: Command "pnpm run build" exited with 1.
