@@ -53,6 +53,7 @@ import {
   useAutoLoadConfigurations,
 } from "@/lib/hooks/use-mapping-config";
 import { ImportPreviewSection } from "./components/ImportPreviewSection";
+import ImportErrorModal from "@/components/payroll-import/ImportErrorModal";
 import * as XLSX from "xlsx";
 
 interface ImportResult {
@@ -86,6 +87,8 @@ export default function PayrollImportExportPage() {
     null,
   );
   const [analysisError, setAnalysisError] = useState("");
+
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const router = useRouter();
   const { configurations, defaultConfig } = useMappingConfig();
@@ -1048,9 +1051,73 @@ export default function PayrollImportExportPage() {
               {/* Error Details */}
               {results.errors && results.errors.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="font-medium text-red-700 mb-3">
-                    Chi Tiết Lỗi:
-                  </h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-red-700">Chi Tiết Lỗi:</h4>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowErrorModal(true)}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Xem Tất Cả {results.errors.length} Lỗi
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem("admin_token");
+                            if (!token || !results.errors) return;
+
+                            const response = await fetch(
+                              "/api/admin/export-import-errors",
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({
+                                  errors: results.errors.map((error: any) => ({
+                                    row: error.row,
+                                    column: error.field,
+                                    field: error.field,
+                                    currentValue:
+                                      error.employee_id || error.salary_month,
+                                    errorType: error.errorType || "validation",
+                                    severity: "medium",
+                                    message: error.error,
+                                  })),
+                                  format: "excel",
+                                  fileName: "import_errors",
+                                }),
+                              },
+                            );
+
+                            if (response.ok) {
+                              const blob = await response.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = `import_errors_${new Date().toISOString().split("T")[0]}.xlsx`;
+                              document.body.appendChild(a);
+                              a.click();
+                              window.URL.revokeObjectURL(url);
+                              document.body.removeChild(a);
+                            }
+                          } catch (error) {
+                            console.error("Export error:", error);
+                          }
+                        }}
+                        className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Tải Báo Cáo Lỗi Excel
+                      </Button>
+                    </div>
+                  </div>
                   <div className="max-h-60 overflow-y-auto space-y-2">
                     {results.errors
                       .slice(0, 10)
@@ -1134,6 +1201,17 @@ export default function PayrollImportExportPage() {
           ]}
           defaultSalaryMonth={salaryMonth}
         />
+
+        {/* Import Error Modal */}
+        {results && results.errors && results.errors.length > 0 && (
+          <ImportErrorModal
+            isOpen={showErrorModal}
+            onClose={() => setShowErrorModal(false)}
+            errors={results.errors}
+            totalRecords={results.totalRecords}
+            successCount={results.successCount}
+          />
+        )}
       </div>
     </div>
   );

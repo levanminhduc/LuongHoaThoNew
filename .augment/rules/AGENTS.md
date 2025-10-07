@@ -1,8 +1,11 @@
+---
+type: "always_apply"
+---
+
 # Priority Rules (override default if there is a duplicate) (TOML formatted)
 
 [language_requirements]
-reiterate_in_english = "When a user asks in a language other than English, reiterate the request in English before proceeding"
-working_language = "ALWAYS think, answer, and perform in English"
+working_language = "ALWAYS think, answer, and perform in VietNamese"
 
 [code_quality.core_principles]
 no_unused_code = "Don't write unused code - ensure everything written is utilized in the project"
@@ -42,8 +45,8 @@ step_7 = "Take Responsibility"
 step_8 = "Learn & Adapt"
 
 [typescript_development]
-lint_requirement = "ALWAYS run 'deno task lint' at root directory after writing code to ensure code quality"
-format_requirement = "Run 'deno task fmt' to format code according to Deno standards"
-typecheck_requirement = "After fixing lint errors, ALWAYS run 'deno task typecheck' to verify type correctness"
-complete_workflow = "The complete workflow after writing code: 'deno task fmt' → 'deno task lint' → fix errors → 'deno task typecheck' → fix type errors"
-runtime = "Deno v2.0+ with npm: specifier for npm package compatibility"
+lint_requirement = "ALWAYS run 'npm run lint' at the root directory after writing code to check for syntax and style errors (typically using ESLint)"
+format_requirement = "Run 'npm run format' to format code consistently (typically using Prettier)"
+typecheck_requirement = "After fixing lint errors, ALWAYS run 'npm run typecheck' to verify type correctness (using the TypeScript compiler 'tsc')"
+complete_workflow = "The complete workflow after writing code: 'npm run format' → 'npm run lint' → fix errors → 'npm run typecheck' → fix type errors"
+runtime = "Node.js v18
