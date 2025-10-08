@@ -1052,7 +1052,7 @@ export async function POST(request: NextRequest) {
               errorType:
                 error.code === "DUPLICATE_RECORD" ? "duplicate" : "database",
               severity: "high" as const,
-              message: error.error,
+              message: String(error.error || "Unknown error"),
               suggestion: "Kiểm tra dữ liệu và thử lại",
             });
           });
@@ -1232,7 +1232,7 @@ async function processFileForTransaction(
 
         // Map columns according to configuration
         headers.forEach((header, colIndex) => {
-          const mapping = mappingLookup.get(header);
+          const mapping = mappingLookup.get(String(header));
           if (mapping && row[colIndex] !== undefined) {
             const cellValue = cleanCellValue(row[colIndex]);
 
@@ -1302,7 +1302,7 @@ async function processFileForTransaction(
         autoFixes.push(
           ...validationResult.autoFixes.map((fix) => ({
             success: true,
-            fixedValue: fix.fixedValue,
+            fixedValue: fix.fixedValue as string | number | Date | null,
             fixType: "validation",
             confidence: fix.confidence,
             description: `${fix.field}: ${fix.reason}`,
@@ -1537,10 +1537,12 @@ async function processFile(
                   mappedData,
                   "create_new",
                 );
-                mappedData = newData;
-                console.log(
-                  `Creating new record with modified ID: ${mappedData.employee_id}`,
-                );
+                if (newData) {
+                  mappedData = newData as PayrollRecord;
+                  console.log(
+                    `Creating new record with modified ID: ${mappedData.employee_id}`,
+                  );
+                }
                 break;
 
               default:

@@ -13,6 +13,21 @@ import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
 
+// Type definitions for mapping
+interface ColumnAlias {
+  alias_name: string;
+  database_field: string;
+}
+
+interface FieldMapping {
+  database_field: string;
+  excel_column_name: string;
+}
+
+interface MappingConfig {
+  configuration_field_mappings?: FieldMapping[];
+}
+
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -53,20 +68,6 @@ async function createHeaderToFieldMapping(
       .from("column_aliases")
       .select("database_field, alias_name")
       .eq("is_active", true);
-
-    interface ColumnAlias {
-      alias_name: string;
-      database_field: string;
-    }
-
-    interface FieldMapping {
-      database_field: string;
-      excel_column_name: string;
-    }
-
-    interface MappingConfig {
-      configuration_field_mappings?: FieldMapping[];
-    }
 
     if (!error && aliases) {
       (aliases as ColumnAlias[]).forEach((alias) => {

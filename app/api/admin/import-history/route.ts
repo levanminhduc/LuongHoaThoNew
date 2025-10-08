@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import jwt from "jsonwebtoken";
+import { type JWTPayload } from "@/lib/auth";
 
 interface ImportHistoryRecord {
   id?: string;
@@ -39,9 +40,9 @@ export async function POST(request: NextRequest) {
     const token = authHeader.split(" ")[1];
     const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
-    let decoded: { role?: string };
+    let decoded: JWTPayload;
     try {
-      decoded = jwt.verify(token, JWT_SECRET) as { role?: string };
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     } catch (error) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
     const mockData = {
       id: `hist_${Date.now()}`,
       ...body,
-      user_id: decoded.userId || "admin",
+      user_id: decoded.employee_id || "admin",
       created_at: getVietnamTimestamp(),
     };
 

@@ -5,6 +5,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 export interface JWTPayload {
   username: string;
   employee_id: string;
+  full_name?: string;
   role:
     | "admin"
     | "giam_doc"

@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
         dataRows = payrollData.map((record) =>
           selectedFields.map(
             (field) =>
-              (record as Record<string, unknown>)[field] ?? ("" as unknown),
+              (record as unknown as Record<string, unknown>)[field] ?? "",
           ),
         );
       }

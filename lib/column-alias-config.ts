@@ -12,6 +12,7 @@ export interface ColumnAlias {
   created_by: string;
   created_at?: string;
   updated_at?: string;
+  config_id?: number;
 }
 
 export interface DatabaseFieldConfig {
