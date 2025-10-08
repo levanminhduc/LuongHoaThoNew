@@ -31,7 +31,7 @@ interface ImportError {
   row: number;
   column?: string;
   field?: string;
-  value?: any;
+  value?: unknown;
   errorType: "validation" | "format" | "duplicate" | "database" | "system";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
@@ -44,7 +44,7 @@ interface ErrorFix {
   errorIndex: number;
   originalError: ImportError;
   fixType: "manual" | "auto" | "pattern";
-  newValue: any;
+  newValue: unknown;
   confidence: "high" | "medium" | "low";
   applied: boolean;
 }
@@ -125,7 +125,7 @@ export function BatchErrorResolution({
   }, []);
 
   const applyBatchFix = useCallback(
-    (fixType: "manual" | "auto" | "pattern", value?: any) => {
+    (fixType: "manual" | "auto" | "pattern", value?: unknown) => {
       const newFixes: ErrorFix[] = [];
 
       selectedErrors.forEach((errorIndex) => {

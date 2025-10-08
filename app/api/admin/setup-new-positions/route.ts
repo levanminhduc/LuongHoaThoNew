@@ -74,10 +74,13 @@ export async function POST(request: NextRequest) {
     }
 
     const positionCounts =
-      positions?.reduce((acc: any, emp: any) => {
-        acc[emp.chuc_vu] = (acc[emp.chuc_vu] || 0) + 1;
-        return acc;
-      }, {}) || {};
+      positions?.reduce(
+        (acc: Record<string, number>, emp: { chuc_vu: string }) => {
+          acc[emp.chuc_vu] = (acc[emp.chuc_vu] || 0) + 1;
+          return acc;
+        },
+        {},
+      ) || {};
 
     return NextResponse.json({
       success: true,

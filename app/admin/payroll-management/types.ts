@@ -124,7 +124,7 @@ export interface PayrollField {
   max?: number;
   step?: number;
   description?: string;
-  validation?: (value: any) => string | null;
+  validation?: (value: unknown) => string | null;
 }
 
 export interface PayrollUpdateRequest {

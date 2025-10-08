@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   TestTube,
   Database,
-  FileSpreadsheet,
 } from "lucide-react";
 import {
   autoMapColumnsWithAliases,
@@ -453,7 +452,7 @@ export default function TestColumnMappingPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    Chưa có kết quả test. Nhấn "Basic Test" để bắt đầu.
+                    {`Chưa có kết quả test. Nhấn "Basic Test" để bắt đầu.`}
                   </div>
                 )}
               </CardContent>
@@ -487,7 +486,7 @@ export default function TestColumnMappingPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    Chưa có kết quả test. Nhấn "Problematic Test" để bắt đầu.
+                    {`Chưa có kết quả test. Nhấn "Problematic Test" để bắt đầu.`}
                   </div>
                 )}
               </CardContent>
@@ -541,8 +540,7 @@ export default function TestColumnMappingPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    Chưa có kết quả validation. Chạy Basic Test trước, sau đó
-                    nhấn "Validation Test".
+                    {`Chưa có kết quả validation. Chạy Basic Test trước, sau đó nhấn "Validation Test".`}
                   </div>
                 )}
               </CardContent>

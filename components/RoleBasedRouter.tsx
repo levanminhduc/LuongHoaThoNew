@@ -248,10 +248,10 @@ export function useRoleAccess() {
 
 // Higher-order component for protecting routes
 export function withRoleProtection(
-  WrappedComponent: React.ComponentType<any>,
+  WrappedComponent: React.ComponentType<Record<string, unknown>>,
   allowedRoles: string[],
 ) {
-  return function ProtectedComponent(props: any) {
+  return function ProtectedComponent(props: Record<string, unknown>) {
     const { user, hasRole } = useRoleAccess();
     const router = useRouter();
 

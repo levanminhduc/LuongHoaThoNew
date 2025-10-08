@@ -21,7 +21,7 @@ interface ColumnMapping {
 }
 
 // Enhanced validation utilities
-function cleanCellValue(value: any): string | null {
+function cleanCellValue(value: unknown): string | null {
   if (value === undefined || value === null) return null;
 
   const stringValue = value.toString().trim();
@@ -40,24 +40,32 @@ function isValidRequiredField(value: string | null): boolean {
   return value !== null && value !== "" && value.length > 0;
 }
 
+interface PayrollRecord {
+  employee_id?: string;
+  salary_month?: string;
+  [key: string]: unknown;
+}
+
 // Duplicate detection and resolution utilities
 interface DuplicateRecord {
   id: string;
   employee_id: string;
   salary_month: string;
-  existing_data: any;
-  new_data: any;
+  existing_data: Record<string, unknown>;
+  new_data: Record<string, unknown>;
 }
 
 interface DuplicateResolution {
   action: "skip" | "overwrite" | "merge" | "create_new";
   employee_id: string;
   salary_month: string;
-  resolved_data?: any;
+  resolved_data?: Record<string, unknown>;
 }
 
-function detectDuplicatesInBatch(records: any[]): Map<string, any[]> {
-  const duplicateMap = new Map<string, any[]>();
+function detectDuplicatesInBatch(
+  records: PayrollRecord[],
+): Map<string, PayrollRecord[]> {
+  const duplicateMap = new Map<string, PayrollRecord[]>();
   const seenKeys = new Map<string, number>();
 
   records.forEach((record, index) => {
@@ -85,7 +93,7 @@ function detectDuplicatesInBatch(records: any[]): Map<string, any[]> {
 }
 
 async function checkExistingDuplicates(
-  supabase: any,
+  supabase: ReturnType<typeof createServiceClient>,
   employee_id: string,
   salary_month: string,
 ) {
@@ -105,10 +113,10 @@ async function checkExistingDuplicates(
 }
 
 function resolveDuplicateData(
-  existing: any,
-  newData: any,
+  existing: Record<string, unknown> | null,
+  newData: Record<string, unknown>,
   action: string,
-): any {
+): Record<string, unknown> | null {
   switch (action) {
     case "skip":
       return null; // Don't insert anything
@@ -151,7 +159,7 @@ interface ImportError {
   row: number;
   column?: string;
   field?: string;
-  value?: any;
+  value?: unknown;
   errorType: "validation" | "format" | "duplicate" | "database" | "system";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
@@ -168,7 +176,7 @@ function createDetailedError(
   options: {
     column?: string;
     field?: string;
-    value?: any;
+    value?: unknown;
     suggestion?: string;
     expectedFormat?: string;
   } = {},
@@ -220,7 +228,7 @@ function categorizeError(
   row: number,
   column?: string,
   field?: string,
-  value?: any,
+  value?: unknown,
 ): ImportError {
   const lowerMessage = errorMessage.toLowerCase();
 
@@ -286,25 +294,24 @@ function categorizeError(
   });
 }
 
-// Auto-fix utilities
 interface AutoFixResult {
   success: boolean;
-  fixedValue: any;
+  fixedValue: string | number | Date | null;
   fixType: string;
   confidence: "high" | "medium" | "low";
   description: string;
 }
 
 function attemptAutoFix(
-  value: any,
+  value: unknown,
   field: string,
   dataType: string,
 ): AutoFixResult | null {
   if (value === undefined || value === null) {
-    return null; // Cannot auto-fix missing values
+    return null;
   }
 
-  const stringValue = value.toString().trim();
+  const stringValue = String(value).trim();
 
   switch (dataType) {
     case "date":
@@ -447,7 +454,7 @@ function autoFixText(value: string, field: string): AutoFixResult | null {
 
   let fixedValue = value;
   let fixType = "";
-  let confidence: "high" | "medium" | "low" = "high";
+  const confidence: "high" | "medium" | "low" = "high";
 
   // Trim whitespace
   fixedValue = fixedValue.trim();
@@ -474,7 +481,7 @@ function parseNumberField(value: string, columnName: string): number {
       return 0;
     }
 
-    let stringValue = value.toString().trim();
+    const stringValue = value.toString().trim();
 
     // Handle special text values
     const specialValues: { [key: string]: number } = {
@@ -931,8 +938,8 @@ export async function POST(request: NextRequest) {
     const allAutoFixes: AutoFixResult[] = [];
 
     // Prepare data for transaction
-    let file1Records: any[] = [];
-    let file2Records: any[] = [];
+    let file1Records: PayrollRecord[] = [];
+    let file2Records: PayrollRecord[] = [];
 
     // Process File 1 data preparation
     if (file1 && file1MappingsStr) {
@@ -1013,7 +1020,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Execute transaction if we have data to process
-    let transactionResult: any = null;
+    let transactionResult: Record<string, unknown> | null = null;
     if (file1Records.length > 0 || file2Records.length > 0) {
       try {
         const sessionId = `DUAL_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -1037,7 +1044,7 @@ export async function POST(request: NextRequest) {
 
         // Add transaction errors to detailed errors
         if (txResult.errors && Array.isArray(txResult.errors)) {
-          txResult.errors.forEach((error: any) => {
+          txResult.errors.forEach((error: Record<string, unknown>) => {
             allDetailedErrors.push({
               row: 0,
               field: "transaction",
@@ -1175,12 +1182,12 @@ async function processFileForTransaction(
   fileType: string,
   duplicateStrategy: string = "skip",
 ): Promise<{
-  records: any[];
+  records: Record<string, unknown>[];
   totalRecords: number;
   detailedErrors: ImportError[];
   autoFixes: AutoFixResult[];
 }> {
-  const records: any[] = [];
+  const records: Record<string, unknown>[] = [];
   const detailedErrors: ImportError[] = [];
   const autoFixes: AutoFixResult[] = [];
 
@@ -1192,7 +1199,7 @@ async function processFileForTransaction(
 
     const jsonData = XLSX.utils.sheet_to_json(worksheet, {
       header: 1,
-    }) as any[][];
+    }) as unknown[][];
 
     if (jsonData.length < 2) {
       throw new Error(`File ${file.name} không có dữ liệu hoặc thiếu header`);
@@ -1214,7 +1221,7 @@ async function processFileForTransaction(
       const actualRowNumber = index + 2; // +2 because we skip header and arrays are 0-indexed
 
       try {
-        const mappedData: any = {
+        const mappedData: PayrollRecord = {
           source_file: file.name,
           import_batch_id: `BATCH_${Date.now()}`,
           import_status: "pending",
@@ -1340,7 +1347,7 @@ async function processFileForTransaction(
 async function processFile(
   file: File,
   mappings: ColumnMapping[],
-  supabase: any,
+  supabase: ReturnType<typeof createServiceClient>,
   fileType: string,
   duplicateStrategy: string = "skip",
 ): Promise<{
@@ -1371,7 +1378,7 @@ async function processFile(
 
     // Get headers and data
     const headers = jsonData[0] as string[];
-    const dataRows = jsonData.slice(1) as any[][];
+    const dataRows = jsonData.slice(1) as unknown[][];
 
     // Create mapping lookup
     const mappingLookup = new Map<string, ColumnMapping>();
@@ -1388,7 +1395,7 @@ async function processFile(
 
       try {
         // Map Excel data to database fields
-        let mappedData: any = {};
+        let mappedData: PayrollRecord = {};
         let hasRequiredFields = true;
         const missingRequired: string[] = [];
 

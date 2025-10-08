@@ -572,8 +572,12 @@ export default function ColumnMappingConfigPage() {
                             </TableCell>
                             <TableCell>
                               <Badge variant="secondary">
-                                {(config as any).configuration_field_mappings
-                                  ?.length || 0}{" "}
+                                {(
+                                  config as {
+                                    configuration_field_mappings?: unknown[];
+                                  }
+                                ).configuration_field_mappings?.length ||
+                                  0}{" "}
                                 fields
                               </Badge>
                             </TableCell>

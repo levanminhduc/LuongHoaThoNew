@@ -346,15 +346,27 @@ export function EmployeeLookup() {
             Thông Tin Tra Cứu
           </CardTitle>
           <CardDescription>
-            Lưu ý*: Ở ô Nhập <strong>"Mã Nhân Viên"</strong> <br />- Đối với
-            nhân viên <strong>CHÍNH THỨC</strong> bạn cần nhập{" "}
-            <strong>DB0 + mã nhân viên</strong> của mình. <br />
-            - Ví dụ: Nếu mã nhân viên của bạn là 1234, bạn cần nhập DB01234 vào
-            ô "Mã Nhân Viên". <br />- Đối với nhân viên{" "}
-            <strong>THỬ VIỆC</strong> bạn cần nhập{" "}
-            <strong>DBT0 + mã nhân viên</strong> của mình. <br />- Ví dụ: Nếu mã
+            {`Lưu ý*: Ở ô Nhập `}
+            <strong>{`"Mã Nhân Viên"`}</strong> <br />
+            {`- Đối với
+            nhân viên `}
+            <strong>CHÍNH THỨC</strong>
+            {` bạn cần nhập `}
+            <strong>DB0 + mã nhân viên</strong>
+            {` của mình. `}
+            <br />
+            {`- Ví dụ: Nếu mã nhân viên của bạn là 1234, bạn cần nhập DB01234 vào
+            ô "Mã Nhân Viên". `}
+            <br />
+            {`- Đối với nhân viên `}
+            <strong>THỬ VIỆC</strong>
+            {` bạn cần nhập `}
+            <strong>DBT0 + mã nhân viên</strong>
+            {` của mình. `}
+            <br />
+            {`- Ví dụ: Nếu mã
             nhân viên của bạn là 1234, bạn cần nhập DBT01234 vào ô "Mã Nhân
-            Viên".
+            Viên".`}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>

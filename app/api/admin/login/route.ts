@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const tokenPayload: Omit<JWTPayload, "iat" | "exp"> = {
       username: user.username,
       employee_id: user.employee_id,
-      role: user.role as any,
+      role: user.role as JWTPayload["role"],
       department: user.department,
       allowed_departments: user.allowed_departments,
       permissions: user.permissions,

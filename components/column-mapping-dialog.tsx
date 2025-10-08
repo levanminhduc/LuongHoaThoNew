@@ -607,12 +607,12 @@ export function ColumnMappingDialog({
                               {showAdvancedView &&
                                 enhancedMapping[column]?.matched_alias && (
                                   <p className="text-xs text-blue-600">
-                                    via alias: "
+                                    {`via alias: "`}
                                     {
                                       enhancedMapping[column].matched_alias!
                                         .alias_name
                                     }
-                                    "
+                                    {`"`}
                                   </p>
                                 )}
                             </div>
@@ -811,8 +811,10 @@ export function ColumnMappingDialog({
           <DialogHeader>
             <DialogTitle>Tạo Alias Mới</DialogTitle>
             <DialogDescription>
-              Tạo alias cho column "{createAliasColumn}" để tự động mapping
-              trong tương lai
+              {`Tạo alias cho column "`}
+              {createAliasColumn}
+              {`" để tự động mapping
+              trong tương lai`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

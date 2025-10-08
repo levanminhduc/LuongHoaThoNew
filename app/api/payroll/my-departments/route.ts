@@ -175,10 +175,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    interface EmployeeInfo {
+      department?: string;
+    }
+
     // Calculate statistics by department
     const departmentStats = allowedDepartments.map((dept) => {
       const deptData =
-        stats?.filter((s) => (s.employees as any)?.department === dept) || [];
+        stats?.filter((s) => {
+          const employee = s.employees as EmployeeInfo | EmployeeInfo[] | null;
+          const employeeData = Array.isArray(employee) ? employee[0] : employee;
+          return employeeData?.department === dept;
+        }) || [];
       const totalEmployees = deptData.length;
       const signedCount = deptData.filter((s) => s.is_signed).length;
       const totalSalary = deptData.reduce(

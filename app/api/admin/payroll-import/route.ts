@@ -22,7 +22,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as { role?: string };
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -31,7 +31,7 @@ function verifyAdminToken(request: NextRequest) {
 
 // Function to load aliases from database and create comprehensive header mapping
 async function createHeaderToFieldMapping(
-  supabase: any,
+  supabase: ReturnType<typeof createServiceClient>,
 ): Promise<Record<string, string>> {
   const HEADER_TO_FIELD: Record<string, string> = {};
 
@@ -54,8 +54,22 @@ async function createHeaderToFieldMapping(
       .select("database_field, alias_name")
       .eq("is_active", true);
 
+    interface ColumnAlias {
+      alias_name: string;
+      database_field: string;
+    }
+
+    interface FieldMapping {
+      database_field: string;
+      excel_column_name: string;
+    }
+
+    interface MappingConfig {
+      configuration_field_mappings?: FieldMapping[];
+    }
+
     if (!error && aliases) {
-      aliases.forEach((alias: any) => {
+      (aliases as ColumnAlias[]).forEach((alias) => {
         HEADER_TO_FIELD[alias.alias_name] = alias.database_field;
       });
       console.log(`✅ Loaded ${aliases.length} column aliases`);
@@ -79,8 +93,8 @@ async function createHeaderToFieldMapping(
       .eq("is_active", true);
 
     if (!error && configs) {
-      configs.forEach((config: any) => {
-        config.configuration_field_mappings?.forEach((mapping: any) => {
+      (configs as MappingConfig[]).forEach((config) => {
+        config.configuration_field_mappings?.forEach((mapping) => {
           HEADER_TO_FIELD[mapping.excel_column_name] = mapping.database_field;
         });
       });
@@ -172,7 +186,7 @@ export async function POST(request: NextRequest) {
     const worksheet = workbook.Sheets[sheetName];
     const jsonData = XLSX.utils.sheet_to_json(worksheet, {
       header: 1,
-    }) as any[][];
+    }) as unknown[][];
 
     if (jsonData.length < 2) {
       const error = ApiErrorHandler.createError(
@@ -269,7 +283,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Map row data to database fields
-        const recordData: Record<string, any> = {
+        const recordData: Record<string, unknown> = {
           source_file: file.name,
           import_batch_id: batchId,
           import_status: "imported",

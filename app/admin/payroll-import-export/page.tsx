@@ -62,7 +62,14 @@ interface ImportResult {
   successCount: number;
   errorCount: number;
   overwriteCount?: number;
-  errors?: any[];
+  errors?: Array<{
+    row: number;
+    field?: string;
+    employee_id?: string;
+    salary_month?: string;
+    errorType?: string;
+    message: string;
+  }>;
   processingTime: string;
   importBatchId?: string;
 }
@@ -191,15 +198,6 @@ export default function PayrollImportExportPage() {
     } finally {
       setExportLoading(false);
     }
-  };
-
-  // Legacy export function for backward compatibility
-  const handleLegacyExport = async () => {
-    const options: ExportOptions = {
-      includeData: exportType === "data",
-      salaryMonth: exportType === "data" ? salaryMonth : undefined,
-    };
-    await handleExport(options);
   };
 
   // Handle generate template from configuration
@@ -1080,7 +1078,7 @@ export default function PayrollImportExportPage() {
                                   Authorization: `Bearer ${token}`,
                                 },
                                 body: JSON.stringify({
-                                  errors: results.errors.map((error: any) => ({
+                                  errors: results.errors.map((error) => ({
                                     row: error.row,
                                     column: error.field,
                                     field: error.field,
@@ -1119,20 +1117,18 @@ export default function PayrollImportExportPage() {
                     </div>
                   </div>
                   <div className="max-h-60 overflow-y-auto space-y-2">
-                    {results.errors
-                      .slice(0, 10)
-                      .map((error: any, index: number) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-red-50 border-l-4 border-red-300 rounded text-sm"
-                        >
-                          <div className="font-medium text-red-800">
-                            Row {error.row}: {error.employee_id || "UNKNOWN"} -{" "}
-                            {error.salary_month || "UNKNOWN"}
-                          </div>
-                          <div className="text-red-700 mt-1">{error.error}</div>
+                    {results.errors.slice(0, 10).map((error, index: number) => (
+                      <div
+                        key={index}
+                        className="p-3 bg-red-50 border-l-4 border-red-300 rounded text-sm"
+                      >
+                        <div className="font-medium text-red-800">
+                          Row {error.row}: {error.employee_id || "UNKNOWN"} -{" "}
+                          {error.salary_month || "UNKNOWN"}
                         </div>
-                      ))}
+                        <div className="text-red-700 mt-1">{error.error}</div>
+                      </div>
+                    ))}
                     {results.errors.length > 10 && (
                       <div className="text-center text-sm text-gray-500 py-2">
                         Và {results.errors.length - 10} lỗi khác...

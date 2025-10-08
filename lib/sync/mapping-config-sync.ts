@@ -10,7 +10,6 @@ import type { MappingConfiguration } from "@/lib/column-alias-config";
 
 // ===== SYNC INTERFACES =====
 
-
 export interface SyncEvent {
   type:
     | "config_created"

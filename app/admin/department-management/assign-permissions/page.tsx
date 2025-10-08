@@ -137,10 +137,14 @@ function AssignPermissionsContent() {
       );
 
       if (deptResponse.ok) {
+        interface Department {
+          name: string;
+        }
+
         const deptData = await deptResponse.json();
         // Sắp xếp departments theo chữ cái A-Z
         const sortedDepartments = (deptData.departments || []).sort(
-          (a: any, b: any) =>
+          (a: Department, b: Department) =>
             a.name.localeCompare(b.name, "vi", { sensitivity: "base" }),
         );
         setDepartments(sortedDepartments);

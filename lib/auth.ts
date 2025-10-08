@@ -164,7 +164,9 @@ export async function authenticateUser(
             username: testAccount.name,
             role: testAccount.role,
             department: testAccount.department,
-            allowed_departments: (testAccount as any).allowed_departments || [],
+            allowed_departments:
+              (testAccount as { allowed_departments?: string[] })
+                .allowed_departments || [],
             permissions: getPermissionsByRole(testAccount.role),
           },
         };
@@ -302,7 +304,7 @@ function getPermissionsByRole(role: string): string[] {
 export async function verifyEmployeeCredentials(
   employeeId: string,
   cccd: string,
-): Promise<any> {
+): Promise<Record<string, unknown> | null> {
   try {
     const supabase = createServiceClient();
     const { data: employee } = await supabase

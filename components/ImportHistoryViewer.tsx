@@ -51,8 +51,8 @@ interface ImportHistoryRecord {
     database: number;
     system: number;
   };
-  auto_fixes: any[];
-  detailed_errors: any[];
+  auto_fixes: Array<Record<string, unknown>>;
+  detailed_errors: Array<Record<string, unknown>>;
   user_id: string;
   created_at: string;
   status: "completed" | "failed" | "partial";

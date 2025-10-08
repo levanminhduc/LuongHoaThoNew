@@ -165,7 +165,7 @@ export function PayrollEditForm({
     }
 
     // Prepare updates (only changed fields)
-    const updates: Record<string, any> = {};
+    const updates: Record<string, unknown> = {};
     PAYROLL_FIELD_GROUPS.forEach((group) => {
       group.fields.forEach((field) => {
         const currentValue = formData[field.key];

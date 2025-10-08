@@ -58,8 +58,18 @@ interface EmployeeListModalProps {
   totalEmployees?: number;
 }
 
+interface CachedData {
+  employees?: Employee[];
+  pagination?: { totalPages?: number };
+  departments?: string[];
+  departmentCounts?: Record<string, number>;
+}
+
 // Cache object for storing API responses (60 minutes)
-const employeeCache = new Map<string, { data: any; timestamp: number }>();
+const employeeCache = new Map<
+  string,
+  { data: CachedData; timestamp: number }
+>();
 const CACHE_DURATION = 60 * 60 * 1000; // 60 minutes
 
 export default function EmployeeListModal({
@@ -114,7 +124,7 @@ export default function EmployeeListModal({
   }, []);
 
   // Set cache data
-  const setCachedData = useCallback((cacheKey: string, data: any) => {
+  const setCachedData = useCallback((cacheKey: string, data: CachedData) => {
     employeeCache.set(cacheKey, {
       data,
       timestamp: Date.now(),

@@ -154,7 +154,7 @@ export default function TestRolesPage() {
             MAY HÒA THỌ ĐIỆN BÀN - Role-Based Access Control
           </p>
           <p className="text-sm text-gray-500">
-            Click vào nút "Login & Test" để trải nghiệm từng role
+            {`Click vào nút "Login & Test" để trải nghiệm từng role`}
           </p>
         </div>
 

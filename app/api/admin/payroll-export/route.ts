@@ -205,7 +205,9 @@ export async function GET(request: NextRequest) {
     console.log("Debug - Employees table sample:", employeesDebug);
     console.log("Debug - Employees error:", employeesError);
 
-    let { data: payrollData, error } = await query;
+    const queryResult = await query;
+    let payrollData = queryResult.data;
+    const error = queryResult.error;
 
     if (error) {
       console.error("Error fetching payroll data:", error);
@@ -365,9 +367,23 @@ export async function GET(request: NextRequest) {
       "Ký Nhận",
     ];
 
+    interface PayrollRecord {
+      [key: string]: unknown;
+      is_signed?: boolean;
+      employees?: {
+        full_name?: string;
+      } | null;
+    }
+
+    interface ManagementSignature {
+      full_name?: string;
+      signature_image_url?: string;
+      signed_by_name?: string;
+    }
+
     // Prepare data rows - simplified approach
-    const dataRows = payrollData.map((record: any, index: number) => {
-      const row = [index + 1]; // STT
+    const dataRows = payrollData.map((record: PayrollRecord, index: number) => {
+      const row: unknown[] = [index + 1]; // STT
 
       // Add all payroll fields
       PAYROLL_FIELDS.forEach((field) => {
@@ -383,10 +399,14 @@ export async function GET(request: NextRequest) {
     });
 
     // Fetch management signatures for the month
-    let managementSignatures = {
-      giam_doc: null as any,
-      ke_toan: null as any,
-      nguoi_lap_bieu: null as any,
+    const managementSignatures: {
+      giam_doc: ManagementSignature | null;
+      ke_toan: ManagementSignature | null;
+      nguoi_lap_bieu: ManagementSignature | null;
+    } = {
+      giam_doc: null,
+      ke_toan: null,
+      nguoi_lap_bieu: null,
     };
 
     if (month) {

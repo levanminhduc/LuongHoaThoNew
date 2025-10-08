@@ -61,7 +61,7 @@ interface ImportError {
 
 interface EnhancedImportError extends ImportError {
   column?: string;
-  value?: any;
+  value?: unknown;
   severity: "low" | "medium" | "high" | "critical";
   message: string;
   suggestion?: string;
@@ -875,8 +875,8 @@ export default function ImportErrorModal({
                             Tải Báo Cáo Lỗi Excel
                           </h4>
                           <p className="text-sm text-gray-600">
-                            Click nút "Tải Excel" ở tab "Tất Cả Lỗi" để tải
-                            xuống file Excel chứa chi tiết tất cả lỗi.
+                            {`Click nút "Tải Excel" ở tab "Tất Cả Lỗi" để tải
+                            xuống file Excel chứa chi tiết tất cả lỗi.`}
                           </p>
                         </div>
                       </div>
@@ -887,12 +887,12 @@ export default function ImportErrorModal({
                         </div>
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm mb-1">
-                            Xem Sheet "Error Details"
+                            {`Xem Sheet "Error Details"`}
                           </h4>
                           <p className="text-sm text-gray-600">
-                            Mở file Excel và xem sheet "Error Details" để hiểu
+                            {`Mở file Excel và xem sheet "Error Details" để hiểu
                             rõ từng lỗi. Chú ý cột "Suggestion" để biết cách
-                            fix.
+                            fix.`}
                           </p>
                         </div>
                       </div>
@@ -903,12 +903,12 @@ export default function ImportErrorModal({
                         </div>
                         <div className="flex-1">
                           <h4 className="font-semibold text-sm mb-1">
-                            Sử Dụng Sheet "Fix Template"
+                            {`Sử Dụng Sheet "Fix Template"`}
                           </h4>
                           <p className="text-sm text-gray-600">
-                            Điền giá trị đúng vào cột "Corrected Value" trong
+                            {`Điền giá trị đúng vào cột "Corrected Value" trong
                             sheet "Fix Template". Đây là template giúp bạn track
-                            việc fix lỗi.
+                            việc fix lỗi.`}
                           </p>
                         </div>
                       </div>

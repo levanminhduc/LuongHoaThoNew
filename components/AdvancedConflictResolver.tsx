@@ -37,8 +37,8 @@ interface ConflictRecord {
   id: string;
   employee_id: string;
   salary_month: string;
-  existing_data: Record<string, any>;
-  new_data: Record<string, any>;
+  existing_data: Record<string, unknown>;
+  new_data: Record<string, unknown>;
   conflict_fields: string[];
   priority_score: number;
   last_updated: string;
@@ -63,9 +63,17 @@ interface ResolutionRule {
   >;
 }
 
+interface ConflictResolution {
+  employee_id: string;
+  salary_month: string;
+  resolved_data: Record<string, unknown>;
+  resolution_method: string;
+  conflict_fields: string[];
+}
+
 interface AdvancedConflictResolverProps {
   conflicts: ConflictRecord[];
-  onResolveConflicts?: (resolutions: any[]) => void;
+  onResolveConflicts?: (resolutions: ConflictResolution[]) => void;
   className?: string;
 }
 
@@ -117,7 +125,18 @@ export function AdvancedConflictResolver({
     field_rules: {} as Record<string, string>,
   });
 
-  const [resolutions, setResolutions] = useState<Map<string, any>>(new Map());
+  interface Resolution {
+    conflict_id: string;
+    rule_applied: string;
+    resolution_type: string;
+    resolved_data: Record<string, unknown> | null;
+    confidence: string;
+    requires_manual_review?: boolean;
+  }
+
+  const [resolutions, setResolutions] = useState<Map<string, Resolution>>(
+    new Map(),
+  );
 
   const toggleConflictSelection = useCallback((conflictId: string) => {
     setSelectedConflicts((prev) => {
@@ -139,7 +158,7 @@ export function AdvancedConflictResolver({
         const conflict = conflicts.find((c) => c.id === conflictId);
         if (!conflict) return;
 
-        let resolution: any = {
+        const resolution: Resolution = {
           conflict_id: conflictId,
           rule_applied: rule.id,
           resolution_type: rule.action,
@@ -194,10 +213,10 @@ export function AdvancedConflictResolver({
   );
 
   const smartMerge = (
-    existing: Record<string, any>,
-    newData: Record<string, any>,
+    existing: Record<string, unknown>,
+    newData: Record<string, unknown>,
     conflictFields: string[],
-  ) => {
+  ): Record<string, unknown> => {
     const merged = { ...existing };
 
     Object.keys(newData).forEach((key) => {
@@ -243,8 +262,8 @@ export function AdvancedConflictResolver({
   };
 
   const applyFieldRules = (
-    existing: Record<string, any>,
-    newData: Record<string, any>,
+    existing: Record<string, unknown>,
+    newData: Record<string, unknown>,
     fieldRules: Record<string, string>,
   ) => {
     const resolved = { ...existing };
@@ -552,7 +571,7 @@ export function AdvancedConflictResolver({
                     <Label>Action</Label>
                     <Select
                       value={customRule.action}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value: string) =>
                         setCustomRule((prev) => ({ ...prev, action: value }))
                       }
                     >

@@ -1,9 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
+import { type JWTPayload } from "@/lib/auth";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+
+interface EmployeeInfo {
+  full_name: string | null;
+  department: string | null;
+}
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
@@ -14,7 +20,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -376,12 +382,16 @@ export async function GET(request: NextRequest) {
           },
         )
         .map((record) => {
-          const employee = record.employees as any;
+          const employee = record.employees as
+            | EmployeeInfo
+            | EmployeeInfo[]
+            | null;
+          const employeeData = Array.isArray(employee) ? employee[0] : employee;
           return {
             payroll_id: record.id,
             employee_id: record.employee_id,
-            full_name: employee?.full_name || "N/A",
-            department: employee?.department || "N/A",
+            full_name: employeeData?.full_name || "N/A",
+            department: employeeData?.department || "N/A",
             position: employee?.chuc_vu || "N/A",
             salary_month: record.salary_month,
             net_salary: record.tien_luong_thuc_nhan_cuoi_ky || 0,

@@ -22,7 +22,7 @@ export interface PayrollFieldConfig {
   type: "text" | "number" | "date";
   required: boolean;
   maxLength?: number;
-  validation?: (value: any) => string | null;
+  validation?: (value: unknown) => string | null;
 }
 
 export interface AdvancedPayrollData {
@@ -31,7 +31,7 @@ export interface AdvancedPayrollData {
   source_file: string;
 
   // Dynamic fields based on column mapping
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ImportResult {
@@ -300,12 +300,12 @@ export const PAYROLL_FIELD_CONFIG: PayrollFieldConfig[] = [
 export function detectColumns(worksheet: XLSX.WorkSheet): string[] {
   const jsonData = XLSX.utils.sheet_to_json(worksheet, {
     header: 1,
-  }) as any[][];
+  }) as unknown[][];
   if (jsonData.length === 0) return [];
 
-  return jsonData[0]
-    .map((header: any) => String(header || "").trim())
-    .filter((header: string) => header.length > 0);
+  return (jsonData[0] as unknown[])
+    .map((header) => String(header || "").trim())
+    .filter((header) => header.length > 0);
 }
 
 // Helper function to apply saved configuration with enhanced matching
@@ -417,7 +417,7 @@ export function mergeMappingConfigurations(
   configs: MappingConfiguration[],
   mergedName: string,
 ): Omit<MappingConfiguration, "id"> {
-  const mergedFieldMappings = new Map<string, any>();
+  const mergedFieldMappings = new Map<string, FieldMapping>();
 
   // Merge field mappings, keeping highest confidence for each database field
   configs.forEach((config) => {
@@ -937,7 +937,7 @@ export async function loadColumnAliases(): Promise<ColumnAlias[]> {
 }
 
 export function validateValue(
-  value: any,
+  value: unknown,
   field: PayrollFieldConfig,
 ): string | null {
   if (field.required && (!value || String(value).trim() === "")) {
@@ -1030,7 +1030,7 @@ export function parseAdvancedExcelFiles(
 
       const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         header: 1,
-      }) as any[][];
+      }) as unknown[][];
       if (jsonData.length < 2) return;
 
       const headers = jsonData[0];

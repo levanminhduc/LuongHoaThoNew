@@ -38,7 +38,7 @@ interface ManagementSignatureFormProps {
   };
   isEligible: boolean;
   eligibilityReason?: string;
-  existingSignature?: any;
+  existingSignature?: Record<string, unknown>;
   onSubmit: (data: SignatureFormData) => Promise<void>;
   loading?: boolean;
   className?: string;

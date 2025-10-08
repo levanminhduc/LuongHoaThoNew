@@ -487,7 +487,7 @@ export default function EmployeeForm({
                 ))}
                 {filteredDepartments.length === 0 && debouncedSearch && (
                   <div className="py-6 text-center text-sm text-muted-foreground">
-                    Không tìm thấy "{debouncedSearch}"
+                    {`Không tìm thấy "${debouncedSearch}"`}
                   </div>
                 )}
               </div>

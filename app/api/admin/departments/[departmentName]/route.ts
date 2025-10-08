@@ -241,8 +241,15 @@ export async function GET(
       if (range) range.count++;
     });
 
-    // Calculate monthly trends
-    const monthlyTrends: { [key: string]: any } = {};
+    const monthlyTrends: Record<
+      string,
+      {
+        month: string;
+        totalSalary: number;
+        employeeCount: number;
+        signedCount: number;
+      }
+    > = {};
     historicalPayrolls?.forEach((payroll) => {
       const month = payroll.salary_month;
       if (!monthlyTrends[month]) {
@@ -261,7 +268,7 @@ export async function GET(
       }
     });
 
-    const trendsArray = Object.values(monthlyTrends).map((trend: any) => ({
+    const trendsArray = Object.values(monthlyTrends).map((trend) => ({
       ...trend,
       averageSalary:
         trend.employeeCount > 0

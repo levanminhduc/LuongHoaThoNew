@@ -179,11 +179,9 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Prepare data rows
-    let dataRows: any[][] = [];
+    let dataRows: unknown[][] = [];
 
     if (includeData) {
-      // Get real data from database
       let query = supabase
         .from("payrolls")
         .select(selectedFields.join(","))
@@ -192,14 +190,17 @@ export async function GET(request: NextRequest) {
       if (salaryMonth) {
         query = query.eq("salary_month", salaryMonth);
       } else {
-        query = query.limit(100); // Limit to 100 records for template
+        query = query.limit(100);
       }
 
       const { data: payrollData, error: dataError } = await query;
 
       if (!dataError && payrollData) {
         dataRows = payrollData.map((record) =>
-          selectedFields.map((field) => (record as any)[field] || ""),
+          selectedFields.map(
+            (field) =>
+              (record as Record<string, unknown>)[field] ?? ("" as unknown),
+          ),
         );
       }
     } else {

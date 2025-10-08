@@ -7,6 +7,7 @@ import {
   type ConfigurationSearchParams,
   type ApiResponse,
 } from "@/lib/column-alias-config";
+import { type JWTPayload } from "@/lib/auth";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
@@ -20,7 +21,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -312,17 +313,24 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    interface MappingConfig {
+      database_field: string;
+      confidence_score?: number;
+      mapping_type?: string;
+      validation_status?: string;
+    }
+
     // Create field mappings
-    const mappingsToInsert = Object.entries(mapping).map(
-      ([excelColumn, config]: [string, any]) => ({
-        config_id: newConfig.id,
-        database_field: config.database_field,
-        excel_column_name: excelColumn,
-        confidence_score: config.confidence_score || 80,
-        mapping_type: config.mapping_type || "manual",
-        validation_passed: config.validation_status === "valid",
-      }),
-    );
+    const mappingsToInsert = (
+      Object.entries(mapping) as [string, MappingConfig][]
+    ).map(([excelColumn, config]) => ({
+      config_id: newConfig.id,
+      database_field: config.database_field,
+      excel_column_name: excelColumn,
+      confidence_score: config.confidence_score || 80,
+      mapping_type: config.mapping_type || "manual",
+      validation_passed: config.validation_status === "valid",
+    }));
 
     const { error: mappingsError } = await supabase
       .from("configuration_field_mappings")

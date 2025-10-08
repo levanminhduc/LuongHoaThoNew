@@ -16,7 +16,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as { role?: string };
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
 
     // Load mapping configuration if specified
     let mappingConfig = null;
-    let customHeaders: Record<string, string> = {};
+    const customHeaders: Record<string, string> = {};
 
     if (configId) {
       const { data: config, error: configError } = await supabase
@@ -192,11 +192,18 @@ export async function GET(request: NextRequest) {
       if (!configError && config) {
         mappingConfig = config;
 
+        interface FieldMapping {
+          database_field: string;
+          excel_column_name: string;
+        }
+
         // Create custom headers from mapping configuration
         if (config.configuration_field_mappings) {
-          config.configuration_field_mappings.forEach((mapping: any) => {
-            customHeaders[mapping.database_field] = mapping.excel_column_name;
-          });
+          (config.configuration_field_mappings as FieldMapping[]).forEach(
+            (mapping) => {
+              customHeaders[mapping.database_field] = mapping.excel_column_name;
+            },
+          );
         }
       }
     }
@@ -209,11 +216,17 @@ export async function GET(request: NextRequest) {
     let activeFields = PAYROLL_FIELDS;
 
     if (!analysisError && columnAnalysis) {
+      interface ColumnAnalysis {
+        column_name: string;
+        non_null_count: number;
+        non_zero_count: number;
+      }
+
       // Filter out columns that are completely empty
       activeFields = PAYROLL_FIELDS.filter((field) => {
         if (field === "employee_id" || field === "salary_month") return true; // Always include required fields
-        const analysis = columnAnalysis.find(
-          (col: any) => col.column_name === field,
+        const analysis = (columnAnalysis as ColumnAnalysis[]).find(
+          (col) => col.column_name === field,
         );
         return (
           analysis &&
@@ -222,11 +235,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    interface MappingConfig {
+      configuration_field_mappings?: Array<{ database_field: string }>;
+    }
+
     // If mapping config is provided, prioritize fields from the configuration
-    if (mappingConfig && mappingConfig.configuration_field_mappings) {
-      const configFields = mappingConfig.configuration_field_mappings.map(
-        (m: any) => m.database_field,
-      );
+    if (
+      mappingConfig &&
+      (mappingConfig as MappingConfig).configuration_field_mappings
+    ) {
+      const configFields = (
+        mappingConfig as MappingConfig
+      ).configuration_field_mappings!.map((m) => m.database_field);
       // Include both active fields and config fields, removing duplicates
       activeFields = [...new Set([...activeFields, ...configFields])].filter(
         (field) => PAYROLL_FIELDS.includes(field),
@@ -243,7 +263,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Prepare data rows
-    let dataRows: any[][] = [];
+    let dataRows: unknown[][] = [];
 
     if (includeData) {
       // Get sample data or specific month data
@@ -262,7 +282,9 @@ export async function GET(request: NextRequest) {
 
       if (!dataError && payrollData) {
         dataRows = payrollData.map((record) =>
-          activeFields.map((field) => (record as any)[field] || ""),
+          activeFields.map(
+            (field) => (record as Record<string, unknown>)[field] || "",
+          ),
         );
       }
     } else {

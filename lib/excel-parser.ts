@@ -24,13 +24,15 @@ export function parseExcelFile(
     // Chuyển đổi sheet thành JSON
     const jsonData = XLSX.utils.sheet_to_json(worksheet, {
       header: 1,
-    }) as any[][];
+    }) as unknown[][];
 
     if (jsonData.length < 2) {
       throw new Error("File Excel không có dữ liệu hoặc thiếu header");
     }
 
-    const headers = jsonData[0].map((h: any) => String(h).toLowerCase().trim());
+    const headers = (jsonData[0] as unknown[]).map((h) =>
+      String(h).toLowerCase().trim(),
+    );
     const rows = jsonData.slice(1);
 
     // Mapping các cột (có thể điều chỉnh theo format Excel thực tế)

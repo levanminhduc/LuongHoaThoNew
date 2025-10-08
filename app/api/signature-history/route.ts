@@ -172,8 +172,19 @@ export async function GET(request: NextRequest) {
       user_filter: auth.user.role !== "admin" ? auth.user.employee_id : null,
     };
 
-    const monthlyStats: any = {};
-    signatures.forEach((sig: any) => {
+    interface SignatureRecord {
+      salary_month: string;
+      signature_type: string;
+    }
+
+    interface MonthlyStatRecord {
+      month: string;
+      total_signatures: number;
+      signature_types: string[];
+    }
+
+    const monthlyStats: Record<string, MonthlyStatRecord> = {};
+    signatures.forEach((sig: SignatureRecord) => {
       if (!monthlyStats[sig.salary_month]) {
         monthlyStats[sig.salary_month] = {
           month: sig.salary_month,

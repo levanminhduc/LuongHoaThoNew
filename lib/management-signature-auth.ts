@@ -108,8 +108,8 @@ export interface AuditLogEntry {
   table_name: string;
   operation: "SELECT" | "INSERT" | "UPDATE" | "DELETE";
   record_id?: string;
-  old_values?: any;
-  new_values?: any;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
   user_id: string;
   user_role: string;
   ip_address?: string;
@@ -160,13 +160,13 @@ export async function logAuditEntry(auditEntry: AuditLogEntry): Promise<void> {
   }
 }
 
-export function sanitizeInput(input: any): any {
+export function sanitizeInput(input: unknown): unknown {
   if (typeof input === "string") {
     return input.trim().replace(/[<>]/g, "").substring(0, 1000);
   }
 
   if (typeof input === "object" && input !== null) {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(input)) {
       if (typeof value === "string") {
         sanitized[key] = sanitizeInput(value);

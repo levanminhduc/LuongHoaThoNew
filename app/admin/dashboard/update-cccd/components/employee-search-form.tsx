@@ -110,7 +110,7 @@ export function EmployeeSearchForm({
         <Alert>
           <AlertCircle className="w-4 h-4" />
           <AlertDescription>
-            Không tìm thấy nhân viên nào với từ khóa "{searchQuery}"
+            {`Không tìm thấy nhân viên nào với từ khóa "${searchQuery}"`}
           </AlertDescription>
         </Alert>
       )}

@@ -238,7 +238,7 @@ export default function DepartmentDetailModalRefactored({
     try {
       const token = localStorage.getItem("admin_token");
 
-      let url = `/api/admin/payroll-export?month=${month}&department=${encodeURIComponent(departmentName)}`;
+      const url = `/api/admin/payroll-export?month=${month}&department=${encodeURIComponent(departmentName)}`;
       let filename = `department-${departmentName}-${month}`;
 
       if (exportType === "summary") {
@@ -291,7 +291,7 @@ export default function DepartmentDetailModalRefactored({
     if (payrollRecord && onViewEmployee) {
       // Transform to PayrollResult format and call parent callback
       const payrollResult = transformPayrollRecordToResult(
-        payrollRecord as any,
+        payrollRecord as Record<string, unknown>,
       );
       // Set source file to indicate Department Detail
       payrollResult.source_file = "Department Detail";

@@ -6,6 +6,7 @@ import {
 } from "@/lib/employee-parser";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { type JWTPayload } from "@/lib/auth";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
@@ -19,7 +20,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;

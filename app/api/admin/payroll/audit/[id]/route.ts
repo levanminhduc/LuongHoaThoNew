@@ -1,9 +1,30 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
+import { type JWTPayload } from "@/lib/auth";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+
+interface AuditLog {
+  changed_at: string;
+  change_reason: string;
+  changed_by: string;
+  field_name: string;
+  old_value: string | null;
+  new_value: string | null;
+}
+
+interface AuditGroup {
+  changed_at: string;
+  change_reason: string;
+  changed_by: string;
+  changes: Array<{
+    field_name: string;
+    old_value: string | null;
+    new_value: string | null;
+  }>;
+}
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
@@ -14,7 +35,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -138,7 +159,7 @@ export async function GET(
 
     // Group changes by timestamp and reason
     const groupedChanges =
-      auditData?.reduce((groups: any[], log: any) => {
+      auditData?.reduce((groups: AuditGroup[], log: AuditLog) => {
         const existingGroup = groups.find(
           (group) =>
             group.changed_at === log.changed_at &&

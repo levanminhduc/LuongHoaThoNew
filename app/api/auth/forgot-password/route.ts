@@ -54,12 +54,12 @@ function checkRateLimit(identifier: string): {
 }
 
 async function logSecurityEvent(
-  supabase: any,
+  supabase: ReturnType<typeof createServiceClient>,
   employeeId: string | null,
   event: string,
   ipHash: string,
   userAgent: string,
-  details?: any,
+  details?: Record<string, unknown>,
 ) {
   try {
     await supabase.from("employee_security_events").insert({
@@ -76,12 +76,12 @@ async function logSecurityEvent(
 }
 
 async function logToSecurityLogs(
-  supabase: any,
+  supabase: ReturnType<typeof createServiceClient>,
   employeeId: string | null,
   action: string,
   ipAddress: string,
   _userAgent: string,
-  details?: any,
+  details?: Record<string, unknown>,
 ) {
   try {
     await supabase.from("security_logs").insert({

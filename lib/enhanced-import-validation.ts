@@ -281,13 +281,20 @@ export class EnhancedImportValidator {
       }
     });
 
-    if (bestMatch && (bestMatch as any).score > 30) {
+    interface MatchResult {
+      score: number;
+      field: string;
+      reason: string;
+    }
+
+    if (bestMatch && (bestMatch as MatchResult).score > 30) {
+      const match = bestMatch as MatchResult;
       return {
         excel_column: column,
-        suggested_field: (bestMatch as any).field,
-        confidence_score: (bestMatch as any).score,
-        reason: (bestMatch as any).reason,
-        action: (bestMatch as any).score > 70 ? "map" : "review",
+        suggested_field: match.field,
+        confidence_score: match.score,
+        reason: match.reason,
+        action: match.score > 70 ? "map" : "review",
       };
     }
 

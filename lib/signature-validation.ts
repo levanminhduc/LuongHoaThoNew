@@ -200,7 +200,9 @@ export const ALLOWED_SIGNATURE_ROLES = [
 export function isAllowedSignatureRole(
   role: string,
 ): role is (typeof ALLOWED_SIGNATURE_ROLES)[number] {
-  return ALLOWED_SIGNATURE_ROLES.includes(role as any);
+  return ALLOWED_SIGNATURE_ROLES.includes(
+    role as (typeof ALLOWED_SIGNATURE_ROLES)[number],
+  );
 }
 
 export function canRoleSignType(

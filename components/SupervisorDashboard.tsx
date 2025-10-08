@@ -152,7 +152,9 @@ export default function SupervisorDashboard({
   const [selectedMonth, setSelectedMonth] =
     useState<string>(getPreviousMonth());
   const [loading, setLoading] = useState(true);
-  const [monthlyTrend, setMonthlyTrend] = useState<any[]>([]);
+  const [monthlyTrend, setMonthlyTrend] = useState<
+    Array<Record<string, unknown>>
+  >([]);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [selectedPayrollData, setSelectedPayrollData] =
@@ -268,7 +270,7 @@ export default function SupervisorDashboard({
       setExportingExcel(true);
       const token = localStorage.getItem("admin_token");
 
-      let url = `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(user.department)}`;
+      const url = `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(user.department)}`;
       let filename = `Luong_${user.department}_${selectedMonth}`;
 
       if (exportType === "overview") {

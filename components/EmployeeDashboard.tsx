@@ -90,7 +90,9 @@ export default function EmployeeDashboard({
     new Date().getFullYear(),
   );
   const [loading, setLoading] = useState(true);
-  const [monthlyBreakdown, setMonthlyBreakdown] = useState<any[]>([]);
+  const [monthlyBreakdown, setMonthlyBreakdown] = useState<
+    Array<Record<string, unknown>>
+  >([]);
 
   useEffect(() => {
     loadPersonalData();

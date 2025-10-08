@@ -14,8 +14,8 @@ export interface ValidationResult {
 
 export interface AutoFix {
   field: string;
-  originalValue: any;
-  fixedValue: any;
+  originalValue: unknown;
+  fixedValue: unknown;
   reason: string;
   confidence: "high" | "medium" | "low";
 }
@@ -32,7 +32,7 @@ export class PayrollValidator {
    * Validate complete payroll record
    */
   static validatePayrollRecord(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     context: PayrollValidationContext,
   ): ValidationResult {
     const result: ValidationResult = {
@@ -69,7 +69,7 @@ export class PayrollValidator {
    * Validate required fields
    */
   private static validateRequiredFields(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     context: PayrollValidationContext,
     result: ValidationResult,
   ): void {
@@ -95,7 +95,7 @@ export class PayrollValidator {
    * Validate data types
    */
   private static validateDataTypes(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     context: PayrollValidationContext,
     result: ValidationResult,
   ): void {
@@ -161,7 +161,7 @@ export class PayrollValidator {
    * Validate business logic rules
    */
   private static validateBusinessLogic(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     context: PayrollValidationContext,
     result: ValidationResult,
   ): void {
@@ -285,7 +285,7 @@ export class PayrollValidator {
    * Validate cross-field relationships
    */
   private static validateCrossFields(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     context: PayrollValidationContext,
     result: ValidationResult,
   ): void {
@@ -361,7 +361,7 @@ export class PayrollValidator {
    * Validate value ranges
    */
   private static validateRanges(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     context: PayrollValidationContext,
     result: ValidationResult,
   ): void {
@@ -424,7 +424,7 @@ export class PayrollValidator {
    * Validate formats
    */
   private static validateFormats(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     context: PayrollValidationContext,
     result: ValidationResult,
   ): void {
@@ -449,7 +449,7 @@ export class PayrollValidator {
   /**
    * Try to auto-fix numeric values
    */
-  private static tryAutoFixNumeric(value: any): number | null {
+  private static tryAutoFixNumeric(value: unknown): number | null {
     if (typeof value === "number") return value;
 
     const stringValue = String(value).trim();

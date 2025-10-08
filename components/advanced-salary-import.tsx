@@ -630,8 +630,9 @@ export function AdvancedSalaryImport({
                   <Alert>
                     <Settings className="h-4 w-4" />
                     <AlertDescription>
-                      Đã tự động áp dụng configuration "
-                      {autoAppliedConfig.config_name}" làm mặc định.
+                      {`Đã tự động áp dụng configuration "`}
+                      {autoAppliedConfig.config_name}
+                      {`" làm mặc định.`}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -698,7 +699,7 @@ export function AdvancedSalaryImport({
             </h4>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Chọn một hoặc nhiều file Excel chứa dữ liệu lương</li>
-              <li>• Click "Phân Tích & Cấu Hình" để xem cấu trúc file</li>
+              <li>{`• Click "Phân Tích & Cấu Hình" để xem cấu trúc file`}</li>
               <li>• Cấu hình ánh xạ cột Excel với trường database</li>
               <li>• Hệ thống sẽ tự động phát hiện và gợi ý ánh xạ</li>
               <li>• Xem báo cáo chi tiết sau khi import hoàn tất</li>

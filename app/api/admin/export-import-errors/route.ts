@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
 
-// Simple token verification function
 async function verifyAdminToken(token: string): Promise<boolean> {
   try {
     const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
     jwt.verify(token, JWT_SECRET);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -17,7 +16,7 @@ interface ImportError {
   row: number;
   column?: string;
   field?: string;
-  value?: any;
+  value?: unknown;
   errorType: "validation" | "format" | "duplicate" | "database" | "system";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
@@ -28,7 +27,7 @@ interface ImportError {
 
 interface ErrorExportRequest {
   errors: ImportError[];
-  originalData?: any[];
+  originalData?: Record<string, unknown>[];
   fileName?: string;
   format: "excel" | "csv";
 }
@@ -48,12 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: ErrorExportRequest = await request.json();
-    const {
-      errors,
-      originalData,
-      fileName = "import_errors",
-      format = "excel",
-    } = body;
+    const { errors, fileName = "import_errors", format = "excel" } = body;
 
     if (!errors || errors.length === 0) {
       return NextResponse.json(

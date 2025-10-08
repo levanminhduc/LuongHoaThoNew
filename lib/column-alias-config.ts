@@ -22,7 +22,7 @@ export interface DatabaseFieldConfig {
   required: boolean;
   category: string;
   aliases: ColumnAlias[];
-  default_value?: any;
+  default_value?: unknown;
   validation_rules?: ValidationRule[];
 }
 
@@ -34,7 +34,7 @@ export interface ValidationRule {
     | "min_value"
     | "max_value"
     | "pattern";
-  value?: any;
+  value?: unknown;
   message: string;
 }
 

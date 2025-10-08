@@ -19,9 +19,12 @@ import OverviewModal from "@/components/OverviewModal";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { type JWTPayload } from "@/lib/auth";
 import {
+  type MonthStatus,
+  type SignatureRecord,
+} from "@/lib/management-signature-utils";
+import {
   Calculator,
   DollarSign,
-  TrendingUp,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -33,32 +36,14 @@ import {
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
-interface MonthStatus {
-  month: string;
-  employee_completion: {
-    total_employees: number;
-    signed_employees: number;
-    completion_percentage: number;
-    is_100_percent_complete: boolean;
-  };
-  management_signatures: {
-    giam_doc: any;
-    ke_toan: any;
-    nguoi_lap_bieu: any;
-  };
-  summary: {
-    completed_signatures: number;
-    remaining_signatures: string[];
-    is_fully_signed: boolean;
-  };
-}
-
 export default function AccountantDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] =
     useState<string>(getPreviousMonth());
   const [monthStatus, setMonthStatus] = useState<MonthStatus | null>(null);
-  const [signatureHistory, setSignatureHistory] = useState<any[]>([]);
+  const [signatureHistory, setSignatureHistory] = useState<SignatureRecord[]>(
+    [],
+  );
   const [message, setMessage] = useState("");
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showOverviewModal, setShowOverviewModal] = useState(false);

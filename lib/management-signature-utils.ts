@@ -206,7 +206,7 @@ export async function getManagementSignatureStatus(
   try {
     const employeeCompletion = await calculateEmployeeCompletion(month);
 
-    let managementSignatures = {
+    const managementSignatures = {
       giam_doc: null as SignatureRecord | null,
       ke_toan: null as SignatureRecord | null,
       nguoi_lap_bieu: null as SignatureRecord | null,

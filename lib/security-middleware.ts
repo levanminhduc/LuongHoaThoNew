@@ -78,8 +78,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
 
   const isValidOrigin = origin && allowedOrigins.includes(origin);
   const isValidReferer =
-    referer &&
-    allowedOrigins.some((allowed) => (referer as any).startsWith(allowed));
+    referer && allowedOrigins.some((allowed) => referer.startsWith(allowed));
 
   if (!isValidOrigin && !isValidReferer) {
     return NextResponse.json(
@@ -92,7 +91,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
 }
 
 // Input validation middleware
-export function validateInput(schema: any) {
+export function validateInput(schema: Record<string, unknown>) {
   return async (request: NextRequest): Promise<NextResponse | null> => {
     try {
       if (request.method === "GET") {
@@ -110,7 +109,7 @@ export function validateInput(schema: any) {
       }
 
       // Store sanitized body for later use
-      (request as any).validatedBody = sanitizedBody;
+      (request as { validatedBody?: unknown }).validatedBody = sanitizedBody;
 
       return null; // Continue processing
     } catch (error) {
@@ -126,7 +125,7 @@ export function validateInput(schema: any) {
 }
 
 // Input sanitization function
-function sanitizeInput(obj: any): any {
+function sanitizeInput(obj: unknown): unknown {
   if (typeof obj === "string") {
     return obj
       .trim()
@@ -140,7 +139,7 @@ function sanitizeInput(obj: any): any {
   }
 
   if (obj && typeof obj === "object") {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       sanitized[key] = sanitizeInput(value);
     }
@@ -222,7 +221,7 @@ export function applySecurity(
   options: {
     rateLimit?: keyof typeof RATE_LIMITS;
     csrf?: boolean;
-    validation?: any;
+    validation?: Record<string, unknown>;
   },
 ): NextResponse | null {
   // Apply rate limiting
@@ -249,7 +248,7 @@ export function applySecurity(
 // Audit logging for security events
 export async function logSecurityEvent(
   event: string,
-  details: any,
+  details: Record<string, unknown>,
   request: NextRequest,
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "MEDIUM",
 ) {

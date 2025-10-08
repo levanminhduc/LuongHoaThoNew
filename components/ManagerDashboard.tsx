@@ -321,7 +321,7 @@ export default function ManagerDashboard({
     if (payrollRecord && payrollRecord.employees) {
       // Transform to PayrollResult format and open modal
       const payrollResult = transformPayrollRecordToResult(
-        payrollRecord as any,
+        payrollRecord as Parameters<typeof transformPayrollRecordToResult>[0],
       );
       // Set source file to indicate Manager Dashboard
       payrollResult.source_file = "Manager Dashboard";

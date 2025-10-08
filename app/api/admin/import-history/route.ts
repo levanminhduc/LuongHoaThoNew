@@ -20,8 +20,8 @@ interface ImportHistoryRecord {
     database: number;
     system: number;
   };
-  auto_fixes: any[];
-  detailed_errors: any[];
+  auto_fixes: Array<Record<string, unknown>>;
+  detailed_errors: Array<Record<string, unknown>>;
   user_id: string;
   created_at: string;
   status: "completed" | "failed" | "partial";
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
     const token = authHeader.split(" ")[1];
     const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
-    let decoded: any;
+    let decoded: { role?: string };
     try {
-      decoded = jwt.verify(token, JWT_SECRET);
+      decoded = jwt.verify(token, JWT_SECRET) as { role?: string };
     } catch (error) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
 
     const { data: summaryData, error: summaryError } = await summaryQuery;
 
-    let summary = {
+    const summary = {
       total_imports: 0,
       total_records_processed: 0,
       total_success: 0,

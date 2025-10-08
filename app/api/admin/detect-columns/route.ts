@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
+import { type JWTPayload } from "@/lib/auth";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
@@ -13,7 +14,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -68,10 +69,9 @@ export async function POST(request: NextRequest) {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
 
-      // Convert to JSON to get headers
       const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         header: 1,
-      }) as any[][];
+      }) as unknown[][];
 
       if (jsonData.length === 0) {
         return NextResponse.json(
@@ -80,18 +80,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Get headers from first row
       const headers = jsonData[0];
-      if (!headers || headers.length === 0) {
+      if (!headers || !Array.isArray(headers) || headers.length === 0) {
         return NextResponse.json(
           { error: "No headers found in Excel file" },
           { status: 400 },
         );
       }
 
-      // Clean and validate headers
       const detectedColumns = headers
-        .map((header: any) => String(header || "").trim())
+        .map((header: unknown) => String(header || "").trim())
         .filter((header: string) => header.length > 0)
         .map((header: string, index: number) => ({
           name: header,
@@ -147,14 +145,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function getSampleData(jsonData: any[][], columnIndex: number): string[] {
+function getSampleData(jsonData: unknown[][], columnIndex: number): string[] {
   const samples: string[] = [];
   const maxSamples = 3;
 
-  // Skip header row and get sample data
   for (let i = 1; i < Math.min(jsonData.length, maxSamples + 1); i++) {
     const row = jsonData[i];
-    if (row && row[columnIndex] !== undefined && row[columnIndex] !== null) {
+    if (
+      Array.isArray(row) &&
+      row[columnIndex] !== undefined &&
+      row[columnIndex] !== null
+    ) {
       const value = String(row[columnIndex]).trim();
       if (value.length > 0) {
         samples.push(value);

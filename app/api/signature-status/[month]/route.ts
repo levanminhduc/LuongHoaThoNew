@@ -89,7 +89,7 @@ export async function GET(
       console.error("Error fetching unsigned employees:", unsignedError);
     }
 
-    let managementSignatures: any = {};
+    let managementSignatures: Record<string, unknown> = {};
     try {
       const { data: signatures, error: sigError } = await supabase
         .from("management_signatures")

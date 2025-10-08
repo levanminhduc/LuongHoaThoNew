@@ -22,13 +22,13 @@ import {
 } from "lucide-react";
 
 interface DebugInfo {
-  userInfo: any;
-  apiResponse: any;
-  debugApiResponse: any;
-  countApiResponse: any;
-  rawDepartments: any[];
-  filteredDepartments: any[];
-  permissions: any[];
+  userInfo: Record<string, unknown>;
+  apiResponse: Record<string, unknown>;
+  debugApiResponse: Record<string, unknown>;
+  countApiResponse: Record<string, unknown>;
+  rawDepartments: Array<Record<string, unknown>>;
+  filteredDepartments: Array<Record<string, unknown>>;
+  permissions: Array<Record<string, unknown>>;
 }
 
 export default function DepartmentDebugInfo() {

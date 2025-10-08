@@ -43,7 +43,7 @@ export interface InvalidationRule {
 // ===== CACHE IMPLEMENTATION =====
 
 export class MappingConfigCache {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private stats: CacheStats = {
     hits: 0,
     misses: 0,
@@ -52,7 +52,7 @@ export class MappingConfigCache {
     lastCleanup: 0,
   };
   private invalidationRules: InvalidationRule[] = [];
-  private optimisticUpdates = new Map<string, any>();
+  private optimisticUpdates = new Map<string, unknown>();
   private config: CacheConfig;
 
   constructor(config: Partial<CacheConfig> = {}) {
@@ -299,7 +299,7 @@ export class MappingConfigCache {
 
       // Restore cache entries (only non-expired ones)
       const now = Date.now();
-      data.cache.forEach(([key, entry]: [string, CacheEntry<any>]) => {
+      data.cache.forEach(([key, entry]: [string, CacheEntry<unknown>]) => {
         if (now - entry.timestamp < entry.expiry) {
           this.cache.set(key, entry);
         }
@@ -315,7 +315,7 @@ export class MappingConfigCache {
 
   // ===== UTILITY METHODS =====
 
-  private isExpired(entry: CacheEntry<any>): boolean {
+  private isExpired(entry: CacheEntry<unknown>): boolean {
     return Date.now() - entry.timestamp > entry.expiry;
   }
 
@@ -339,7 +339,7 @@ export class MappingConfigCache {
     return Date.now();
   }
 
-  private generateETag(data: any): string {
+  private generateETag(data: unknown): string {
     return btoa(JSON.stringify(data)).slice(0, 16);
   }
 

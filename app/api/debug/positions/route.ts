@@ -30,12 +30,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    interface EmployeePosition {
+      chuc_vu: string;
+    }
+
+    interface SampleEmployee {
+      employee_id: string;
+      full_name: string;
+      chuc_vu: string;
+      department: string;
+    }
+
     // Count positions
     const positionCounts =
-      positions?.reduce((acc: any, emp: any) => {
-        acc[emp.chuc_vu] = (acc[emp.chuc_vu] || 0) + 1;
-        return acc;
-      }, {}) || {};
+      positions?.reduce(
+        (acc: Record<string, number>, emp: EmployeePosition) => {
+          acc[emp.chuc_vu] = (acc[emp.chuc_vu] || 0) + 1;
+          return acc;
+        },
+        {},
+      ) || {};
 
     // 2. Get sample employees for each position
     const { data: sampleEmployees, error: sampleError } = await supabase
@@ -51,18 +65,21 @@ export async function GET(request: NextRequest) {
 
     // Group sample employees by position
     const employeesByPosition =
-      sampleEmployees?.reduce((acc: any, emp: any) => {
-        if (!acc[emp.chuc_vu]) acc[emp.chuc_vu] = [];
-        if (acc[emp.chuc_vu].length < 5) {
-          // Limit to 5 samples per position
-          acc[emp.chuc_vu].push({
-            employee_id: emp.employee_id,
-            full_name: emp.full_name,
-            department: emp.department,
-          });
-        }
-        return acc;
-      }, {}) || {};
+      sampleEmployees?.reduce(
+        (acc: Record<string, SampleEmployee[]>, emp: SampleEmployee) => {
+          if (!acc[emp.chuc_vu]) acc[emp.chuc_vu] = [];
+          if (acc[emp.chuc_vu].length < 5) {
+            // Limit to 5 samples per position
+            acc[emp.chuc_vu].push({
+              employee_id: emp.employee_id,
+              full_name: emp.full_name,
+              department: emp.department,
+            });
+          }
+          return acc;
+        },
+        {},
+      ) || {};
 
     // 3. Get department permissions info
     // Updated query syntax: Use exact constraint name to resolve ambiguous relationships
@@ -84,10 +101,22 @@ export async function GET(request: NextRequest) {
       console.error("Permissions query error:", permError);
     }
 
+    interface PermissionEmployee {
+      chuc_vu?: string;
+    }
+
+    interface Permission {
+      employees?: PermissionEmployee | PermissionEmployee[] | null;
+    }
+
     // Count permissions by position
     const permissionsByPosition =
-      permissions?.reduce((acc: any, perm: any) => {
-        const position = perm.employees?.chuc_vu;
+      permissions?.reduce((acc: Record<string, number>, perm: Permission) => {
+        const employeeData = perm.employees;
+        const employee = Array.isArray(employeeData)
+          ? employeeData[0]
+          : employeeData;
+        const position = employee?.chuc_vu;
         if (position) {
           acc[position] = (acc[position] || 0) + 1;
         }

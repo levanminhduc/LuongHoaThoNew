@@ -4,6 +4,13 @@ import { verifyAdminToken } from "@/lib/auth-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
 
+interface FieldMapping {
+  database_field: string;
+  excel_column_name: string;
+  confidence_score: number;
+  mapping_type: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authResult = await verifyAdminToken(request);
@@ -77,9 +84,9 @@ export async function GET(request: NextRequest) {
         ? employees.map((emp) => emp.employee_id)
         : ["EMP001", "EMP002", "EMP003"]; // Fallback IDs if no employees found
 
-    const headers = config.configuration_field_mappings
-      .sort((a: any, b: any) => b.confidence_score - a.confidence_score)
-      .map((mapping: any) => mapping.excel_column_name);
+    const headers = (config.configuration_field_mappings as FieldMapping[])
+      .sort((a, b) => b.confidence_score - a.confidence_score)
+      .map((mapping) => mapping.excel_column_name);
 
     const sampleData = [
       generateSampleRow(
@@ -160,10 +167,10 @@ export async function GET(request: NextRequest) {
 }
 
 function generateSampleRow(
-  fieldMappings: any[],
+  fieldMappings: FieldMapping[],
   rowIndex: number,
   employeeId?: string,
-): any[] {
+): unknown[] {
   // Generate valid salary month (current year, previous month to avoid future dates)
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -172,7 +179,7 @@ function generateSampleRow(
   const sampleYear = currentMonth > 1 ? currentYear : currentYear - 1;
   const formattedMonth = sampleMonth.toString().padStart(2, "0");
 
-  const sampleData: Record<string, any> = {
+  const sampleData: Record<string, unknown> = {
     employee_id: employeeId || `EMP00${rowIndex}`,
     salary_month: `${sampleYear}-${formattedMonth}`,
     he_so_lam_viec: 1.0,
@@ -214,6 +221,9 @@ function generateSampleRow(
   };
 
   return fieldMappings
-    .sort((a: any, b: any) => b.confidence_score - a.confidence_score)
-    .map((mapping: any) => sampleData[mapping.database_field] || "");
+    .sort((a, b) => b.confidence_score - a.confidence_score)
+    .map(
+      (mapping) =>
+        (sampleData as Record<string, unknown>)[mapping.database_field] || "",
+    );
 }

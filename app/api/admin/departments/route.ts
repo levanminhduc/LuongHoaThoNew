@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
     const includeStats = searchParams.get("include_stats") === "true";
     const month =
       searchParams.get("month") || new Date().toISOString().slice(0, 7);
-    const departmentName = searchParams.get("department_name");
 
     // Get ALL departments (including those with only inactive employees)
     const { data: allDepartments, error: allDeptError } = await supabase
@@ -356,10 +355,17 @@ export async function PUT(request: NextRequest) {
           });
           return acc;
         },
-        {} as Record<string, any[]>,
+        {} as Record<
+          string,
+          Array<{
+            employee_id: string;
+            full_name: string | undefined;
+            granted_at: string;
+            notes: string | null;
+          }>
+        >,
       ) || {};
 
-    // Group permissions by employee
     const permissionsByEmployee =
       permissions?.reduce(
         (acc, perm) => {
@@ -378,7 +384,18 @@ export async function PUT(request: NextRequest) {
           });
           return acc;
         },
-        {} as Record<string, any>,
+        {} as Record<
+          string,
+          {
+            employee_id: string;
+            full_name: string | undefined;
+            departments: Array<{
+              department: string;
+              granted_at: string;
+              notes: string | null;
+            }>;
+          }
+        >,
       ) || {};
 
     return NextResponse.json({

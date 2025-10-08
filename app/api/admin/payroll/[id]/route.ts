@@ -165,8 +165,8 @@ export async function PUT(
     }
 
     // Validate updates (basic validation)
-    const validatedUpdates: any = {};
-    const auditLogs: any[] = [];
+    const validatedUpdates: Record<string, unknown> = {};
+    const auditLogs: Array<Record<string, unknown>> = [];
 
     // List of editable fields (exclude metadata)
     const editableFields = [

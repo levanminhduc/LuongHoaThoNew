@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
+import { type JWTPayload } from "@/lib/auth";
 import {
   type ColumnAlias,
   type AliasSearchParams,
@@ -10,7 +11,6 @@ import {
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
 
-// Verify admin token
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -19,7 +19,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -56,7 +56,12 @@ export async function GET(request: NextRequest) {
         : undefined,
       page: parseInt(searchParams.get("page") || "1"),
       limit: parseInt(searchParams.get("limit") || "50"),
-      sort_by: (searchParams.get("sort_by") as any) || "alias_name",
+      sort_by:
+        (searchParams.get("sort_by") as
+          | "alias_name"
+          | "confidence_score"
+          | "created_at"
+          | null) || "alias_name",
       sort_order: (searchParams.get("sort_order") as "asc" | "desc") || "asc",
     };
 
@@ -187,8 +192,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new alias
-    const aliasData: any = {
+    const aliasData: Partial<ColumnAlias> = {
       database_field,
       alias_name: alias_name.trim(),
       confidence_score,
@@ -298,7 +302,7 @@ export async function PUT(request: NextRequest) {
         } else {
           results.created++;
         }
-      } catch (err) {
+      } catch {
         results.errors.push(`Lỗi xử lý alias: ${JSON.stringify(alias)}`);
       }
     }

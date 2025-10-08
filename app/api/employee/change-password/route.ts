@@ -41,7 +41,7 @@ function checkRateLimit(identifier: string): {
 
 // Security logging helper
 async function logSecurityEvent(
-  supabase: any,
+  supabase: ReturnType<typeof createServiceClient>,
   employeeId: string,
   action: string,
   ipAddress: string,
@@ -175,7 +175,9 @@ export async function POST(request: NextRequest) {
       if (employee.failed_login_attempts !== undefined) {
         // Increment failed attempts
         const newFailedAttempts = (employee.failed_login_attempts || 0) + 1;
-        let updateData: any = { failed_login_attempts: newFailedAttempts };
+        const updateData: Record<string, unknown> = {
+          failed_login_attempts: newFailedAttempts,
+        };
 
         // Lock account if too many failures
         if (
@@ -232,7 +234,7 @@ export async function POST(request: NextRequest) {
 
     // Step 4: Update password and reset security fields
     // Build update object based on what columns exist
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     // Update password_hash if column exists, otherwise fallback to cccd_hash
     if (employee.password_hash !== undefined) {

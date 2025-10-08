@@ -86,19 +86,31 @@ export function requireDepartmentAccess(department: string) {
 }
 
 // Admin-only authorization (backward compatibility)
-export function verifyAdminToken(request: NextRequest): any {
+export function verifyAdminToken(request: NextRequest): {
+  success: boolean;
+  user?: JWTPayload;
+} {
   const auth = verifyToken(request);
-  return auth?.isRole("admin") ? auth.user : null;
+  return auth?.isRole("admin")
+    ? { success: true, user: auth.user }
+    : { success: false };
 }
 
 // Audit logs authorization (admin only)
-export function verifyAuditLogsAccess(request: NextRequest): any {
+export function verifyAuditLogsAccess(request: NextRequest): {
+  success: boolean;
+  user?: JWTPayload;
+} {
   const auth = verifyToken(request);
-  return auth?.isRole("admin") ? auth.user : null;
+  return auth?.isRole("admin")
+    ? { success: true, user: auth.user }
+    : { success: false };
 }
 
 // Employee Management authorization (admin and van_phong)
-export function verifyEmployeeManagementAccess(request: NextRequest): any {
+export function verifyEmployeeManagementAccess(
+  request: NextRequest,
+): JWTPayload | null {
   const auth = verifyToken(request);
   if (!auth) return null;
 

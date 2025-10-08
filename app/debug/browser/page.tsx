@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 export default function BrowserDebugPage() {
-  const [browserInfo, setBrowserInfo] = useState<any>(null);
+  const [browserInfo, setBrowserInfo] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [features, setFeatures] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -44,8 +47,10 @@ export default function BrowserDebugPage() {
         "CSS Flexbox": CSS.supports("display", "flex"),
       };
       setFeatures(featureChecks);
-    } catch (err: any) {
-      setError(err.message || "Failed to collect browser information");
+    } catch (err) {
+      setError(
+        (err as Error).message || "Failed to collect browser information",
+      );
     }
   }, []);
 
@@ -227,8 +232,8 @@ export default function BrowserDebugPage() {
             )}
             {!features["Optional Chaining"] && (
               <p className="text-amber-600">
-                ⚠️ Your browser doesn't support modern JavaScript features.
-                Consider updating.
+                {`⚠️ Your browser doesn't support modern JavaScript features.
+                Consider updating.`}
               </p>
             )}
             {Object.values(features).every((v) => v) && (

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
 import JSZip from "jszip";
+import { type JWTPayload } from "@/lib/auth";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
@@ -15,14 +16,14 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
   }
 }
 
-function createExcelBuffer(data: any[][], sheetName: string) {
+function createExcelBuffer(data: unknown[][], sheetName: string) {
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(data);
 

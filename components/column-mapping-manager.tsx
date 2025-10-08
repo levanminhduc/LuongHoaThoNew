@@ -148,7 +148,7 @@ export function ColumnMappingManager({
   const updateMapping = (
     index: number,
     field: keyof ColumnMapping,
-    value: any,
+    value: string,
   ) => {
     const updatedMappings = [...mappings];
 

@@ -120,8 +120,7 @@ export async function PUT(
         );
       }
 
-      // Update other fields if needed (after cascade update)
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         full_name,
         chuc_vu,
         department: department || null,
@@ -166,8 +165,7 @@ export async function PUT(
       });
     }
 
-    // Handle normal update (employee_id not changing)
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       full_name,
       chuc_vu,
       department: department || null,

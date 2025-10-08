@@ -155,7 +155,8 @@ export default function EmployeeTable({
 
     // Sort
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: string | number = "";
+      let bValue: string | number = "";
 
       switch (sortBy) {
         case "name":
@@ -183,7 +184,7 @@ export default function EmployeeTable({
           bValue = b.employees?.full_name || "";
       }
 
-      if (typeof aValue === "string") {
+      if (typeof aValue === "string" && typeof bValue === "string") {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }

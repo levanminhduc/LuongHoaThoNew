@@ -12,7 +12,7 @@ export default function EmployeeLookupPage() {
             CÔNG TY MAY HÒA THỌ ĐIỆN BÀN
           </h2>
           <p className="text-sm sm:text-base text-gray-600 mt-2">
-            Nhập "Mã số nhân viên" và "Số CCCD" để xem thông tin lương
+            {`Nhập "Mã số nhân viên" và "Số CCCD" để xem thông tin lương`}
           </p>
         </div>
         <EmployeeLookup />

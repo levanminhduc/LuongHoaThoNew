@@ -121,8 +121,26 @@ export async function GET(request: NextRequest) {
 
           return acc;
         },
-        {} as Record<string, any>,
+        {} as Record<
+          string,
+          { managers: number; supervisors: number; employees: number }
+        >,
       ) || {};
+
+    interface EmployeeInfo {
+      full_name?: string;
+      chuc_vu?: string;
+    }
+
+    interface PermissionStats {
+      total: number;
+      active: number;
+      employees: Array<{
+        employee_id: string;
+        full_name?: string;
+        chuc_vu?: string;
+      }>;
+    }
 
     // Permission statistics
     const permStatsMap =
@@ -140,16 +158,23 @@ export async function GET(request: NextRequest) {
           acc[dept].total++;
           if (perm.is_active) {
             acc[dept].active++;
+            const employeeInfo = perm.employees as
+              | EmployeeInfo
+              | EmployeeInfo[]
+              | null;
+            const employee = Array.isArray(employeeInfo)
+              ? employeeInfo[0]
+              : employeeInfo;
             acc[dept].employees.push({
               employee_id: perm.employee_id,
-              full_name: (perm.employees as any)?.full_name,
-              chuc_vu: (perm.employees as any)?.chuc_vu,
+              full_name: employee?.full_name,
+              chuc_vu: employee?.chuc_vu,
             });
           }
 
           return acc;
         },
-        {} as Record<string, any>,
+        {} as Record<string, PermissionStats>,
       ) || {};
 
     // Find missing departments
