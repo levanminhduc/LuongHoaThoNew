@@ -156,6 +156,43 @@ export async function PUT(
         );
       }
 
+      try {
+        const cascadeChanges: Array<{
+          fieldName: string;
+          oldValue: string;
+          newValue: string;
+        }> = [];
+
+        if (password) {
+          cascadeChanges.push({
+            fieldName: "password",
+            oldValue: "[HIDDEN]",
+            newValue: "[CHANGED]",
+          });
+        }
+
+        if (cccd) {
+          cascadeChanges.push({
+            fieldName: "cccd",
+            oldValue: "[HIDDEN]",
+            newValue: "[CHANGED]",
+          });
+        }
+
+        if (cascadeChanges.length > 0) {
+          await auditService.logEmployeeUpdate(
+            admin.employee_id,
+            admin.full_name || admin.employee_id,
+            employee_id,
+            updatedEmployee.full_name,
+            cascadeChanges,
+            "Sensitive fields updated during cascade operation",
+          );
+        }
+      } catch (auditError) {
+        console.error("Audit logging failed during cascade:", auditError);
+      }
+
       return NextResponse.json({
         success: true,
         employee: updatedEmployee,
@@ -264,9 +301,17 @@ export async function PUT(
         });
       }
 
-      if (cccd) {
+      if (password) {
         changes.push({
           fieldName: "password",
+          oldValue: "[HIDDEN]",
+          newValue: "[CHANGED]",
+        });
+      }
+
+      if (cccd) {
+        changes.push({
+          fieldName: "cccd",
           oldValue: "[HIDDEN]",
           newValue: "[CHANGED]",
         });

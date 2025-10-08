@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
       gio_an_ca: payroll.gio_an_ca || 0,
       tong_gio_lam_viec: payroll.tong_gio_lam_viec || 0,
       tong_he_so_quy_doi: payroll.tong_he_so_quy_doi || 0,
+      ngay_cong_chu_nhat: payroll.ngay_cong_chu_nhat || 0,
 
       // Lương sản phẩm và đơn giá
       tong_luong_san_pham_cong_doan: payroll.tong_luong_san_pham_cong_doan || 0,

@@ -26,6 +26,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -238,14 +239,16 @@ export default function EmployeeManagementPage() {
               Thêm Nhân Viên
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
               <DialogDescription>
                 Nhập thông tin nhân viên mới vào hệ thống
               </DialogDescription>
             </DialogHeader>
-            <EmployeeForm onSuccess={handleEmployeeCreated} />
+            <ScrollArea className="max-h-[65vh] pr-4">
+              <EmployeeForm onSuccess={handleEmployeeCreated} />
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>
@@ -395,7 +398,7 @@ export default function EmployeeManagementPage() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
+                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
                               <DialogHeader>
                                 <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
                                 <DialogDescription>
@@ -403,12 +406,14 @@ export default function EmployeeManagementPage() {
                                   {employee.full_name}
                                 </DialogDescription>
                               </DialogHeader>
-                              {editingEmployee && (
-                                <EmployeeForm
-                                  employee={editingEmployee}
-                                  onSuccess={handleEmployeeUpdated}
-                                />
-                              )}
+                              <ScrollArea className="max-h-[65vh] pr-4">
+                                {editingEmployee && (
+                                  <EmployeeForm
+                                    employee={editingEmployee}
+                                    onSuccess={handleEmployeeUpdated}
+                                  />
+                                )}
+                              </ScrollArea>
                             </DialogContent>
                           </Dialog>
                           <Dialog>
