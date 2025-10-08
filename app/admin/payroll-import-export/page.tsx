@@ -67,8 +67,13 @@ interface ImportResult {
     field?: string;
     employee_id?: string;
     salary_month?: string;
-    errorType?: string;
-    message: string;
+    errorType:
+      | "validation"
+      | "duplicate"
+      | "employee_not_found"
+      | "database"
+      | "format";
+    error: string;
   }>;
   processingTime: string;
   importBatchId?: string;
