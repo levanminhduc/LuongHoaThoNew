@@ -3,10 +3,7 @@
  * Logic để map database fields to user-friendly Excel headers dựa trên saved configurations
  */
 
-import type {
-  MappingConfiguration,
-  FieldMapping,
-} from "@/lib/column-alias-config";
+import type { MappingConfiguration } from "@/lib/column-alias-config";
 
 // ===== INTERFACES =====
 

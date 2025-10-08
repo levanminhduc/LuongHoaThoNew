@@ -25,8 +25,8 @@ describe("Date Formatter Utilities", () => {
       expect(formatSalaryMonth("2024-00")).toBe("2024-00"); // Invalid month
       expect(formatSalaryMonth("invalid")).toBe("invalid");
       expect(formatSalaryMonth("")).toBe("");
-      expect(formatSalaryMonth(null as any)).toBe("");
-      expect(formatSalaryMonth(undefined as any)).toBe("");
+      expect(formatSalaryMonth(null)).toBe("");
+      expect(formatSalaryMonth(undefined)).toBe("");
     });
   });
 

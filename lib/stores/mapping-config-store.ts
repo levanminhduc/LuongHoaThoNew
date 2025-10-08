@@ -476,9 +476,6 @@ export const useMappingConfigStore = create<MappingConfigStore>()(
           cacheUtils.invalidateConfiguration(id);
 
           set((state) => {
-            const configToDelete = state.configurations.find(
-              (c) => c.id === id,
-            );
             state.configurations = state.configurations.filter(
               (c) => c.id !== id,
             );

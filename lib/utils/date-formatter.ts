@@ -5,10 +5,13 @@
 
 /**
  * Formats salary month from "YYYY-MM" to Vietnamese format
- * @param salaryMonth - Format: "YYYY-MM" (e.g., "2024-07")
+ * Why: Accepts null/undefined to handle edge cases in test scenarios
+ * @param salaryMonth - Format: "YYYY-MM" (e.g., "2024-07"), or null/undefined
  * @returns Vietnamese formatted month (e.g., "Tháng 7 - 2024" or "07/2024")
  */
-export function formatSalaryMonth(salaryMonth: string): string {
+export function formatSalaryMonth(
+  salaryMonth: string | null | undefined,
+): string {
   if (!salaryMonth || typeof salaryMonth !== "string") {
     return salaryMonth || "";
   }
@@ -33,10 +36,13 @@ export function formatSalaryMonth(salaryMonth: string): string {
 
 /**
  * Formats salary month to short format MM/YYYY
- * @param salaryMonth - Format: "YYYY-MM" (e.g., "2024-07")
+ * Why: Accepts null/undefined to handle edge cases in test scenarios
+ * @param salaryMonth - Format: "YYYY-MM" (e.g., "2024-07"), or null/undefined
  * @returns Short format (e.g., "07/2024")
  */
-export function formatSalaryMonthShort(salaryMonth: string): string {
+export function formatSalaryMonthShort(
+  salaryMonth: string | null | undefined,
+): string {
   if (!salaryMonth || typeof salaryMonth !== "string") {
     return salaryMonth || "";
   }

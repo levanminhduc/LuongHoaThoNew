@@ -10,6 +10,7 @@ import type { MappingConfiguration } from "@/lib/column-alias-config";
 
 // ===== SYNC INTERFACES =====
 
+
 export interface SyncEvent {
   type:
     | "config_created"
@@ -18,7 +19,7 @@ export interface SyncEvent {
     | "default_changed"
     | "cache_invalidated";
   configId?: number;
-  data?: any;
+  data?: MappingConfiguration | Record<string, unknown> | null;
   timestamp: number;
   source: "local" | "external" | "api";
 }
@@ -437,6 +438,10 @@ export const useMappingConfigSync = () => {
   };
 };
 
+/**
+ * React hook for subscribing to sync events
+ * Why: callback and filter must be in dependency array to prevent stale closures
+ */
 export const useSyncSubscription = (
   callback: (event: SyncEvent) => void,
   filter?: (event: SyncEvent) => boolean,
@@ -448,7 +453,7 @@ export const useSyncSubscription = (
     return () => {
       syncManager.unsubscribe(subscriptionId);
     };
-  }, deps);
+  }, [callback, filter, ...deps]);
 };
 
 // ===== SYNC UTILITIES =====
