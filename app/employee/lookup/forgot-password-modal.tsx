@@ -416,7 +416,7 @@ export function ForgotPasswordModal({
               <AlertDescription className="text-xs text-blue-700">
                 <strong>Lưu ý:</strong> Vì lý do bảo mật, bạn chỉ có thể sử dụng
                 chức năng này sau 24 giờ kể từ lần đổi mật khẩu trước. Nếu cần
-                hỗ trợ ngay, vui lòng liên hệ admin.
+                hỗ trợ ngay, vui lòng liên hệ Văn Phòng.
               </AlertDescription>
             </Alert>
 
