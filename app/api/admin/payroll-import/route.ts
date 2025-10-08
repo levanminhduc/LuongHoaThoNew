@@ -358,8 +358,8 @@ export async function POST(request: NextRequest) {
         if (!recordData.employee_id || !recordData.salary_month) {
           const error = {
             row: rowNumber,
-            employee_id: recordData.employee_id,
-            salary_month: recordData.salary_month,
+            employee_id: recordData.employee_id as string | undefined,
+            salary_month: recordData.salary_month as string | undefined,
             error: `Thiếu dữ liệu bắt buộc - Employee ID: "${recordData.employee_id || "EMPTY"}", Salary Month: "${recordData.salary_month || "EMPTY"}". Kiểm tra dữ liệu trong file Excel.`,
             errorType: "validation" as const,
           };
@@ -369,11 +369,11 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate employee exists
-        if (!validEmployeeIds.has(recordData.employee_id)) {
+        if (!validEmployeeIds.has(recordData.employee_id as string)) {
           const error = {
             row: rowNumber,
-            employee_id: recordData.employee_id,
-            salary_month: recordData.salary_month,
+            employee_id: recordData.employee_id as string | undefined,
+            salary_month: recordData.salary_month as string | undefined,
             error: `Mã nhân viên "${recordData.employee_id}" không tồn tại trong hệ thống.
             Valid Employee IDs: [${Array.from(validEmployeeIds).slice(0, 10).join(", ")}${validEmployeeIds.size > 10 ? "..." : ""}].
             Vui lòng kiểm tra lại mã nhân viên hoặc thêm nhân viên vào hệ thống trước.`,
@@ -386,11 +386,11 @@ export async function POST(request: NextRequest) {
 
         // Validate salary month format
         const monthPattern = /^\d{4}-\d{2}$/;
-        if (!monthPattern.test(recordData.salary_month)) {
+        if (!monthPattern.test(recordData.salary_month as string)) {
           errors.push({
             row: rowNumber,
-            employee_id: recordData.employee_id,
-            salary_month: recordData.salary_month,
+            employee_id: recordData.employee_id as string | undefined,
+            salary_month: recordData.salary_month as string | undefined,
             error: `Tháng lương "${recordData.salary_month}" không đúng định dạng. Phải có định dạng YYYY-MM (ví dụ: 2024-01, 2024-12)`,
             errorType: "validation",
           });
@@ -401,8 +401,8 @@ export async function POST(request: NextRequest) {
         const { data: existingRecord } = await supabase
           .from("payrolls")
           .select("id")
-          .eq("employee_id", recordData.employee_id)
-          .eq("salary_month", recordData.salary_month)
+          .eq("employee_id", recordData.employee_id as string)
+          .eq("salary_month", recordData.salary_month as string)
           .single();
 
         if (existingRecord) {
@@ -410,14 +410,14 @@ export async function POST(request: NextRequest) {
           const { error: updateError } = await supabase
             .from("payrolls")
             .update(recordData)
-            .eq("employee_id", recordData.employee_id)
-            .eq("salary_month", recordData.salary_month);
+            .eq("employee_id", recordData.employee_id as string)
+            .eq("salary_month", recordData.salary_month as string);
 
           if (updateError) {
             errors.push({
               row: rowNumber,
-              employee_id: recordData.employee_id,
-              salary_month: recordData.salary_month,
+              employee_id: recordData.employee_id as string | undefined,
+              salary_month: recordData.salary_month as string | undefined,
               error: `Lỗi cập nhật: ${updateError.message}`,
               errorType: "database",
             });
@@ -434,8 +434,8 @@ export async function POST(request: NextRequest) {
           if (insertError) {
             errors.push({
               row: rowNumber,
-              employee_id: recordData.employee_id,
-              salary_month: recordData.salary_month,
+              employee_id: recordData.employee_id as string | undefined,
+              salary_month: recordData.salary_month as string | undefined,
               error: `Lỗi thêm mới: ${insertError.message}`,
               errorType: "database",
             });

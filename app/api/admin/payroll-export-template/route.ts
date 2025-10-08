@@ -283,7 +283,8 @@ export async function GET(request: NextRequest) {
       if (!dataError && payrollData) {
         dataRows = payrollData.map((record) =>
           activeFields.map(
-            (field) => (record as unknown as Record<string, unknown>)[field] || "",
+            (field) =>
+              (record as unknown as Record<string, unknown>)[field] || "",
           ),
         );
       }
