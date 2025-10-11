@@ -114,7 +114,7 @@ export function verifyEmployeeManagementAccess(
   const auth = verifyToken(request);
   if (!auth) return null;
 
-  const allowedRoles = ["admin", "van_phong"];
+  const allowedRoles = ["admin", "van_phong", "nguoi_lap_bieu"];
   return allowedRoles.includes(auth.user.role) ? auth.user : null;
 }
 

@@ -149,6 +149,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
+    if (
+      admin.role === "nguoi_lap_bieu" &&
+      restrictedRoles.includes(chuc_vu)
+    ) {
+      return NextResponse.json(
+        { error: "Không có quyền tạo nhân viên với chức vụ này" },
+        { status: 403 },
+      );
+    }
+
     const supabase = createServiceClient();
 
     const { data: existing } = await supabase

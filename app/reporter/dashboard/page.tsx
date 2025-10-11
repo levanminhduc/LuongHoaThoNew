@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import EmployeeListModal from "@/components/EmployeeListModal";
 import OverviewModal from "@/components/OverviewModal";
+import EmployeeManagementModal from "@/components/EmployeeManagementModal";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { type JWTPayload } from "@/lib/auth";
 import {
@@ -34,6 +35,7 @@ import {
   FileSpreadsheet,
   LogOut,
   Eye,
+  Users,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
@@ -48,6 +50,7 @@ export default function ReporterDashboard() {
   const [message, setMessage] = useState("");
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showOverviewModal, setShowOverviewModal] = useState(false);
+  const [showEmployeeManagementModal, setShowEmployeeManagementModal] = useState(false);
   const [user, setUser] = useState<JWTPayload | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const router = useRouter();
@@ -184,6 +187,23 @@ export default function ReporterDashboard() {
               >
                 <Eye className="h-4 w-4" />
                 Xem Tổng Quan
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowEmployeeManagementModal(true)}
+                className="hidden sm:flex"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Quản Lý Nhân Viên
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowEmployeeManagementModal(true)}
+                className="sm:hidden bg-purple-600 hover:bg-purple-700"
+              >
+                <Users className="h-4 w-4" />
+                Quản Lý NV
               </Button>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger className="w-full sm:w-40">
@@ -574,6 +594,12 @@ export default function ReporterDashboard() {
           initialMonth={selectedMonth}
         />
       )}
+
+      <EmployeeManagementModal
+        isOpen={showEmployeeManagementModal}
+        onClose={() => setShowEmployeeManagementModal(false)}
+        userRole="nguoi_lap_bieu"
+      />
     </div>
   );
 }

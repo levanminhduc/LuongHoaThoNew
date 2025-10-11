@@ -27,6 +27,7 @@ interface Employee {
 interface EmployeeFormProps {
   employee?: Employee;
   onSuccess: () => void;
+  restrictedRoles?: string[];
 }
 
 const roleOptions = [
@@ -43,6 +44,7 @@ const roleOptions = [
 export default function EmployeeForm({
   employee,
   onSuccess,
+  restrictedRoles = [],
 }: EmployeeFormProps) {
   const [formData, setFormData] = useState({
     employee_id: employee?.employee_id || "",
@@ -62,6 +64,10 @@ export default function EmployeeForm({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredRoleOptions = roleOptions.filter(
+    (role) => !restrictedRoles.includes(role.value)
+  );
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -421,7 +427,7 @@ export default function EmployeeForm({
               <SelectValue placeholder="Chọn chức vụ" />
             </SelectTrigger>
             <SelectContent>
-              {roleOptions.map((role) => (
+              {filteredRoleOptions.map((role) => (
                 <SelectItem key={role.value} value={role.value}>
                   {role.label}
                 </SelectItem>
