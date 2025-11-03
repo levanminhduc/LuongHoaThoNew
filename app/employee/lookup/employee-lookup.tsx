@@ -400,7 +400,7 @@ export function EmployeeLookup() {
                 <div className="relative">
                   <Input
                     id="cccd"
-                    type={showCccd ? "text" : authFieldConfig.type}
+                    type={showCccd ? "text" : "password"}
                     value={cccd}
                     onChange={(e) => setCccd(e.target.value)}
                     placeholder={authFieldConfig.placeholder}

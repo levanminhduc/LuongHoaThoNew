@@ -50,7 +50,8 @@ export default function ReporterDashboard() {
   const [message, setMessage] = useState("");
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showOverviewModal, setShowOverviewModal] = useState(false);
-  const [showEmployeeManagementModal, setShowEmployeeManagementModal] = useState(false);
+  const [showEmployeeManagementModal, setShowEmployeeManagementModal] =
+    useState(false);
   const [user, setUser] = useState<JWTPayload | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const router = useRouter();

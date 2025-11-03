@@ -81,10 +81,7 @@ export async function PUT(
     }
 
     const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
-    if (
-      admin.role === "nguoi_lap_bieu" &&
-      restrictedRoles.includes(chuc_vu)
-    ) {
+    if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {
       return NextResponse.json(
         { error: "Không có quyền thay đổi thành chức vụ này" },
         { status: 403 },
@@ -370,7 +367,10 @@ export async function DELETE(
 
     if (admin.role === "nguoi_lap_bieu") {
       return NextResponse.json(
-        { error: "Không có quyền xóa nhân viên. Vui lòng vô hiệu hóa thay vì xóa." },
+        {
+          error:
+            "Không có quyền xóa nhân viên. Vui lòng vô hiệu hóa thay vì xóa.",
+        },
         { status: 403 },
       );
     }

@@ -66,7 +66,7 @@ export default function EmployeeForm({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filteredRoleOptions = roleOptions.filter(
-    (role) => !restrictedRoles.includes(role.value)
+    (role) => !restrictedRoles.includes(role.value),
   );
 
   useEffect(() => {
