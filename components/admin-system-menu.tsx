@@ -13,6 +13,7 @@ import {
   Cog,
   Database,
   KeyRound,
+  Users,
 } from "lucide-react";
 
 interface AdminSystemMenuProps {
@@ -40,6 +41,15 @@ export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
       colorClass: "text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50",
       iconColorClass: "text-cyan-600",
       onClick: () => router.push("/admin/data-validation"),
+    },
+    {
+      id: "bulk-signature",
+      label: "Ký Hàng Loạt",
+      icon: Users,
+      description: "Ký hàng loạt chữ ký cho nhân viên chưa ký",
+      colorClass: "text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50",
+      iconColorClass: "text-indigo-600",
+      onClick: () => router.push("/admin/bulk-signature"),
     },
     {
       id: "cccd-management",

@@ -8,7 +8,8 @@
     "lint": "next lint",
     "start": "next start",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,css,scss,json,md}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate:bulk-signature": "node scripts/run-bulk-signature-migrations.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

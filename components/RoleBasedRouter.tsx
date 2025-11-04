@@ -76,6 +76,7 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
         "/admin/payroll-management",
         "/admin/employee-management",
         "/admin/payroll-import-export",
+        "/admin/bulk-signature",
       ],
       giam_doc: [
         "/director",

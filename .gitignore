@@ -3,6 +3,10 @@
 # dependencies
 /node_modules
 
+# skill claude
+/.claude/
+CLAUDE.md
+
 # next.js
 /.next/
 /out/
@@ -19,9 +23,11 @@ yarn-error.log*
 # env files
 .env*
 
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.claude/skills/algorithmic-art/LICENSE.txt
