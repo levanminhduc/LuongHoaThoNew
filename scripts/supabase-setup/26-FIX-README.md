@@ -35,6 +35,7 @@ CREATE FUNCTION auto_sign_salary(
 File fix: `scripts/supabase-setup/26-fix-bulk-sign-salaries-function.sql`
 
 **Thay đổi**:
+
 - ✅ Bỏ parameter `p_admin_id` khỏi lời gọi `auto_sign_salary`
 - ✅ Gọi với 4 parameters: `(v_employee_id, p_salary_month, p_ip_address, p_device_info)`
 - ✅ Admin tracking được lưu vào bảng `bulk_signature_history` thay vì truyền qua function
@@ -78,18 +79,19 @@ Sau khi chạy fix script, verify bằng query:
 
 ```sql
 -- Kiểm tra function signature
-SELECT 
+SELECT
   p.proname as function_name,
   pg_get_function_arguments(p.oid) as parameters,
   pg_get_function_result(p.oid) as return_type
 FROM pg_proc p
 JOIN pg_namespace n ON p.pronamespace = n.oid
-WHERE n.nspname = 'public' 
+WHERE n.nspname = 'public'
   AND p.proname IN ('auto_sign_salary', 'bulk_sign_salaries')
 ORDER BY p.proname;
 ```
 
 **Kết quả mong đợi**:
+
 - `auto_sign_salary`: 4-5 parameters (không có `p_admin_id`)
 - `bulk_sign_salaries`: 7 parameters (có `p_admin_id` nhưng không truyền cho `auto_sign_salary`)
 
@@ -123,6 +125,7 @@ DROP FUNCTION IF EXISTS bulk_sign_salaries(VARCHAR[], VARCHAR, VARCHAR, TEXT, VA
 ```
 
 Sau đó chạy lại file gốc:
+
 ```bash
 psql -f scripts/supabase-setup/25-create-bulk-sign-salaries-function.sql
 ```
@@ -132,18 +135,22 @@ psql -f scripts/supabase-setup/25-create-bulk-sign-salaries-function.sql
 ## 📊 **IMPACT ANALYSIS**
 
 ### **Files Changed:**
+
 - ✅ `scripts/supabase-setup/26-fix-bulk-sign-salaries-function.sql` (NEW)
 
 ### **Database Changes:**
+
 - ✅ Function `bulk_sign_salaries` updated
 - ✅ No table schema changes
 - ✅ No data migration needed
 
 ### **API Changes:**
+
 - ✅ No API route changes
 - ✅ No frontend changes needed
 
 ### **Risk Level:** 🟢 **LOW**
+
 - Chỉ sửa function logic
 - Không ảnh hưởng data
 - Có rollback script
@@ -161,4 +168,3 @@ psql -f scripts/supabase-setup/25-create-bulk-sign-salaries-function.sql
 **Fix Date**: 2025-11-04  
 **Status**: ✅ Ready to deploy  
 **Tested**: ✅ Verified with function signature check
-

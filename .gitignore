@@ -4,8 +4,6 @@
 /node_modules
 
 # skill claude
-/.claude/
-CLAUDE.md
 
 # next.js
 /.next/
@@ -31,3 +29,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .claude/skills/algorithmic-art/LICENSE.txt
+auggie_shell.ps1
+auggie_shell.sh

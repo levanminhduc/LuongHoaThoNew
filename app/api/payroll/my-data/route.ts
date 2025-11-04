@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        employees!inner(
+        employees!payrolls_employee_id_fkey!inner(
           employee_id,
           full_name,
           department,

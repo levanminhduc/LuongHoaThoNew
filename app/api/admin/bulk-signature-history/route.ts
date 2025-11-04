@@ -54,4 +54,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
   }
 }
-

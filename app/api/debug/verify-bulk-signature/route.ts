@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // ===== 1. CHECK DATABASE FUNCTIONS =====
     console.log("📋 Checking database functions...");
-    
+
     // Test auto_sign_salary function
     try {
       const { data: testSign, error: signError } = await supabase.rpc(
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
           p_device_info: "verification_test",
         },
       );
-      
+
       results.checks.auto_sign_salary = {
         exists: !signError || !signError.message.includes("not found"),
         error: signError?.message || null,
@@ -77,9 +77,14 @@ export async function GET(request: NextRequest) {
 
     // ===== 2. CHECK TABLES =====
     console.log("📋 Checking tables...");
-    
-    const tables = ["payrolls", "signature_logs", "bulk_signature_history", "employees"];
-    
+
+    const tables = [
+      "payrolls",
+      "signature_logs",
+      "bulk_signature_history",
+      "employees",
+    ];
+
     for (const table of tables) {
       try {
         const { data, error, count } = await supabase
@@ -104,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     // ===== 3. CHECK PAYROLL DATA =====
     console.log("📋 Checking payroll data...");
-    
+
     try {
       const { data: payrolls, error: payrollError } = await supabase
         .from("payrolls")
@@ -145,19 +150,22 @@ export async function GET(request: NextRequest) {
     }
 
     // ===== 4. GENERATE SUMMARY =====
-    const functionExists = 
-      results.checks.auto_sign_salary?.exists && 
+    const functionExists =
+      results.checks.auto_sign_salary?.exists &&
       results.checks.bulk_sign_salaries?.exists;
-    
+
     const tablesAccessible = tables.every(
-      (table) => results.checks[`table_${table}`]?.accessible
+      (table) => results.checks[`table_${table}`]?.accessible,
     );
 
     results.summary = {
       functions_ready: functionExists,
       tables_ready: tablesAccessible,
       payroll_data_accessible: results.checks.payroll_data?.accessible || false,
-      system_ready: functionExists && tablesAccessible && results.checks.payroll_data?.accessible,
+      system_ready:
+        functionExists &&
+        tablesAccessible &&
+        results.checks.payroll_data?.accessible,
     };
 
     // ===== 5. RECOMMENDATIONS =====
@@ -167,7 +175,8 @@ export async function GET(request: NextRequest) {
       results.recommendations.push({
         priority: "CRITICAL",
         issue: "bulk_sign_salaries function not found",
-        action: "Run: scripts/supabase-setup/25-create-bulk-sign-salaries-function.sql",
+        action:
+          "Run: scripts/supabase-setup/25-create-bulk-sign-salaries-function.sql",
       });
     }
 
@@ -175,7 +184,8 @@ export async function GET(request: NextRequest) {
       results.recommendations.push({
         priority: "CRITICAL",
         issue: "auto_sign_salary function not found",
-        action: "Run: scripts/supabase-setup/18-emergency-fix-signature-function-clean.sql",
+        action:
+          "Run: scripts/supabase-setup/18-emergency-fix-signature-function-clean.sql",
       });
     }
 
@@ -202,4 +212,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

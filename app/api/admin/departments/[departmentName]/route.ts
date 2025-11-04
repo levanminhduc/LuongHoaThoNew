@@ -80,6 +80,8 @@ export async function GET(
     }
 
     // Get payroll data for the department in the specified month
+    // Query payroll data với employees join
+    // Sử dụng order by created_at thay vì employees(full_name) vì Supabase không hỗ trợ ordering by nested relationship fields
     const { data: payrolls, error: payrollsError } = await supabase
       .from("payrolls")
       .select(
@@ -136,7 +138,7 @@ export async function GET(
         signature_device,
         created_at,
         updated_at,
-        employees!inner(
+        employees!payrolls_employee_id_fkey!inner(
           employee_id,
           full_name,
           department,
@@ -146,7 +148,7 @@ export async function GET(
       )
       .eq("employees.department", departmentName)
       .eq("salary_month", month)
-      .order("employees(full_name)", { ascending: true });
+      .order("created_at", { ascending: false });
 
     if (payrollsError) {
       console.error("Payrolls query error:", payrollsError);
@@ -180,7 +182,7 @@ export async function GET(
         salary_month,
         tien_luong_thuc_nhan_cuoi_ky,
         is_signed,
-        employees!inner(department)
+        employees!payrolls_employee_id_fkey!inner(department)
       `,
       )
       .eq("employees.department", departmentName)

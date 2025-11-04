@@ -37,11 +37,14 @@ export async function POST(request: NextRequest) {
 
     if (fetchError) {
       console.error("Error fetching unsigned payrolls:", fetchError);
-      console.error("Fetch error details:", JSON.stringify(fetchError, null, 2));
+      console.error(
+        "Fetch error details:",
+        JSON.stringify(fetchError, null, 2),
+      );
       return NextResponse.json(
         {
           error: "Lỗi khi lấy danh sách chưa ký",
-          details: fetchError.message
+          details: fetchError.message,
         },
         { status: 500 },
       );
@@ -201,4 +204,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

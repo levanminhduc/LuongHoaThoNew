@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
               `
               tien_luong_thuc_nhan_cuoi_ky,
               is_signed,
-              employees!inner(department)
+              employees!payrolls_employee_id_fkey!inner(department)
             `,
             )
             .eq("employees.department", dept)

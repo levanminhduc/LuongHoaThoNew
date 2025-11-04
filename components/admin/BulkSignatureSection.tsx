@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { BulkSignatureDialog } from "./BulkSignatureDialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -100,4 +106,3 @@ export function BulkSignatureSection({ onSuccess }: BulkSignatureSectionProps) {
     </Card>
   );
 }
-

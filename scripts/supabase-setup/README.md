@@ -92,6 +92,41 @@ SELECT \* FROM get_employee_salary_detail('NV001', '2024-07');
 SELECT \* FROM get_signature_report('2024-07');
 \`\`\`
 
+## 🔧 IMPORTANT: RLS FIX FOR SERVICE CLIENT
+
+### **⚠️ CRITICAL FIX - Apply After Initial Setup**
+
+Nếu Overview Dashboard hiển thị **Tỷ Lệ Ký: 0%** và **Tổng Lương: 0.0M**, bạn cần apply RLS fix:
+
+**Script:** `20-fix-rls-service-client-final.sql`
+
+**Hướng dẫn chi tiết:** Xem file `APPLY-RLS-FIX.md`
+
+**Quick Apply:**
+\`\`\`bash
+
+# Option 1: Supabase Dashboard (RECOMMENDED)
+
+# - Mở SQL Editor
+
+# - Copy/paste nội dung file 20-fix-rls-service-client-final.sql
+
+# - Click Run
+
+# Option 2: psql CLI
+
+psql "postgresql://..." -f scripts/supabase-setup/20-fix-rls-service-client-final.sql
+\`\`\`
+
+**Vấn đề được fix:**
+
+- ✅ Service client (admin APIs) có thể query payroll data
+- ✅ Overview Dashboard hiển thị statistics đúng
+- ✅ Không có RLS policy errors trong console
+- ✅ Giữ nguyên security cho regular users
+
+---
+
 ## 🚨 TROUBLESHOOTING
 
 ### **Common Issues:**
@@ -115,6 +150,17 @@ CREATE EXTENSION IF NOT EXISTS plpgsql;
 \`\`\`sql
 -- Drop existing policy first
 DROP POLICY IF EXISTS "employees_own_data" ON employees;
+\`\`\`
+
+#### **4. Overview Dashboard Shows 0% and 0.0M:**
+
+**Giải pháp:** Apply RLS fix (xem section "RLS FIX FOR SERVICE CLIENT" ở trên)
+
+\`\`\`bash
+
+# Chạy script fix
+
+psql -f scripts/supabase-setup/20-fix-rls-service-client-final.sql
 \`\`\`
 
 ### **Rollback Strategy:**

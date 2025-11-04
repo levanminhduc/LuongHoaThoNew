@@ -43,6 +43,8 @@ import {
   X,
   Eye,
   Download,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { type JWTPayload } from "@/lib/auth";
 import { getPreviousMonth } from "@/utils/dateUtils";
@@ -90,6 +92,7 @@ export default function OverviewModal({
     initialMonth || getPreviousMonth(),
   );
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Department Detail Modal state
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -113,9 +116,11 @@ export default function OverviewModal({
     }
   }, [isOpen, selectedMonth]);
 
+  // Load department statistics với error handling
   const loadDepartmentStats = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem("admin_token");
       const response = await fetch(
         `/api/admin/departments?include_stats=true&month=${selectedMonth}`,
@@ -129,9 +134,18 @@ export default function OverviewModal({
       if (response.ok) {
         const data = await response.json();
         setDepartments(data.departments || []);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(
+          errorData.error ||
+            `Không thể tải dữ liệu thống kê (Mã lỗi: ${response.status})`,
+        );
       }
     } catch (error) {
       console.error("Error loading department stats:", error);
+      setError(
+        "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      );
     } finally {
       setLoading(false);
     }
@@ -260,6 +274,28 @@ export default function OverviewModal({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="text-gray-600">Đang tải dữ liệu...</p>
             </div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-12">
+            <Card className="w-full max-w-md border-red-200 bg-red-50">
+              <CardHeader>
+                <div className="flex items-center gap-2 text-red-800">
+                  <AlertCircle className="h-5 w-5" />
+                  <CardTitle className="text-lg">Lỗi tải dữ liệu</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-red-700">{error}</p>
+                <Button
+                  onClick={loadDepartmentStats}
+                  className="w-full"
+                  variant="default"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Thử lại
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         ) : (
           <div className="space-y-6">

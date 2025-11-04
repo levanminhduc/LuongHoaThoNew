@@ -187,7 +187,6 @@ export default function DepartmentDetailModalRefactored({
     setError("");
 
     try {
-      // Check cache first (unless force refresh)
       if (!forceRefresh) {
         const cachedData = DepartmentCache.getCacheData(departmentName, month);
         if (cachedData) {
@@ -196,11 +195,9 @@ export default function DepartmentDetailModalRefactored({
           return;
         }
       } else {
-        // Clear cache if force refresh
         DepartmentCache.clearCache(departmentName, month);
       }
 
-      // Fetch from API
       const token = localStorage.getItem("admin_token");
       const response = await fetch(
         `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}`,
@@ -215,7 +212,6 @@ export default function DepartmentDetailModalRefactored({
         const data = await response.json();
         const departmentData = data.department;
 
-        // Cache the response
         DepartmentCache.setCacheData(departmentName, month, departmentData);
 
         setDepartmentData(departmentData);

@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        employees!inner(
+        employees!payrolls_employee_id_fkey!inner(
           employee_id,
           full_name,
           department,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         `
         tien_luong_thuc_nhan_cuoi_ky,
         is_signed,
-        employees!inner(department)
+        employees!payrolls_employee_id_fkey!inner(department)
       `,
       )
       .eq("employees.department", auth.user.department)
