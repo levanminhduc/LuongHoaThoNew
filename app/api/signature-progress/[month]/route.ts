@@ -32,45 +32,37 @@ export async function GET(
 
     const supabase = createServiceClient();
 
-    // Thay đổi logic: Lấy nhân viên có bảng lương trong tháng đó
-    const { data: employeesWithPayroll, error: payrollError } = await supabase
+    const { data: payrolls, error: payrollError } = await supabase
       .from("payrolls")
-      .select("employee_id", { count: "exact" })
+      .select("employee_id, is_signed, signed_at", { count: "exact" })
       .eq("salary_month", month);
 
     if (payrollError) {
-      console.error("Error fetching employees with payroll:", payrollError);
+      console.error("Error fetching payrolls:", payrollError);
       return NextResponse.json(
-        { error: "Lỗi khi lấy danh sách nhân viên có bảng lương" },
+        { error: "Lỗi khi lấy danh sách bảng lương" },
         { status: 500 },
       );
     }
 
-    const { data: signedEmployees, error: signedError } = await supabase
-      .from("signature_logs")
-      .select("employee_id, signed_at", { count: "exact" })
-      .eq("salary_month", month)
-      .order("signed_at", { ascending: false });
-
-    if (signedError) {
-      console.error("Error fetching signed employees:", signedError);
-      return NextResponse.json(
-        { error: "Lỗi khi lấy danh sách nhân viên đã ký" },
-        { status: 500 },
-      );
-    }
-
-    // Tính toán dựa trên nhân viên có bảng lương
-    const totalCount = employeesWithPayroll?.length || 0;
-    const signedCount = signedEmployees?.length || 0;
+    const totalCount = payrolls?.length || 0;
+    const signedPayrolls = payrolls?.filter((p) => p.is_signed) || [];
+    const signedCount = signedPayrolls.length;
     const employeeCompletionPercentage =
       totalCount > 0
         ? Math.round((signedCount / totalCount) * 100 * 100) / 100
         : 0;
 
+    const sortedSignedPayrolls = signedPayrolls
+      .filter((p) => p.signed_at)
+      .sort(
+        (a, b) =>
+          new Date(b.signed_at!).getTime() - new Date(a.signed_at!).getTime(),
+      );
+
     const lastEmployeeSignature =
-      signedEmployees && signedEmployees.length > 0
-        ? signedEmployees[0].signed_at
+      sortedSignedPayrolls.length > 0
+        ? sortedSignedPayrolls[0].signed_at
         : null;
 
     let managementProgress = {
@@ -112,8 +104,8 @@ export async function GET(
 
     const recentActivity = [];
 
-    if (signedEmployees && signedEmployees.length > 0) {
-      const recentSigns = signedEmployees.slice(0, 5);
+    if (sortedSignedPayrolls.length > 0) {
+      const recentSigns = sortedSignedPayrolls.slice(0, 5);
       recentActivity.push(
         ...recentSigns.map((sign) => ({
           type: "employee_signature",

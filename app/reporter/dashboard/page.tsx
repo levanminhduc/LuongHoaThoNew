@@ -17,6 +17,7 @@ import {
 import EmployeeListModal from "@/components/EmployeeListModal";
 import OverviewModal from "@/components/OverviewModal";
 import EmployeeManagementModal from "@/components/EmployeeManagementModal";
+import UnsignedEmployeesModal from "@/components/UnsignedEmployeesModal";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { type JWTPayload } from "@/lib/auth";
 import {
@@ -36,6 +37,7 @@ import {
   LogOut,
   Eye,
   Users,
+  UserX,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
@@ -50,6 +52,7 @@ export default function ReporterDashboard() {
   const [message, setMessage] = useState("");
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showOverviewModal, setShowOverviewModal] = useState(false);
+  const [showUnsignedModal, setShowUnsignedModal] = useState(false);
   const [showEmployeeManagementModal, setShowEmployeeManagementModal] =
     useState(false);
   const [user, setUser] = useState<JWTPayload | null>(null);
@@ -188,6 +191,21 @@ export default function ReporterDashboard() {
               >
                 <Eye className="h-4 w-4" />
                 Xem Tổng Quan
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowUnsignedModal(true)}
+                disabled={!monthStatus}
+                className="hidden sm:flex border-red-200 hover:bg-red-50"
+              >
+                <UserX className="h-4 w-4 mr-2 text-red-600" />
+                <span className="text-red-700">Nhân Viên Chưa Ký</span>
+                {monthStatus && (
+                  <Badge className="ml-2 bg-red-600 text-white">
+                    {monthStatus.employee_completion.total_employees -
+                      monthStatus.employee_completion.signed_employees}
+                  </Badge>
+                )}
               </Button>
               <Button
                 variant="outline"
@@ -600,6 +618,19 @@ export default function ReporterDashboard() {
         isOpen={showEmployeeManagementModal}
         onClose={() => setShowEmployeeManagementModal(false)}
         userRole="nguoi_lap_bieu"
+      />
+
+      <UnsignedEmployeesModal
+        isOpen={showUnsignedModal}
+        onClose={() => setShowUnsignedModal(false)}
+        selectedMonth={selectedMonth}
+        userRole="nguoi_lap_bieu"
+        totalUnsigned={
+          monthStatus
+            ? monthStatus.employee_completion.total_employees -
+              monthStatus.employee_completion.signed_employees
+            : undefined
+        }
       />
     </div>
   );

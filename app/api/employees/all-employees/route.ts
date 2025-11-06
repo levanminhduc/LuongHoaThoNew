@@ -38,10 +38,22 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month");
     const includeInactive = searchParams.get("include_inactive") === "true";
     const includePayrollData = searchParams.get("include_payroll") === "true";
+    const unsignedOnly = searchParams.get("unsigned_only") === "true";
 
     const offset = (page - 1) * limit;
 
-    // Base query for all employees
+    let unsignedEmployeeIds: string[] = [];
+    if (unsignedOnly && month) {
+      const { data: payrollsData } = await supabase
+        .from("payrolls")
+        .select("employee_id, is_signed")
+        .eq("salary_month", month);
+
+      unsignedEmployeeIds =
+        payrollsData?.filter((p) => !p.is_signed).map((p) => p.employee_id) ||
+        [];
+    }
+
     let employeeQuery = supabase
       .from("employees")
       .select("employee_id, full_name, department, chuc_vu, is_active")
@@ -49,7 +61,6 @@ export async function GET(request: NextRequest) {
       .order("chuc_vu", { ascending: false })
       .order("full_name");
 
-    // Apply filters
     if (!includeInactive) {
       employeeQuery = employeeQuery.eq("is_active", true);
     }
@@ -64,13 +75,59 @@ export async function GET(request: NextRequest) {
       employeeQuery = employeeQuery.eq("department", department);
     }
 
-    // Get total count for pagination
-    const { count: totalCount } = await supabase
+    if (unsignedOnly && unsignedEmployeeIds.length > 0) {
+      employeeQuery = employeeQuery.in("employee_id", unsignedEmployeeIds);
+    } else if (unsignedOnly && unsignedEmployeeIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        employees: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+        departments: [],
+        departmentCounts: {},
+        filters: {
+          search,
+          department,
+          month,
+          includeInactive,
+          includePayrollData,
+          unsignedOnly,
+        },
+        metadata: {
+          role: auth.user.role,
+          timestamp: getVietnamTimestamp(),
+          cached_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        },
+      });
+    }
+
+    let countQuery = supabase
       .from("employees")
       .select("*", { count: "exact", head: true })
       .eq("is_active", includeInactive ? undefined : true);
 
-    // Apply pagination
+    if (search && search.length >= 2) {
+      countQuery = countQuery.or(
+        `employee_id.ilike.%${search}%,full_name.ilike.%${search}%`,
+      );
+    }
+
+    if (department && department !== "all") {
+      countQuery = countQuery.eq("department", department);
+    }
+
+    if (unsignedOnly && unsignedEmployeeIds.length > 0) {
+      countQuery = countQuery.in("employee_id", unsignedEmployeeIds);
+    }
+
+    const { count: totalCount } = await countQuery;
+
     employeeQuery = employeeQuery.range(offset, offset + limit - 1);
 
     const { data: employees, error: employeeError } = await employeeQuery;
@@ -83,7 +140,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Optionally include payroll data for specific month
     let employeesWithPayroll = employees || [];
 
     if (includePayrollData && month && employees?.length) {
@@ -98,7 +154,6 @@ export async function GET(request: NextRequest) {
         .in("employee_id", employeeIds);
 
       if (!payrollError && payrollData) {
-        // Merge payroll data with employee data
         employeesWithPayroll = employees.map((emp) => {
           const payroll = payrollData.find(
             (p) => p.employee_id === emp.employee_id,
@@ -114,8 +169,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get department statistics
-    const { data: deptStats, error: deptError } = await supabase
+    const { data: deptStats } = await supabase
       .from("employees")
       .select("department")
       .eq("is_active", true);
@@ -151,6 +205,7 @@ export async function GET(request: NextRequest) {
         month,
         includeInactive,
         includePayrollData,
+        unsignedOnly,
       },
       metadata: {
         role: auth.user.role,

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import EmployeeListModal from "@/components/EmployeeListModal";
 import OverviewModal from "@/components/OverviewModal";
+import UnsignedEmployeesModal from "@/components/UnsignedEmployeesModal";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { type JWTPayload } from "@/lib/auth";
 import {
@@ -33,6 +34,7 @@ import {
   BarChart3,
   LogOut,
   Eye,
+  UserX,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
@@ -47,6 +49,7 @@ export default function AccountantDashboard() {
   const [message, setMessage] = useState("");
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showOverviewModal, setShowOverviewModal] = useState(false);
+  const [showUnsignedModal, setShowUnsignedModal] = useState(false);
   const [user, setUser] = useState<JWTPayload | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const router = useRouter();
@@ -182,6 +185,21 @@ export default function AccountantDashboard() {
               >
                 <Eye className="h-4 w-4" />
                 Xem Tổng Quan
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowUnsignedModal(true)}
+                disabled={!monthStatus}
+                className="hidden sm:flex border-red-200 hover:bg-red-50"
+              >
+                <UserX className="h-4 w-4 mr-2 text-red-600" />
+                <span className="text-red-700">Nhân Viên Chưa Ký</span>
+                {monthStatus && (
+                  <Badge className="ml-2 bg-red-600 text-white">
+                    {monthStatus.employee_completion.total_employees -
+                      monthStatus.employee_completion.signed_employees}
+                  </Badge>
+                )}
               </Button>
               {/* Month selector: full width on mobile, fixed width on larger screens */}
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -547,6 +565,19 @@ export default function AccountantDashboard() {
           initialMonth={selectedMonth}
         />
       )}
+
+      <UnsignedEmployeesModal
+        isOpen={showUnsignedModal}
+        onClose={() => setShowUnsignedModal(false)}
+        selectedMonth={selectedMonth}
+        userRole="ke_toan"
+        totalUnsigned={
+          monthStatus
+            ? monthStatus.employee_completion.total_employees -
+              monthStatus.employee_completion.signed_employees
+            : undefined
+        }
+      />
     </div>
   );
 }

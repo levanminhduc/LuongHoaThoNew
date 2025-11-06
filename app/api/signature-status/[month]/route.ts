@@ -32,61 +32,50 @@ export async function GET(
 
     const supabase = createServiceClient();
 
-    // Thay đổi logic: Lấy nhân viên có bảng lương trong tháng đó
-    const { data: employeesWithPayroll, error: payrollError } = await supabase
+    const { data: payrolls, error: payrollError } = await supabase
       .from("payrolls")
-      .select("employee_id")
+      .select("employee_id, is_signed")
       .eq("salary_month", month);
 
     if (payrollError) {
-      console.error("Error fetching employees with payroll:", payrollError);
+      console.error("Error fetching payrolls:", payrollError);
       return NextResponse.json(
-        { error: "Lỗi khi lấy danh sách nhân viên có bảng lương" },
+        { error: "Lỗi khi lấy danh sách bảng lương" },
         { status: 500 },
       );
     }
 
-    const { data: signedEmployees, error: signedError } = await supabase
-      .from("signature_logs")
-      .select("employee_id")
-      .eq("salary_month", month);
-
-    if (signedError) {
-      console.error("Error fetching signed employees:", signedError);
-      return NextResponse.json(
-        { error: "Lỗi khi lấy danh sách nhân viên đã ký" },
-        { status: 500 },
-      );
-    }
-
-    // Tính toán dựa trên nhân viên có bảng lương
-    const totalCount = employeesWithPayroll?.length || 0;
-    const signedCount = signedEmployees?.length || 0;
+    const totalCount = payrolls?.length || 0;
+    const signedCount = payrolls?.filter((p) => p.is_signed).length || 0;
     const completionPercentage =
       totalCount > 0
         ? Math.round((signedCount / totalCount) * 100 * 100) / 100
         : 0;
     const is100PercentComplete = signedCount === totalCount && totalCount > 0;
 
-    const signedEmployeeIds = signedEmployees?.map((s) => s.employee_id) || [];
-    const employeesWithPayrollIds =
-      employeesWithPayroll?.map((p) => p.employee_id) || [];
+    const unsignedEmployeeIds =
+      payrolls?.filter((p) => !p.is_signed).map((p) => p.employee_id) || [];
 
-    // Lấy sample nhân viên chưa ký trong số những người có bảng lương
-    const { data: unsignedSample, error: unsignedError } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu")
-      .eq("is_active", true)
-      .in("employee_id", employeesWithPayrollIds)
-      .not(
-        "employee_id",
-        "in",
-        `(${signedEmployeeIds.length > 0 ? signedEmployeeIds.map((id) => `'${id}'`).join(",") : "''"})`,
-      )
-      .limit(10);
+    let unsignedSample: Array<{
+      employee_id: string;
+      full_name: string;
+      department: string;
+      chuc_vu: string;
+    }> = [];
 
-    if (unsignedError) {
-      console.error("Error fetching unsigned employees:", unsignedError);
+    if (unsignedEmployeeIds.length > 0) {
+      const { data: unsignedData, error: unsignedError } = await supabase
+        .from("employees")
+        .select("employee_id, full_name, department, chuc_vu")
+        .eq("is_active", true)
+        .in("employee_id", unsignedEmployeeIds)
+        .limit(10);
+
+      if (unsignedError) {
+        console.error("Error fetching unsigned employees:", unsignedError);
+      } else {
+        unsignedSample = unsignedData || [];
+      }
     }
 
     let managementSignatures: Record<string, unknown> = {};

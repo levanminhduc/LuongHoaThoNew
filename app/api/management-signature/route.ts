@@ -47,36 +47,21 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // Thay đổi logic: Kiểm tra dựa trên nhân viên có bảng lương trong tháng đó
-    const { data: employeesWithPayroll, error: payrollError } = await supabase
+    const { data: payrolls, error: payrollError } = await supabase
       .from("payrolls")
-      .select("employee_id", { count: "exact" })
+      .select("employee_id, is_signed", { count: "exact" })
       .eq("salary_month", salary_month);
 
     if (payrollError) {
-      console.error("Error fetching employees with payroll:", payrollError);
+      console.error("Error fetching payrolls:", payrollError);
       return NextResponse.json(
-        { error: "Lỗi khi kiểm tra danh sách nhân viên có bảng lương" },
+        { error: "Lỗi khi kiểm tra danh sách bảng lương" },
         { status: 500 },
       );
     }
 
-    const { data: signedEmployees, error: signedError } = await supabase
-      .from("signature_logs")
-      .select("employee_id", { count: "exact" })
-      .eq("salary_month", salary_month);
-
-    if (signedError) {
-      console.error("Error fetching signed employees:", signedError);
-      return NextResponse.json(
-        { error: "Lỗi khi kiểm tra nhân viên đã ký" },
-        { status: 500 },
-      );
-    }
-
-    // Tính toán dựa trên nhân viên có bảng lương
-    const totalCount = employeesWithPayroll?.length || 0;
-    const signedCount = signedEmployees?.length || 0;
+    const totalCount = payrolls?.length || 0;
+    const signedCount = payrolls?.filter((p) => p.is_signed).length || 0;
     const is100PercentComplete = signedCount === totalCount && totalCount > 0;
 
     if (!is100PercentComplete) {
