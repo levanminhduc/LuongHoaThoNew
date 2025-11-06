@@ -169,10 +169,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: deptStats } = await supabase
-      .from("employees")
-      .select("department")
-      .eq("is_active", true);
+    let deptStatsQuery = supabase.from("employees").select("department");
+
+    if (!includeInactive) {
+      deptStatsQuery = deptStatsQuery.eq("is_active", true);
+    }
+
+    if (search && search.length >= 2) {
+      deptStatsQuery = deptStatsQuery.or(
+        `employee_id.ilike.%${search}%,full_name.ilike.%${search}%`,
+      );
+    }
+
+    if (department && department !== "all") {
+      deptStatsQuery = deptStatsQuery.eq("department", department);
+    }
+
+    if (unsignedOnly && unsignedEmployeeIds.length > 0) {
+      deptStatsQuery = deptStatsQuery.in("employee_id", unsignedEmployeeIds);
+    }
+
+    const { data: deptStats } = await deptStatsQuery;
 
     const departmentCounts =
       deptStats?.reduce(

@@ -29,6 +29,7 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Download,
 } from "lucide-react";
 
 interface Employee {
@@ -79,6 +80,7 @@ export default function UnsignedEmployeesModal({
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
@@ -246,6 +248,60 @@ export default function UnsignedEmployeesModal({
     return labels[chucVu as keyof typeof labels] || chucVu;
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      setError("");
+
+      const token = localStorage.getItem("admin_token");
+      if (!token) {
+        setError("Không có quyền truy cập");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        month: selectedMonth,
+      });
+
+      if (debouncedSearch && debouncedSearch.length >= 2) {
+        params.append("search", debouncedSearch);
+      }
+
+      if (selectedDepartment && selectedDepartment !== "all") {
+        params.append("department", selectedDepartment);
+      }
+
+      const response = await fetch(
+        `/api/admin/unsigned-employees-export?${params}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = `NV_Chua_Ky_${selectedMonth}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Lỗi khi xuất Excel");
+      }
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      setError("Lỗi khi xuất Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
@@ -299,9 +355,30 @@ export default function UnsignedEmployeesModal({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Thống kê</label>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Building2 className="w-4 h-4" />
-                {departments.length} phòng ban
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Building2 className="w-4 h-4" />
+                  {departments.length} phòng ban
+                </div>
+                <Button
+                  onClick={handleExportExcel}
+                  disabled={exporting || employees.length === 0}
+                  size="sm"
+                  variant="outline"
+                  className="gap-2"
+                >
+                  {exporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Đang xuất...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Xuất Excel
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
