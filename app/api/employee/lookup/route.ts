@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
       tong_cong_tien_luong_san_pham: payroll.tong_cong_tien_luong_san_pham || 0,
       ho_tro_thoi_tiet_nong: payroll.ho_tro_thoi_tiet_nong || 0,
       bo_sung_luong: payroll.bo_sung_luong || 0,
+      pc_luong_cho_viec: payroll.pc_luong_cho_viec || 0,
 
       // Bảo hiểm và phúc lợi
       bhxh_21_5_percent: payroll.bhxh_21_5_percent || 0,

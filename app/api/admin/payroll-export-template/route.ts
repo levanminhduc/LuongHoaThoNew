@@ -55,6 +55,7 @@ const FIELD_HEADERS: Record<string, string> = {
   tong_cong_tien_luong_san_pham: "Tổng Cộng Tiền Lương Sản Phẩm",
   ho_tro_thoi_tiet_nong: "Hỗ Trợ Thời Tiết Nóng",
   bo_sung_luong: "Bổ Sung Lương",
+  pc_luong_cho_viec: "PC Lương Chờ Việc",
   tien_luong_chu_nhat: "Tiền Lương Chủ Nhật",
   luong_cnkcp_vuot: "Lương CNKCP Vượt",
   tien_tang_ca_vuot: "Tiền Tăng Ca Vượt",
@@ -110,6 +111,7 @@ const PAYROLL_FIELDS = [
   "tong_cong_tien_luong_san_pham",
   "ho_tro_thoi_tiet_nong",
   "bo_sung_luong",
+  "pc_luong_cho_viec",
   "tien_luong_chu_nhat",
   "luong_cnkcp_vuot",
   "tien_tang_ca_vuot", // Bổ sung 3 cột mới

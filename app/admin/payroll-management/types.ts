@@ -65,6 +65,7 @@ export interface PayrollData {
   tong_cong_tien_luong_san_pham?: number;
   ho_tro_thoi_tiet_nong?: number;
   bo_sung_luong?: number;
+  pc_luong_cho_viec?: number;
   tien_luong_chu_nhat?: number;
   luong_cnkcp_vuot?: number;
   tien_tang_ca_vuot?: number;

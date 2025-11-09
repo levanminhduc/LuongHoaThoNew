@@ -86,10 +86,13 @@ export async function GET(request: NextRequest) {
     }
 
     const employeesWithSalary = employees.map((emp) => {
-      const payroll = payrollsData.find((p) => p.employee_id === emp.employee_id);
+      const payroll = payrollsData.find(
+        (p) => p.employee_id === emp.employee_id,
+      );
       return {
         ...emp,
-        tien_luong_thuc_nhan_cuoi_ky: payroll?.tien_luong_thuc_nhan_cuoi_ky || 0,
+        tien_luong_thuc_nhan_cuoi_ky:
+          payroll?.tien_luong_thuc_nhan_cuoi_ky || 0,
       };
     });
 
@@ -163,4 +166,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

@@ -30,6 +30,7 @@ const ALL_PAYROLL_FIELDS = [
   "tong_cong_tien_luong_san_pham",
   "ho_tro_thoi_tiet_nong",
   "bo_sung_luong",
+  "pc_luong_cho_viec",
   "bhxh_21_5_percent",
   "pc_cdcs_pccc_atvsv",
   "luong_phu_nu_hanh_kinh",

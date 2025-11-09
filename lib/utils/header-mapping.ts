@@ -58,6 +58,7 @@ export const DEFAULT_FIELD_HEADERS: Record<string, string> = {
   phu_cap_xang_xe: "Phụ Cấp Xăng Xe",
   phu_cap_dien_thoai: "Phụ Cấp Điện Thoại",
   phu_cap_khac: "Phụ Cấp Khác",
+  pc_luong_cho_viec: "PC Lương Chờ Việc",
 
   // Lương CNKCP và vượt
   luong_cnkcp_vuot: "Lương CNKCP Vượt",

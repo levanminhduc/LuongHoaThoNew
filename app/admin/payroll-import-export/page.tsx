@@ -1186,6 +1186,7 @@ export default function PayrollImportExportPage() {
             "phu_cap_xang_xe",
             "phu_cap_dien_thoai",
             "phu_cap_khac",
+            "pc_luong_cho_viec",
             "luong_cnkcp_vuot",
             "tien_tang_ca_vuot",
             "ngay_cong_phep_le",

@@ -73,6 +73,7 @@ interface PayrollResult {
   tien_luong_30p_an_ca?: number;
   tien_tang_ca_vuot?: number;
   tien_luong_chu_nhat?: number;
+  pc_luong_cho_viec?: number;
 
   tien_khen_thuong_chuyen_can?: number;
   luong_hoc_viec_pc_luong?: number;

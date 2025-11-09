@@ -205,6 +205,15 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
     category: "Thưởng và phụ cấp",
     default_value: 0,
   },
+  {
+    field: "pc_luong_cho_viec",
+    label: "PC Lương Chờ Việc",
+    description: "Phụ cấp lương chờ việc",
+    data_type: "number",
+    is_required: false,
+    category: "Thưởng và phụ cấp",
+    default_value: 0,
+  },
 
   // Bảo hiểm và phúc lợi
   {

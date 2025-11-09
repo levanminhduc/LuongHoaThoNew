@@ -70,6 +70,7 @@ interface PayrollResult {
   tong_cong_tien_luong_san_pham?: number;
   ho_tro_thoi_tiet_nong?: number;
   bo_sung_luong?: number;
+  pc_luong_cho_viec?: number;
   luong_cnkcp_vuot?: number;
 
   // Bảo hiểm và phúc lợi
@@ -319,6 +320,11 @@ export function PayrollDetailModal({
                 <DetailRow
                   label="Lương Học Việc PC Lương"
                   value={payrollData.luong_hoc_viec_pc_luong}
+                  isCurrency
+                />
+                <DetailRow
+                  label="PC Lương Chờ Việc ( hỗ trợ bão, lụt )"
+                  value={payrollData.pc_luong_cho_viec}
                   isCurrency
                 />
                 <DetailRow

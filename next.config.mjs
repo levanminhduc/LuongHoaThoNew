@@ -9,6 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: 'standalone',
   // Add support for older browsers (swcMinify is enabled by default in Next.js 15)
   compiler: {
     // Remove console logs in production

@@ -34,6 +34,7 @@ interface PayrollRecord {
   tong_cong_tien_luong_san_pham?: number;
   ho_tro_thoi_tiet_nong?: number;
   bo_sung_luong?: number;
+  pc_luong_cho_viec?: number;
   tien_tang_ca_vuot?: number;
   luong_cnkcp_vuot?: number;
   tien_luong_chu_nhat?: number;
@@ -112,6 +113,7 @@ interface PayrollResult {
   tong_cong_tien_luong_san_pham?: number;
   ho_tro_thoi_tiet_nong?: number;
   bo_sung_luong?: number;
+  pc_luong_cho_viec?: number;
   tien_tang_ca_vuot?: number;
   luong_cnkcp_vuot?: number;
   tien_luong_chu_nhat?: number;

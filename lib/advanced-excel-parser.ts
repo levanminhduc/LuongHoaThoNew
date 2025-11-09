@@ -184,6 +184,12 @@ export const PAYROLL_FIELD_CONFIG: PayrollFieldConfig[] = [
     required: false,
   },
   {
+    field: "pc_luong_cho_viec",
+    label: "PC Lương Chờ Việc",
+    type: "number",
+    required: false,
+  },
+  {
     field: "bhxh_21_5_percent",
     label: "BHXH 21.5%",
     type: "number",
