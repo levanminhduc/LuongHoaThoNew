@@ -32,7 +32,13 @@ interface ImportError {
   column?: string;
   field?: string;
   value?: unknown;
-  errorType: "validation" | "format" | "duplicate" | "database" | "system";
+  errorType:
+    | "validation"
+    | "format"
+    | "duplicate"
+    | "database"
+    | "system"
+    | "employee_not_found";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
   suggestion?: string;

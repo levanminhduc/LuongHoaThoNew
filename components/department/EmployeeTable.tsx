@@ -62,6 +62,7 @@ interface PayrollRecord {
   // Phụ cấp và hỗ trợ
   ho_tro_thoi_tiet_nong?: number;
   bo_sung_luong?: number;
+  pc_luong_cho_viec?: number;
   tien_luong_chu_nhat?: number;
   luong_cnkcp_vuot?: number;
   tien_tang_ca_vuot?: number;
@@ -349,6 +350,12 @@ export default function EmployeeTable({
                     </p>
                   </div>
                   <div>
+                    <span className="text-muted-foreground">PC Chờ Việc:</span>
+                    <p className="font-medium mt-1">
+                      {formatCurrency(payroll.pc_luong_cho_viec || 0)}
+                    </p>
+                  </div>
+                  <div>
                     <span className="text-muted-foreground">Hệ số LV:</span>
                     <p className="font-medium mt-1">
                       {(payroll.he_so_lam_viec || 0).toFixed(2)}
@@ -393,6 +400,9 @@ export default function EmployeeTable({
                   <TableHead className="text-right min-w-[120px]">
                     Thưởng Chuyên Cần
                   </TableHead>
+                  <TableHead className="text-right min-w-[120px]">
+                    PC Chờ Việc
+                  </TableHead>
                   <TableHead className="text-center min-w-[80px]">
                     Hệ Số LV
                   </TableHead>
@@ -430,6 +440,9 @@ export default function EmployeeTable({
                         {formatCurrency(
                           payroll.tien_khen_thuong_chuyen_can || 0,
                         )}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(payroll.pc_luong_cho_viec || 0)}
                       </TableCell>
                       <TableCell className="text-center font-medium">
                         {(payroll.he_so_lam_viec || 0).toFixed(2)}

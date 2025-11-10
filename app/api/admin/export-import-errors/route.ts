@@ -17,7 +17,13 @@ interface ImportError {
   column?: string;
   field?: string;
   value?: unknown;
-  errorType: "validation" | "format" | "duplicate" | "database" | "system";
+  errorType:
+    | "validation"
+    | "format"
+    | "duplicate"
+    | "database"
+    | "system"
+    | "employee_not_found";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
   suggestion?: string;
@@ -85,6 +91,11 @@ export async function POST(request: NextRequest) {
       {
         Metric: "Duplicate Errors",
         Count: errors.filter((e) => e.errorType === "duplicate").length,
+      },
+      {
+        Metric: "Employee Not Found Errors",
+        Count: errors.filter((e) => e.errorType === "employee_not_found")
+          .length,
       },
       {
         Metric: "Database Errors",
@@ -229,12 +240,12 @@ export async function GET(request: NextRequest) {
         Row: "Example: 23",
         Column: "Example: employee_id",
         Field: "Example: employee_id",
-        "Current Value": "Example: (empty)",
-        "Error Type": "validation",
+        "Current Value": "Example: EMP999",
+        "Error Type": "employee_not_found",
         Severity: "high",
-        "Error Message": "Missing required field 'employee_id'",
-        "Expected Format": "Non-empty text or number",
-        Suggestion: "Ensure all required fields have valid values",
+        "Error Message": "Employee ID 'EMP999' not found in system",
+        "Expected Format": "Valid employee ID from system",
+        Suggestion: "Verify employee ID exists in employee database",
         Status: "Needs Fix",
       },
     ];

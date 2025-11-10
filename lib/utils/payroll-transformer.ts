@@ -190,6 +190,7 @@ export function transformPayrollRecordToResult(
     tong_cong_tien_luong_san_pham: payrollRecord.tong_cong_tien_luong_san_pham,
     ho_tro_thoi_tiet_nong: payrollRecord.ho_tro_thoi_tiet_nong,
     bo_sung_luong: payrollRecord.bo_sung_luong,
+    pc_luong_cho_viec: payrollRecord.pc_luong_cho_viec,
     tien_tang_ca_vuot: payrollRecord.tien_tang_ca_vuot,
     luong_cnkcp_vuot: payrollRecord.luong_cnkcp_vuot,
     tien_luong_chu_nhat: payrollRecord.tien_luong_chu_nhat,
