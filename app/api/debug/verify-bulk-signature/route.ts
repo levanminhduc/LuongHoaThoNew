@@ -153,17 +153,23 @@ export async function GET(request: NextRequest) {
           string,
           { total: number; signed: number; unsigned: number }
         > = {};
-        payrolls?.forEach((row: { salary_month: string; is_signed: boolean }) => {
-          if (!monthStats[row.salary_month]) {
-            monthStats[row.salary_month] = { total: 0, signed: 0, unsigned: 0 };
-          }
-          monthStats[row.salary_month].total++;
-          if (row.is_signed) {
-            monthStats[row.salary_month].signed++;
-          } else {
-            monthStats[row.salary_month].unsigned++;
-          }
-        });
+        payrolls?.forEach(
+          (row: { salary_month: string; is_signed: boolean }) => {
+            if (!monthStats[row.salary_month]) {
+              monthStats[row.salary_month] = {
+                total: 0,
+                signed: 0,
+                unsigned: 0,
+              };
+            }
+            monthStats[row.salary_month].total++;
+            if (row.is_signed) {
+              monthStats[row.salary_month].signed++;
+            } else {
+              monthStats[row.salary_month].unsigned++;
+            }
+          },
+        );
 
         results.checks.payroll_data = {
           accessible: true,
