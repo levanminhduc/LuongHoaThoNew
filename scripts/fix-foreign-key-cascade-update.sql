@@ -126,7 +126,45 @@ BEGIN
     END IF;
 END $$;
 
--- ===== 7. EMPLOYEE_AUDIT_LOGS TABLE (NO FK NEEDED) =====
+-- ===== 7. PAYROLLS.SIGNED_BY_ADMIN_ID (ADMIN SIGNATURE TRACKING) =====
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'payrolls') THEN
+        -- Drop existing constraint
+        ALTER TABLE payrolls DROP CONSTRAINT IF EXISTS fk_payrolls_signed_by_admin;
+
+        -- Recreate with ON UPDATE CASCADE and ON DELETE SET NULL
+        ALTER TABLE payrolls
+        ADD CONSTRAINT fk_payrolls_signed_by_admin
+        FOREIGN KEY (signed_by_admin_id) REFERENCES employees(employee_id)
+        ON DELETE SET NULL ON UPDATE CASCADE;
+
+        RAISE NOTICE 'UPDATED: payrolls.signed_by_admin_id foreign key constraint';
+    ELSE
+        RAISE NOTICE 'SKIPPED: payrolls table does not exist';
+    END IF;
+END $$;
+
+-- ===== 8. SIGNATURE_LOGS.SIGNED_BY_ADMIN_ID (ADMIN SIGNATURE TRACKING) =====
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'signature_logs') THEN
+        -- Drop existing constraint
+        ALTER TABLE signature_logs DROP CONSTRAINT IF EXISTS fk_signature_logs_signed_by_admin;
+
+        -- Recreate with ON UPDATE CASCADE and ON DELETE SET NULL
+        ALTER TABLE signature_logs
+        ADD CONSTRAINT fk_signature_logs_signed_by_admin
+        FOREIGN KEY (signed_by_admin_id) REFERENCES employees(employee_id)
+        ON DELETE SET NULL ON UPDATE CASCADE;
+
+        RAISE NOTICE 'UPDATED: signature_logs.signed_by_admin_id foreign key constraint';
+    ELSE
+        RAISE NOTICE 'SKIPPED: signature_logs table does not exist';
+    END IF;
+END $$;
+
+-- ===== 9. EMPLOYEE_AUDIT_LOGS TABLE (NO FK NEEDED) =====
 -- Note: This table stores employee_id as VARCHAR for historical tracking
 -- No foreign key constraint needed
 

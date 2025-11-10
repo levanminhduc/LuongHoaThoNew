@@ -91,7 +91,12 @@ export async function POST(request: NextRequest) {
     // 8. Batch processing
     let totalSuccessful = 0;
     let totalFailed = 0;
-    const allErrors: any[] = [];
+    const allErrors: Array<{
+      employee_id?: string;
+      employee_ids?: string[];
+      error: string;
+      batch?: number;
+    }> = [];
 
     for (let i = 0; i < employeeIds.length; i += batch_size) {
       const batch = employeeIds.slice(i, i + batch_size);

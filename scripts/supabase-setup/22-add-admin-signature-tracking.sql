@@ -15,17 +15,18 @@ ADD COLUMN IF NOT EXISTS signed_by_admin_id VARCHAR(50) NULL;
 COMMENT ON COLUMN payrolls.signed_by_admin_id IS 'Mã admin thực hiện ký (NULL nếu employee tự ký)';
 
 -- Add foreign key constraint
-DO $$ 
+DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint 
+    SELECT 1 FROM pg_constraint
     WHERE conname = 'fk_payrolls_signed_by_admin'
   ) THEN
-    ALTER TABLE payrolls 
-    ADD CONSTRAINT fk_payrolls_signed_by_admin 
-    FOREIGN KEY (signed_by_admin_id) 
-    REFERENCES employees(employee_id) 
-    ON DELETE SET NULL;
+    ALTER TABLE payrolls
+    ADD CONSTRAINT fk_payrolls_signed_by_admin
+    FOREIGN KEY (signed_by_admin_id)
+    REFERENCES employees(employee_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE;
   END IF;
 END $$;
 
@@ -44,17 +45,18 @@ ADD COLUMN IF NOT EXISTS signed_by_admin_id VARCHAR(50) NULL;
 COMMENT ON COLUMN signature_logs.signed_by_admin_id IS 'Mã admin thực hiện ký (NULL nếu employee tự ký)';
 
 -- Add foreign key constraint
-DO $$ 
+DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint 
+    SELECT 1 FROM pg_constraint
     WHERE conname = 'fk_signature_logs_signed_by_admin'
   ) THEN
-    ALTER TABLE signature_logs 
-    ADD CONSTRAINT fk_signature_logs_signed_by_admin 
-    FOREIGN KEY (signed_by_admin_id) 
-    REFERENCES employees(employee_id) 
-    ON DELETE SET NULL;
+    ALTER TABLE signature_logs
+    ADD CONSTRAINT fk_signature_logs_signed_by_admin
+    FOREIGN KEY (signed_by_admin_id)
+    REFERENCES employees(employee_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE;
   END IF;
 END $$;
 

@@ -17,6 +17,8 @@ interface CascadeUpdateStats {
   access_logs_employee_accessed: number;
   access_logs_user_id: number;
   payroll_audit_logs: number;
+  payrolls_signed_by_admin: number;
+  signature_logs_signed_by_admin: number;
   employees: number;
 }
 
@@ -81,6 +83,8 @@ export async function cascadeUpdateEmployeeId(
       access_logs_employee_accessed: 0,
       access_logs_user_id: 0,
       payroll_audit_logs: 0,
+      payrolls_signed_by_admin: 0,
+      signature_logs_signed_by_admin: 0,
       employees: 1,
     };
 
@@ -133,6 +137,18 @@ export async function cascadeUpdateEmployeeId(
       .eq("employee_id", oldEmployeeId);
     stats.payroll_audit_logs = auditLogsCount || 0;
 
+    const { count: payrollsSignedByAdminCount } = await supabase
+      .from("payrolls")
+      .select("*", { count: "exact", head: true })
+      .eq("signed_by_admin_id", oldEmployeeId);
+    stats.payrolls_signed_by_admin = payrollsSignedByAdminCount || 0;
+
+    const { count: signatureLogsSignedByAdminCount } = await supabase
+      .from("signature_logs")
+      .select("*", { count: "exact", head: true })
+      .eq("signed_by_admin_id", oldEmployeeId);
+    stats.signature_logs_signed_by_admin = signatureLogsSignedByAdminCount || 0;
+
     console.log("Affected records count:", stats);
 
     // ===== PHASE 2: SUPABASE TRANSACTION EXECUTION =====
@@ -148,6 +164,8 @@ export async function cascadeUpdateEmployeeId(
       access_logs_employee_accessed: 0,
       access_logs_user_id: 0,
       payroll_audit_logs: 0,
+      payrolls_signed_by_admin: 0,
+      signature_logs_signed_by_admin: 0,
       employees: 0,
     };
 
@@ -392,7 +410,55 @@ export async function cascadeUpdateEmployeeId(
         );
       }
 
-      // Note: employees table already updated at the beginning to satisfy FK constraints
+      // 10. Update payrolls.signed_by_admin_id (Admin signature tracking)
+      if (stats.payrolls_signed_by_admin > 0) {
+        const { error: payrollsSignedByAdminError } = await supabase
+          .from("payrolls")
+          .update({
+            signed_by_admin_id: newEmployeeId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("signed_by_admin_id", oldEmployeeId);
+
+        if (payrollsSignedByAdminError)
+          throw new Error(
+            `Payrolls signed_by_admin_id update failed: ${payrollsSignedByAdminError.message}`,
+          );
+        updatedStats.payrolls_signed_by_admin = stats.payrolls_signed_by_admin;
+        rollbackData.push({
+          table: "payrolls",
+          field: "signed_by_admin_id",
+          oldValue: oldEmployeeId,
+          newValue: newEmployeeId,
+        });
+        console.log(
+          `Updated ${stats.payrolls_signed_by_admin} records in payrolls (signed_by_admin_id)`,
+        );
+      }
+
+      // 11. Update signature_logs.signed_by_admin_id (Admin signature tracking)
+      if (stats.signature_logs_signed_by_admin > 0) {
+        const { error: signatureLogsSignedByAdminError } = await supabase
+          .from("signature_logs")
+          .update({ signed_by_admin_id: newEmployeeId })
+          .eq("signed_by_admin_id", oldEmployeeId);
+
+        if (signatureLogsSignedByAdminError)
+          throw new Error(
+            `Signature logs signed_by_admin_id update failed: ${signatureLogsSignedByAdminError.message}`,
+          );
+        updatedStats.signature_logs_signed_by_admin =
+          stats.signature_logs_signed_by_admin;
+        rollbackData.push({
+          table: "signature_logs",
+          field: "signed_by_admin_id",
+          oldValue: oldEmployeeId,
+          newValue: newEmployeeId,
+        });
+        console.log(
+          `Updated ${stats.signature_logs_signed_by_admin} records in signature_logs (signed_by_admin_id)`,
+        );
+      }
     } catch (updateError) {
       console.error("Update error, attempting rollback:", updateError);
 

@@ -14,7 +14,31 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    const results: any = {
+    const results: {
+      timestamp: string;
+      checks: Record<
+        string,
+        {
+          exists?: boolean;
+          accessible?: boolean;
+          error?: string | null;
+          testResult?: unknown;
+          recordCount?: number | null;
+          totalRecords?: number;
+          monthStats?: Record<
+            string,
+            { total: number; signed: number; unsigned: number }
+          >;
+        }
+      >;
+      errors: string[];
+      summary: Record<string, unknown>;
+      recommendations?: Array<{
+        priority: string;
+        issue: string;
+        action: string;
+      }>;
+    } = {
       timestamp: new Date().toISOString(),
       checks: {},
       errors: [],
@@ -41,10 +65,11 @@ export async function GET(request: NextRequest) {
         error: signError?.message || null,
         testResult: testSign,
       };
-    } catch (e: any) {
+    } catch (e) {
+      const error = e as Error;
       results.checks.auto_sign_salary = {
-        exists: !e.message.includes("not found"),
-        error: e.message,
+        exists: !error.message.includes("not found"),
+        error: error.message,
       };
     }
 
@@ -68,10 +93,11 @@ export async function GET(request: NextRequest) {
         error: bulkError?.message || null,
         testResult: testBulk,
       };
-    } catch (e: any) {
+    } catch (e) {
+      const error = e as Error;
       results.checks.bulk_sign_salaries = {
-        exists: !e.message.includes("not found"),
-        error: e.message,
+        exists: !error.message.includes("not found"),
+        error: error.message,
       };
     }
 
@@ -98,11 +124,12 @@ export async function GET(request: NextRequest) {
           error: error?.message || null,
           recordCount: count,
         };
-      } catch (e: any) {
+      } catch (e) {
+        const error = e as Error;
         results.checks[`table_${table}`] = {
           exists: false,
           accessible: false,
-          error: e.message,
+          error: error.message,
         };
       }
     }
@@ -122,9 +149,11 @@ export async function GET(request: NextRequest) {
           error: payrollError.message,
         };
       } else {
-        // Group by month
-        const monthStats: any = {};
-        payrolls?.forEach((row: any) => {
+        const monthStats: Record<
+          string,
+          { total: number; signed: number; unsigned: number }
+        > = {};
+        payrolls?.forEach((row: { salary_month: string; is_signed: boolean }) => {
           if (!monthStats[row.salary_month]) {
             monthStats[row.salary_month] = { total: 0, signed: 0, unsigned: 0 };
           }
@@ -142,10 +171,11 @@ export async function GET(request: NextRequest) {
           monthStats,
         };
       }
-    } catch (e: any) {
+    } catch (e) {
+      const error = e as Error;
       results.checks.payroll_data = {
         accessible: false,
-        error: e.message,
+        error: error.message,
       };
     }
 

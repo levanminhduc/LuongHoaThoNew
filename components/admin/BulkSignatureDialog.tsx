@@ -35,7 +35,12 @@ interface BulkSignatureResult {
     now_signed: number;
     still_unsigned: number;
   };
-  errors?: any[];
+  errors?: Array<{
+    employee_id?: string;
+    employee_ids?: string[];
+    error: string;
+    batch?: number;
+  }>;
   duration_seconds: number;
 }
 
