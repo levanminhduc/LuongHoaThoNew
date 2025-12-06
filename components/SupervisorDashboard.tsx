@@ -46,6 +46,7 @@ import {
   transformPayrollRecordToResult,
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
+import DashboardCache from "@/utils/dashboardCache";
 
 interface User {
   employee_id: string;
@@ -152,9 +153,15 @@ export default function SupervisorDashboard({
   const [selectedMonth, setSelectedMonth] =
     useState<string>(getPreviousMonth());
   const [loading, setLoading] = useState(true);
-  const [monthlyTrend, setMonthlyTrend] = useState<
-    Array<Record<string, unknown>>
-  >([]);
+  interface TrendItem {
+    month: string;
+    monthLabel: string;
+    totalEmployees: number;
+    signedCount: number;
+    totalSalary: number;
+    signedPercentage: number;
+  }
+  const [monthlyTrend, setMonthlyTrend] = useState<TrendItem[]>([]);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [selectedPayrollData, setSelectedPayrollData] =
@@ -166,10 +173,27 @@ export default function SupervisorDashboard({
   }, [selectedMonth]);
 
   const loadDepartmentData = async () => {
+    const cachedPayroll = DashboardCache.getCacheData<PayrollRecord[]>(
+      `supervisor_${user.department}`,
+      selectedMonth,
+      "payroll",
+    );
+    const cachedStats = DashboardCache.getCacheData<DepartmentStats>(
+      `supervisor_${user.department}`,
+      selectedMonth,
+      "stats",
+    );
+
+    if (cachedPayroll && cachedStats) {
+      setPayrollData(cachedPayroll);
+      setDepartmentStats(cachedStats);
+      setLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("admin_token");
 
-      // Load payroll data for department
       const payrollResponse = await fetch(
         `/api/payroll/my-department?month=${selectedMonth}&limit=100`,
         {
@@ -181,10 +205,11 @@ export default function SupervisorDashboard({
 
       if (payrollResponse.ok) {
         const payrollData = await payrollResponse.json();
-        setPayrollData(payrollData.data || []);
+        const data = payrollData.data || [];
+        setPayrollData(data);
+        DashboardCache.setCacheData(`supervisor_${user.department}`, selectedMonth, "payroll", data);
       }
 
-      // Load department statistics
       const statsResponse = await fetch(`/api/payroll/my-department`, {
         method: "POST",
         headers: {
@@ -197,6 +222,7 @@ export default function SupervisorDashboard({
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setDepartmentStats(statsData.statistics);
+        DashboardCache.setCacheData(`supervisor_${user.department}`, selectedMonth, "stats", statsData.statistics);
       }
     } catch (error) {
       console.error("Error loading department data:", error);
@@ -206,11 +232,21 @@ export default function SupervisorDashboard({
   };
 
   const loadMonthlyTrend = async () => {
+    const cachedTrends = DashboardCache.getCacheData<TrendItem[]>(
+      `supervisor_${user.department}`,
+      "trends",
+      "trends",
+    );
+
+    if (cachedTrends) {
+      setMonthlyTrend(cachedTrends);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("admin_token");
       const months = [];
 
-      // Get last 6 months data
       for (let i = 5; i >= 0; i--) {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
@@ -238,7 +274,7 @@ export default function SupervisorDashboard({
               }),
               totalEmployees: data.statistics.totalEmployees,
               signedCount: data.statistics.signedCount,
-              totalSalary: data.statistics.totalSalary / 1000000, // Convert to millions
+              totalSalary: data.statistics.totalSalary / 1000000,
               signedPercentage: parseFloat(data.statistics.signedPercentage),
             };
           }
@@ -246,7 +282,9 @@ export default function SupervisorDashboard({
         }),
       );
 
-      setMonthlyTrend(trendData.filter(Boolean));
+      const validTrends = trendData.filter((t): t is TrendItem => t !== null);
+      setMonthlyTrend(validTrends);
+      DashboardCache.setCacheData(`supervisor_${user.department}`, "trends", "trends", validTrends);
     } catch (error) {
       console.error("Error loading monthly trend:", error);
     }

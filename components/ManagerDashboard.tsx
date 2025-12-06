@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -46,6 +46,7 @@ import {
   transformPayrollRecordToResult,
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
+import DashboardCache from "@/utils/dashboardCache";
 
 interface User {
   employee_id: string;
@@ -160,6 +161,18 @@ export default function ManagerDashboard({
   }, [selectedDepartment, selectedMonth]);
 
   const loadDepartmentStats = async () => {
+    const cachedData = DashboardCache.getCacheData<DepartmentStats[]>(
+      "manager",
+      selectedMonth,
+      "departments",
+    );
+
+    if (cachedData) {
+      setDepartments(cachedData);
+      setLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("admin_token");
       const response = await fetch(
@@ -173,7 +186,9 @@ export default function ManagerDashboard({
 
       if (response.ok) {
         const data = await response.json();
-        setDepartments(data.departments || []);
+        const depts = data.departments || [];
+        setDepartments(depts);
+        DashboardCache.setCacheData("manager", selectedMonth, "departments", depts);
       }
     } catch (error) {
       console.error("Error loading department stats:", error);
@@ -336,32 +351,44 @@ export default function ManagerDashboard({
     setShowDepartmentPayrollModal(true);
   };
 
-  const totalStats = departments.reduce(
-    (acc, dept) => ({
-      totalEmployees: acc.totalEmployees + dept.employeeCount,
-      totalPayroll: acc.totalPayroll + dept.payrollCount,
-      totalSigned: acc.totalSigned + dept.signedCount,
-      totalSalary: acc.totalSalary + dept.totalSalary,
-    }),
-    { totalEmployees: 0, totalPayroll: 0, totalSigned: 0, totalSalary: 0 },
+  const totalStats = useMemo(
+    () =>
+      departments.reduce(
+        (acc, dept) => ({
+          totalEmployees: acc.totalEmployees + dept.employeeCount,
+          totalPayroll: acc.totalPayroll + dept.payrollCount,
+          totalSigned: acc.totalSigned + dept.signedCount,
+          totalSalary: acc.totalSalary + dept.totalSalary,
+        }),
+        { totalEmployees: 0, totalPayroll: 0, totalSigned: 0, totalSalary: 0 },
+      ),
+    [departments],
   );
 
-  const chartData = departments.map((dept) => ({
-    name: dept.name,
-    employees: dept.employeeCount,
-    signed: dept.signedCount,
-    unsigned: dept.payrollCount - dept.signedCount,
-    totalSalary: dept.totalSalary / 1000000, // Convert to millions
-  }));
+  const chartData = useMemo(
+    () =>
+      departments.map((dept) => ({
+        name: dept.name,
+        employees: dept.employeeCount,
+        signed: dept.signedCount,
+        unsigned: dept.payrollCount - dept.signedCount,
+        totalSalary: dept.totalSalary / 1000000,
+      })),
+    [departments],
+  );
 
-  const pieData = departments.map((dept) => ({
-    name: dept.name,
-    value: dept.totalSalary,
-    percentage:
-      totalStats.totalSalary > 0
-        ? ((dept.totalSalary / totalStats.totalSalary) * 100).toFixed(1)
-        : "0",
-  }));
+  const pieData = useMemo(
+    () =>
+      departments.map((dept) => ({
+        name: dept.name,
+        value: dept.totalSalary,
+        percentage:
+          totalStats.totalSalary > 0
+            ? ((dept.totalSalary / totalStats.totalSalary) * 100).toFixed(1)
+            : "0",
+      })),
+    [departments, totalStats.totalSalary],
+  );
 
   const COLORS = [
     "#0088FE",

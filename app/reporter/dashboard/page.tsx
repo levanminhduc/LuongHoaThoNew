@@ -40,6 +40,7 @@ import {
   UserX,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
+import DashboardCache from "@/utils/dashboardCache";
 
 export default function ReporterDashboard() {
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,25 @@ export default function ReporterDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+
+      const cachedStatus = DashboardCache.getCacheData<MonthStatus>(
+        "reporter",
+        selectedMonth,
+        "signature-status",
+      );
+      const cachedHistory = DashboardCache.getCacheData<SignatureRecord[]>(
+        "reporter",
+        selectedMonth,
+        "signature-history",
+      );
+
+      if (cachedStatus && cachedHistory) {
+        setMonthStatus(cachedStatus);
+        setSignatureHistory(cachedHistory);
+        setLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem("admin_token");
 
       const [statusResponse, historyResponse] = await Promise.all([
@@ -91,11 +111,14 @@ export default function ReporterDashboard() {
       if (statusResponse.ok) {
         const statusData = await statusResponse.json();
         setMonthStatus(statusData);
+        DashboardCache.setCacheData("reporter", selectedMonth, "signature-status", statusData);
       }
 
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
-        setSignatureHistory(historyData.signatures || []);
+        const signatures = historyData.signatures || [];
+        setSignatureHistory(signatures);
+        DashboardCache.setCacheData("reporter", selectedMonth, "signature-history", signatures);
       }
 
       if (statusResponse.status === 401 || historyResponse.status === 401) {

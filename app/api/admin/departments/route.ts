@@ -85,84 +85,103 @@ export async function GET(request: NextRequest) {
       uniqueDepartments,
     );
 
-    // Get statistics for each department
-    const departmentStats = await Promise.all(
-      uniqueDepartments.map(async (dept) => {
-        try {
-          // Get employee count (ALL employees, not just active)
-          const { count: employeeCount, error: empCountError } = await supabase
-            .from("employees")
-            .select("*", { count: "exact", head: true })
-            .eq("department", dept);
+    const [
+      allEmployeesResult,
+      allPayrollsResult,
+      allManagersResult,
+      allSupervisorsResult,
+    ] = await Promise.all([
+      supabase
+        .from("employees")
+        .select("department")
+        .in("department", uniqueDepartments),
 
-          if (empCountError) {
-            console.error(`Employee count error for ${dept}:`, empCountError);
-            return null;
-          }
+      supabase
+        .from("payrolls")
+        .select(
+          `
+          tien_luong_thuc_nhan_cuoi_ky,
+          is_signed,
+          employees!payrolls_employee_id_fkey!inner(department)
+        `,
+        )
+        .in("employees.department", uniqueDepartments)
+        .eq("salary_month", month),
 
-          // Get payroll statistics for the month
-          const { data: payrollData, error: payrollError } = await supabase
-            .from("payrolls")
-            .select(
-              `
-              tien_luong_thuc_nhan_cuoi_ky,
-              is_signed,
-              employees!payrolls_employee_id_fkey!inner(department)
-            `,
-            )
-            .eq("employees.department", dept)
-            .eq("salary_month", month);
+      supabase
+        .from("employees")
+        .select("employee_id, full_name, department")
+        .in("department", uniqueDepartments)
+        .eq("chuc_vu", "truong_phong")
+        .eq("is_active", true),
 
-          if (payrollError) {
-            console.error(`Payroll query error for ${dept}:`, payrollError);
-          }
+      supabase
+        .from("employees")
+        .select("employee_id, full_name, department")
+        .in("department", uniqueDepartments)
+        .eq("chuc_vu", "to_truong")
+        .eq("is_active", true),
+    ]);
 
-          const payrollCount = payrollData?.length || 0;
-          const signedCount =
-            payrollData?.filter((p) => p.is_signed).length || 0;
-          const totalSalary =
-            payrollData?.reduce(
-              (sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0),
-              0,
-            ) || 0;
+    if (allEmployeesResult.error) {
+      console.error("Batch employees query error:", allEmployeesResult.error);
+    }
+    if (allPayrollsResult.error) {
+      console.error("Batch payrolls query error:", allPayrollsResult.error);
+    }
 
-          // Get truong_phong for this department
-          const { data: managers } = await supabase
-            .from("employees")
-            .select("employee_id, full_name")
-            .eq("department", dept)
-            .eq("chuc_vu", "truong_phong")
-            .eq("is_active", true);
+    const allEmployees = allEmployeesResult.data || [];
+    const allPayrolls = allPayrollsResult.data || [];
+    const allManagers = allManagersResult.data || [];
+    const allSupervisors = allSupervisorsResult.data || [];
 
-          // Get to_truong for this department
-          const { data: supervisors } = await supabase
-            .from("employees")
-            .select("employee_id, full_name")
-            .eq("department", dept)
-            .eq("chuc_vu", "to_truong")
-            .eq("is_active", true);
+    interface PayrollWithEmployee {
+      tien_luong_thuc_nhan_cuoi_ky: number;
+      is_signed: boolean;
+      employees: { department: string }[];
+    }
 
-          return {
-            name: dept,
-            employeeCount: employeeCount || 0,
-            payrollCount,
-            signedCount,
-            signedPercentage:
-              payrollCount > 0
-                ? ((signedCount / payrollCount) * 100).toFixed(1)
-                : "0",
-            totalSalary,
-            averageSalary:
-              payrollCount > 0 ? Math.round(totalSalary / payrollCount) : 0,
-            managers: managers || [],
-            supervisors: supervisors || [],
-          };
-        } catch (error) {
-          console.error(`Error processing department ${dept}:`, error);
-          return null;
-        }
-      }),
-    );
+    const departmentStats = uniqueDepartments.map((dept) => {
+      const employeeCount = allEmployees.filter(
+        (e) => e.department === dept,
+      ).length;
+
+      const deptPayrolls = allPayrolls.filter((p) => {
+        const payroll = p as PayrollWithEmployee;
+        return payroll.employees?.[0]?.department === dept;
+      }) as PayrollWithEmployee[];
+
+      const payrollCount = deptPayrolls.length;
+      const signedCount = deptPayrolls.filter((p) => p.is_signed).length;
+      const totalSalary = deptPayrolls.reduce(
+        (sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0),
+        0,
+      );
+
+      const managers = allManagers
+        .filter((m) => m.department === dept)
+        .map((m) => ({ employee_id: m.employee_id, full_name: m.full_name }));
+
+      const supervisors = allSupervisors
+        .filter((s) => s.department === dept)
+        .map((s) => ({ employee_id: s.employee_id, full_name: s.full_name }));
+
+      return {
+        name: dept,
+        employeeCount,
+        payrollCount,
+        signedCount,
+        signedPercentage:
+          payrollCount > 0
+            ? ((signedCount / payrollCount) * 100).toFixed(1)
+            : "0",
+        totalSalary,
+        averageSalary:
+          payrollCount > 0 ? Math.round(totalSalary / payrollCount) : 0,
+        managers,
+        supervisors,
+      };
+    });
 
     // Filter out null results and log
     const validDepartmentStats = departmentStats.filter(Boolean);
