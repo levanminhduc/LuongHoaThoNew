@@ -10,6 +10,13 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
+  experimental: {
+    webpackBuildWorker: false,
+    skipTrailingSlashRedirect: true,
+  },
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
   // Add support for older browsers (swcMinify is enabled by default in Next.js 15)
   compiler: {
     // Remove console logs in production

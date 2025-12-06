@@ -361,19 +361,28 @@ export async function GET(request: NextRequest) {
     // Create workbook
     const workbook = XLSX.utils.book_new();
 
-    // Prepare headers (all 39 fields + Ký Nhận column)
+    // Prepare headers (all 39 fields + Ký Tên + Ngày Ký columns)
     const headers = [
       "STT",
       ...PAYROLL_FIELDS.map((field) => FIELD_HEADERS[field] || field),
-      "Ký Nhận",
+      "Ký Tên",
+      "Ngày Ký",
     ];
 
     interface PayrollRecord {
       [key: string]: unknown;
+      employee_id?: string;
       is_signed?: boolean;
       employees?: {
         full_name?: string;
       } | null;
+    }
+
+    interface SignatureLog {
+      employee_id: string;
+      salary_month: string;
+      signed_by_name: string;
+      signed_at: string;
     }
 
     interface ManagementSignature {
@@ -382,19 +391,58 @@ export async function GET(request: NextRequest) {
       signed_by_name?: string;
     }
 
-    // Prepare data rows - simplified approach
-    const dataRows = payrollData.map((record: PayrollRecord, index: number) => {
-      const row: unknown[] = [index + 1]; // STT
+    const formatSignedAtDate = (signedAt: string | null): string => {
+      if (!signedAt) return "";
+      try {
+        const date = new Date(signedAt);
+        if (isNaN(date.getTime())) return "";
+        const day = String(date.getDate()).padStart(2, "0");
+        const monthNum = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}/${monthNum}/${year}`;
+      } catch {
+        return "";
+      }
+    };
 
-      // Add all payroll fields
+    const signatureLogsMap = new Map<string, SignatureLog>();
+    if (month) {
+      try {
+        const { data: signatureLogs, error: sigLogsError } = await supabase
+          .from("signature_logs")
+          .select("employee_id, salary_month, signed_by_name, signed_at")
+          .eq("salary_month", month);
+
+        if (!sigLogsError && signatureLogs) {
+          signatureLogs.forEach((log) => {
+            signatureLogsMap.set(log.employee_id, log as SignatureLog);
+          });
+        }
+      } catch (error) {
+        console.log("Could not fetch signature_logs - using fallback");
+      }
+    }
+
+    const dataRows = payrollData.map((record: PayrollRecord, index: number) => {
+      const row: unknown[] = [index + 1];
+
       PAYROLL_FIELDS.forEach((field) => {
         row.push(record[field] || "");
       });
 
-      // Add signature column
-      row.push(
-        record.is_signed ? record.employees?.full_name || "N/A" : "Chưa Ký",
-      );
+      const employeeId = record.employee_id as string;
+      const signatureLog = signatureLogsMap.get(employeeId);
+
+      if (signatureLog) {
+        row.push(signatureLog.signed_by_name || "");
+        row.push(formatSignedAtDate(signatureLog.signed_at));
+      } else if (record.is_signed) {
+        row.push(record.employees?.full_name || "N/A");
+        row.push("");
+      } else {
+        row.push("Chưa Ký");
+        row.push("");
+      }
 
       return row;
     });

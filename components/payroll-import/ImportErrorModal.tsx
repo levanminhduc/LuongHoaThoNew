@@ -57,6 +57,7 @@ interface ImportError {
     | "employee_not_found"
     | "database"
     | "format";
+  originalData?: Record<string, unknown>;
 }
 
 interface EnhancedImportError extends ImportError {
@@ -75,6 +76,8 @@ interface ImportErrorModalProps {
   errors: ImportError[];
   totalRecords: number;
   successCount: number;
+  skippedCount?: number;
+  originalHeaders?: string[];
 }
 
 interface ErrorStats {
@@ -251,6 +254,8 @@ export default function ImportErrorModal({
   errors,
   totalRecords,
   successCount,
+  skippedCount = 0,
+  originalHeaders = [],
 }: ImportErrorModalProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -315,6 +320,16 @@ export default function ImportErrorModal({
         return;
       }
 
+      const exportErrors = errors.map((err) => ({
+        row: err.row,
+        employee_id: err.employee_id,
+        salary_month: err.salary_month,
+        errorType: err.errorType,
+        error: err.error,
+        message: err.error,
+        originalData: err.originalData,
+      }));
+
       const response = await fetch("/api/admin/export-import-errors", {
         method: "POST",
         headers: {
@@ -322,9 +337,11 @@ export default function ImportErrorModal({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          errors: enhancedErrors,
+          errors: exportErrors,
           format: "excel",
-          fileName: "import_errors",
+          fileName: "bao_cao_loi_import",
+          includeOriginalData: true,
+          originalHeaders,
         }),
       });
 
@@ -336,7 +353,7 @@ export default function ImportErrorModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `import_errors_${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.download = `bao_cao_loi_import_${new Date().toISOString().split("T")[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -641,6 +658,24 @@ export default function ImportErrorModal({
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm font-medium text-gray-600">
+                        Bỏ Qua (Skip)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-orange-600">
+                        {skippedCount}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Records thiếu Mã NV/Tháng
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-gray-600">
                         Tỷ Lệ Thành Công
                       </CardTitle>
                     </CardHeader>
@@ -652,6 +687,34 @@ export default function ImportErrorModal({
                         value={(successCount / totalRecords) * 100}
                         className="mt-2"
                       />
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium text-gray-600">
+                        Tổng Quan
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span>Tổng records:</span>
+                          <span className="font-semibold">{totalRecords}</span>
+                        </div>
+                        <div className="flex justify-between text-green-600">
+                          <span>Thành công:</span>
+                          <span className="font-semibold">{successCount}</span>
+                        </div>
+                        <div className="flex justify-between text-red-600">
+                          <span>Lỗi:</span>
+                          <span className="font-semibold">{errorStats.totalErrors}</span>
+                        </div>
+                        <div className="flex justify-between text-orange-600">
+                          <span>Bỏ qua:</span>
+                          <span className="font-semibold">{skippedCount}</span>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>

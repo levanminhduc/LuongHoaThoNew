@@ -62,6 +62,7 @@ interface ImportResult {
   successCount: number;
   errorCount: number;
   overwriteCount?: number;
+  skippedCount?: number;
   errors?: Array<{
     row: number;
     field?: string;
@@ -74,9 +75,11 @@ interface ImportResult {
       | "database"
       | "format";
     error: string;
+    originalData?: Record<string, unknown>;
   }>;
   processingTime: string;
   importBatchId?: string;
+  originalHeaders?: string[];
 }
 
 export default function PayrollImportExportPage() {
@@ -307,10 +310,20 @@ export default function PayrollImportExportPage() {
       const result = await response.json();
 
       if (response.ok) {
+        const importData = result.data || result;
+        const importErrors = result.importErrors || importData.errors || [];
+        const originalHeaders = result.originalHeaders || importData.originalHeaders || [];
+
+        const resultWithErrors: ImportResult = {
+          ...importData,
+          errors: importErrors,
+          originalHeaders,
+          skippedCount: result.metadata?.skippedCount || importData.skippedCount || 0,
+        };
+
         if (result.success) {
-          setResults(result.data || result);
+          setResults(resultWithErrors);
           setMessage(result.message || "Import thành công!");
-          // Set batch ID from response - check multiple locations
           const batchId =
             result.data?.importBatchId ||
             result.importBatchId ||
@@ -319,10 +332,8 @@ export default function PayrollImportExportPage() {
             setImportBatchId(batchId);
           }
         } else {
-          // Partial success with errors
-          setResults(result.data || result);
+          setResults(resultWithErrors);
           setMessage(result.message || "Import hoàn tất với một số lỗi");
-          // Set batch ID from response even with errors - check multiple locations
           const batchId =
             result.data?.importBatchId ||
             result.importBatchId ||
@@ -1204,7 +1215,6 @@ export default function PayrollImportExportPage() {
           defaultSalaryMonth={salaryMonth}
         />
 
-        {/* Import Error Modal */}
         {results && results.errors && results.errors.length > 0 && (
           <ImportErrorModal
             isOpen={showErrorModal}
@@ -1212,6 +1222,8 @@ export default function PayrollImportExportPage() {
             errors={results.errors}
             totalRecords={results.totalRecords}
             successCount={results.successCount}
+            skippedCount={results.skippedCount}
+            originalHeaders={results.originalHeaders}
           />
         )}
       </div>

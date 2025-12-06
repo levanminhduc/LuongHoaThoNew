@@ -5,10 +5,16 @@ import jwt from "jsonwebtoken";
 import {
   ApiErrorHandler,
   type ApiError,
-  type ApiResponse,
 } from "@/lib/api-error-handler";
 import { DEFAULT_FIELD_HEADERS } from "@/lib/utils/header-mapping";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import {
+  type ImportErrorRecord,
+  isEmptyValue,
+  validateEmployeeId,
+  validateSalaryMonth,
+  validateEmployeeExists,
+} from "@/lib/import-error-collector";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
@@ -108,28 +114,16 @@ async function createHeaderToFieldMapping(
   return HEADER_TO_FIELD;
 }
 
-interface ImportError {
-  row: number;
-  employee_id?: string;
-  salary_month?: string;
-  field?: string;
-  error: string;
-  errorType:
-    | "validation"
-    | "duplicate"
-    | "employee_not_found"
-    | "database"
-    | "format";
-}
-
 interface ImportResult {
   success: boolean;
   totalRecords: number;
   successCount: number;
   errorCount: number;
   overwriteCount: number;
-  errors: ImportError[];
+  skippedCount: number;
+  errors: ImportErrorRecord[];
   processingTime: string;
+  originalHeaders: string[];
 }
 
 export async function POST(request: NextRequest) {
@@ -252,11 +246,11 @@ export async function POST(request: NextRequest) {
         status: 400,
       });
     }
-    const errors: ImportError[] = [];
+    const errors: ImportErrorRecord[] = [];
     let successCount = 0;
     let overwriteCount = 0;
+    let skippedCount = 0;
 
-    // Get all existing employees for validation
     const { data: employees, error: employeesError } = await supabase
       .from("employees")
       .select("employee_id");
@@ -275,16 +269,74 @@ export async function POST(request: NextRequest) {
     const validEmployeeIds = new Set(
       employees?.map((emp) => emp.employee_id) || [],
     );
-    console.log("👥 Valid Employee IDs loaded:", Array.from(validEmployeeIds));
 
-    // Process each row
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      const rowNumber = i + 2; // +2 because arrays are 0-indexed and we skip header
+      const rowNumber = i + 2;
+
+      const originalData: Record<string, unknown> = {};
+      headers.forEach((header, idx) => {
+        originalData[header] = row[idx] ?? "";
+      });
+
+      const employeeIdColIndex = Object.entries(fieldMapping).find(
+        ([, field]) => field === "employee_id",
+      )?.[0];
+      const salaryMonthColIndex = Object.entries(fieldMapping).find(
+        ([, field]) => field === "salary_month",
+      )?.[0];
+
+      const rawEmployeeId = employeeIdColIndex
+        ? row[parseInt(employeeIdColIndex)]
+        : undefined;
+      const rawSalaryMonth = salaryMonthColIndex
+        ? row[parseInt(salaryMonthColIndex)]
+        : undefined;
+
+      const employeeIdError = validateEmployeeId(
+        rawEmployeeId,
+        rowNumber,
+        originalData,
+      );
+      if (employeeIdError) {
+        errors.push(employeeIdError);
+        skippedCount++;
+        continue;
+      }
+
+      const employeeId = String(rawEmployeeId).trim();
+
+      const salaryMonthError = validateSalaryMonth(
+        rawSalaryMonth,
+        rowNumber,
+        employeeId,
+        originalData,
+      );
+      if (salaryMonthError) {
+        errors.push(salaryMonthError);
+        skippedCount++;
+        continue;
+      }
+
+      const salaryMonth = String(rawSalaryMonth).trim();
+
+      const employeeExistsError = validateEmployeeExists(
+        employeeId,
+        validEmployeeIds,
+        rowNumber,
+        salaryMonth,
+        originalData,
+      );
+      if (employeeExistsError) {
+        errors.push(employeeExistsError);
+        skippedCount++;
+        continue;
+      }
 
       try {
-        // Map row data to database fields
         const recordData: Record<string, unknown> = {
+          employee_id: employeeId,
+          salary_month: salaryMonth,
           source_file: file.name,
           import_batch_id: batchId,
           import_status: "imported",
@@ -292,112 +344,17 @@ export async function POST(request: NextRequest) {
           updated_at: getVietnamTimestamp(),
         };
 
-        // Extract data from row with improved value processing
         Object.entries(fieldMapping).forEach(([colIndex, field]) => {
+          if (field === "employee_id" || field === "salary_month") return;
           const value = row[parseInt(colIndex)];
-
-          // Handle required fields (employee_id, salary_month)
-          if (field === "employee_id" || field === "salary_month") {
-            if (
-              value !== undefined &&
-              value !== null &&
-              String(value).trim() !== ""
-            ) {
-              recordData[field] = String(value).trim();
-            }
+          if (!isEmptyValue(value)) {
+            const numValue = Number(String(value).trim());
+            recordData[field] = isNaN(numValue) ? 0 : numValue;
           } else {
-            // Handle optional numeric fields - be more permissive
-            if (value !== undefined && value !== null) {
-              const stringValue = String(value).trim();
-              if (stringValue !== "") {
-                const numValue = Number(stringValue);
-                recordData[field] = isNaN(numValue) ? 0 : numValue;
-              } else {
-                // Set default value for empty cells
-                recordData[field] = 0;
-              }
-            } else {
-              // Set default value for null/undefined
-              recordData[field] = 0;
-            }
+            recordData[field] = 0;
           }
         });
 
-        // Debug: Log mapped fields count
-        const mappedFieldsCount = Object.keys(fieldMapping).length;
-        const recordFieldsCount = Object.keys(recordData).length - 5; // Exclude metadata fields
-        console.log(
-          `🔍 Row ${rowNumber}: Mapped ${mappedFieldsCount} fields, Record has ${recordFieldsCount} data fields`,
-        );
-
-        // Debug logging for each row (first few rows only)
-        if (rowNumber <= 3) {
-          console.log(`🔍 Row ${rowNumber} detailed data:`, {
-            employee_id: recordData.employee_id,
-            salary_month: recordData.salary_month,
-            sample_fields: Object.fromEntries(
-              Object.entries(recordData)
-                .filter(
-                  ([key]) =>
-                    ![
-                      "source_file",
-                      "import_batch_id",
-                      "import_status",
-                      "created_at",
-                      "updated_at",
-                    ].includes(key),
-                )
-                .slice(0, 5),
-            ),
-            total_fields: Object.keys(recordData).length,
-            rawRow: row.slice(0, 5),
-          });
-        }
-
-        // Validate required fields
-        if (!recordData.employee_id || !recordData.salary_month) {
-          const error = {
-            row: rowNumber,
-            employee_id: recordData.employee_id as string | undefined,
-            salary_month: recordData.salary_month as string | undefined,
-            error: `Thiếu dữ liệu bắt buộc - Employee ID: "${recordData.employee_id || "EMPTY"}", Salary Month: "${recordData.salary_month || "EMPTY"}". Kiểm tra dữ liệu trong file Excel.`,
-            errorType: "validation" as const,
-          };
-          console.log(`❌ Row ${rowNumber} validation error:`, error);
-          errors.push(error);
-          continue;
-        }
-
-        // Validate employee exists
-        if (!validEmployeeIds.has(recordData.employee_id as string)) {
-          const error = {
-            row: rowNumber,
-            employee_id: recordData.employee_id as string | undefined,
-            salary_month: recordData.salary_month as string | undefined,
-            error: `Mã nhân viên "${recordData.employee_id}" không tồn tại trong hệ thống.
-            Valid Employee IDs: [${Array.from(validEmployeeIds).slice(0, 10).join(", ")}${validEmployeeIds.size > 10 ? "..." : ""}].
-            Vui lòng kiểm tra lại mã nhân viên hoặc thêm nhân viên vào hệ thống trước.`,
-            errorType: "employee_not_found" as const,
-          };
-          console.log(`❌ Row ${rowNumber} employee not found:`, error);
-          errors.push(error);
-          continue;
-        }
-
-        // Validate salary month format
-        const monthPattern = /^\d{4}-\d{2}$/;
-        if (!monthPattern.test(recordData.salary_month as string)) {
-          errors.push({
-            row: rowNumber,
-            employee_id: recordData.employee_id as string | undefined,
-            salary_month: recordData.salary_month as string | undefined,
-            error: `Tháng lương "${recordData.salary_month}" không đúng định dạng. Phải có định dạng YYYY-MM (ví dụ: 2024-01, 2024-12)`,
-            errorType: "validation",
-          });
-          continue;
-        }
-
-        // Check if record exists (for overwrite logic)
         const { data: existingRecord } = await supabase
           .from("payrolls")
           .select("id")
@@ -406,27 +363,26 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (existingRecord) {
-          // Overwrite existing record
           const { error: updateError } = await supabase
             .from("payrolls")
             .update(recordData)
-            .eq("employee_id", recordData.employee_id as string)
-            .eq("salary_month", recordData.salary_month as string);
+            .eq("employee_id", employeeId)
+            .eq("salary_month", salaryMonth);
 
           if (updateError) {
             errors.push({
               row: rowNumber,
-              employee_id: recordData.employee_id as string | undefined,
-              salary_month: recordData.salary_month as string | undefined,
+              employee_id: employeeId,
+              salary_month: salaryMonth,
               error: `Lỗi cập nhật: ${updateError.message}`,
               errorType: "database",
+              originalData,
             });
           } else {
             overwriteCount++;
             successCount++;
           }
         } else {
-          // Insert new record
           const { error: insertError } = await supabase
             .from("payrolls")
             .insert(recordData);
@@ -434,22 +390,22 @@ export async function POST(request: NextRequest) {
           if (insertError) {
             errors.push({
               row: rowNumber,
-              employee_id: recordData.employee_id as string | undefined,
-              salary_month: recordData.salary_month as string | undefined,
+              employee_id: employeeId,
+              salary_month: salaryMonth,
               error: `Lỗi thêm mới: ${insertError.message}`,
               errorType: "database",
+              originalData,
             });
           } else {
             successCount++;
           }
         }
-      } catch (error) {
+      } catch (err) {
         errors.push({
           row: rowNumber,
-          employee_id: "UNKNOWN",
-          salary_month: "UNKNOWN",
-          error: error instanceof Error ? error.message : "Lỗi không xác định",
+          error: err instanceof Error ? err.message : "Lỗi không xác định",
           errorType: "format",
+          originalData,
         });
       }
     }
@@ -462,47 +418,49 @@ export async function POST(request: NextRequest) {
       successCount,
       errorCount: errors.length,
       overwriteCount,
-      errors: errors.slice(0, 50), // Limit errors for response size
+      skippedCount,
+      errors: errors.slice(0, 100),
       processingTime,
+      originalHeaders: headers,
     };
 
-    const message = `Import hoàn tất: ${successCount} thành công, ${errors.length} lỗi${overwriteCount > 0 ? `, ${overwriteCount} ghi đè` : ""}`;
+    const message = `Import hoàn tất: ${successCount} thành công, ${errors.length} lỗi${skippedCount > 0 ? `, ${skippedCount} bỏ qua` : ""}${overwriteCount > 0 ? `, ${overwriteCount} ghi đè` : ""}`;
 
     if (errors.length > 0) {
-      const standardizedErrors: ApiError[] = errors
-        .slice(0, 20)
-        .map((error) =>
-          ApiErrorHandler.createError(
-            error.errorType === "validation"
-              ? ApiErrorHandler.ErrorCodes.VALIDATION_ERROR
-              : error.errorType === "employee_not_found"
-                ? ApiErrorHandler.ErrorCodes.EMPLOYEE_NOT_FOUND
-                : error.errorType === "duplicate"
-                  ? ApiErrorHandler.ErrorCodes.DUPLICATE_RECORD
-                  : ApiErrorHandler.ErrorCodes.DATABASE_ERROR,
-            error.error,
-            `Row ${error.row}`,
-            error.field,
-            error.row,
-            error.employee_id,
-            error.salary_month,
-          ),
-        );
+      const standardizedErrors: ApiError[] = errors.slice(0, 20).map((err) =>
+        ApiErrorHandler.createError(
+          err.errorType === "validation"
+            ? ApiErrorHandler.ErrorCodes.VALIDATION_ERROR
+            : err.errorType === "employee_not_found"
+              ? ApiErrorHandler.ErrorCodes.EMPLOYEE_NOT_FOUND
+              : err.errorType === "duplicate"
+                ? ApiErrorHandler.ErrorCodes.DUPLICATE_RECORD
+                : ApiErrorHandler.ErrorCodes.DATABASE_ERROR,
+          err.error,
+          `Row ${err.row}`,
+          err.field,
+          err.row,
+          err.employee_id,
+          err.salary_month,
+        ),
+      );
 
-      // Return custom response with importBatchId for partial success
       return NextResponse.json({
-        success: successCount > 0, // True if any records succeeded
+        success: successCount > 0,
         data: result,
         errors: standardizedErrors,
+        importErrors: errors,
         message,
         metadata: {
           totalRecords: rows.length,
           successCount,
           errorCount: errors.length,
+          skippedCount,
           processingTime,
           autoFixCount: 0,
         },
-        importBatchId: batchId, // Add at top level for easy access
+        originalHeaders: headers,
+        importBatchId: batchId,
       });
     }
 
@@ -513,11 +471,13 @@ export async function POST(request: NextRequest) {
       metadata: {
         totalRecords: rows.length,
         successCount,
-        errorCount: errors.length,
+        errorCount: 0,
+        skippedCount: 0,
         processingTime,
         autoFixCount: 0,
       },
-      importBatchId: batchId, // Add at top level for easy access
+      originalHeaders: headers,
+      importBatchId: batchId,
     });
   } catch (error) {
     console.error("Payroll import error:", error);

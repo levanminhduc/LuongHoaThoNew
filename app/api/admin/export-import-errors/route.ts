@@ -17,6 +17,8 @@ interface ImportError {
   column?: string;
   field?: string;
   value?: unknown;
+  employee_id?: string;
+  salary_month?: string;
   errorType:
     | "validation"
     | "format"
@@ -24,11 +26,13 @@ interface ImportError {
     | "database"
     | "system"
     | "employee_not_found";
-  severity: "low" | "medium" | "high" | "critical";
-  message: string;
+  severity?: "low" | "medium" | "high" | "critical";
+  message?: string;
+  error?: string;
   suggestion?: string;
   expectedFormat?: string;
   currentValue?: string;
+  originalData?: Record<string, unknown>;
 }
 
 interface ErrorExportRequest {
@@ -36,6 +40,8 @@ interface ErrorExportRequest {
   originalData?: Record<string, unknown>[];
   fileName?: string;
   format: "excel" | "csv";
+  includeOriginalData?: boolean;
+  originalHeaders?: string[];
 }
 
 export async function POST(request: NextRequest) {
@@ -53,7 +59,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body: ErrorExportRequest = await request.json();
-    const { errors, fileName = "import_errors", format = "excel" } = body;
+    const {
+      errors,
+      fileName = "import_errors",
+      format = "excel",
+      includeOriginalData = true,
+      originalHeaders = [],
+    } = body;
 
     if (!errors || errors.length === 0) {
       return NextResponse.json(
@@ -62,124 +74,86 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create error report data
-    const errorReportData = errors.map((error, index) => ({
-      "Error #": index + 1,
-      Row: error.row,
-      Column: error.column || "N/A",
-      Field: error.field || "N/A",
-      "Current Value": error.currentValue || "N/A",
-      "Error Type": error.errorType,
-      Severity: error.severity,
-      "Error Message": error.message,
-      "Expected Format": error.expectedFormat || "N/A",
-      Suggestion: error.suggestion || "N/A",
-      Status: "Needs Fix",
-    }));
+    const getErrorTypeLabel = (errorType: string): string => {
+      const labels: Record<string, string> = {
+        validation: "Lỗi dữ liệu",
+        duplicate: "Trùng lặp",
+        employee_not_found: "Không tìm thấy NV",
+        database: "Lỗi database",
+        format: "Lỗi định dạng",
+        system: "Lỗi hệ thống",
+      };
+      return labels[errorType] || errorType;
+    };
 
-    // Create summary data
+    const errorReportData = errors.map((error, index) => {
+      const baseRow: Record<string, unknown> = {
+        STT: index + 1,
+        "Dòng Excel": error.row,
+        "Mã NV": error.employee_id || "N/A",
+        Tháng: error.salary_month || "N/A",
+        Lỗi: error.message || error.error || "N/A",
+        "Loại Lỗi": getErrorTypeLabel(error.errorType),
+      };
+
+      if (includeOriginalData && error.originalData) {
+        originalHeaders.forEach((header) => {
+          if (
+            !["STT", "Dòng Excel", "Mã NV", "Tháng", "Lỗi", "Loại Lỗi"].includes(
+              header,
+            )
+          ) {
+            baseRow[header] = error.originalData?.[header] ?? "";
+          }
+        });
+      }
+
+      return baseRow;
+    });
+
     const summaryData = [
-      { Metric: "Total Errors", Count: errors.length },
+      { "Thống Kê": "Tổng số lỗi", "Số Lượng": errors.length },
       {
-        Metric: "Validation Errors",
-        Count: errors.filter((e) => e.errorType === "validation").length,
+        "Thống Kê": "Lỗi dữ liệu",
+        "Số Lượng": errors.filter((e) => e.errorType === "validation").length,
       },
       {
-        Metric: "Format Errors",
-        Count: errors.filter((e) => e.errorType === "format").length,
+        "Thống Kê": "Lỗi định dạng",
+        "Số Lượng": errors.filter((e) => e.errorType === "format").length,
       },
       {
-        Metric: "Duplicate Errors",
-        Count: errors.filter((e) => e.errorType === "duplicate").length,
+        "Thống Kê": "Lỗi trùng lặp",
+        "Số Lượng": errors.filter((e) => e.errorType === "duplicate").length,
       },
       {
-        Metric: "Employee Not Found Errors",
-        Count: errors.filter((e) => e.errorType === "employee_not_found")
+        "Thống Kê": "Không tìm thấy NV",
+        "Số Lượng": errors.filter((e) => e.errorType === "employee_not_found")
           .length,
       },
       {
-        Metric: "Database Errors",
-        Count: errors.filter((e) => e.errorType === "database").length,
+        "Thống Kê": "Lỗi database",
+        "Số Lượng": errors.filter((e) => e.errorType === "database").length,
       },
       {
-        Metric: "System Errors",
-        Count: errors.filter((e) => e.errorType === "system").length,
-      },
-      {
-        Metric: "High Severity",
-        Count: errors.filter(
-          (e) => e.severity === "high" || e.severity === "critical",
-        ).length,
-      },
-      {
-        Metric: "Medium Severity",
-        Count: errors.filter((e) => e.severity === "medium").length,
-      },
-      {
-        Metric: "Low Severity",
-        Count: errors.filter((e) => e.severity === "low").length,
+        "Thống Kê": "Lỗi hệ thống",
+        "Số Lượng": errors.filter((e) => e.errorType === "system").length,
       },
     ];
 
-    // Create fix template data
-    const fixTemplateData = errors.map((error, index) => ({
-      "Error #": index + 1,
-      Row: error.row,
-      Field: error.field || "N/A",
-      "Current Value": error.currentValue || "",
-      "Corrected Value": "", // Empty for user to fill
-      Notes: error.suggestion || "",
-      Status: "Pending",
-    }));
-
     if (format === "excel") {
-      // Create Excel workbook with multiple sheets
       const workbook = XLSX.utils.book_new();
 
-      // Error Details sheet
       const errorSheet = XLSX.utils.json_to_sheet(errorReportData);
-      XLSX.utils.book_append_sheet(workbook, errorSheet, "Error Details");
+      XLSX.utils.book_append_sheet(workbook, errorSheet, "Danh Sách Lỗi");
 
-      // Summary sheet
       const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+      XLSX.utils.book_append_sheet(workbook, summarySheet, "Thống Kê");
 
-      // Fix Template sheet
-      const fixSheet = XLSX.utils.json_to_sheet(fixTemplateData);
-      XLSX.utils.book_append_sheet(workbook, fixSheet, "Fix Template");
-
-      // Instructions sheet
-      const instructions = [
-        {
-          Step: 1,
-          Instruction:
-            "Review the 'Error Details' sheet to understand all errors",
-        },
-        {
-          Step: 2,
-          Instruction: "Check the 'Summary' sheet for error statistics",
-        },
-        {
-          Step: 3,
-          Instruction: "Use the 'Fix Template' sheet to plan corrections",
-        },
-        {
-          Step: 4,
-          Instruction: "Fill in 'Corrected Value' column with proper values",
-        },
-        { Step: 5, Instruction: "Update 'Status' to 'Fixed' when completed" },
-        { Step: 6, Instruction: "Re-import the corrected data file" },
-      ];
-      const instructionSheet = XLSX.utils.json_to_sheet(instructions);
-      XLSX.utils.book_append_sheet(workbook, instructionSheet, "Instructions");
-
-      // Generate Excel buffer
       const excelBuffer = XLSX.write(workbook, {
         type: "buffer",
         bookType: "xlsx",
       });
 
-      // Return Excel file
       return new NextResponse(excelBuffer, {
         headers: {
           "Content-Type":
@@ -188,21 +162,17 @@ export async function POST(request: NextRequest) {
         },
       });
     } else if (format === "csv") {
-      // Create CSV content
+      const headers = Object.keys(errorReportData[0] || {});
       const csvContent = [
-        // Header
-        "Error #,Row,Column,Field,Current Value,Error Type,Severity,Error Message,Expected Format,Suggestion,Status",
-        // Data rows
-        ...errorReportData.map(
-          (row) =>
-            `${row["Error #"]},${row.Row},"${row.Column}","${row.Field}","${row["Current Value"]}","${row["Error Type"]}","${row.Severity}","${row["Error Message"]}","${row["Expected Format"]}","${row.Suggestion}","${row.Status}"`,
+        headers.join(","),
+        ...errorReportData.map((row) =>
+          headers.map((h) => `"${row[h] ?? ""}"`).join(","),
         ),
       ].join("\n");
 
-      // Return CSV file
       return new NextResponse(csvContent, {
         headers: {
-          "Content-Type": "text/csv",
+          "Content-Type": "text/csv; charset=utf-8",
           "Content-Disposition": `attachment; filename="${fileName}_${new Date().toISOString().split("T")[0]}.csv"`,
         },
       });
