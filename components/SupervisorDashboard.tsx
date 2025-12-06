@@ -497,7 +497,7 @@ export default function SupervisorDashboard({
           </div>
         )}
 
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <Tabs defaultValue="employees" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-3 h-auto">
             <TabsTrigger
               value="overview"
