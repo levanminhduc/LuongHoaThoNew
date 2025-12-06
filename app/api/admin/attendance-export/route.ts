@@ -295,9 +295,9 @@ export async function POST(request: NextRequest) {
           return a.localeCompare(b, "vi", { sensitivity: "base" });
         };
 
-        const sortedDepartments = Array.from(employeesByDepartment.entries()).sort(
-          ([deptA], [deptB]) => naturalSortDepartments(deptA, deptB),
-        );
+        const sortedDepartments = Array.from(
+          employeesByDepartment.entries(),
+        ).sort(([deptA], [deptB]) => naturalSortDepartments(deptA, deptB));
 
         for (const [dept, empList] of sortedDepartments) {
           departmentRowIndices.push(dataRows.length + 1);

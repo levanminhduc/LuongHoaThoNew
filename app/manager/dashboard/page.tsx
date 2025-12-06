@@ -64,10 +64,15 @@ export default function ManagerDashboardPage() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch {
+      // Ignore error
+    }
     localStorage.removeItem("admin_token");
     localStorage.removeItem("user_info");
-    router.push("/admin/login");
+    router.push("/");
   };
 
   if (loading) {

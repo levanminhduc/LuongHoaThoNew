@@ -312,13 +312,15 @@ export default function PayrollImportExportPage() {
       if (response.ok) {
         const importData = result.data || result;
         const importErrors = result.importErrors || importData.errors || [];
-        const originalHeaders = result.originalHeaders || importData.originalHeaders || [];
+        const originalHeaders =
+          result.originalHeaders || importData.originalHeaders || [];
 
         const resultWithErrors: ImportResult = {
           ...importData,
           errors: importErrors,
           originalHeaders,
-          skippedCount: result.metadata?.skippedCount || importData.skippedCount || 0,
+          skippedCount:
+            result.metadata?.skippedCount || importData.skippedCount || 0,
         };
 
         if (result.success) {

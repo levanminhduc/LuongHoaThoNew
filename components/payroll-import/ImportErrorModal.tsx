@@ -708,7 +708,9 @@ export default function ImportErrorModal({
                         </div>
                         <div className="flex justify-between text-red-600">
                           <span>Lỗi:</span>
-                          <span className="font-semibold">{errorStats.totalErrors}</span>
+                          <span className="font-semibold">
+                            {errorStats.totalErrors}
+                          </span>
                         </div>
                         <div className="flex justify-between text-orange-600">
                           <span>Bỏ qua:</span>

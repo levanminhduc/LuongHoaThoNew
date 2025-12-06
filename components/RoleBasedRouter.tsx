@@ -149,11 +149,16 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch {
+      // Ignore error
+    }
     localStorage.removeItem("admin_token");
     localStorage.removeItem("user_info");
     setUser(null);
-    router.push("/admin/login");
+    router.push("/");
   };
 
   if (loading) {

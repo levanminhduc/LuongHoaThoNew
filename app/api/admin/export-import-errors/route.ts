@@ -99,9 +99,14 @@ export async function POST(request: NextRequest) {
       if (includeOriginalData && error.originalData) {
         originalHeaders.forEach((header) => {
           if (
-            !["STT", "Dòng Excel", "Mã NV", "Tháng", "Lỗi", "Loại Lỗi"].includes(
-              header,
-            )
+            ![
+              "STT",
+              "Dòng Excel",
+              "Mã NV",
+              "Tháng",
+              "Lỗi",
+              "Loại Lỗi",
+            ].includes(header)
           ) {
             baseRow[header] = error.originalData?.[header] ?? "";
           }

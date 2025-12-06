@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
-import {
-  ApiErrorHandler,
-  type ApiError,
-} from "@/lib/api-error-handler";
+import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { DEFAULT_FIELD_HEADERS } from "@/lib/utils/header-mapping";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import {
@@ -427,23 +424,25 @@ export async function POST(request: NextRequest) {
     const message = `Import hoàn tất: ${successCount} thành công, ${errors.length} lỗi${skippedCount > 0 ? `, ${skippedCount} bỏ qua` : ""}${overwriteCount > 0 ? `, ${overwriteCount} ghi đè` : ""}`;
 
     if (errors.length > 0) {
-      const standardizedErrors: ApiError[] = errors.slice(0, 20).map((err) =>
-        ApiErrorHandler.createError(
-          err.errorType === "validation"
-            ? ApiErrorHandler.ErrorCodes.VALIDATION_ERROR
-            : err.errorType === "employee_not_found"
-              ? ApiErrorHandler.ErrorCodes.EMPLOYEE_NOT_FOUND
-              : err.errorType === "duplicate"
-                ? ApiErrorHandler.ErrorCodes.DUPLICATE_RECORD
-                : ApiErrorHandler.ErrorCodes.DATABASE_ERROR,
-          err.error,
-          `Row ${err.row}`,
-          err.field,
-          err.row,
-          err.employee_id,
-          err.salary_month,
-        ),
-      );
+      const standardizedErrors: ApiError[] = errors
+        .slice(0, 20)
+        .map((err) =>
+          ApiErrorHandler.createError(
+            err.errorType === "validation"
+              ? ApiErrorHandler.ErrorCodes.VALIDATION_ERROR
+              : err.errorType === "employee_not_found"
+                ? ApiErrorHandler.ErrorCodes.EMPLOYEE_NOT_FOUND
+                : err.errorType === "duplicate"
+                  ? ApiErrorHandler.ErrorCodes.DUPLICATE_RECORD
+                  : ApiErrorHandler.ErrorCodes.DATABASE_ERROR,
+            err.error,
+            `Row ${err.row}`,
+            err.field,
+            err.row,
+            err.employee_id,
+            err.salary_month,
+          ),
+        );
 
       return NextResponse.json({
         success: successCount > 0,

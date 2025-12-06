@@ -139,9 +139,15 @@ export default function AccountantDashboard() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch {
+      // Ignore error
+    }
     localStorage.removeItem("admin_token");
-    router.push("/admin/login");
+    localStorage.removeItem("user_info");
+    router.push("/");
   };
 
   if (loading) {

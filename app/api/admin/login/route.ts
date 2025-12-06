@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "24h" });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       token,
       user: {
@@ -55,6 +55,16 @@ export async function POST(request: NextRequest) {
       },
       message: "Đăng nhập thành công",
     });
+
+    response.cookies.set("auth_token", token, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

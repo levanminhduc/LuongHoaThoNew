@@ -14,10 +14,10 @@ export interface ImportErrorRecord {
 }
 
 export interface ErrorReportRow {
-  "Dòng": number;
+  Dòng: number;
   "Mã NV": string;
-  "Tháng": string;
-  "Lỗi": string;
+  Tháng: string;
+  Lỗi: string;
   "Loại Lỗi": string;
   [key: string]: unknown;
 }
@@ -154,10 +154,10 @@ export function createErrorReportData(
 ): ErrorReportRow[] {
   return errors.map((error) => {
     const row: ErrorReportRow = {
-      "Dòng": error.row,
+      Dòng: error.row,
       "Mã NV": error.employee_id || "N/A",
-      "Tháng": error.salary_month || "N/A",
-      "Lỗi": error.error,
+      Tháng: error.salary_month || "N/A",
+      Lỗi: error.error,
       "Loại Lỗi": getErrorTypeLabel(error.errorType),
     };
 
@@ -183,4 +183,3 @@ function getErrorTypeLabel(errorType: string): string {
   };
   return labels[errorType] || errorType;
 }
-

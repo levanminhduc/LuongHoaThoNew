@@ -2,8 +2,8 @@
 
 import type React from "react";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,12 +19,37 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Shield } from "lucide-react";
 import Link from "next/link";
 
-export function AdminLoginForm() {
+function LoginFormContent() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+
+  const getDefaultRedirect = (role: string): string => {
+    switch (role) {
+      case "admin":
+        return "/admin/dashboard";
+      case "giam_doc":
+        return "/director/dashboard";
+      case "ke_toan":
+        return "/accountant/dashboard";
+      case "nguoi_lap_bieu":
+        return "/reporter/dashboard";
+      case "truong_phong":
+        return "/manager/dashboard";
+      case "to_truong":
+        return "/supervisor/dashboard";
+      case "nhan_vien":
+        return "/employee/dashboard";
+      case "van_phong":
+        return "/admin/employee-management";
+      default:
+        return "/admin/dashboard";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,39 +68,13 @@ export function AdminLoginForm() {
       const data = await response.json();
 
       if (response.ok) {
-        // Lưu token và user info vào localStorage
         localStorage.setItem("admin_token", data.token);
         localStorage.setItem("user_info", JSON.stringify(data.user));
 
-        // Redirect based on user role
-        const userRole = data.user?.role;
-        switch (userRole) {
-          case "admin":
-            router.push("/admin/dashboard");
-            break;
-          case "giam_doc":
-            router.push("/director/dashboard");
-            break;
-          case "ke_toan":
-            router.push("/accountant/dashboard");
-            break;
-          case "nguoi_lap_bieu":
-            router.push("/reporter/dashboard");
-            break;
-          case "truong_phong":
-            router.push("/manager/dashboard");
-            break;
-          case "to_truong":
-            router.push("/supervisor/dashboard");
-            break;
-          case "nhan_vien":
-            router.push("/employee/dashboard");
-            break;
-          case "van_phong":
-            router.push("/admin/employee-management");
-            break;
-          default:
-            router.push("/admin/dashboard"); // Fallback to admin dashboard
+        if (redirectUrl && redirectUrl.startsWith("/")) {
+          router.push(redirectUrl);
+        } else {
+          router.push(getDefaultRedirect(data.user?.role));
         }
       } else {
         setError(
@@ -83,7 +82,7 @@ export function AdminLoginForm() {
             "Đăng nhập thất bại, liên hệ ban Chuyển Đổi Số để được hỗ trợ.",
         );
       }
-    } catch (error) {
+    } catch {
       setError("Có lỗi xảy ra khi đăng nhập");
     } finally {
       setLoading(false);
@@ -147,5 +146,27 @@ export function AdminLoginForm() {
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+export function AdminLoginForm() {
+  return (
+    <Suspense
+      fallback={
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Shield className="w-6 h-6 text-blue-600" />
+            </div>
+            <CardTitle>Đăng Nhập Hệ Thống</CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          </CardContent>
+        </Card>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }
