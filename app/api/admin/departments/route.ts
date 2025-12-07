@@ -138,8 +138,18 @@ export async function GET(request: NextRequest) {
     interface PayrollWithEmployee {
       tien_luong_thuc_nhan_cuoi_ky: number;
       is_signed: boolean;
-      employees: { department: string }[];
+      employees: { department: string } | { department: string }[];
     }
+
+    const getEmployeeDepartment = (
+      employees: { department: string } | { department: string }[] | null,
+    ): string | null => {
+      if (!employees) return null;
+      if (Array.isArray(employees)) {
+        return employees[0]?.department ?? null;
+      }
+      return employees.department ?? null;
+    };
 
     const departmentStats = uniqueDepartments.map((dept) => {
       const employeeCount = allEmployees.filter(
@@ -148,7 +158,7 @@ export async function GET(request: NextRequest) {
 
       const deptPayrolls = allPayrolls.filter((p) => {
         const payroll = p as PayrollWithEmployee;
-        return payroll.employees?.[0]?.department === dept;
+        return getEmployeeDepartment(payroll.employees) === dept;
       }) as PayrollWithEmployee[];
 
       const payrollCount = deptPayrolls.length;

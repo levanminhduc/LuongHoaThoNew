@@ -161,6 +161,7 @@ export default function ManagerDashboard({
   }, [selectedDepartment, selectedMonth]);
 
   const loadDepartmentStats = async () => {
+    setLoading(true);
     const cachedData = DashboardCache.getCacheData<DepartmentStats[]>(
       "manager",
       selectedMonth,
