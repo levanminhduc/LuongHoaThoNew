@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, Suspense, useRef, useLayoutEffect } from "react";
+import { useState, Suspense, useRef, useLayoutEffect, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,8 +16,36 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Shield, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Shield, Eye, EyeOff, Trash2 } from "lucide-react";
 import Link from "next/link";
+
+const ADMIN_CREDENTIALS_KEY = "admin_saved_credentials";
+
+function encodeCredentials(username: string, password: string): string {
+  const data = JSON.stringify({ username, password });
+  return btoa(encodeURIComponent(data));
+}
+
+function decodeCredentials(): { username: string; password: string } | null {
+  try {
+    const encoded = localStorage.getItem(ADMIN_CREDENTIALS_KEY);
+    if (!encoded) return null;
+    const decoded = decodeURIComponent(atob(encoded));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+function saveCredentials(username: string, password: string): void {
+  const encoded = encodeCredentials(username, password);
+  localStorage.setItem(ADMIN_CREDENTIALS_KEY, encoded);
+}
+
+function clearCredentials(): void {
+  localStorage.removeItem(ADMIN_CREDENTIALS_KEY);
+}
 
 function LoginFormContent() {
   const [username, setUsername] = useState("");
@@ -25,12 +53,24 @@ function LoginFormContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [rememberPassword, setRememberPassword] = useState(false);
+  const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
 
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const cursorPositionRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const savedCredentials = decodeCredentials();
+    if (savedCredentials) {
+      setUsername(savedCredentials.username);
+      setPassword(savedCredentials.password);
+      setRememberPassword(true);
+      setHasSavedCredentials(true);
+    }
+  }, []);
 
   useLayoutEffect(() => {
     if (cursorPositionRef.current === null || !usernameInputRef.current) {
@@ -44,6 +84,14 @@ function LoginFormContent() {
 
     cursorPositionRef.current = null;
   }, [username]);
+
+  const handleClearSavedCredentials = () => {
+    clearCredentials();
+    setUsername("");
+    setPassword("");
+    setRememberPassword(false);
+    setHasSavedCredentials(false);
+  };
 
   const getDefaultRedirect = (role: string): string => {
     switch (role) {
@@ -85,6 +133,14 @@ function LoginFormContent() {
       const data = await response.json();
 
       if (response.ok) {
+        if (rememberPassword) {
+          saveCredentials(username, password);
+          setHasSavedCredentials(true);
+        } else {
+          clearCredentials();
+          setHasSavedCredentials(false);
+        }
+
         localStorage.setItem("admin_token", data.token);
         localStorage.setItem("user_info", JSON.stringify(data.user));
 
@@ -168,6 +224,37 @@ function LoginFormContent() {
                 )}
               </button>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={rememberPassword}
+                onCheckedChange={(checked) =>
+                  setRememberPassword(checked === true)
+                }
+              />
+              <label
+                htmlFor="remember"
+                className="text-sm font-medium leading-none cursor-pointer select-none"
+              >
+                Ghi nhớ thông tin đăng nhập
+              </label>
+            </div>
+            {/* Tạm ẩn nút xóa - có thể bật lại sau */}
+            {false && hasSavedCredentials && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSavedCredentials}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Xóa thông tin đã lưu
+              </Button>
+            )}
           </div>
         </CardContent>
 
