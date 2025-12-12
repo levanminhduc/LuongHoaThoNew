@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { MAINTENANCE_MESSAGE } from "@/lib/maintenance";
-import { Cog, RefreshCw, Server, AlertCircle } from 'lucide-react';
+import { Cog, RefreshCw, Server, AlertCircle } from "lucide-react";
 
 const HEADING_TEXT = "Tra Cứu và Ký Xác Nhận Lương";
 
@@ -15,7 +15,6 @@ export default function MaintenancePage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 font-sans text-white">
-
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-20 -left-20 h-96 w-96 rounded-full bg-blue-500/30 blur-3xl animate-pulse" />
         <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-blue-900/40 blur-3xl animate-pulse delay-1000" />
@@ -26,12 +25,12 @@ export default function MaintenancePage() {
       </div>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center p-6 text-center">
-
-        <div className={`
+        <div
+          className={`
           w-full max-w-lg transform rounded-2xl bg-white p-8 shadow-2xl transition-all duration-1000 ease-out
-          ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
-        `}>
-
+          ${mounted ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}
+        `}
+        >
           <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center">
             <div className="absolute inset-0 animate-[spin_10s_linear_infinite]">
               <Cog className="h-24 w-24 text-blue-100" strokeWidth={1} />
@@ -56,22 +55,21 @@ export default function MaintenancePage() {
           <div className="mb-6 w-full rounded-full bg-slate-100 p-1">
             <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2 shadow-sm border border-slate-100">
               <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">Đang cập nhật dữ liệu...</span>
+              <span className="text-sm font-medium text-blue-700">
+                Đang cập nhật dữ liệu...
+              </span>
               {/* <span className="ml-auto text-xs text-slate-400">75%</span> */}
             </div>
             {/* <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-slate-200">
               <div className="h-full w-3/4 animate-[shimmer_2s_infinite] bg-gradient-to-r from-blue-500 to-blue-400 w-[75%]" />
             </div> */}
           </div>
-
-
         </div>
 
         <p className="mt-8 text-xs font-medium text-blue-200 opacity-80">
           &copy; Hệ thống tra cứu và ký xác nhận lương{" "}
           <strong>Công Ty May Hòa Thọ Điện Bàn</strong>
         </p>
-
       </div>
     </div>
   );

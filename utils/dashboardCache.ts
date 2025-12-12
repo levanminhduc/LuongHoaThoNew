@@ -64,7 +64,9 @@ class DashboardCache {
       const cachedItem = localStorage.getItem(cacheKey);
 
       if (!cachedItem) {
-        console.log(`[DashboardCache] Cache miss: ${role}/${month}/${dataType}`);
+        console.log(
+          `[DashboardCache] Cache miss: ${role}/${month}/${dataType}`,
+        );
         return null;
       }
 
@@ -72,7 +74,9 @@ class DashboardCache {
       const now = Date.now();
 
       if (now > cacheData.expiresAt) {
-        console.log(`[DashboardCache] Cache expired: ${role}/${month}/${dataType}`);
+        console.log(
+          `[DashboardCache] Cache expired: ${role}/${month}/${dataType}`,
+        );
         localStorage.removeItem(cacheKey);
         return null;
       }
@@ -89,7 +93,11 @@ class DashboardCache {
     }
   }
 
-  static isCacheValid(role: string, month: string, dataType: DataType): boolean {
+  static isCacheValid(
+    role: string,
+    month: string,
+    dataType: DataType,
+  ): boolean {
     try {
       const cacheKey = this.generateCacheKey(role, month, dataType);
       const cachedItem = localStorage.getItem(cacheKey);
@@ -132,7 +140,9 @@ class DashboardCache {
       const cacheKeys = keys.filter((key) => key.startsWith(rolePrefix));
 
       cacheKeys.forEach((key) => localStorage.removeItem(key));
-      console.log(`[DashboardCache] Cleared ${cacheKeys.length} entries for ${role}`);
+      console.log(
+        `[DashboardCache] Cleared ${cacheKeys.length} entries for ${role}`,
+      );
     } catch (error) {
       console.error("[DashboardCache] Failed to clear role cache:", error);
     }
@@ -149,4 +159,3 @@ export const {
   clearAllDashboardCache,
   clearRoleCache,
 } = DashboardCache;
-

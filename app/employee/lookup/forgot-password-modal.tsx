@@ -340,13 +340,17 @@ export function ForgotPasswordModal({
                             {passwordStrength.label}
                           </span>
                         </div>
-                        <Progress value={passwordStrength.score} className="h-2" />
+                        <Progress
+                          value={passwordStrength.score}
+                          className="h-2"
+                        />
 
                         {passwordStrength.issues.length > 0 && (
                           <ul className="text-xs text-muted-foreground space-y-1">
                             {passwordStrength.issues.map((issue, idx) => (
                               <li key={idx} className="flex items-center gap-1">
-                                <span className="text-yellow-600">•</span> {issue}
+                                <span className="text-yellow-600">•</span>{" "}
+                                {issue}
                               </li>
                             ))}
                           </ul>
@@ -403,31 +407,31 @@ export function ForgotPasswordModal({
                 )}
               />
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-            {success && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-700">
-                  Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu
-                  mới.
+              {success && (
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-700">
+                    Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật
+                    khẩu mới.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Alert className="border-blue-200 bg-blue-50">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-xs text-blue-700">
+                  <strong>Lưu ý:</strong> Vì lý do bảo mật, bạn chỉ có thể sử
+                  dụng chức năng này sau 24 giờ kể từ lần đổi mật khẩu trước.
+                  Nếu cần hỗ trợ ngay, vui lòng liên hệ Văn Phòng.
                 </AlertDescription>
               </Alert>
-            )}
-
-            <Alert className="border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-xs text-blue-700">
-                <strong>Lưu ý:</strong> Vì lý do bảo mật, bạn chỉ có thể sử dụng
-                chức năng này sau 24 giờ kể từ lần đổi mật khẩu trước. Nếu cần
-                hỗ trợ ngay, vui lòng liên hệ Văn Phòng.
-              </AlertDescription>
-            </Alert>
 
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
                 <Button

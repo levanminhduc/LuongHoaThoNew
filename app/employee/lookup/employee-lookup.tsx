@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,11 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Loader2,
   Search,
   User,
-  CreditCard,
   DollarSign,
   Calendar,
   Eye,
@@ -31,9 +31,42 @@ import {
   Timer,
   FileText,
   Lock,
-  AlertTriangle,
-  History,
+  Trash2,
 } from "lucide-react";
+
+const STORAGE_KEY = "salary_lookup_credentials";
+
+function encodeCredentials(employeeId: string, password: string): string {
+  const data = JSON.stringify({ e: employeeId, p: password, t: Date.now() });
+  return btoa(encodeURIComponent(data));
+}
+
+function decodeCredentials(): {
+  employeeId: string;
+  password: string;
+} | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    const decoded = decodeURIComponent(atob(stored));
+    const data = JSON.parse(decoded);
+    if (data.e && data.p) {
+      return { employeeId: data.e, password: data.p };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCredentials(employeeId: string, password: string): void {
+  const encoded = encodeCredentials(employeeId, password);
+  localStorage.setItem(STORAGE_KEY, encoded);
+}
+
+function clearCredentials(): void {
+  localStorage.removeItem(STORAGE_KEY);
+}
 import Link from "next/link";
 import { PayrollDetailModal } from "./payroll-detail-modal";
 import { ResetPasswordModal } from "./reset-password-modal";
@@ -41,7 +74,6 @@ import { SalaryHistoryModal } from "./salary-history-modal";
 import { ForgotPasswordModal } from "./forgot-password-modal";
 import {
   formatSalaryMonth,
-  formatSignatureTime,
   formatCurrency,
   formatNumber,
 } from "@/lib/utils/date-formatter";
@@ -136,20 +168,33 @@ export function EmployeeLookup() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
-  const [mustChangePassword, setMustChangePassword] = useState(false);
-  const salaryInfoRef = useRef<HTMLDivElement>(null); // Ref để scroll đến phần thông tin lương
+  const [, setMustChangePassword] = useState(false);
+  const [rememberPassword, setRememberPassword] = useState(false);
+  const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
+  const salaryInfoRef = useRef<HTMLDivElement>(null);
 
-  // Refs for auto-uppercase employee ID with cursor position preservation
   const employeeIdInputRef = useRef<HTMLInputElement>(null);
   const cursorPositionRef = useRef<number | null>(null);
 
-  // State mới cho label động
-  const [authFieldConfig, setAuthFieldConfig] = useState({
-    label: "Số CCCD",
-    placeholder: "Nhập số CCCD",
-    type: "text" as "text" | "password",
-  });
-  const [checkingStatus, setCheckingStatus] = useState(false);
+  useEffect(() => {
+    const saved = decodeCredentials();
+    if (saved) {
+      setEmployeeId(saved.employeeId);
+      setCccd(saved.password);
+      setRememberPassword(true);
+      setHasSavedCredentials(true);
+    }
+  }, []);
+
+  const handleClearSavedCredentials = () => {
+    clearCredentials();
+    setEmployeeId("");
+    setCccd("");
+    setRememberPassword(false);
+    setHasSavedCredentials(false);
+    setResult(null);
+    setError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,13 +218,15 @@ export function EmployeeLookup() {
 
       if (response.ok) {
         setResult(data.payroll);
-        // Don't force password change - let users decide
-        // if (data.payroll.must_change_password) {
-        //   setMustChangePassword(true)
-        //   setShowPasswordModal(true)
-        // }
 
-        // Auto-scroll đến phần thông tin lương sau khi có kết quả
+        if (rememberPassword) {
+          saveCredentials(employeeId.trim(), cccd.trim());
+          setHasSavedCredentials(true);
+        } else {
+          clearCredentials();
+          setHasSavedCredentials(false);
+        }
+
         setTimeout(() => {
           if (salaryInfoRef.current) {
             salaryInfoRef.current.scrollIntoView({
@@ -187,11 +234,11 @@ export function EmployeeLookup() {
               block: "start",
             });
           }
-        }, 100); // Đợi 100ms để đảm bảo DOM đã render
+        }, 100);
       } else {
         setError(data.error || "Không tìm thấy thông tin lương");
       }
-    } catch (error) {
+    } catch {
       setError("Có lỗi xảy ra khi tra cứu thông tin");
     } finally {
       setLoading(false);
@@ -244,9 +291,7 @@ export function EmployeeLookup() {
             "Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.",
           );
         } else if (data.error && data.error.includes("CCCD không đúng")) {
-          setError(
-            `${authFieldConfig.label} không đúng. Vui lòng kiểm tra lại ${authFieldConfig.label.toLowerCase()}.`,
-          );
+          setError("Mật khẩu / CCCD không đúng. Vui lòng kiểm tra lại.");
         } else if (
           data.error &&
           data.error.includes("không tìm thấy nhân viên")
@@ -268,58 +313,6 @@ export function EmployeeLookup() {
       setSigningLoading(false);
     }
   };
-
-  // Kiểm tra trạng thái mật khẩu khi người dùng nhập mã nhân viên
-  useEffect(() => {
-    const checkPasswordStatus = async () => {
-      // Chỉ kiểm tra khi mã nhân viên đủ dài (ít nhất 5 ký tự)
-      if (employeeId.trim().length < 5) {
-        // Reset về mặc định khi mã nhân viên không hợp lệ
-        setAuthFieldConfig({
-          label: "Số CCCD",
-          placeholder: "Nhập số CCCD",
-          type: "text",
-        });
-        return;
-      }
-
-      setCheckingStatus(true);
-      try {
-        const response = await fetch("/api/employee/check-password-status", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            employee_id: employeeId.trim(),
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.authField) {
-          setAuthFieldConfig(data.authField);
-          // Clear CCCD field khi chuyển giữa các trạng thái khác nhau
-          if (
-            (data.authField.label === "Mật khẩu" &&
-              authFieldConfig.label === "Số CCCD") ||
-            (data.authField.label === "Số CCCD" &&
-              authFieldConfig.label === "Mật khẩu")
-          ) {
-            setCccd("");
-          }
-        }
-      } catch (error) {
-        console.error("Error checking password status:", error);
-      } finally {
-        setCheckingStatus(false);
-      }
-    };
-
-    // Debounce để tránh gọi API quá nhiều
-    const timeoutId = setTimeout(checkPasswordStatus, 500);
-    return () => clearTimeout(timeoutId);
-  }, [employeeId, authFieldConfig.label]);
 
   useLayoutEffect(() => {
     if (cursorPositionRef.current === null || !employeeIdInputRef.current) {
@@ -391,19 +384,14 @@ export function EmployeeLookup() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cccd">
-                  {authFieldConfig.label}
-                  {checkingStatus && (
-                    <Loader2 className="inline-block ml-2 h-3 w-3 animate-spin" />
-                  )}
-                </Label>
+                <Label htmlFor="cccd">Mật khẩu / CCCD</Label>
                 <div className="relative">
                   <Input
                     id="cccd"
                     type={showCccd ? "text" : "password"}
                     value={cccd}
                     onChange={(e) => setCccd(e.target.value)}
-                    placeholder={authFieldConfig.placeholder}
+                    placeholder="Nhập mật khẩu hoặc số CCCD"
                     className="pr-10"
                     required
                   />
@@ -411,11 +399,7 @@ export function EmployeeLookup() {
                     type="button"
                     onClick={() => setShowCccd(!showCccd)}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-                    aria-label={
-                      showCccd
-                        ? `Ẩn ${authFieldConfig.label}`
-                        : `Hiển thị ${authFieldConfig.label}`
-                    }
+                    aria-label={showCccd ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"}
                   >
                     {showCccd ? (
                       <EyeOff className="w-4 h-4" />
@@ -424,12 +408,41 @@ export function EmployeeLookup() {
                     )}
                   </button>
                 </div>
-                {authFieldConfig.label === "Mật khẩu" && (
-                  <p className="text-xs text-gray-500">
-                    Sử dụng mật khẩu bạn đã đổi thay cho số CCCD
-                  </p>
-                )}
+                <p className="text-xs text-gray-500">
+                  Nếu chưa đổi mật khẩu, nhập số CCCD (12 chữ số)
+                </p>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberPassword}
+                  onCheckedChange={(checked) =>
+                    setRememberPassword(checked === true)
+                  }
+                />
+                <label
+                  htmlFor="remember"
+                  className="text-sm font-medium leading-none cursor-pointer select-none"
+                >
+                  Ghi nhớ thông tin đăng nhập
+                </label>
+              </div>
+              {/* Tạm ẩn nút xóa - có thể bật lại sau */}
+              {false && hasSavedCredentials && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSavedCredentials}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Xóa thông tin đã lưu
+                </Button>
+              )}
             </div>
 
             {error && (

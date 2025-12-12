@@ -107,14 +107,24 @@ export default function DirectorDashboard() {
       if (statusResponse.ok) {
         const statusData = await statusResponse.json();
         setMonthStatus(statusData);
-        DashboardCache.setCacheData("director", selectedMonth, "signature-status", statusData);
+        DashboardCache.setCacheData(
+          "director",
+          selectedMonth,
+          "signature-status",
+          statusData,
+        );
       }
 
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
         const signatures = historyData.signatures || [];
         setSignatureHistory(signatures);
-        DashboardCache.setCacheData("director", selectedMonth, "signature-history", signatures);
+        DashboardCache.setCacheData(
+          "director",
+          selectedMonth,
+          "signature-history",
+          signatures,
+        );
       }
 
       if (statusResponse.status === 401 || historyResponse.status === 401) {

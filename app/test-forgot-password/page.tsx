@@ -182,7 +182,7 @@ export default function TestForgotPasswordPage() {
           setError("Thông tin không hợp lệ. Vui lòng kiểm tra lại.");
         } else {
           setError(
-            data.error || "Không thể đặt lại mật khẩu. Vui lòng thử lại."
+            data.error || "Không thể đặt lại mật khẩu. Vui lòng thử lại.",
           );
         }
       }
@@ -453,4 +453,3 @@ export default function TestForgotPasswordPage() {
     </div>
   );
 }
-

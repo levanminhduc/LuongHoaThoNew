@@ -189,7 +189,12 @@ export default function ManagerDashboard({
         const data = await response.json();
         const depts = data.departments || [];
         setDepartments(depts);
-        DashboardCache.setCacheData("manager", selectedMonth, "departments", depts);
+        DashboardCache.setCacheData(
+          "manager",
+          selectedMonth,
+          "departments",
+          depts,
+        );
       }
     } catch (error) {
       console.error("Error loading department stats:", error);

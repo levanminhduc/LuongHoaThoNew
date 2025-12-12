@@ -207,7 +207,12 @@ export default function SupervisorDashboard({
         const payrollData = await payrollResponse.json();
         const data = payrollData.data || [];
         setPayrollData(data);
-        DashboardCache.setCacheData(`supervisor_${user.department}`, selectedMonth, "payroll", data);
+        DashboardCache.setCacheData(
+          `supervisor_${user.department}`,
+          selectedMonth,
+          "payroll",
+          data,
+        );
       }
 
       const statsResponse = await fetch(`/api/payroll/my-department`, {
@@ -222,7 +227,12 @@ export default function SupervisorDashboard({
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setDepartmentStats(statsData.statistics);
-        DashboardCache.setCacheData(`supervisor_${user.department}`, selectedMonth, "stats", statsData.statistics);
+        DashboardCache.setCacheData(
+          `supervisor_${user.department}`,
+          selectedMonth,
+          "stats",
+          statsData.statistics,
+        );
       }
     } catch (error) {
       console.error("Error loading department data:", error);
@@ -284,7 +294,12 @@ export default function SupervisorDashboard({
 
       const validTrends = trendData.filter((t): t is TrendItem => t !== null);
       setMonthlyTrend(validTrends);
-      DashboardCache.setCacheData(`supervisor_${user.department}`, "trends", "trends", validTrends);
+      DashboardCache.setCacheData(
+        `supervisor_${user.department}`,
+        "trends",
+        "trends",
+        validTrends,
+      );
     } catch (error) {
       console.error("Error loading monthly trend:", error);
     }

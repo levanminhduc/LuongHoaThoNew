@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
           error: "Hệ thống đang bảo trì",
           message: "Vui lòng thử lại sau",
         },
-        { status: 503 }
+        { status: 503 },
       );
     }
 

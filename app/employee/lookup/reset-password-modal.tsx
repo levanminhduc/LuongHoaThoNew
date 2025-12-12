@@ -369,12 +369,12 @@ export function ResetPasswordModal({
                   )}
                 </button>
               </div>
-                {formData.confirmPassword &&
-                  formData.newPassword !== formData.confirmPassword && (
-                    <p className="text-xs text-red-600">
-                      Mật khẩu xác nhận không khớp
-                    </p>
-                  )}
+              {formData.confirmPassword &&
+                formData.newPassword !== formData.confirmPassword && (
+                  <p className="text-xs text-red-600">
+                    Mật khẩu xác nhận không khớp
+                  </p>
+                )}
             </div>
 
             {/* Error/Success Messages */}
