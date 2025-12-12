@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
-import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import * as XLSX from "xlsx";
+import XLSX from "xlsx-js-style";
 
 // All 39 payroll fields from database
 const PAYROLL_FIELDS = [
@@ -53,7 +52,7 @@ const PAYROLL_FIELDS = [
 // Field headers in Vietnamese
 const FIELD_HEADERS: Record<string, string> = {
   employee_id: "Mã Nhân Viên",
-  salary_month: "Tháng Lương",
+  salary_month: "Họ Và Tên",
   he_so_lam_viec: "Hệ Số Làm Việc",
   he_so_phu_cap_ket_qua: "Hệ Số Phụ Cấp Kết Quả",
   he_so_luong_co_ban: "Hệ Số Lương Cơ Bản",
@@ -74,6 +73,7 @@ const FIELD_HEADERS: Record<string, string> = {
   tong_cong_tien_luong_san_pham: "Tổng Cộng Tiền Lương Sản Phẩm",
   ho_tro_thoi_tiet_nong: "Hỗ Trợ Thời Tiết Nóng",
   bo_sung_luong: "Bổ Sung Lương",
+  pc_luong_cho_viec: "PC Lương Cho Việc",
   tien_luong_chu_nhat: "Tiền Lương Chủ Nhật",
   luong_cnkcp_vuot: "Lương CNKCP Vượt",
   tien_tang_ca_vuot: "Tiền Tăng Ca Vượt",
@@ -130,12 +130,14 @@ export async function GET(request: NextRequest) {
     const department = searchParams.get("department");
 
     // Build query with role-based filtering
+    // Use explicit FK constraint name to avoid ambiguity (2 FKs: payrolls_employee_id_fkey and fk_payrolls_signed_by_admin)
+    // IMPORTANT: Must use !inner for department filter to work (INNER JOIN vs LEFT JOIN)
     let query = supabase
       .from("payrolls")
       .select(
         `
         *,
-        employees!inner(
+        employees!payrolls_employee_id_fkey!inner(
           full_name,
           department
         )
@@ -209,6 +211,9 @@ export async function GET(request: NextRequest) {
     const queryResult = await query;
     let payrollData = queryResult.data;
     const error = queryResult.error;
+
+    console.log("Query result - records count:", payrollData?.length || 0);
+    console.log("Query params:", { month, department, role: auth.user.role });
 
     if (error) {
       console.error("Error fetching payroll data:", error);
@@ -427,7 +432,11 @@ export async function GET(request: NextRequest) {
       const row: unknown[] = [index + 1];
 
       PAYROLL_FIELDS.forEach((field) => {
-        row.push(record[field] || "");
+        if (field === "salary_month") {
+          row.push(record.employees?.full_name || "");
+        } else {
+          row.push(record[field] || "");
+        }
       });
 
       const employeeId = record.employee_id as string;
@@ -480,13 +489,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Format month for display
     const formatMonthDisplay = (monthParam: string | null): string => {
       if (!monthParam || !monthParam.match(/^\d{4}-\d{2}$/)) {
         return "Tháng ... năm .....";
       }
-      const [year, month] = monthParam.split("-");
-      return `Tháng ${month} năm ${year}`;
+      const [yearPart, monthPart] = monthParam.split("-");
+      return `Tháng ${monthPart} năm ${yearPart}`;
     };
 
     // Create title rows (5 rows total)
@@ -567,9 +575,174 @@ export async function GET(request: NextRequest) {
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     console.log("Worksheet created successfully");
 
-    // Set column widths
-    const columnWidths = headers.map(() => ({ wch: 15 }));
+    const borderStyle = {
+      top: { style: "thin", color: { rgb: "000000" } },
+      bottom: { style: "thin", color: { rgb: "000000" } },
+      left: { style: "thin", color: { rgb: "000000" } },
+      right: { style: "thin", color: { rgb: "000000" } },
+    };
+
+    const headerStyle = {
+      fill: {
+        patternType: "solid",
+        fgColor: { rgb: "4472C4" },
+      },
+      font: {
+        bold: true,
+        color: { rgb: "CCECFF" },
+        sz: 10,
+        name: "Arial",
+      },
+      alignment: {
+        horizontal: "center",
+        vertical: "center",
+        wrapText: true,
+      },
+      border: borderStyle,
+    };
+
+    const dataCellStyle = {
+      font: {
+        sz: 10,
+        name: "Arial",
+      },
+      alignment: {
+        horizontal: "left",
+        vertical: "center",
+        wrapText: false,
+      },
+      border: borderStyle,
+    };
+
+    const numberCellStyle = {
+      font: {
+        sz: 10,
+        name: "Arial",
+      },
+      alignment: {
+        horizontal: "right",
+        vertical: "center",
+      },
+      border: borderStyle,
+      numFmt: "#,##0",
+    };
+
+    const columnWidths = headers.map(() => ({ wch: 12 }));
     worksheet["!cols"] = columnWidths;
+
+    const headerRowIndex = 5;
+    const rowHeights = [];
+    for (let i = 0; i < headerRowIndex; i++) {
+      rowHeights.push({ hpt: 20 });
+    }
+    rowHeights.push({ hpt: 65 });
+    for (let i = 0; i < dataRows.length; i++) {
+      rowHeights.push({ hpt: 25 });
+    }
+    for (let i = 0; i < 8; i++) {
+      rowHeights.push({ hpt: 20 });
+    }
+    worksheet["!rows"] = rowHeights;
+
+    const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "");
+    const numericFields = [
+      "he_so_lam_viec",
+      "he_so_phu_cap_ket_qua",
+      "he_so_luong_co_ban",
+      "luong_toi_thieu_cty",
+      "ngay_cong_trong_gio",
+      "gio_cong_tang_ca",
+      "gio_an_ca",
+      "tong_gio_lam_viec",
+      "tong_he_so_quy_doi",
+      "ngay_cong_chu_nhat",
+      "tong_luong_san_pham_cong_doan",
+      "don_gia_tien_luong_tren_gio",
+      "tien_luong_san_pham_trong_gio",
+      "tien_luong_tang_ca",
+      "tien_luong_30p_an_ca",
+      "tien_khen_thuong_chuyen_can",
+      "luong_hoc_viec_pc_luong",
+      "tong_cong_tien_luong_san_pham",
+      "ho_tro_thoi_tiet_nong",
+      "bo_sung_luong",
+      "pc_luong_cho_viec",
+      "tien_luong_chu_nhat",
+      "luong_cnkcp_vuot",
+      "tien_tang_ca_vuot",
+      "bhxh_21_5_percent",
+      "pc_cdcs_pccc_atvsv",
+      "luong_phu_nu_hanh_kinh",
+      "tien_con_bu_thai_7_thang",
+      "ho_tro_gui_con_nha_tre",
+      "ngay_cong_phep_le",
+      "tien_phep_le",
+      "tong_cong_tien_luong",
+      "tien_boc_vac",
+      "ho_tro_xang_xe",
+      "thue_tncn_nam_2024",
+      "tam_ung",
+      "thue_tncn",
+      "bhxh_bhtn_bhyt_total",
+      "truy_thu_the_bhyt",
+      "tien_luong_thuc_nhan_cuoi_ky",
+    ];
+
+    const numericFieldHeaders = numericFields.map(
+      (field) => FIELD_HEADERS[field] || field,
+    );
+
+    const titleStyle = {
+      font: {
+        sz: 14,
+        name: "Arial",
+      },
+      alignment: {
+        horizontal: "left",
+        vertical: "center",
+      },
+    };
+
+    for (let row = range.s.r; row <= range.e.r; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+
+        if (row < headerRowIndex) {
+          if (worksheet[cellRef] && worksheet[cellRef].v !== "" && worksheet[cellRef].v !== null && worksheet[cellRef].v !== undefined) {
+            worksheet[cellRef].s = titleStyle;
+          } else {
+            delete worksheet[cellRef];
+          }
+        } else if (row === headerRowIndex) {
+          if (!worksheet[cellRef]) {
+            worksheet[cellRef] = { t: "s", v: "" };
+          }
+          worksheet[cellRef].s = headerStyle;
+        } else if (row > headerRowIndex && row < headerRowIndex + 1 + dataRows.length) {
+          if (!worksheet[cellRef]) {
+            worksheet[cellRef] = { t: "s", v: "" };
+          }
+          const headerText = headers[col];
+          const isNumericColumn = numericFieldHeaders.includes(headerText);
+
+          if (isNumericColumn && typeof worksheet[cellRef].v === "number") {
+            worksheet[cellRef].s = numberCellStyle;
+          } else {
+            worksheet[cellRef].s = dataCellStyle;
+          }
+        } else {
+          if (worksheet[cellRef] && !worksheet[cellRef].s) {
+            worksheet[cellRef].s = {
+              border: borderStyle,
+              alignment: {
+                horizontal: "center",
+                vertical: "center",
+              },
+            };
+          }
+        }
+      }
+    }
 
     // Apply styling to signature section
     const signatureHeaderRowIndex = signatureStartRow + 1;
@@ -618,8 +791,8 @@ export async function GET(request: NextRequest) {
     titleCells.forEach((cellRef) => {
       if (!worksheet[cellRef]) worksheet[cellRef] = { t: "s", v: "" };
       worksheet[cellRef].s = {
-        font: { bold: true, sz: 12 },
-        alignment: { horizontal: "center", vertical: "center" },
+        font: { bold: true, sz: 14 },
+        alignment: { horizontal: "left", vertical: "center" },
       };
     });
 

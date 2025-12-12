@@ -1,330 +1,441 @@
-# AI Agent Configuration
+# CLAUDE.md
 
-<skills_system priority="1">
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Available Skills
+---
 
-<!-- SKILLS_TABLE_START -->
-<usage>
-When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively. Skills provide specialized capabilities and domain knowledge.
+# Hệ Thống Quản Lý Lương MAY HÒA THỌ ĐIỆN BÀN
 
-How to use skills:
+## 🔧 Môi Trường Phát Triển
 
-- Invoke: Bash("skillaug read <skill-name>")
-- The skill content will load with detailed instructions on how to complete the task
-- Base directory provided in output for resolving bundled resources (references/, scripts/, assets/)
+### Node Version
+- **Node.js**: v18+
+- **Package Manager**: npm (primary), pnpm/bun (optional)
 
-Usage notes:
+### Commands Chính
 
-- Only use skills listed in <available_skills> below
-- Do not invoke a skill that is already loaded in your context
-- Each skill invocation is stateless
-  </usage>
+```bash
+# Development
+npm run dev                    # Start dev server on localhost:3000
 
-<available_skills>
+# Build & Production
+npm run build                  # Build Next.js production
+npm start                      # Start production server
 
-<skill>
-<name>algorithmic-art</name>
-<description>Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.</description>
-<location>project</location>
-</skill>
+# Code Quality (QUAN TRỌNG - chạy sau mỗi lần code)
+npm run format                 # Format code với Prettier
+npm run lint                   # Check ESLint errors
+npm run typecheck              # Check TypeScript errors
 
-<skill>
-<name>artifacts-builder</name>
-<description>Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.</description>
-<location>project</location>
-</skill>
+# Workflow đầy đủ sau khi viết code:
+npm run format && npm run lint && npm run typecheck
 
-<skill>
-<name>better-auth</name>
-<description>Guide for implementing Better Auth - a framework-agnostic authentication and authorization framework for TypeScript. Use when adding authentication features like email/password, OAuth, 2FA, passkeys, or advanced auth functionality to applications.</description>
-<location>project</location>
-</skill>
+# Database Migrations
+node scripts/run-bulk-signature-migrations.js
+```
 
-<skill>
-<name>brand-guidelines</name>
-<description>Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.</description>
-<location>project</location>
-</skill>
+---
 
-<skill>
-<name>canvas-design</name>
-<description>Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright violations.</description>
-<location>project</location>
-</skill>
+## 📊 Kiến Trúc Hệ Thống
 
-<skill>
-<name>chrome-devtools</name>
-<description>Browser automation, debugging, and performance analysis using Puppeteer CLI scripts. Use for automating browsers, taking screenshots, analyzing performance, monitoring network traffic, web scraping, form automation, and JavaScript debugging.</description>
-<location>project</location>
-</skill>
+### Tech Stack
+- **Frontend**: Next.js 15 App Router, React 19, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Backend**: Next.js API Routes
+- **Database**: Supabase PostgreSQL với Row Level Security (RLS)
+- **Authentication**: JWT-based với bcrypt hashing
+- **File Processing**: xlsx, xlsx-js-style cho Excel import/export
 
-<skill>
-<name>cloudflare</name>
-<description>Guide for building applications on Cloudflare's edge platform. Use when implementing serverless functions (Workers), edge databases (D1), storage (R2, KV), real-time apps (Durable Objects), AI features (Workers AI, AI Gateway), static sites (Pages), or any edge computing solutions.</description>
-<location>project</location>
-</skill>
+### Cấu Trúc Dự Án
+```
+app/
+├── admin/              # Admin dashboard & management
+├── api/                # API routes
+│   ├── admin/          # Admin-only APIs
+│   ├── auth/           # Authentication APIs
+│   ├── payroll/        # Payroll data APIs
+│   └── management-signature/  # Management signature APIs
+├── employee/           # Employee self-service
+├── director/           # Director dashboard
+├── accountant/         # Accountant dashboard
+├── reporter/           # Reporter dashboard
+├── manager/            # Manager dashboard
+└── supervisor/         # Supervisor dashboard
 
-<skill>
-<name>cloudflare-browser-rendering</name>
-<description>Guide for implementing Cloudflare Browser Rendering - a headless browser automation API for screenshots, PDFs, web scraping, and testing. Use when automating browsers, taking screenshots, generating PDFs, scraping dynamic content, extracting structured data, or testing web applications. Supports REST API, Workers Bindings (Puppeteer/Playwright), MCP servers, and AI-powered automation. (project)</description>
-<location>project</location>
-</skill>
+components/
+├── ui/                 # shadcn/ui base components
+├── admin/              # Admin-specific components
+├── signature/          # Signature components
+└── payroll-import/     # Import components
 
-<skill>
-<name>cloudflare-r2</name>
-<description>Guide for implementing Cloudflare R2 - S3-compatible object storage with zero egress fees. Use when implementing file storage, uploads/downloads, data migration to/from R2, configuring buckets, integrating with Workers, or working with R2 APIs and SDKs.</description>
-<location>project</location>
-</skill>
+lib/
+├── auth.ts                    # Authentication logic
+├── auth-middleware.ts         # Role-based auth middleware
+├── payroll-validation.ts      # Validation rules
+├── advanced-excel-parser.ts   # Excel parsing engine
+├── column-alias-config.ts     # Column mapping system
+├── api-error-handler.ts       # Error handling utilities
+└── hooks/                     # Custom React hooks
 
-<skill>
-<name>cloudflare-workers</name>
-<description>Comprehensive guide for building serverless applications with Cloudflare Workers. Use when developing Workers, configuring bindings, implementing runtime APIs, testing Workers, using Wrangler CLI, deploying to production, or building edge functions with JavaScript/TypeScript/Python/Rust.</description>
-<location>project</location>
-</skill>
+scripts/
+└── supabase-setup/     # Database migration scripts
+```
+---
 
-<skill>
-<name>collision-zone-thinking</name>
-<description>Force unrelated concepts together to discover emergent properties - "What if we treated X like Y?"</description>
-<location>project</location>
-</skill>
+## 🔑 Hệ Thống Authentication & Authorization
 
-<skill>
-<name>defense-in-depth</name>
-<description>Validate at every layer data passes through to make bugs impossible</description>
-<location>project</location>
-</skill>
+### Role-Based Access Control (RBAC)
+Hệ thống có 8 roles với permissions khác nhau:
 
-<skill>
-<name>docker</name>
-<description>Guide for using Docker - a containerization platform for building, running, and deploying applications in isolated containers. Use when containerizing applications, creating Dockerfiles, working with Docker Compose, managing images/containers, configuring networking and storage, optimizing builds, deploying to production, or implementing CI/CD pipelines with Docker.</description>
-<location>project</location>
-</skill>
+1. **admin**: Full access tất cả chức năng
+2. **giam_doc** (Giám Đốc): Xem và ký duyệt lương tất cả departments được phân quyền
+3. **ke_toan** (Kế Toán): Xem và ký duyệt lương, quản lý tài chính
+4. **nguoi_lap_bieu** (Người Lập Biểu): Tạo và ký duyệt bảng lương
+5. **truong_phong** (Trưởng Phòng): Xem lương departments được phân quyền
+6. **to_truong** (Tổ Trưởng): Xem lương department của mình
+7. **van_phong** (Văn Phòng): Quản lý thông tin nhân viên
+8. **nhan_vien** (Nhân Viên): Chỉ xem lương của mình
 
-<skill>
-<name>docs-seeker</name>
-<description>"Searching internet for technical documentation using llms.txt standard, GitHub repositories via Repomix, and parallel exploration. Use when user needs: (1) Latest documentation for libraries/frameworks, (2) Documentation in llms.txt format, (3) GitHub repository analysis, (4) Documentation without direct llms.txt support, (5) Multiple documentation sources in parallel"</description>
-<location>project</location>
-</skill>
+### Authentication Flow
+- **JWT-based authentication** với `lib/auth.ts`
+- **Middleware protection** tại `middleware.ts` cho protected routes
+- **Role verification** thông qua `lib/auth-middleware.ts`
+- **Password hashing** với bcrypt (12 rounds)
+- **CCCD verification** cho employee login
 
-<skill>
-<name>docx</name>
-<description>"Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. When Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"</description>
-<location>project</location>
-</skill>
+### Special Authentication Rules
+- Username "admin" bị block hoàn toàn (security measure)
+- Admin users được lưu trong bảng `admin_users` riêng
+- Employees login bằng `employee_id` + password hoặc `employee_id` + CCCD
+- JWT payload bao gồm: `username`, `employee_id`, `role`, `department`, `allowed_departments`, `permissions`
 
-<skill>
-<name>ffmpeg</name>
-<description>Guide for using FFmpeg - a comprehensive multimedia framework for video/audio encoding, conversion, streaming, and filtering. Use when processing media files, converting formats, extracting audio, creating streams, applying filters, or optimizing video/audio quality.</description>
-<location>project</location>
-</skill>
+---
 
-<skill>
-<name>gcloud</name>
-<description>Guide for implementing Google Cloud SDK (gcloud CLI) - a command-line tool for managing Google Cloud resources. Use when installing/configuring gcloud, authenticating with Google Cloud, managing projects/configurations, deploying applications, working with Compute Engine/GKE/App Engine/Cloud Storage, scripting gcloud operations, implementing CI/CD pipelines, or troubleshooting Google Cloud deployments.</description>
-<location>project</location>
-</skill>
+## 🗄️ Database Schema (Supabase PostgreSQL)
 
-<skill>
-<name>gemini-audio</name>
-<description>Guide for implementing Google Gemini API audio capabilities - analyze audio with transcription, summarization, and understanding (up to 9.5 hours), plus generate speech with controllable TTS. Use when processing audio files, creating transcripts, analyzing speech/music/sounds, or generating natural speech from text.</description>
-<location>project</location>
-</skill>
+### Core Tables
 
-<skill>
-<name>gemini-document-processing</name>
-<description>Guide for implementing Google Gemini API document processing - analyze PDFs with native vision to extract text, images, diagrams, charts, and tables. Use when processing documents, extracting structured data, summarizing PDFs, answering questions about document content, or converting documents to structured formats. (project)</description>
-<location>project</location>
-</skill>
+#### 1. employees
+Thông tin nhân viên
+- **PK**: `employee_id` (VARCHAR, business key)
+- **Important fields**: `full_name`, `cccd_hash`, `department`, `chuc_vu`, `password_hash`
+- **RLS Policies**: Employees chỉ xem được data của mình, managers xem theo department
 
-<skill>
-<name>gemini-image-gen</name>
-<description>Guide for implementing Google Gemini API image generation - create high-quality images from text prompts using gemini-2.5-flash-image model. Use when generating images, creating visual content, or implementing text-to-image features. Supports text-to-image, image editing, multi-image composition, and iterative refinement.</description>
-<location>project</location>
-</skill>
+#### 2. payrolls
+Dữ liệu lương với 39 cột từ Excel + metadata
+- **PK**: `id` (SERIAL)
+- **Unique constraint**: (`employee_id`, `salary_month`) - 1 record/employee/month
+- **Signature fields**: `is_signed`, `signed_at`, `signed_by_name`, `signature_ip`, `signature_device`
+- **39 salary fields**: Hệ số lương, ngày công, phụ cấp, thuế, bảo hiểm, lương thực nhận
+- **Key field**: `tien_luong_thuc_nhan_cuoi_ky` - lương thực nhận final
 
-<skill>
-<name>gemini-video-understanding</name>
-<description>Analyze videos using Google's Gemini API - describe content, answer questions, transcribe audio with visual descriptions, reference timestamps, clip videos, and process YouTube URLs. Supports 9 video formats, multiple models (Gemini 2.5/2.0), and context windows up to 2M tokens (6 hours of video).</description>
-<location>project</location>
-</skill>
+#### 3. signature_logs
+Log chi tiết ký tên
+- **Unique constraint**: (`employee_id`, `salary_month`) - chỉ ký 1 lần/tháng
+- **Tracking**: `signed_at`, `signature_ip`, `signature_device`, `signed_by_admin_id`
 
-<skill>
-<name>gemini-vision</name>
-<description>Guide for implementing Google Gemini API image understanding - analyze images with captioning, classification, visual QA, object detection, segmentation, and multi-image comparison. Use when analyzing images, answering visual questions, detecting objects, or processing documents with vision.</description>
-<location>project</location>
-</skill>
+#### 4. management_signatures
+Chữ ký quản lý (3 loại: giam_doc, ke_toan, nguoi_lap_bieu)
+- **Unique constraint**: (`salary_month`, `signature_type`, `is_active`) - mỗi role ký 1 lần/tháng
+- **Vietnam timezone handling**: All timestamps use Vietnam time (+7 hours)
 
-<skill>
-<name>imagemagick</name>
-<description>Guide for using ImageMagick command-line tools to perform advanced image processing tasks including format conversion, resizing, cropping, effects, transformations, and batch operations. Use when manipulating images programmatically via shell commands.</description>
-<location>project</location>
-</skill>
+#### 5. department_permissions
+Phân quyền department cho managers
+- **Many-to-many**: employee_id <-> departments
+- **Tracking**: `granted_by`, `granted_at`
 
-<skill>
-<name>internal-comms</name>
-<description>A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.).</description>
-<location>project</location>
-</skill>
+#### 6. admin_bulk_signature_logs
+Log bulk signature operations
+- **Tracking**: batch_id, admin_id, statistics, errors, duration
 
-<skill>
-<name>inversion-exercise</name>
-<description>Flip core assumptions to reveal hidden constraints and alternative approaches - "what if the opposite were true?"</description>
-<location>project</location>
-</skill>
+#### 7. column_aliases & import_mapping_configs
+Hệ thống column mapping cho Excel import (xem phần Excel System)
 
-<skill>
-<name>mcp-builder</name>
-<description>Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).</description>
-<location>project</location>
-</skill>
+### Database Functions
+- `auto_sign_salary()`: Ký lương tự động với timestamp tracking
+- `bulk_sign_salaries()`: Bulk signature với error handling
+- `get_employee_salary_detail()`: Query chi tiết lương
+- `update_employee_password()`: Cập nhật password atomic
 
-<skill>
-<name>meta-pattern-recognition</name>
-<description>Spot patterns appearing in 3+ domains to find universal principles</description>
-<location>project</location>
-</skill>
+---
 
-<skill>
-<name>mongodb</name>
-<description>Guide for implementing MongoDB - a document database platform with CRUD operations, aggregation pipelines, indexing, replication, sharding, search capabilities, and comprehensive security. Use when working with MongoDB databases, designing schemas, writing queries, optimizing performance, configuring deployments (Atlas/self-managed/Kubernetes), implementing security, or integrating with applications through 15+ official drivers. (project)</description>
-<location>project</location>
-</skill>
+## 📥 Excel Import System (Core Business Logic)
 
-<skill>
-<name>nextjs</name>
-<description>Guide for implementing Next.js - a React framework for production with server-side rendering, static generation, and modern web features. Use when building Next.js applications, implementing App Router, working with server components, data fetching, routing, or optimizing performance.</description>
-<location>project</location>
-</skill>
+### Architecture Overview
+Hệ thống import Excel phức tạp với **flexible column mapping** và **alias management**:
 
-<skill>
-<name>pdf</name>
-<description>Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, and handling forms. When Claude needs to fill in a PDF form or programmatically process, generate, or analyze PDF documents at scale.</description>
-<location>project</location>
-</skill>
+```
+Excel File → Column Detection → Auto-Mapping with Aliases → Validation → Database Import
+           ↓
+    Saved Configurations (import_mapping_configs)
+           ↓
+    Column Aliases Database (column_aliases)
+```
 
-<skill>
-<name>postgresql-psql</name>
-<description>Comprehensive guide for PostgreSQL psql - the interactive terminal client for PostgreSQL. Use when connecting to PostgreSQL databases, executing queries, managing databases/tables, configuring connection options, formatting output, writing scripts, managing transactions, and using advanced psql features for database administration and development.</description>
-<location>project</location>
-</skill>
+### Key Files
+- `lib/advanced-excel-parser.ts`: Core parsing engine
+- `lib/column-alias-config.ts`: Alias management & mapping types
+- `lib/payroll-validation.ts`: 39-field validation rules
+- `components/advanced-salary-import.tsx`: Import UI component
 
-<skill>
-<name>pptx</name>
-<description>"Presentation creation, editing, and analysis. When Claude needs to work with presentations (.pptx files) for: (1) Creating new presentations, (2) Modifying or editing content, (3) Working with layouts, (4) Adding comments or speaker notes, or any other presentation tasks"</description>
-<location>project</location>
-</skill>
+### Column Mapping System
+**3 loại mapping**:
+1. **Exact match**: Tên cột Excel trùng 100% với database field
+2. **Alias match**: Dùng `column_aliases` table để map tên khác nhau
+3. **Manual mapping**: User chọn mapping thủ công
 
-<skill>
-<name>remix-icon</name>
-<description>Guide for implementing RemixIcon - an open-source neutral-style icon library with 3,100+ icons in outlined and filled styles. Use when adding icons to applications, building UI components, or designing interfaces. Supports webfonts, SVG, React, Vue, and direct integration.</description>
-<location>project</location>
-</skill>
+**Confidence scoring**:
+- HIGH (≥80): Auto-apply
+- MEDIUM (50-79): Suggest với confirmation
+- LOW (<50): Require manual review
 
-<skill>
-<name>repomix</name>
-<description>Guide for using Repomix - a powerful tool that packs entire repositories into single, AI-friendly files. Use when packaging codebases for AI analysis, generating context for LLMs, creating codebase snapshots, analyzing third-party libraries, or preparing repositories for security audits.</description>
-<location>project</location>
-</skill>
+### Dual File Import
+Hệ thống hỗ trợ import **2 files Excel cùng lúc** (File 1: thông tin chính, File 2: thông tin bổ sung):
+- API endpoint: `/api/admin/import-dual-files`
+- Merge logic: Combine data từ 2 files theo `employee_id`
+- Duplicate strategy: skip, overwrite, merge
 
-<skill>
-<name>root-cause-tracing</name>
-<description>Systematically trace bugs backward through call stack to find original trigger</description>
-<location>project</location>
-</skill>
+### Special Import Features
+1. **Auto-fix data**: Tự động sửa lỗi format (số âm, format date, trim spaces)
+2. **Duplicate detection**: Phát hiện và handle duplicates theo strategy
+3. **Cross-field validation**: Validate tổng lương = lương cơ bản + phụ cấp + thưởng - khấu trừ
+4. **Batch processing**: Import theo batch với error tracking
+5. **Rollback support**: Transaction-based import với rollback on error
 
-<skill>
-<name>scale-game</name>
-<description>Test at extremes (1000x bigger/smaller, instant/year-long) to expose fundamental truths hidden at normal scales</description>
-<location>project</location>
-</skill>
+### Column Alias Management
+- **Storage**: `column_aliases` table với confidence_score
+- **CRUD**: Full CRUD operations qua UI và API
+- **Sync**: Real-time sync across browser tabs (BroadcastChannel + localStorage)
+- **Import/Export**: JSON format cho backup/restore configs
 
-<skill>
-<name>shadcn-ui</name>
-<description>Guide for implementing shadcn/ui - a collection of beautifully-designed, accessible UI components built with Radix UI and Tailwind CSS. Use when building user interfaces, adding UI components, or implementing design systems in React-based applications.</description>
-<location>project</location>
-</skill>
+### Import Validation Rules
+**Required fields**:
+- `employee_id`, `salary_month`
 
-<skill>
-<name>shopify</name>
-<description>Guide for implementing Shopify apps, extensions, themes, and integrations using GraphQL/REST APIs, Shopify CLI, Polaris UI, and various extension types (Checkout, Admin, POS). Use when building Shopify apps, implementing checkout extensions, customizing admin interfaces, creating themes with Liquid, or integrating with Shopify's APIs.</description>
-<location>project</location>
-</skill>
+**Numeric validation**:
+- Salary fields: >= 0
+- Work hours: 0-744 hours/month
+- Insurance: 0-100% of salary
 
-<skill>
-<name>simplification-cascades</name>
-<description>Find one insight that eliminates multiple components - "if this is true, we don't need X, Y, or Z"</description>
-<location>project</location>
-</skill>
+**Cross-field validation**:
+- `tong_cong_tien_luong` ≈ sum of salary components (±10% tolerance)
+- `tien_luong_thuc_nhan_cuoi_ky` = gross - deductions (±10% tolerance)
 
-<skill>
-<name>skill-creator</name>
-<description>Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.</description>
-<location>project</location>
-</skill>
+---
 
-<skill>
-<name>slack-gif-creator</name>
-<description>Toolkit for creating animated GIFs optimized for Slack, with validators for size constraints and composable animation primitives. This skill applies when users request animated GIFs or emoji animations for Slack from descriptions like "make me a GIF for Slack of X doing Y".</description>
-<location>project</location>
-</skill>
+## ✍️ Signature System (Core Business Logic)
 
-<skill>
-<name>systematic-debugging</name>
-<description>Four-phase debugging framework that ensures root cause investigation before attempting fixes. Never jump to solutions.</description>
-<location>project</location>
-</skill>
+### Employee Signature Flow
+1. Employee login → View payroll → Click "Ký Nhận"
+2. Call `auto_sign_salary()` function
+3. Update `payrolls.is_signed = true`, `signed_at = Vietnam time`
+4. Insert to `signature_logs` với tracking info
+5. Return success với `signed_by_name` = employee name
 
-<skill>
-<name>tailwindcss</name>
-<description>Guide for implementing Tailwind CSS - a utility-first CSS framework for rapid UI development. Use when styling applications with responsive design, dark mode, custom themes, or building design systems with Tailwind's utility classes.</description>
-<location>project</location>
-</skill>
+### Management Signature Flow (3-tier approval)
+**3 loại chữ ký quản lý** cần thiết cho mỗi tháng:
+1. **giam_doc** (Giám Đốc)
+2. **ke_toan** (Kế Toán)
+3. **nguoi_lap_bieu** (Người Lập Biểu)
 
-<skill>
-<name>template-skill</name>
-<description>Replace with description of the skill and when Claude should use it.</description>
-<location>project</location>
-</skill>
+**Workflow**:
+- Each role có thể ký **1 lần duy nhất** cho mỗi tháng
+- Lưu vào `management_signatures` table
+- Unique constraint: (`salary_month`, `signature_type`, `is_active`)
+- API: `/api/management-signature` (POST)
 
-<skill>
-<name>theme-factory</name>
-<description>Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly.</description>
-<location>project</location>
-</skill>
 
-<skill>
-<name>turborepo</name>
-<description>Guide for implementing Turborepo - a high-performance build system for JavaScript and TypeScript monorepos. Use when setting up monorepos, optimizing build performance, implementing task pipelines, configuring caching strategies, or orchestrating tasks across multiple packages.</description>
-<location>project</location>
-</skill>
+### Bulk Signature Operations
+- **API**: `/api/admin/bulk-sign-salary` (POST)
+- **Tracking**: Lưu vào `admin_bulk_signature_logs` với batch_id unique
+- **Error handling**: Collect errors nhưng không rollback (best-effort approach)
+- **Vietnam timezone**: Tất cả timestamps sử dụng Vietnam time (+7 hours)
 
-<skill>
-<name>verification-before-completion</name>
-<description>Run verification commands and confirm output before claiming success</description>
-<location>project</location>
-</skill>
+---
 
-<skill>
-<name>webapp-testing</name>
-<description>Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.</description>
-<location>project</location>
-</skill>
+## 🌍 Vietnam Timezone Handling
 
-<skill>
-<name>when-stuck</name>
-<description>Dispatch to the right problem-solving technique based on how you're stuck</description>
-<location>project</location>
-</skill>
+### Critical Implementation Details
+**QUAN TRỌNG**: Hệ thống sử dụng Vietnam timezone (+7 hours) cho TẤT CẢ timestamps
 
-<skill>
-<name>xlsx</name>
-<description>"Comprehensive spreadsheet creation, editing, and analysis with support for formulas, formatting, data analysis, and visualization. When Claude needs to work with spreadsheets (.xlsx, .xlsm, .csv, .tsv, etc) for: (1) Creating new spreadsheets with formulas and formatting, (2) Reading or analyzing data, (3) Modify existing spreadsheets while preserving formulas, (4) Data analysis and visualization in spreadsheets, or (5) Recalculating formulas"</description>
-<location>project</location>
-</skill>
+### Database Functions
+```sql
+-- Tất cả functions phải sử dụng:
+v_current_time := CURRENT_TIMESTAMP + INTERVAL '7 hours';
+```
 
-</available_skills>
+### Key Points
+- **Signature timestamps**: `signed_at` sử dụng Vietnam time
+- **Import timestamps**: `created_at`, `updated_at` sử dụng Vietnam time
+- **Management signatures**: `signed_at` sử dụng Vietnam time
+- **Utility function**: `getVietnamTimestamp()` trong `lib/utils/vietnam-timezone.ts`
 
-<!-- SKILLS_TABLE_END -->
+---
 
-</skills_system>
+## 🔒 Security Features
+
+### Authentication Security
+- **CCCD hashing**: bcrypt với 12 rounds
+- **Password requirements**: Minimum 6 characters, must contain letters and numbers
+- **Rate limiting**: Implemented for password reset và login attempts
+- **Account lockout**: After multiple failed password recovery attempts
+- **Token expiration**: JWT expires after 24 hours
+
+### Database Security
+- **Row Level Security (RLS)**: Enabled cho tất cả tables
+- **Service role**: Chỉ dùng trong API routes, không expose client-side
+- **Foreign key constraints**: CASCADE delete cho data integrity
+- **Unique constraints**: Prevent duplicate signatures và payroll records
+
+### API Security
+- **Token verification**: Tất cả protected routes verify JWT
+- **Role-based access**: `lib/auth-middleware.ts` enforces role permissions
+- **IP tracking**: Track IP cho signatures và password changes
+- **Device fingerprinting**: Track device info cho audit trail
+
+---
+
+## 🚨 Special Business Logic & Edge Cases
+
+### 1. Username "admin" Block
+**CRITICAL**: Username "admin" bị block hoàn toàn trong `lib/auth.ts`:
+```typescript
+if (username.toLowerCase() === "admin") {
+  return { success: false, error: "Tài khoản không tồn tại" };
+}
+```
+- Admin users phải login qua `admin_users` table
+- Không bao giờ dùng username "admin" cho bất kỳ account nào
+
+### 2. Signature Unique Constraint
+- Mỗi employee chỉ ký **1 lần duy nhất** cho mỗi tháng
+- Database constraint: `UNIQUE(employee_id, salary_month)` trong `signature_logs`
+- Management signatures: `UNIQUE(salary_month, signature_type, is_active)`
+
+### 3. Department Permissions Logic
+**Quan trọng**: Department permissions quyết định data access:
+- `giam_doc`, `ke_toan`, `nguoi_lap_bieu`, `truong_phong`: Access theo `allowed_departments[]`
+- `to_truong`: Chỉ access department của mình (`department` field)
+- `nhan_vien`: Chỉ access data của mình (`employee_id`)
+- `admin`: Access tất cả (no filter)
+
+### 4. Excel Column Mapping Priority
+**Mapping resolution order**:
+1. **Saved configuration** (nếu có) → highest priority
+2. **Exact match** → database field name = Excel column name
+3. **Alias match** → từ `column_aliases` table
+4. **Fuzzy match** → similarity algorithm
+5. **Manual mapping** → user selection
+
+### 5. Payroll Import Duplicate Strategy
+3 strategies khi gặp duplicate `(employee_id, salary_month)`:
+- **skip**: Bỏ qua record mới, giữ record cũ
+- **overwrite**: Xóa record cũ, thêm record mới
+- **merge**: Merge non-empty fields từ record mới vào record cũ
+
+### 6. Cross-Field Validation Tolerance
+**Important**: Validation có tolerance ±10% cho tính toán lương:
+```typescript
+// lib/payroll-validation.ts
+Math.abs(actual - expected) > expected * 0.1  // 10% tolerance
+```
+Lý do: Làm tròn và công thức tính khác nhau có thể gây sai lệch nhỏ
+
+### 7. Vietnam Time Implementation
+**CRITICAL**: Supabase database ở UTC timezone, cần convert:
+```typescript
+// lib/utils/vietnam-timezone.ts
+export function getVietnamTimestamp(): string {
+  const now = new Date();
+  const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  return vietnamTime.toISOString();
+}
+```
+- Tất cả API responses include Vietnam time
+- Database functions add `+ INTERVAL '7 hours'` cho timestamps
+
+---
+
+## 🛠️ Development Workflow
+
+### Path Aliases
+- **@/**: Root directory alias (configured trong `tsconfig.json`)
+- Examples: `@/lib/auth`, `@/components/ui/button`
+
+### Type Safety
+- **TypeScript strict mode enabled**
+- Run `npm run typecheck` after code changes
+- Import types: `import type { ... }` cho type-only imports
+
+### Common Issues & Solutions
+
+#### Issue: TypeScript errors về Supabase types
+**Solution**: Check `utils/supabase/server.ts` và `utils/supabase/client.ts` cho correct client initialization
+
+#### Issue: JWT token expired
+**Solution**: Token expires sau 24h, user cần login lại
+
+#### Issue: Import fails với "Column not found"
+**Solution**:
+1. Check column aliases trong database
+2. Verify mapping configuration
+3. Review `lib/advanced-excel-parser.ts` detection logic
+
+#### Issue: Timezone mismatch trong signatures
+**Solution**: Đảm bảo sử dụng `getVietnamTimestamp()` function thay vì `new Date()`
+
+---
+
+## 📝 Testing
+
+### Test Structure
+- **Test files**: `__tests__/` folders hoặc `*.test.ts` files
+- **Test framework**: Jest + Testing Library
+- **Run tests**: `npm test` (if configured)
+
+### Key Test Areas
+1. **Authentication**: Login, password reset, CCCD verification
+2. **Role permissions**: Verify access control for each role
+3. **Excel import**: Column mapping, validation, error handling
+4. **Signature flow**: Employee signatures, management signatures
+5. **Timezone handling**: Verify Vietnam time conversion
+
+---
+
+## 🚀 Deployment
+
+### Environment Variables
+Required in `.env.local` (see `.env.example`):
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+JWT_SECRET=your_jwt_secret_key_change_this_in_production
+NODE_ENV=production
+```
+
+### Build Configuration
+- **next.config.mjs**:
+  - `output: 'standalone'` for Docker deployment
+  - `eslint.ignoreDuringBuilds: true`
+  - `typescript.ignoreBuildErrors: true`
+- **Docker support**: `Dockerfile` và `compose.yml` available
+
+### Database Migrations
+Run scripts trong `scripts/supabase-setup/` theo thứ tự số:
+```bash
+01-create-employees-table.sql
+02-create-payrolls-table.sql
+03-create-signature-logs-table.sql
+# ... continue in order
+```
+
+---
+
+## 📚 Key Documentation Files
+
+- **README.md**: Overview và setup instructions
+- **docs/flexible-column-mapping-system.md**: Chi tiết Excel mapping system
+- **docs/management-signature-business-logic.md**: Management signature workflow
+- **docs/timezone-fix-guide.md**: Vietnam timezone implementation
+- **analysis.md**: System analysis và architecture decisions
