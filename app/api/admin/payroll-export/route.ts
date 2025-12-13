@@ -708,7 +708,12 @@ export async function GET(request: NextRequest) {
         const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
 
         if (row < headerRowIndex) {
-          if (worksheet[cellRef] && worksheet[cellRef].v !== "" && worksheet[cellRef].v !== null && worksheet[cellRef].v !== undefined) {
+          if (
+            worksheet[cellRef] &&
+            worksheet[cellRef].v !== "" &&
+            worksheet[cellRef].v !== null &&
+            worksheet[cellRef].v !== undefined
+          ) {
             worksheet[cellRef].s = titleStyle;
           } else {
             delete worksheet[cellRef];
@@ -718,7 +723,10 @@ export async function GET(request: NextRequest) {
             worksheet[cellRef] = { t: "s", v: "" };
           }
           worksheet[cellRef].s = headerStyle;
-        } else if (row > headerRowIndex && row < headerRowIndex + 1 + dataRows.length) {
+        } else if (
+          row > headerRowIndex &&
+          row < headerRowIndex + 1 + dataRows.length
+        ) {
           if (!worksheet[cellRef]) {
             worksheet[cellRef] = { t: "s", v: "" };
           }

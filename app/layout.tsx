@@ -7,6 +7,7 @@ import TickerGate from "@/components/TickerGate";
 import { ENABLE_TICKER } from "@/lib/features";
 import ErrorBoundary from "@/components/error-boundary";
 import { SafeClientComponent } from "@/components/safe-client-component";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Tra Cứu Lương Hoà Thọ Điện Bàn",
@@ -53,6 +54,7 @@ export default function RootLayout({
             </SafeClientComponent>
           ) : null}
           {children}
+          <Toaster />
         </ErrorBoundary>
       </body>
     </html>
