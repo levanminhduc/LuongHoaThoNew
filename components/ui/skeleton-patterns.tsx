@@ -176,3 +176,39 @@ export function ImportProgressSkeleton() {
     </Card>
   );
 }
+
+export type PageLoadingVariant = "dashboard" | "table" | "form" | "cards";
+
+export function PageLoading({
+  variant = "dashboard",
+}: {
+  variant?: PageLoadingVariant;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-[300px]" />
+        <Skeleton className="h-4 w-[400px]" />
+      </div>
+
+      {variant === "dashboard" && (
+        <>
+          <DashboardCardsSkeleton cards={4} />
+          <TableSkeleton rows={5} columns={6} />
+        </>
+      )}
+
+      {variant === "table" && <TableSkeleton rows={8} columns={6} />}
+
+      {variant === "form" && <FormSkeleton fields={5} />}
+
+      {variant === "cards" && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      )}
+    </div>
+  );
+}

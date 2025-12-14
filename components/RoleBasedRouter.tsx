@@ -188,10 +188,10 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
       return <ReporterDashboard />;
 
     case "truong_phong":
-      return <ManagerDashboard user={user} onLogout={handleLogout} />;
+      return <ManagerDashboard user={user} />;
 
     case "to_truong":
-      return <SupervisorDashboard user={user} onLogout={handleLogout} />;
+      return <SupervisorDashboard user={user} />;
 
     case "nhan_vien":
       return <EmployeeDashboard user={user} onLogout={handleLogout} />;

@@ -32,12 +32,12 @@ import {
   FileText,
   PenTool,
   BarChart3,
-  LogOut,
   Eye,
   UserX,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 import DashboardCache from "@/utils/dashboardCache";
+import { PageLoading } from "@/components/ui/skeleton-patterns";
 
 export default function AccountantDashboard() {
   const [loading, setLoading] = useState(true);
@@ -172,420 +172,368 @@ export default function AccountantDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push("/");
-  };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dashboard kế toán...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading variant="dashboard" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 space-y-4 sm:space-y-0">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                Dashboard Kế Toán
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
-                MAY HÒA THỌ ĐIỆN BÀN - Xác nhận tài chính lương
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowOverviewModal(true)}
-                className="hidden sm:flex"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Xem Tổng Quan
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowOverviewModal(true)}
-                className="sm:hidden"
-              >
-                <Eye className="h-4 w-4" />
-                Xem Tổng Quan
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowUnsignedModal(true)}
-                disabled={!monthStatus}
-                className="hidden sm:flex border-red-200 hover:bg-red-50"
-              >
-                <UserX className="h-4 w-4 mr-2 text-red-600" />
-                <span className="text-red-700">Nhân Viên Chưa Ký</span>
-                {monthStatus && (
-                  <Badge className="ml-2 bg-red-600 text-white">
-                    {monthStatus.employee_completion.total_employees -
-                      monthStatus.employee_completion.signed_employees}
-                  </Badge>
-                )}
-              </Button>
-              {/* Month selector: full width on mobile, fixed width on larger screens */}
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() - i);
-                    const value = date.toISOString().slice(0, 7);
-                    return (
-                      <SelectItem key={value} value={value}>
-                        {date.toLocaleDateString("vi-VN", {
-                          year: "numeric",
-                          month: "long",
-                        })}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Đăng Xuất
-              </Button>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Dashboard Kế Toán
+          </h1>
+          <p className="text-sm text-gray-600">Tháng: {selectedMonth}</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowOverviewModal(true)}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Xem Tổng Quan
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowUnsignedModal(true)}
+            disabled={!monthStatus}
+            className="border-red-200 hover:bg-red-50"
+          >
+            <UserX className="h-4 w-4 mr-2 text-red-600" />
+            <span className="text-red-700">Chưa Ký</span>
+            {monthStatus && (
+              <Badge className="ml-2 bg-red-600 text-white">
+                {monthStatus.employee_completion.total_employees -
+                  monthStatus.employee_completion.signed_employees}
+              </Badge>
+            )}
+          </Button>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 12 }, (_, i) => {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const value = date.toISOString().slice(0, 7);
+                return (
+                  <SelectItem key={value} value={value}>
+                    {date.toLocaleDateString("vi-VN", {
+                      year: "numeric",
+                      month: "long",
+                    })}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </div>
+      {message && (
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {message && (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
-
-        {monthStatus && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200"
-              onClick={() => setShowEmployeeModal(true)}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Tổng Nhân Viên
-                </CardTitle>
-                <Calculator className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.employee_completion.total_employees}
-                </div>
-                <p className="text-xs text-green-100">
-                  Cần xác nhận tài chính • Click để xem chi tiết
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Đã Ký Lương
-                </CardTitle>
-                <CheckCircle className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.employee_completion.signed_employees}
-                </div>
-                <p className="text-xs text-blue-100">
-                  {monthStatus.employee_completion.completion_percentage.toFixed(
-                    1,
-                  )}
-                  % hoàn thành
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Xác Nhận KT
-                </CardTitle>
-                <PenTool className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.management_signatures.ke_toan ? "✅" : "⏳"}
-                </div>
-                <p className="text-xs text-green-100">
-                  {monthStatus.management_signatures.ke_toan
-                    ? "Đã ký"
-                    : "Chờ ký"}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Trạng Thái
-                </CardTitle>
-                <BarChart3 className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.employee_completion.is_100_percent_complete
-                    ? "SẴN SÀNG"
-                    : "CHỜ"}
-                </div>
-                <p className="text-xs text-orange-100">
-                  {monthStatus.summary.is_fully_signed
-                    ? "Hoàn thành"
-                    : "Đang xử lý"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        <Tabs defaultValue="financial" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="financial" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Xác Nhận Tài Chính
-            </TabsTrigger>
-            <TabsTrigger
-              value="verification"
-              className="flex items-center gap-2"
-            >
+      {monthStatus && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200"
+            onClick={() => setShowEmployeeModal(true)}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Tổng Nhân Viên
+              </CardTitle>
               <Calculator className="h-4 w-4" />
-              Kiểm Tra Tính Toán
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Lịch Sử KT
-            </TabsTrigger>
-          </TabsList>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.employee_completion.total_employees}
+              </div>
+              <p className="text-xs text-green-100">
+                Cần xác nhận tài chính • Click để xem chi tiết
+              </p>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="financial" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Xác Nhận Tài Chính Lương Tháng {selectedMonth}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {monthStatus?.employee_completion.is_100_percent_complete ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                      <span className="text-green-700">
-                        100% nhân viên đã ký lương - Kế Toán có thể ký
-                      </span>
-                    </div>
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Đã Ký Lương</CardTitle>
+              <CheckCircle className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.employee_completion.signed_employees}
+              </div>
+              <p className="text-xs text-blue-100">
+                {monthStatus.employee_completion.completion_percentage.toFixed(
+                  1,
+                )}
+                % hoàn thành
+              </p>
+            </CardContent>
+          </Card>
 
-                    {monthStatus.management_signatures.ke_toan ? (
-                      <div className="p-4 bg-green-50 rounded-lg">
-                        <p className="text-green-800 font-medium">
-                          ✅ Đã xác nhận tài chính
-                        </p>
-                        <p className="text-sm text-green-600">
-                          Ký bởi:{" "}
-                          {
-                            monthStatus.management_signatures.ke_toan
-                              .signed_by_name
-                          }
-                        </p>
-                        <p className="text-sm text-green-600">
-                          Thời gian:{" "}
-                          {formatTimestampFromDBRaw(
-                            monthStatus.management_signatures.ke_toan.signed_at,
-                          )}
-                        </p>
-                        {monthStatus.management_signatures.ke_toan.notes && (
-                          <p className="text-sm text-green-600 mt-2">
-                            Ghi chú:{" "}
-                            {monthStatus.management_signatures.ke_toan.notes}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="p-4 bg-blue-50 rounded-lg">
-                          <h4 className="font-medium text-blue-800 mb-2">
-                            Checklist Xác Nhận Tài Chính:
-                          </h4>
-                          <ul className="text-sm text-blue-700 space-y-1">
-                            <li>✅ Kiểm tra tổng số tiền lương</li>
-                            <li>✅ Xác minh các khoản khấu trừ</li>
-                            <li>✅ Đối chiếu với ngân sách tháng</li>
-                            <li>✅ Kiểm tra tính chính xác tính toán</li>
-                          </ul>
-                        </div>
-                        <Button
-                          onClick={handleSignature}
-                          disabled={isSigning}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSigning ? (
-                            <>
-                              <Clock className="h-4 w-4 mr-2 animate-spin" />
-                              Đang xử lý...
-                            </>
-                          ) : (
-                            <>
-                              <PenTool className="h-4 w-4 mr-2" />
-                              Ký Xác Nhận Kế Toán
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Xác Nhận KT</CardTitle>
+              <PenTool className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.management_signatures.ke_toan ? "✅" : "⏳"}
+              </div>
+              <p className="text-xs text-green-100">
+                {monthStatus.management_signatures.ke_toan ? "Đã ký" : "Chờ ký"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Trạng Thái</CardTitle>
+              <BarChart3 className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.employee_completion.is_100_percent_complete
+                  ? "SẴN SÀNG"
+                  : "CHỜ"}
+              </div>
+              <p className="text-xs text-orange-100">
+                {monthStatus.summary.is_fully_signed
+                  ? "Hoàn thành"
+                  : "Đang xử lý"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <Tabs defaultValue="financial" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="financial" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Xác Nhận Tài Chính
+          </TabsTrigger>
+          <TabsTrigger value="verification" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" />
+            Kiểm Tra Tính Toán
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Lịch Sử KT
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="financial" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Xác Nhận Tài Chính Lương Tháng {selectedMonth}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {monthStatus?.employee_completion.is_100_percent_complete ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <span className="text-green-700">
+                      100% nhân viên đã ký lương - Kế Toán có thể ký
+                    </span>
                   </div>
-                ) : (
-                  <div className="p-4 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-5 w-5 text-yellow-500" />
-                      <span className="text-yellow-800 font-medium">
-                        Chờ nhân viên ký đủ
-                      </span>
+
+                  {monthStatus.management_signatures.ke_toan ? (
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <p className="text-green-800 font-medium">
+                        ✅ Đã xác nhận tài chính
+                      </p>
+                      <p className="text-sm text-green-600">
+                        Ký bởi:{" "}
+                        {
+                          monthStatus.management_signatures.ke_toan
+                            .signed_by_name
+                        }
+                      </p>
+                      <p className="text-sm text-green-600">
+                        Thời gian:{" "}
+                        {formatTimestampFromDBRaw(
+                          monthStatus.management_signatures.ke_toan.signed_at,
+                        )}
+                      </p>
+                      {monthStatus.management_signatures.ke_toan.notes && (
+                        <p className="text-sm text-green-600 mt-2">
+                          Ghi chú:{" "}
+                          {monthStatus.management_signatures.ke_toan.notes}
+                        </p>
+                      )}
                     </div>
-                    <p className="text-sm text-yellow-700">
-                      Hiện tại:{" "}
-                      {monthStatus?.employee_completion.signed_employees}/
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-medium text-blue-800 mb-2">
+                          Checklist Xác Nhận Tài Chính:
+                        </h4>
+                        <ul className="text-sm text-blue-700 space-y-1">
+                          <li>✅ Kiểm tra tổng số tiền lương</li>
+                          <li>✅ Xác minh các khoản khấu trừ</li>
+                          <li>✅ Đối chiếu với ngân sách tháng</li>
+                          <li>✅ Kiểm tra tính chính xác tính toán</li>
+                        </ul>
+                      </div>
+                      <Button
+                        onClick={handleSignature}
+                        disabled={isSigning}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSigning ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Đang xử lý...
+                          </>
+                        ) : (
+                          <>
+                            <PenTool className="h-4 w-4 mr-2" />
+                            Ký Xác Nhận Kế Toán
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-5 w-5 text-yellow-500" />
+                    <span className="text-yellow-800 font-medium">
+                      Chờ nhân viên ký đủ
+                    </span>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    Hiện tại:{" "}
+                    {monthStatus?.employee_completion.signed_employees}/
+                    {monthStatus?.employee_completion.total_employees} nhân viên
+                    đã ký (
+                    {monthStatus?.employee_completion.completion_percentage.toFixed(
+                      1,
+                    )}
+                    %)
+                  </p>
+                  <p className="text-sm text-yellow-700 mt-2">
+                    Cần đợi 100% nhân viên ký lương trước khi có thể xác nhận
+                    tài chính.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="verification" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Kiểm Tra Tính Toán Lương</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium mb-2">Thống Kê Nhân Viên</h4>
+                    <p className="text-sm text-gray-600">
+                      Tổng số:{" "}
                       {monthStatus?.employee_completion.total_employees} nhân
-                      viên đã ký (
+                      viên
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Đã ký: {monthStatus?.employee_completion.signed_employees}{" "}
+                      nhân viên
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Tỷ lệ:{" "}
                       {monthStatus?.employee_completion.completion_percentage.toFixed(
                         1,
                       )}
-                      %)
+                      %
                     </p>
-                    <p className="text-sm text-yellow-700 mt-2">
-                      Cần đợi 100% nhân viên ký lương trước khi có thể xác nhận
-                      tài chính.
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-medium mb-2 text-green-800">
+                      Trạng Thái Xác Nhận
+                    </h4>
+                    <p className="text-sm text-green-700">
+                      Giám đốc:{" "}
+                      {monthStatus?.management_signatures.giam_doc
+                        ? "✅ Đã ký"
+                        : "⏳ Chờ ký"}
                     </p>
+                    <p className="text-sm text-green-700">
+                      Kế toán:{" "}
+                      {monthStatus?.management_signatures.ke_toan
+                        ? "✅ Đã ký"
+                        : "⏳ Chờ ký"}
+                    </p>
+                    <p className="text-sm text-green-700">
+                      Người lập biểu:{" "}
+                      {monthStatus?.management_signatures.nguoi_lap_bieu
+                        ? "✅ Đã ký"
+                        : "⏳ Chờ ký"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lịch Sử Xác Nhận Kế Toán</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {signatureHistory.length > 0 ? (
+                  signatureHistory.map((signature) => (
+                    <div
+                      key={signature.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {signature.signed_by_name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Tháng {signature.salary_month}
+                        </p>
+                        {signature.notes && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            {signature.notes}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="secondary">
+                        {formatTimestampFromDBRaw(signature.signed_at)}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Chưa có lịch sử xác nhận kế toán</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="verification" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Kiểm Tra Tính Toán Lương</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="font-medium mb-2">Thống Kê Nhân Viên</h4>
-                      <p className="text-sm text-gray-600">
-                        Tổng số:{" "}
-                        {monthStatus?.employee_completion.total_employees} nhân
-                        viên
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Đã ký:{" "}
-                        {monthStatus?.employee_completion.signed_employees} nhân
-                        viên
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Tỷ lệ:{" "}
-                        {monthStatus?.employee_completion.completion_percentage.toFixed(
-                          1,
-                        )}
-                        %
-                      </p>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium mb-2 text-green-800">
-                        Trạng Thái Xác Nhận
-                      </h4>
-                      <p className="text-sm text-green-700">
-                        Giám đốc:{" "}
-                        {monthStatus?.management_signatures.giam_doc
-                          ? "✅ Đã ký"
-                          : "⏳ Chờ ký"}
-                      </p>
-                      <p className="text-sm text-green-700">
-                        Kế toán:{" "}
-                        {monthStatus?.management_signatures.ke_toan
-                          ? "✅ Đã ký"
-                          : "⏳ Chờ ký"}
-                      </p>
-                      <p className="text-sm text-green-700">
-                        Người lập biểu:{" "}
-                        {monthStatus?.management_signatures.nguoi_lap_bieu
-                          ? "✅ Đã ký"
-                          : "⏳ Chờ ký"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="history" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Lịch Sử Xác Nhận Kế Toán</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {signatureHistory.length > 0 ? (
-                    signatureHistory.map((signature) => (
-                      <div
-                        key={signature.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium">
-                            {signature.signed_by_name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Tháng {signature.salary_month}
-                          </p>
-                          {signature.notes && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              {signature.notes}
-                            </p>
-                          )}
-                        </div>
-                        <Badge variant="secondary">
-                          {formatTimestampFromDBRaw(signature.signed_at)}
-                        </Badge>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Chưa có lịch sử xác nhận kế toán</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       {/* Employee List Modal */}
       <EmployeeListModal
         isOpen={showEmployeeModal}

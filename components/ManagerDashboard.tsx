@@ -35,7 +35,6 @@ import {
   Users,
   DollarSign,
   FileCheck,
-  LogOut,
   Eye,
   Download,
 } from "lucide-react";
@@ -47,6 +46,7 @@ import {
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
 import DashboardCache from "@/utils/dashboardCache";
+import { PageLoading } from "@/components/ui/skeleton-patterns";
 
 interface User {
   employee_id: string;
@@ -69,7 +69,6 @@ interface DepartmentStats {
 
 interface ManagerDashboardProps {
   user: User;
-  onLogout: () => void;
 }
 
 interface PayrollRecord {
@@ -89,10 +88,7 @@ interface PayrollRecord {
   };
 }
 
-export default function ManagerDashboard({
-  user,
-  onLogout,
-}: ManagerDashboardProps) {
+export default function ManagerDashboard({ user }: ManagerDashboardProps) {
   const [departments, setDepartments] = useState<DepartmentStats[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] =
@@ -406,575 +402,547 @@ export default function ManagerDashboard({
   ];
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <PageLoading variant="dashboard" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 space-y-4 sm:space-y-0">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                Dashboard Trưởng Phòng
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
-                Xin chào, {user.username} | Bạn đang Quản lý{" "}
-                {user.allowed_departments?.length || 0} Bộ Phận
-              </p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Dashboard Trưởng Phòng
+          </h1>
+          <p className="text-sm text-gray-600">
+            Xin chào, {user.username} | Quản lý{" "}
+            {user.allowed_departments?.length || 0} Bộ Phận
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 12 }, (_, i) => {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const value = date.toISOString().slice(0, 7);
+                const label = date.toLocaleDateString("vi-VN", {
+                  year: "numeric",
+                  month: "long",
+                });
+                return (
+                  <SelectItem key={`month-${i}-${value}`} value={value}>
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <Card className="hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium truncate">
+              Tổng Departments
+            </CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">
+              {departments.length}
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue />
+            <p className="text-xs text-muted-foreground truncate">
+              Được phân quyền quản lý
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium truncate">
+              Tổng Nhân Viên
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">
+              {totalStats.totalEmployees}
+            </div>
+            <p className="text-xs text-muted-foreground truncate">
+              Trong tất cả departments
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium truncate">
+              Tổng Lương
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">
+              {(totalStats.totalSalary / 1000000).toFixed(1)}M
+            </div>
+            <p className="text-xs text-muted-foreground truncate">
+              VND tháng {selectedMonth}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium truncate">
+              Đã Ký
+            </CardTitle>
+            <FileCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl font-bold">
+              {totalStats.totalPayroll > 0
+                ? (
+                    (totalStats.totalSigned / totalStats.totalPayroll) *
+                    100
+                  ).toFixed(1)
+                : 0}
+              %
+            </div>
+            <p className="text-xs text-muted-foreground truncate">
+              {totalStats.totalSigned}/{totalStats.totalPayroll} bảng lương
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="departments" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger
+            value="overview"
+            className="text-xs sm:text-sm px-2 py-2"
+          >
+            <span className="hidden sm:inline">Tổng Quan</span>
+            <span className="sm:hidden">Tổng Quan</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="departments"
+            className="text-xs sm:text-sm px-2 py-2"
+          >
+            <span className="hidden sm:inline">Chi Tiết Các Bộ Phận</span>
+            <span className="sm:hidden">Departments</span>
+          </TabsTrigger>
+          <TabsTrigger value="payroll" className="text-xs sm:text-sm px-2 py-2">
+            <span className="hidden sm:inline">Dữ Liệu Lương</span>
+            <span className="sm:hidden">Lương</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base sm:text-lg">
+                  Thống Kê Theo Department
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Số lượng nhân viên và tỷ lệ ký
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer
+                  width="100%"
+                  height={250}
+                  className="sm:h-[300px]"
+                >
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="name"
+                      fontSize={12}
+                      tick={{ fontSize: 10 }}
+                      className="sm:text-sm"
+                    />
+                    <YAxis
+                      fontSize={12}
+                      tick={{ fontSize: 10 }}
+                      className="sm:text-sm"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        fontSize: "12px",
+                        padding: "8px",
+                        borderRadius: "6px",
+                      }}
+                    />
+                    <Bar dataKey="employees" fill="#8884d8" name="Nhân viên" />
+                    <Bar dataKey="signed" fill="#82ca9d" name="Đã ký" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base sm:text-lg">
+                  Phân Bố Lương Theo Bộ Phận
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Tỷ lệ tổng lương theo từng Bộ Phận
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer
+                  width="100%"
+                  height={250}
+                  className="sm:h-[300px]"
+                >
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percentage }) =>
+                        `${name}: ${percentage}%`
+                      }
+                      outerRadius={60}
+                      className="sm:outerRadius-80"
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) =>
+                        `${(value / 1000000).toFixed(1)}M VND`
+                      }
+                      contentStyle={{
+                        fontSize: "12px",
+                        padding: "8px",
+                        borderRadius: "6px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="departments" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {departments.map((dept) => (
+              <Card
+                key={dept.name}
+                className="hover:shadow-md transition-shadow duration-200"
+              >
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span className="truncate text-sm sm:text-base">
+                      {dept.name}
+                    </span>
+                    <Badge
+                      variant={
+                        parseInt(dept.signedPercentage) >= 80
+                          ? "default"
+                          : "secondary"
+                      }
+                      className="self-start sm:self-center"
+                    >
+                      {dept.signedPercentage}% ký
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 sm:space-y-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs sm:text-sm">
+                        Nhân viên
+                      </p>
+                      <p className="font-semibold text-sm sm:text-base">
+                        {dept.employeeCount}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs sm:text-sm">
+                        Bảng lương
+                      </p>
+                      <p className="font-semibold text-sm sm:text-base">
+                        {dept.payrollCount}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs sm:text-sm">
+                        Tổng lương
+                      </p>
+                      <p className="font-semibold text-sm sm:text-base">
+                        {(dept.totalSalary / 1000000).toFixed(1)}M
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs sm:text-sm">
+                        TB/người
+                      </p>
+                      <p className="font-semibold text-sm sm:text-base">
+                        {(dept.averageSalary / 1000).toFixed(0)}K
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-12 sm:h-8 text-xs sm:text-sm touch-manipulation"
+                      onClick={() => handleViewPayroll(dept.name)}
+                    >
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Xem Chi Tiết</span>
+                      <span className="sm:hidden">Xem Chi Tiết</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-12 sm:h-8 text-xs sm:text-sm touch-manipulation"
+                      onClick={() => handleExportDepartment(dept.name)}
+                      disabled={exportingDepartment === dept.name}
+                    >
+                      {exportingDepartment === dept.name ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1 sm:mr-2"></div>
+                          <span className="hidden sm:inline">Xuất...</span>
+                          <span className="sm:hidden">...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Xuất Excel</span>
+                          <span className="sm:hidden">Xuất Excel</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="payroll" className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="flex items-center space-x-4">
+              <Select
+                value={selectedDepartment}
+                onValueChange={setSelectedDepartment}
+              >
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Chọn department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() - i);
-                    const value = date.toISOString().slice(0, 7);
-                    const label = date.toLocaleDateString("vi-VN", {
-                      year: "numeric",
-                      month: "long",
-                    });
-                    return (
-                      <SelectItem key={`month-${i}-${value}`} value={value}>
-                        {label}
-                      </SelectItem>
-                    );
-                  })}
+                  <SelectItem value="all">Tất cả Bộ Phận</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.name} value={dept.name}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <Button
-                variant="outline"
-                onClick={onLogout}
-                className="w-full sm:w-auto"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Đăng xuất
-              </Button>
             </div>
+            <Button
+              onClick={handleExportData}
+              disabled={exportingData}
+              className="flex items-center gap-2 w-full sm:w-auto h-12 sm:h-8 touch-manipulation"
+            >
+              {exportingData ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span className="hidden sm:inline">Đang xuất...</span>
+                  <span className="sm:hidden">Xuất...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">Xuất Excel</span>
+                  <span className="sm:hidden">Xuất</span>
+                </>
+              )}
+            </Button>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Overview Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">
-                Tổng Departments
-              </CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">
-                {departments.length}
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                Được phân quyền quản lý
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">
-                Tổng Nhân Viên
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">
-                {totalStats.totalEmployees}
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                Trong tất cả departments
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">
-                Tổng Lương
-              </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">
-                {(totalStats.totalSalary / 1000000).toFixed(1)}M
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                VND tháng {selectedMonth}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium truncate">
-                Đã Ký
-              </CardTitle>
-              <FileCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold">
-                {totalStats.totalPayroll > 0
-                  ? (
-                      (totalStats.totalSigned / totalStats.totalPayroll) *
-                      100
-                    ).toFixed(1)
-                  : 0}
-                %
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {totalStats.totalSigned}/{totalStats.totalPayroll} bảng lương
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="departments" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger
-              value="overview"
-              className="text-xs sm:text-sm px-2 py-2"
-            >
-              <span className="hidden sm:inline">Tổng Quan</span>
-              <span className="sm:hidden">Tổng Quan</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="departments"
-              className="text-xs sm:text-sm px-2 py-2"
-            >
-              <span className="hidden sm:inline">Chi Tiết Các Bộ Phận</span>
-              <span className="sm:hidden">Departments</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="payroll"
-              className="text-xs sm:text-sm px-2 py-2"
-            >
-              <span className="hidden sm:inline">Dữ Liệu Lương</span>
-              <span className="sm:hidden">Lương</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">
-                    Thống Kê Theo Department
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Số lượng nhân viên và tỷ lệ ký
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer
-                    width="100%"
-                    height={250}
-                    className="sm:h-[300px]"
-                  >
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="name"
-                        fontSize={12}
-                        tick={{ fontSize: 10 }}
-                        className="sm:text-sm"
-                      />
-                      <YAxis
-                        fontSize={12}
-                        tick={{ fontSize: 10 }}
-                        className="sm:text-sm"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          fontSize: "12px",
-                          padding: "8px",
-                          borderRadius: "6px",
-                        }}
-                      />
-                      <Bar
-                        dataKey="employees"
-                        fill="#8884d8"
-                        name="Nhân viên"
-                      />
-                      <Bar dataKey="signed" fill="#82ca9d" name="Đã ký" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">
-                    Phân Bố Lương Theo Bộ Phận
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Tỷ lệ tổng lương theo từng Bộ Phận
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer
-                    width="100%"
-                    height={250}
-                    className="sm:h-[300px]"
-                  >
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percentage }) =>
-                          `${name}: ${percentage}%`
-                        }
-                        outerRadius={60}
-                        className="sm:outerRadius-80"
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {pieData.map((_, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: number) =>
-                          `${(value / 1000000).toFixed(1)}M VND`
-                        }
-                        contentStyle={{
-                          fontSize: "12px",
-                          padding: "8px",
-                          borderRadius: "6px",
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="departments" className="space-y-4 sm:space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {departments.map((dept) => (
-                <Card
-                  key={dept.name}
-                  className="hover:shadow-md transition-shadow duration-200"
-                >
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <span className="truncate text-sm sm:text-base">
-                        {dept.name}
-                      </span>
-                      <Badge
-                        variant={
-                          parseInt(dept.signedPercentage) >= 80
-                            ? "default"
-                            : "secondary"
-                        }
-                        className="self-start sm:self-center"
-                      >
-                        {dept.signedPercentage}% ký
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">
-                          Nhân viên
-                        </p>
-                        <p className="font-semibold text-sm sm:text-base">
-                          {dept.employeeCount}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">
-                          Bảng lương
-                        </p>
-                        <p className="font-semibold text-sm sm:text-base">
-                          {dept.payrollCount}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">
-                          Tổng lương
-                        </p>
-                        <p className="font-semibold text-sm sm:text-base">
-                          {(dept.totalSalary / 1000000).toFixed(1)}M
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs sm:text-sm">
-                          TB/người
-                        </p>
-                        <p className="font-semibold text-sm sm:text-base">
-                          {(dept.averageSalary / 1000).toFixed(0)}K
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-row gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 h-12 sm:h-8 text-xs sm:text-sm touch-manipulation"
-                        onClick={() => handleViewPayroll(dept.name)}
-                      >
-                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Xem Chi Tiết</span>
-                        <span className="sm:hidden">Xem Chi Tiết</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 h-12 sm:h-8 text-xs sm:text-sm touch-manipulation"
-                        onClick={() => handleExportDepartment(dept.name)}
-                        disabled={exportingDepartment === dept.name}
-                      >
-                        {exportingDepartment === dept.name ? (
-                          <>
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1 sm:mr-2"></div>
-                            <span className="hidden sm:inline">Xuất...</span>
-                            <span className="sm:hidden">...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            <span className="hidden sm:inline">Xuất Excel</span>
-                            <span className="sm:hidden">Xuất Excel</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="payroll" className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <div className="flex items-center space-x-4">
-                <Select
-                  value={selectedDepartment}
-                  onValueChange={setSelectedDepartment}
-                >
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Chọn department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả Bộ Phận</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.name} value={dept.name}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={handleExportData}
-                disabled={exportingData}
-                className="flex items-center gap-2 w-full sm:w-auto h-12 sm:h-8 touch-manipulation"
-              >
-                {exportingData ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span className="hidden sm:inline">Đang xuất...</span>
-                    <span className="sm:hidden">Xuất...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" />
-                    <span className="hidden sm:inline">Xuất Excel</span>
-                    <span className="sm:hidden">Xuất</span>
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {selectedDepartment !== "all" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">
-                    Dữ Liệu Lương - {selectedDepartment}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Tháng {selectedMonth}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Mobile Card Layout */}
-                  <div className="block sm:hidden space-y-3">
-                    {payrollData.map((payroll) => (
-                      <Card key={payroll.id} className="p-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm">
-                                {payroll.employees?.full_name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Mã: {payroll.employee_id}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant={
-                                  payroll.is_signed ? "default" : "secondary"
-                                }
-                                className="text-xs"
-                              >
-                                {payroll.is_signed ? "Đã ký" : "Chưa ký"}
-                              </Badge>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleViewEmployee(payroll.employee_id)
-                                }
-                                className="h-8 w-8 p-0 touch-manipulation"
-                              >
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="pt-2 border-t">
-                            <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Khen thưởng:
-                                </span>
-                                <p className="font-medium">
-                                  {(
-                                    payroll.tien_khen_thuong_chuyen_can || 0
-                                  ).toLocaleString()}{" "}
-                                  VND
-                                </p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Hệ số LV:
-                                </span>
-                                <p className="font-medium">
-                                  {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-                            <p className="text-sm font-semibold">
-                              Lương thực nhận:{" "}
-                              {(
-                                payroll.tien_luong_thuc_nhan_cuoi_ky || 0
-                              ).toLocaleString()}{" "}
-                              VND
+          {selectedDepartment !== "all" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base sm:text-lg">
+                  Dữ Liệu Lương - {selectedDepartment}
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Tháng {selectedMonth}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Mobile Card Layout */}
+                <div className="block sm:hidden space-y-3">
+                  {payrollData.map((payroll) => (
+                    <Card key={payroll.id} className="p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm">
+                              {payroll.employees?.full_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Mã: {payroll.employee_id}
                             </p>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                payroll.is_signed ? "default" : "secondary"
+                              }
+                              className="text-xs"
+                            >
+                              {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleViewEmployee(payroll.employee_id)
+                              }
+                              className="h-8 w-8 p-0 touch-manipulation"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
-                      </Card>
-                    ))}
-                  </div>
+                        <div className="pt-2 border-t">
+                          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                            <div>
+                              <span className="text-muted-foreground">
+                                Khen thưởng:
+                              </span>
+                              <p className="font-medium">
+                                {(
+                                  payroll.tien_khen_thuong_chuyen_can || 0
+                                ).toLocaleString()}{" "}
+                                VND
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Hệ số LV:
+                              </span>
+                              <p className="font-medium">
+                                {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-sm font-semibold">
+                            Lương thực nhận:{" "}
+                            {(
+                              payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                            ).toLocaleString()}{" "}
+                            VND
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
 
-                  {/* Desktop Table Layout */}
-                  <div className="hidden sm:block overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left p-2 sm:p-3 min-w-[100px]">
-                            Mã NV
-                          </th>
-                          <th className="text-left p-2 sm:p-3 min-w-[150px]">
-                            Họ Tên
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
-                            Khen Thưởng
-                          </th>
-                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
-                            Hệ Số LV
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
-                            Lương Thực Nhận
-                          </th>
-                          <th className="text-center p-2 sm:p-3 min-w-[100px]">
-                            Trạng Thái
-                          </th>
-                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
-                            Thao Tác
-                          </th>
+                {/* Desktop Table Layout */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2 sm:p-3 min-w-[100px]">
+                          Mã NV
+                        </th>
+                        <th className="text-left p-2 sm:p-3 min-w-[150px]">
+                          Họ Tên
+                        </th>
+                        <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                          Khen Thưởng
+                        </th>
+                        <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                          Hệ Số LV
+                        </th>
+                        <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                          Lương Thực Nhận
+                        </th>
+                        <th className="text-center p-2 sm:p-3 min-w-[100px]">
+                          Trạng Thái
+                        </th>
+                        <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                          Thao Tác
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payrollData.map((payroll) => (
+                        <tr
+                          key={payroll.id}
+                          className="border-b hover:bg-gray-50"
+                        >
+                          <td className="p-2 sm:p-3 font-mono text-xs sm:text-sm">
+                            {payroll.employee_id}
+                          </td>
+                          <td className="p-2 sm:p-3">
+                            {payroll.employees?.full_name}
+                          </td>
+                          <td className="p-2 sm:p-3 text-right font-medium">
+                            {(
+                              payroll.tien_khen_thuong_chuyen_can || 0
+                            ).toLocaleString()}{" "}
+                            VND
+                          </td>
+                          <td className="p-2 sm:p-3 text-center font-medium">
+                            {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                          </td>
+                          <td className="p-2 sm:p-3 text-right font-semibold">
+                            {(
+                              payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                            ).toLocaleString()}{" "}
+                            VND
+                          </td>
+                          <td className="p-2 sm:p-3 text-center">
+                            <Badge
+                              variant={
+                                payroll.is_signed ? "default" : "secondary"
+                              }
+                            >
+                              {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                            </Badge>
+                          </td>
+                          <td className="p-2 sm:p-3 text-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleViewEmployee(payroll.employee_id)
+                              }
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {payrollData.map((payroll) => (
-                          <tr
-                            key={payroll.id}
-                            className="border-b hover:bg-gray-50"
-                          >
-                            <td className="p-2 sm:p-3 font-mono text-xs sm:text-sm">
-                              {payroll.employee_id}
-                            </td>
-                            <td className="p-2 sm:p-3">
-                              {payroll.employees?.full_name}
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-medium">
-                              {(
-                                payroll.tien_khen_thuong_chuyen_can || 0
-                              ).toLocaleString()}{" "}
-                              VND
-                            </td>
-                            <td className="p-2 sm:p-3 text-center font-medium">
-                              {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-semibold">
-                              {(
-                                payroll.tien_luong_thuc_nhan_cuoi_ky || 0
-                              ).toLocaleString()}{" "}
-                              VND
-                            </td>
-                            <td className="p-2 sm:p-3 text-center">
-                              <Badge
-                                variant={
-                                  payroll.is_signed ? "default" : "secondary"
-                                }
-                              >
-                                {payroll.is_signed ? "Đã ký" : "Chưa ký"}
-                              </Badge>
-                            </td>
-                            <td className="p-2 sm:p-3 text-center">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleViewEmployee(payroll.employee_id)
-                                }
-                                className="h-8 w-8 p-0"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
       {/* Department Detail Modal */}
       <DepartmentDetailModalRefactored
         isOpen={isDetailModalOpen}

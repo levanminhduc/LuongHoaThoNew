@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SupervisorDashboard from "@/components/SupervisorDashboard";
+import { PageLoading } from "@/components/ui/skeleton-patterns";
 
 interface User {
   employee_id: string;
@@ -33,9 +34,7 @@ export default function SupervisorDashboardPage() {
 
       const userData = JSON.parse(userStr);
 
-      // Check if user has supervisor role
       if (userData.role !== "to_truong") {
-        // Redirect based on actual role
         switch (userData.role) {
           case "admin":
             router.push("/admin/dashboard");
@@ -63,28 +62,13 @@ export default function SupervisorDashboardPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push("/");
-  };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <PageLoading variant="dashboard" />;
   }
 
   if (!user) {
-    return null; // Will redirect
+    return null;
   }
 
-  return <SupervisorDashboard user={user} onLogout={handleLogout} />;
+  return <SupervisorDashboard user={user} />;
 }

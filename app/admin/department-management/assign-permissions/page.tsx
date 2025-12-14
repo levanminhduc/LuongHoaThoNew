@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  ArrowLeft,
   Save,
   AlertCircle,
   CheckCircle,
@@ -352,268 +351,249 @@ function AssignPermissionsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/department-management")}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Quay lại
-              </Button>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Cấp Quyền Department
+        </h1>
+        <p className="text-sm text-gray-600">
+          Cấp quyền truy cập departments cho Giám Đốc, Kế Toán, Người Lập Biểu,
+          Trưởng Phòng và Tổ Trưởng
+        </p>
+      </div>
+
+      {error && (
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="whitespace-pre-line">
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {success && (
+        <Alert className="mb-6 border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800 whitespace-pre-line">
+            {success}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Employee Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Chọn Nhân Viên
+            </CardTitle>
+            <CardDescription>
+              Chọn nhân viên quản lý (Giám Đốc, Kế Toán, Người Lập Biểu, Trưởng
+              Phòng, Tổ Trưởng) để cấp quyền truy cập departments
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Cấp Quyền Department
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Cấp quyền truy cập departments cho Giám Đốc, Kế Toán, Người
-                  Lập Biểu, Trưởng Phòng và Tổ Trưởng
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="whitespace-pre-line">
-              {error}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {success && (
-          <Alert className="mb-6 border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800 whitespace-pre-line">
-              {success}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Employee Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Chọn Nhân Viên
-              </CardTitle>
-              <CardDescription>
-                Chọn nhân viên quản lý (Giám Đốc, Kế Toán, Người Lập Biểu,
-                Trưởng Phòng, Tổ Trưởng) để cấp quyền truy cập departments
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="employee">Nhân viên *</Label>
-                  <Select
-                    value={selectedEmployee}
-                    onValueChange={setSelectedEmployee}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn nhân viên..." />
-                    </SelectTrigger>
-                    <SelectContent className="max-w-[90vw] sm:max-w-md">
-                      {employees.map((employee) => (
-                        <SelectItem
-                          key={employee.employee_id}
-                          value={employee.employee_id}
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full min-w-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="font-medium truncate">
-                                {employee.full_name}
-                              </span>
-                              <Badge
-                                variant="outline"
-                                className="text-xs shrink-0"
-                              >
-                                {employee.chuc_vu}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground sm:ml-auto">
-                              <span className="shrink-0">
-                                ({employee.employee_id})
-                              </span>
-                              <span className="text-blue-600 truncate">
-                                {employee.department}
-                              </span>
-                            </div>
+                <Label htmlFor="employee">Nhân viên *</Label>
+                <Select
+                  value={selectedEmployee}
+                  onValueChange={setSelectedEmployee}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn nhân viên..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-w-[90vw] sm:max-w-md">
+                    {employees.map((employee) => (
+                      <SelectItem
+                        key={employee.employee_id}
+                        value={employee.employee_id}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-medium truncate">
+                              {employee.full_name}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="text-xs shrink-0"
+                            >
+                              {employee.chuc_vu}
+                            </Badge>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {selectedEmployeeData && (
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Info className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-800">
-                        Thông tin nhân viên
-                      </span>
-                    </div>
-                    <div className="text-sm text-blue-700">
-                      <p>
-                        <strong>Tên:</strong> {selectedEmployeeData.full_name}
-                      </p>
-                      <p>
-                        <strong>Mã NV:</strong>{" "}
-                        {selectedEmployeeData.employee_id}
-                      </p>
-                      <p>
-                        <strong>Chức vụ:</strong> {selectedEmployeeData.chuc_vu}
-                      </p>
-                      <p>
-                        <strong>Department hiện tại:</strong>{" "}
-                        {selectedEmployeeData.department}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Department Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Chọn Departments
-              </CardTitle>
-              <CardDescription>
-                Chọn các departments mà nhân viên có thể truy cập và quản lý
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {departments.map((department) => {
-                  const isSelected = selectedDepartments.includes(
-                    department.name,
-                  );
-                  const existingPerm = selectedEmployee
-                    ? getExistingPermission(selectedEmployee, department.name)
-                    : null;
-                  const hasActivePermission = existingPerm?.is_active;
-
-                  return (
-                    <div
-                      key={department.name}
-                      className="flex items-start space-x-3 p-3 border rounded-lg"
-                    >
-                      <Checkbox
-                        id={department.name}
-                        checked={isSelected}
-                        onCheckedChange={(checked) =>
-                          handleDepartmentToggle(
-                            department.name,
-                            checked as boolean,
-                          )
-                        }
-                        disabled={hasActivePermission}
-                      />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor={department.name}
-                          className={`text-sm font-medium ${hasActivePermission ? "text-muted-foreground" : ""}`}
-                        >
-                          {department.name}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          {department.employeeCount} nhân viên •{" "}
-                          {department.payrollCount} bảng lương
-                        </p>
-                        {hasActivePermission && (
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            Đã có quyền
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {selectedDepartments.length > 0 && (
-                <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                  <p className="text-sm font-medium text-green-800 mb-2">
-                    Departments được chọn ({selectedDepartments.length}):
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedDepartments.map((dept) => (
-                      <Badge key={dept} variant="default" className="text-xs">
-                        {dept}
-                      </Badge>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground sm:ml-auto">
+                            <span className="shrink-0">
+                              ({employee.employee_id})
+                            </span>
+                            <span className="text-blue-600 truncate">
+                              {employee.department}
+                            </span>
+                          </div>
+                        </div>
+                      </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedEmployeeData && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">
+                      Thông tin nhân viên
+                    </span>
+                  </div>
+                  <div className="text-sm text-blue-700">
+                    <p>
+                      <strong>Tên:</strong> {selectedEmployeeData.full_name}
+                    </p>
+                    <p>
+                      <strong>Mã NV:</strong> {selectedEmployeeData.employee_id}
+                    </p>
+                    <p>
+                      <strong>Chức vụ:</strong> {selectedEmployeeData.chuc_vu}
+                    </p>
+                    <p>
+                      <strong>Department hiện tại:</strong>{" "}
+                      {selectedEmployeeData.department}
+                    </p>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Notes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ghi Chú</CardTitle>
-              <CardDescription>
-                Thêm ghi chú về lý do cấp quyền (tùy chọn)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Ví dụ: Cấp quyền quản lý department Production và QC theo quyết định của Ban Giám Đốc..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-              />
-            </CardContent>
-          </Card>
+        {/* Department Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Chọn Departments
+            </CardTitle>
+            <CardDescription>
+              Chọn các departments mà nhân viên có thể truy cập và quản lý
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {departments.map((department) => {
+                const isSelected = selectedDepartments.includes(
+                  department.name,
+                );
+                const existingPerm = selectedEmployee
+                  ? getExistingPermission(selectedEmployee, department.name)
+                  : null;
+                const hasActivePermission = existingPerm?.is_active;
 
-          {/* Submit */}
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/admin/department-management")}
-            >
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                submitting ||
-                !selectedEmployee ||
-                selectedDepartments.length === 0
-              }
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {submitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Đang cấp quyền...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Cấp Quyền
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </div>
+                return (
+                  <div
+                    key={department.name}
+                    className="flex items-start space-x-3 p-3 border rounded-lg"
+                  >
+                    <Checkbox
+                      id={department.name}
+                      checked={isSelected}
+                      onCheckedChange={(checked) =>
+                        handleDepartmentToggle(
+                          department.name,
+                          checked as boolean,
+                        )
+                      }
+                      disabled={hasActivePermission}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={department.name}
+                        className={`text-sm font-medium ${hasActivePermission ? "text-muted-foreground" : ""}`}
+                      >
+                        {department.name}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {department.employeeCount} nhân viên •{" "}
+                        {department.payrollCount} bảng lương
+                      </p>
+                      {hasActivePermission && (
+                        <Badge variant="secondary" className="text-xs mt-1">
+                          Đã có quyền
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {selectedDepartments.length > 0 && (
+              <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                <p className="text-sm font-medium text-green-800 mb-2">
+                  Departments được chọn ({selectedDepartments.length}):
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedDepartments.map((dept) => (
+                    <Badge key={dept} variant="default" className="text-xs">
+                      {dept}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Notes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ghi Chú</CardTitle>
+            <CardDescription>
+              Thêm ghi chú về lý do cấp quyền (tùy chọn)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="Ví dụ: Cấp quyền quản lý department Production và QC theo quyết định của Ban Giám Đốc..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Submit */}
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/admin/department-management")}
+          >
+            Hủy
+          </Button>
+          <Button
+            type="submit"
+            disabled={
+              submitting ||
+              !selectedEmployee ||
+              selectedDepartments.length === 0
+            }
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {submitting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Đang cấp quyền...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Cấp Quyền
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

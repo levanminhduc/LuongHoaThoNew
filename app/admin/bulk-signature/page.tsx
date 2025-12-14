@@ -2,8 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { BulkSignatureSection } from "@/components/admin/BulkSignatureSection";
 
 export default function BulkSignaturePage() {
@@ -46,39 +44,21 @@ export default function BulkSignaturePage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/dashboard")}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Quay Lại Dashboard
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Ký Hàng Loạt Chữ Ký Nhân Viên
-                </h1>
-                <p className="text-sm text-gray-600">
-                  MAY HÒA THỌ ĐIỆN BÀN - Ký hàng loạt cho nhân viên chưa ký
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Ký Hàng Loạt Chữ Ký Nhân Viên
+        </h1>
+        <p className="text-sm text-gray-600">
+          MAY HÒA THỌ ĐIỆN BÀN - Ký hàng loạt cho nhân viên chưa ký
+        </p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <BulkSignatureSection
-          onSuccess={() => {
-            router.refresh();
-          }}
-        />
-      </div>
+      <BulkSignatureSection
+        onSuccess={() => {
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

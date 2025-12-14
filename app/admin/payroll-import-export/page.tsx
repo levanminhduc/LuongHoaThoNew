@@ -29,7 +29,6 @@ import {
   FileSpreadsheet,
   CheckCircle,
   AlertTriangle,
-  ArrowLeft,
   RefreshCw,
   Eye,
   Search,
@@ -629,574 +628,558 @@ export default function PayrollImportExportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="outline"
-              onClick={() => router.push("/admin/dashboard")}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Quay lại Dashboard
-            </Button>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Import/Export Lương Nhân Viên
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Quản lý dữ liệu lương: Tải template, export dữ liệu và import file
-            Excel
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Import/Export Lương Nhân Viên
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Quản lý dữ liệu lương: Tải template, export dữ liệu và import file
+          Excel
+        </p>
+      </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="export" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="export" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Export & Template
-            </TabsTrigger>
-            <TabsTrigger value="analyze" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Analyze File
-            </TabsTrigger>
-            <TabsTrigger value="import" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              Import Dữ Liệu
-            </TabsTrigger>
-          </TabsList>
+      {/* Main Content */}
+      <Tabs defaultValue="export" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="export" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export & Template
+          </TabsTrigger>
+          <TabsTrigger value="analyze" className="flex items-center gap-2">
+            <Search className="h-4 w-4" />
+            Analyze File
+          </TabsTrigger>
+          <TabsTrigger value="import" className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            Import Dữ Liệu
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Export Tab */}
-          <TabsContent value="export">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5 text-blue-600" />
-                  Tải Template & Export Dữ Liệu
-                </CardTitle>
-                <CardDescription>
-                  Tải template Excel để import hoặc export dữ liệu lương hiện có
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Export Type Selection */}
-                  <div className="space-y-4">
-                    <Label htmlFor="export-type">Loại Export</Label>
-                    <Select
-                      value={exportType}
-                      onValueChange={(value: "template" | "data") =>
-                        setExportType(value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn loại export" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="template">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Template Trống</span>
-                            <span className="text-xs text-gray-500">
-                              File mẫu với 2 dòng dữ liệu ví dụ
-                            </span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="data">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Export Dữ Liệu</span>
-                            <span className="text-xs text-gray-500">
-                              Xuất dữ liệu lương hiện có
-                            </span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Salary Month Selection (for data export) */}
-                  {exportType === "data" && (
-                    <div className="space-y-4">
-                      <Label htmlFor="salary-month">
-                        Tháng Lương (Tùy chọn)
-                      </Label>
-                      <Input
-                        id="salary-month"
-                        type="month"
-                        value={salaryMonth}
-                        onChange={(e) => setSalaryMonth(e.target.value)}
-                        placeholder="Chọn tháng lương"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Để trống để export tất cả dữ liệu
-                      </p>
-                    </div>
-                  )}
+        {/* Export Tab */}
+        <TabsContent value="export">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="h-5 w-5 text-blue-600" />
+                Tải Template & Export Dữ Liệu
+              </CardTitle>
+              <CardDescription>
+                Tải template Excel để import hoặc export dữ liệu lương hiện có
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Export Type Selection */}
+                <div className="space-y-4">
+                  <Label htmlFor="export-type">Loại Export</Label>
+                  <Select
+                    value={exportType}
+                    onValueChange={(value: "template" | "data") =>
+                      setExportType(value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn loại export" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="template">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Template Trống</span>
+                          <span className="text-xs text-gray-500">
+                            File mẫu với 2 dòng dữ liệu ví dụ
+                          </span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="data">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Export Dữ Liệu</span>
+                          <span className="text-xs text-gray-500">
+                            Xuất dữ liệu lương hiện có
+                          </span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Export Button */}
-                <div className="flex justify-center gap-3">
-                  <Button
-                    onClick={() => handleExport()}
-                    disabled={exportLoading}
-                    className="flex items-center gap-2 px-8"
-                  >
-                    {exportLoading ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    {exportLoading
-                      ? "Đang tạo file..."
-                      : `Tải ${exportType === "template" ? "Template" : "Dữ Liệu"}`}
-                  </Button>
+                {/* Salary Month Selection (for data export) */}
+                {exportType === "data" && (
+                  <div className="space-y-4">
+                    <Label htmlFor="salary-month">Tháng Lương (Tùy chọn)</Label>
+                    <Input
+                      id="salary-month"
+                      type="month"
+                      value={salaryMonth}
+                      onChange={(e) => setSalaryMonth(e.target.value)}
+                      placeholder="Chọn tháng lương"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Để trống để export tất cả dữ liệu
+                    </p>
+                  </div>
+                )}
+              </div>
 
+              {/* Export Button */}
+              <div className="flex justify-center gap-3">
+                <Button
+                  onClick={() => handleExport()}
+                  disabled={exportLoading}
+                  className="flex items-center gap-2 px-8"
+                >
+                  {exportLoading ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  {exportLoading
+                    ? "Đang tạo file..."
+                    : `Tải ${exportType === "template" ? "Template" : "Dữ Liệu"}`}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateConfigTemplate}
+                  disabled={exportLoading}
+                  className="flex items-center gap-2"
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Template từ Config
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateAliasTemplate}
+                  disabled={exportLoading}
+                  className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Template từ Aliases
+                </Button>
+              </div>
+
+              {/* Export Info */}
+              <Alert>
+                <FileSpreadsheet className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Lưu ý:</strong>
+                  <ul className="mt-2 space-y-1 text-sm">
+                    <li>
+                      • Template chỉ chứa các cột có dữ liệu trong hệ thống
+                    </li>
+                    <li>• File Excel sử dụng headers tiếng Việt dễ hiểu</li>
+                    <li>
+                      • Template có 2 dòng dữ liệu mẫu để tham khảo format
+                    </li>
+                    <li>
+                      • Export dữ liệu sẽ bao gồm tất cả records hoặc theo tháng
+                      được chọn
+                    </li>
+                    <li>
+                      • <strong>Template từ Aliases</strong>: Sử dụng Column
+                      Aliases đã cấu hình để tạo headers thân thiện
+                    </li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Analyze File Tab */}
+        <TabsContent value="analyze">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-purple-600" />
+                Column Mapping Analysis
+              </CardTitle>
+              <CardDescription>
+                Upload and analyze your Excel file to preview column mapping
+                before import
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* File Upload Section */}
+              <div className="space-y-4">
+                <Label htmlFor="analysis-file-input">
+                  Select Excel File for Analysis
+                </Label>
+                <Input
+                  id="analysis-file-input"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleAnalysisFileSelect}
+                  disabled={analysisLoading}
+                />
+                {analysisFile && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span>{analysisFile.name}</span>
+                    <Badge variant="outline">
+                      {(analysisFile.size / 1024 / 1024).toFixed(2)} MB
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Analyze Button */}
+              <div className="flex justify-center">
+                <Button
+                  onClick={handleAnalyzeFile}
+                  disabled={!analysisFile || analysisLoading}
+                  className="flex items-center gap-2 px-8"
+                >
+                  {analysisLoading ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                  {analysisLoading ? "Analyzing..." : "Analyze Column Mapping"}
+                </Button>
+              </div>
+
+              {/* Analysis Progress */}
+              {analysisLoading && (
+                <div className="space-y-2">
+                  <div className="text-sm text-center text-gray-600">
+                    Analyzing file structure and column mappings...
+                  </div>
+                  <Progress value={undefined} className="w-full" />
+                </div>
+              )}
+
+              {/* Analysis Results */}
+              {analysisResults && (
+                <ColumnMappingAnalysis
+                  analysisResult={analysisResults}
+                  onFixMapping={handleFixMapping}
+                  onProceedImport={handleProceedImport}
+                  onReanalyze={handleReanalyze}
+                />
+              )}
+
+              {/* Analysis Info */}
+              <Alert>
+                <Eye className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Analysis Features:</strong>
+                  <ul className="mt-2 space-y-1 text-sm">
+                    <li>
+                      • <strong>Column Detection:</strong> Automatically detect
+                      all columns in your Excel file
+                    </li>
+                    <li>
+                      • <strong>Smart Mapping:</strong> Use AI-powered mapping
+                      with confidence scores
+                    </li>
+                    <li>
+                      • <strong>Quality Assessment:</strong> Get detailed
+                      analysis of mapping quality
+                    </li>
+                    <li>
+                      • <strong>Issue Identification:</strong> Identify columns
+                      that need manual review
+                    </li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Import Tab */}
+        <TabsContent value="import">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5 text-green-600" />
+                Import Dữ Liệu Lương
+              </CardTitle>
+              <CardDescription>
+                Upload file Excel để import dữ liệu lương vào hệ thống
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* File Selection */}
+              <div className="space-y-4">
+                <Label htmlFor="file-input">Chọn File Excel</Label>
+                <Input
+                  id="file-input"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileSelect}
+                  disabled={loading}
+                />
+                {selectedFile && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span>{selectedFile.name}</span>
+                    <Badge variant="outline">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Progress Widget */}
+              {loading && (
+                <ImportProgress
+                  fileName={selectedFile?.name}
+                  progress={progress}
+                  status={importStatus}
+                  message="Đang import dữ liệu lương..."
+                />
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 justify-center">
+                <Button
+                  onClick={handleImport}
+                  disabled={!selectedFile || loading}
+                  className="flex items-center gap-2 px-8"
+                >
+                  {loading ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {loading ? "Đang Import..." : "Bắt Đầu Import"}
+                </Button>
+
+                {(selectedFile || results) && (
                   <Button
                     variant="outline"
-                    onClick={handleGenerateConfigTemplate}
-                    disabled={exportLoading}
+                    onClick={resetForm}
+                    disabled={loading}
                     className="flex items-center gap-2"
                   >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    Template từ Config
+                    <RefreshCw className="h-4 w-4" />
+                    Reset
                   </Button>
+                )}
+              </div>
 
-                  <Button
-                    variant="outline"
-                    onClick={handleGenerateAliasTemplate}
-                    disabled={exportLoading}
-                    className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                  >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    Template từ Aliases
-                  </Button>
-                </div>
+              {/* Import Info */}
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Quy tắc Import:</strong>
+                  <ul className="mt-2 space-y-1 text-sm">
+                    <li>
+                      • <strong>Overwrite Logic:</strong> Nếu record đã tồn tại
+                      (cùng mã NV + tháng lương) sẽ được ghi đè hoàn toàn
+                    </li>
+                    <li>
+                      • <strong>Validation:</strong> Mã nhân viên phải tồn tại
+                      trong hệ thống
+                    </li>
+                    <li>
+                      • <strong>Format:</strong> Tháng lương phải có định dạng
+                      YYYY-MM (ví dụ: 2024-01)
+                    </li>
+                    <li>
+                      • <strong>File Size:</strong> Hỗ trợ tối đa 5000 rows
+                    </li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-                {/* Export Info */}
-                <Alert>
-                  <FileSpreadsheet className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Lưu ý:</strong>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>
-                        • Template chỉ chứa các cột có dữ liệu trong hệ thống
-                      </li>
-                      <li>• File Excel sử dụng headers tiếng Việt dễ hiểu</li>
-                      <li>
-                        • Template có 2 dòng dữ liệu mẫu để tham khảo format
-                      </li>
-                      <li>
-                        • Export dữ liệu sẽ bao gồm tất cả records hoặc theo
-                        tháng được chọn
-                      </li>
-                      <li>
-                        • <strong>Template từ Aliases</strong>: Sử dụng Column
-                        Aliases đã cấu hình để tạo headers thân thiện
-                      </li>
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          </TabsContent>
+      {/* Messages */}
+      {message && (
+        <Alert className="mt-6">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
-          {/* Analyze File Tab */}
-          <TabsContent value="analyze">
+      {error && (
+        <Alert variant="destructive" className="mt-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {analysisError && (
+        <Alert variant="destructive" className="mt-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Analysis Error:</strong> {analysisError}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Results Display - Using ImportResultSummary Widget */}
+      {results && (
+        <div className="mt-6 space-y-4">
+          <ImportResultSummary
+            totalRecords={results.totalRecords}
+            successCount={results.successCount}
+            errorCount={results.errorCount}
+            skippedCount={results.skippedCount}
+            overwriteCount={results.overwriteCount}
+            processingTime={results.processingTime}
+            onViewErrors={
+              results.errors && results.errors.length > 0
+                ? () => setShowErrorModal(true)
+                : undefined
+            }
+          />
+
+          {/* Error Actions - Export Button */}
+          {results.errors && results.errors.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-purple-600" />
-                  Column Mapping Analysis
-                </CardTitle>
-                <CardDescription>
-                  Upload and analyze your Excel file to preview column mapping
-                  before import
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* File Upload Section */}
-                <div className="space-y-4">
-                  <Label htmlFor="analysis-file-input">
-                    Select Excel File for Analysis
-                  </Label>
-                  <Input
-                    id="analysis-file-input"
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handleAnalysisFileSelect}
-                    disabled={analysisLoading}
-                  />
-                  {analysisFile && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FileSpreadsheet className="h-4 w-4" />
-                      <span>{analysisFile.name}</span>
-                      <Badge variant="outline">
-                        {(analysisFile.size / 1024 / 1024).toFixed(2)} MB
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                {/* Analyze Button */}
-                <div className="flex justify-center">
-                  <Button
-                    onClick={handleAnalyzeFile}
-                    disabled={!analysisFile || analysisLoading}
-                    className="flex items-center gap-2 px-8"
-                  >
-                    {analysisLoading ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                    {analysisLoading
-                      ? "Analyzing..."
-                      : "Analyze Column Mapping"}
-                  </Button>
-                </div>
-
-                {/* Analysis Progress */}
-                {analysisLoading && (
-                  <div className="space-y-2">
-                    <div className="text-sm text-center text-gray-600">
-                      Analyzing file structure and column mappings...
-                    </div>
-                    <Progress value={undefined} className="w-full" />
-                  </div>
-                )}
-
-                {/* Analysis Results */}
-                {analysisResults && (
-                  <ColumnMappingAnalysis
-                    analysisResult={analysisResults}
-                    onFixMapping={handleFixMapping}
-                    onProceedImport={handleProceedImport}
-                    onReanalyze={handleReanalyze}
-                  />
-                )}
-
-                {/* Analysis Info */}
-                <Alert>
-                  <Eye className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Analysis Features:</strong>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>
-                        • <strong>Column Detection:</strong> Automatically
-                        detect all columns in your Excel file
-                      </li>
-                      <li>
-                        • <strong>Smart Mapping:</strong> Use AI-powered mapping
-                        with confidence scores
-                      </li>
-                      <li>
-                        • <strong>Quality Assessment:</strong> Get detailed
-                        analysis of mapping quality
-                      </li>
-                      <li>
-                        • <strong>Issue Identification:</strong> Identify
-                        columns that need manual review
-                      </li>
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Import Tab */}
-          <TabsContent value="import">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-green-600" />
-                  Import Dữ Liệu Lương
-                </CardTitle>
-                <CardDescription>
-                  Upload file Excel để import dữ liệu lương vào hệ thống
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* File Selection */}
-                <div className="space-y-4">
-                  <Label htmlFor="file-input">Chọn File Excel</Label>
-                  <Input
-                    id="file-input"
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handleFileSelect}
-                    disabled={loading}
-                  />
-                  {selectedFile && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FileSpreadsheet className="h-4 w-4" />
-                      <span>{selectedFile.name}</span>
-                      <Badge variant="outline">
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                {/* Progress Widget */}
-                {loading && (
-                  <ImportProgress
-                    fileName={selectedFile?.name}
-                    progress={progress}
-                    status={importStatus}
-                    message="Đang import dữ liệu lương..."
-                  />
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-4 justify-center">
-                  <Button
-                    onClick={handleImport}
-                    disabled={!selectedFile || loading}
-                    className="flex items-center gap-2 px-8"
-                  >
-                    {loading ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                    {loading ? "Đang Import..." : "Bắt Đầu Import"}
-                  </Button>
-
-                  {(selectedFile || results) && (
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-red-700">
+                    Chi Tiết Lỗi ({results.errors.length} lỗi)
+                  </h4>
+                  <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      onClick={resetForm}
-                      disabled={loading}
-                      className="flex items-center gap-2"
+                      size="sm"
+                      onClick={() => setShowErrorModal(true)}
+                      className="text-red-600 border-red-300 hover:bg-red-50"
                     >
-                      <RefreshCw className="h-4 w-4" />
-                      Reset
+                      <Eye className="h-4 w-4 mr-2" />
+                      Xem Chi Tiết
                     </Button>
-                  )}
-                </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const token = localStorage.getItem("admin_token");
+                          if (!token || !results.errors) return;
 
-                {/* Import Info */}
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Quy tắc Import:</strong>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>
-                        • <strong>Overwrite Logic:</strong> Nếu record đã tồn
-                        tại (cùng mã NV + tháng lương) sẽ được ghi đè hoàn toàn
-                      </li>
-                      <li>
-                        • <strong>Validation:</strong> Mã nhân viên phải tồn tại
-                        trong hệ thống
-                      </li>
-                      <li>
-                        • <strong>Format:</strong> Tháng lương phải có định dạng
-                        YYYY-MM (ví dụ: 2024-01)
-                      </li>
-                      <li>
-                        • <strong>File Size:</strong> Hỗ trợ tối đa 5000 rows
-                      </li>
-                    </ul>
-                  </AlertDescription>
-                </Alert>
+                          const response = await fetch(
+                            "/api/admin/export-import-errors",
+                            {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                              },
+                              body: JSON.stringify({
+                                errors: results.errors.map((err) => ({
+                                  row: err.row,
+                                  column: err.field,
+                                  field: err.field,
+                                  currentValue:
+                                    err.employee_id || err.salary_month,
+                                  errorType: err.errorType || "validation",
+                                  severity: "medium",
+                                  message: err.error,
+                                })),
+                                format: "excel",
+                                fileName: "import_errors",
+                              }),
+                            },
+                          );
+
+                          if (response.ok) {
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `import_errors_${new Date().toISOString().split("T")[0]}.xlsx`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                          }
+                        } catch (exportErr) {
+                          console.error("Export error:", exportErr);
+                        }
+                      }}
+                      className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Tải Báo Cáo Lỗi Excel
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
+      )}
 
-        {/* Messages */}
-        {message && (
-          <Alert className="mt-6">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
-
-        {error && (
-          <Alert variant="destructive" className="mt-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {analysisError && (
-          <Alert variant="destructive" className="mt-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Analysis Error:</strong> {analysisError}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Results Display - Using ImportResultSummary Widget */}
-        {results && (
-          <div className="mt-6 space-y-4">
-            <ImportResultSummary
-              totalRecords={results.totalRecords}
-              successCount={results.successCount}
-              errorCount={results.errorCount}
-              skippedCount={results.skippedCount}
-              overwriteCount={results.overwriteCount}
-              processingTime={results.processingTime}
-              onViewErrors={
-                results.errors && results.errors.length > 0
-                  ? () => setShowErrorModal(true)
-                  : undefined
-              }
-            />
-
-            {/* Error Actions - Export Button */}
-            {results.errors && results.errors.length > 0 && (
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-red-700">
-                      Chi Tiết Lỗi ({results.errors.length} lỗi)
-                    </h4>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowErrorModal(true)}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Xem Chi Tiết
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            const token = localStorage.getItem("admin_token");
-                            if (!token || !results.errors) return;
-
-                            const response = await fetch(
-                              "/api/admin/export-import-errors",
-                              {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  Authorization: `Bearer ${token}`,
-                                },
-                                body: JSON.stringify({
-                                  errors: results.errors.map((err) => ({
-                                    row: err.row,
-                                    column: err.field,
-                                    field: err.field,
-                                    currentValue:
-                                      err.employee_id || err.salary_month,
-                                    errorType: err.errorType || "validation",
-                                    severity: "medium",
-                                    message: err.error,
-                                  })),
-                                  format: "excel",
-                                  fileName: "import_errors",
-                                }),
-                              },
-                            );
-
-                            if (response.ok) {
-                              const blob = await response.blob();
-                              const url = window.URL.createObjectURL(blob);
-                              const a = document.createElement("a");
-                              a.href = url;
-                              a.download = `import_errors_${new Date().toISOString().split("T")[0]}.xlsx`;
-                              document.body.appendChild(a);
-                              a.click();
-                              window.URL.revokeObjectURL(url);
-                              document.body.removeChild(a);
-                            }
-                          } catch (exportErr) {
-                            console.error("Export error:", exportErr);
-                          }
-                        }}
-                        className="text-blue-600 border-blue-300 hover:bg-blue-50"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Tải Báo Cáo Lỗi Excel
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {/* Import Preview Section */}
-        {results && results.successCount > 0 && importBatchId && (
-          <ImportPreviewSection
-            importBatchId={importBatchId}
-            totalRecords={results.totalRecords}
-            successCount={results.successCount}
-          />
-        )}
-
-        {/* Export Configuration Dialog */}
-        <ExportConfigurationDialog
-          open={showExportDialog}
-          onOpenChange={setShowExportDialog}
-          onExport={handleExport}
-          availableFields={[
-            "employee_id",
-            "salary_month",
-            "he_so_lam_viec",
-            "he_so_phu_cap_ket_qua",
-            "he_so_luong_co_ban",
-            "luong_toi_thieu_cty",
-            "ngay_cong_trong_gio",
-            "gio_cong_tang_ca",
-            "gio_an_ca",
-            "tong_gio_lam_viec",
-            "tong_he_so_quy_doi",
-            "ngay_cong_chu_nhat",
-            "tong_luong_san_pham_cong_doan",
-            "don_gia_tien_luong_tren_gio",
-            "tien_luong_san_pham_trong_gio",
-            "tien_luong_tang_ca",
-            "tien_luong_30p_an_ca",
-            "tien_luong_chu_nhat",
-            "thuong_hieu_qua_lam_viec",
-            "thuong_chuyen_can",
-            "thuong_khac",
-            "phu_cap_tien_an",
-            "phu_cap_xang_xe",
-            "phu_cap_dien_thoai",
-            "phu_cap_khac",
-            "pc_luong_cho_viec",
-            "luong_cnkcp_vuot",
-            "tien_tang_ca_vuot",
-            "ngay_cong_phep_le",
-            "tien_phep_le",
-            "tong_cong_tien_luong",
-            "tien_boc_vac",
-            "ho_tro_xang_xe",
-            "thue_tncn_nam_2024",
-            "tam_ung",
-            "thue_tncn",
-            "bhxh_bhtn_bhyt_total",
-            "truy_thu_the_bhyt",
-            "tien_luong_thuc_nhan_cuoi_ky",
-          ]}
-          defaultSalaryMonth={salaryMonth}
+      {/* Import Preview Section */}
+      {results && results.successCount > 0 && importBatchId && (
+        <ImportPreviewSection
+          importBatchId={importBatchId}
+          totalRecords={results.totalRecords}
+          successCount={results.successCount}
         />
+      )}
 
-        {results && results.errors && results.errors.length > 0 && (
-          <ImportErrorModal
-            isOpen={showErrorModal}
-            onClose={() => setShowErrorModal(false)}
-            errors={results.errors}
-            totalRecords={results.totalRecords}
-            successCount={results.successCount}
-            skippedCount={results.skippedCount}
-            originalHeaders={results.originalHeaders}
-          />
-        )}
-      </div>
+      {/* Export Configuration Dialog */}
+      <ExportConfigurationDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        onExport={handleExport}
+        availableFields={[
+          "employee_id",
+          "salary_month",
+          "he_so_lam_viec",
+          "he_so_phu_cap_ket_qua",
+          "he_so_luong_co_ban",
+          "luong_toi_thieu_cty",
+          "ngay_cong_trong_gio",
+          "gio_cong_tang_ca",
+          "gio_an_ca",
+          "tong_gio_lam_viec",
+          "tong_he_so_quy_doi",
+          "ngay_cong_chu_nhat",
+          "tong_luong_san_pham_cong_doan",
+          "don_gia_tien_luong_tren_gio",
+          "tien_luong_san_pham_trong_gio",
+          "tien_luong_tang_ca",
+          "tien_luong_30p_an_ca",
+          "tien_luong_chu_nhat",
+          "thuong_hieu_qua_lam_viec",
+          "thuong_chuyen_can",
+          "thuong_khac",
+          "phu_cap_tien_an",
+          "phu_cap_xang_xe",
+          "phu_cap_dien_thoai",
+          "phu_cap_khac",
+          "pc_luong_cho_viec",
+          "luong_cnkcp_vuot",
+          "tien_tang_ca_vuot",
+          "ngay_cong_phep_le",
+          "tien_phep_le",
+          "tong_cong_tien_luong",
+          "tien_boc_vac",
+          "ho_tro_xang_xe",
+          "thue_tncn_nam_2024",
+          "tam_ung",
+          "thue_tncn",
+          "bhxh_bhtn_bhyt_total",
+          "truy_thu_the_bhyt",
+          "tien_luong_thuc_nhan_cuoi_ky",
+        ]}
+        defaultSalaryMonth={salaryMonth}
+      />
+
+      {results && results.errors && results.errors.length > 0 && (
+        <ImportErrorModal
+          isOpen={showErrorModal}
+          onClose={() => setShowErrorModal(false)}
+          errors={results.errors}
+          totalRecords={results.totalRecords}
+          successCount={results.successCount}
+          skippedCount={results.skippedCount}
+          originalHeaders={results.originalHeaders}
+        />
+      )}
     </div>
   );
 }

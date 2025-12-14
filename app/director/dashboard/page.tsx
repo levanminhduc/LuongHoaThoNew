@@ -30,15 +30,14 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Building2,
   PenTool,
   BarChart3,
-  LogOut,
   Eye,
   UserX,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 import DashboardCache from "@/utils/dashboardCache";
+import { PageLoading } from "@/components/ui/skeleton-patterns";
 
 export default function DirectorDashboard() {
   const [loading, setLoading] = useState(true);
@@ -173,364 +172,314 @@ export default function DirectorDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push("/");
-  };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dashboard...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading variant="dashboard" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 space-y-4 sm:space-y-0">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                Dashboard Giám Đốc
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
-                MAY HÒA THỌ ĐIỆN BÀN - Hệ thống ký xác nhận lương
-              </p>
-            </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Dashboard Giám Đốc
+          </h1>
+          <p className="text-sm text-gray-600">Tháng: {selectedMonth}</p>
+        </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowOverviewModal(true)}
-                className="hidden sm:flex"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Xem Tổng Quan
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowOverviewModal(true)}
-                className="sm:hidden"
-              >
-                <Eye className="h-4 w-4" />
-                Xem Tổng Quan
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowUnsignedModal(true)}
-                disabled={!monthStatus}
-                className="hidden sm:flex border-red-200 hover:bg-red-50"
-              >
-                <UserX className="h-4 w-4 mr-2 text-red-600" />
-                <span className="text-red-700">Nhân Viên Chưa Ký</span>
-                {monthStatus && (
-                  <Badge className="ml-2 bg-red-600 text-white">
-                    {monthStatus.employee_completion.total_employees -
-                      monthStatus.employee_completion.signed_employees}
-                  </Badge>
-                )}
-              </Button>
-              {/* Month selector: full width on mobile, fixed width on larger screens */}
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() - i);
-                    const value = date.toISOString().slice(0, 7);
-                    return (
-                      <SelectItem key={value} value={value}>
-                        {date.toLocaleDateString("vi-VN", {
-                          year: "numeric",
-                          month: "long",
-                        })}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Đăng Xuất
-              </Button>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowOverviewModal(true)}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Xem Tổng Quan
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowUnsignedModal(true)}
+            disabled={!monthStatus}
+            className="border-red-200 hover:bg-red-50"
+          >
+            <UserX className="h-4 w-4 mr-2 text-red-600" />
+            <span className="text-red-700">Chưa Ký</span>
+            {monthStatus && (
+              <Badge className="ml-2 bg-red-600 text-white">
+                {monthStatus.employee_completion.total_employees -
+                  monthStatus.employee_completion.signed_employees}
+              </Badge>
+            )}
+          </Button>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 12 }, (_, i) => {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const value = date.toISOString().slice(0, 7);
+                return (
+                  <SelectItem key={value} value={value}>
+                    {date.toLocaleDateString("vi-VN", {
+                      year: "numeric",
+                      month: "long",
+                    })}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </div>
+      {message && (
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {message && (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        )}
+      {monthStatus && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+            onClick={() => setShowEmployeeModal(true)}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Tổng Nhân Viên
+              </CardTitle>
+              <Users className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.employee_completion.total_employees}
+              </div>
+              <p className="text-xs text-blue-100">
+                Tháng: {selectedMonth} • Click để xem chi tiết
+              </p>
+            </CardContent>
+          </Card>
 
-        {monthStatus && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-              onClick={() => setShowEmployeeModal(true)}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Tổng Nhân Viên
-                </CardTitle>
-                <Users className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.employee_completion.total_employees}
-                </div>
-                <p className="text-xs text-blue-100">
-                  Tháng: {selectedMonth} • Click để xem chi tiết
-                </p>
-              </CardContent>
-            </Card>
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Đã Ký Lương</CardTitle>
+              <CheckCircle className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.employee_completion.signed_employees}
+              </div>
+              <p className="text-xs text-green-100">
+                {monthStatus.employee_completion.completion_percentage.toFixed(
+                  1,
+                )}
+                % hoàn thành
+              </p>
+            </CardContent>
+          </Card>
 
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Đã Ký Lương
-                </CardTitle>
-                <CheckCircle className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.employee_completion.signed_employees}
-                </div>
-                <p className="text-xs text-green-100">
-                  {monthStatus.employee_completion.completion_percentage.toFixed(
-                    1,
-                  )}
-                  % hoàn thành
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Ký Xác Nhận
-                </CardTitle>
-                <PenTool className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.summary.completed_signatures}/3
-                </div>
-                <p className="text-xs text-green-100">Management signatures</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Trạng Thái
-                </CardTitle>
-                <BarChart3 className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {monthStatus.employee_completion.is_100_percent_complete
-                    ? "SẴN SÀNG"
-                    : "CHỜ"}
-                </div>
-                <p className="text-xs text-orange-100">
-                  {monthStatus.summary.is_fully_signed
-                    ? "Hoàn thành"
-                    : "Đang xử lý"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        <Tabs defaultValue="signature" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="signature" className="flex items-center gap-2">
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ký Xác Nhận</CardTitle>
               <PenTool className="h-4 w-4" />
-              Ký Xác Nhận
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Tiến Độ
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              Lịch Sử
-            </TabsTrigger>
-          </TabsList>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.summary.completed_signatures}/3
+              </div>
+              <p className="text-xs text-green-100">Management signatures</p>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="signature" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PenTool className="h-5 w-5" />
-                  Ký Xác Nhận Lương Tháng {selectedMonth}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {monthStatus?.employee_completion.is_100_percent_complete ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                      <span className="text-green-700">
-                        100% nhân viên đã ký lương
-                      </span>
-                    </div>
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Trạng Thái</CardTitle>
+              <BarChart3 className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {monthStatus.employee_completion.is_100_percent_complete
+                  ? "SẴN SÀNG"
+                  : "CHỜ"}
+              </div>
+              <p className="text-xs text-orange-100">
+                {monthStatus.summary.is_fully_signed
+                  ? "Hoàn thành"
+                  : "Đang xử lý"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-                    {monthStatus.management_signatures.giam_doc ? (
-                      <div className="p-4 bg-green-50 rounded-lg">
-                        <p className="text-green-800 font-medium">
-                          ✅ Đã ký xác nhận
-                        </p>
-                        <p className="text-sm text-green-600">
-                          Ký bởi:{" "}
-                          {
-                            monthStatus.management_signatures.giam_doc
-                              .signed_by_name
-                          }
-                        </p>
-                        <p className="text-sm text-green-600">
-                          Thời gian:{" "}
-                          {formatTimestampFromDBRaw(
-                            monthStatus.management_signatures.giam_doc
-                              .signed_at,
-                          )}
-                        </p>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={handleSignature}
-                        disabled={isSigning}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSigning ? (
-                          <>
-                            <Clock className="h-4 w-4 mr-2 animate-spin" />
-                            Đang xử lý...
-                          </>
-                        ) : (
-                          <>
-                            <PenTool className="h-4 w-4 mr-2" />
-                            Ký Xác Nhận Giám Đốc
-                          </>
+      <Tabs defaultValue="signature" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="signature" className="flex items-center gap-2">
+            <PenTool className="h-4 w-4" />
+            Ký Xác Nhận
+          </TabsTrigger>
+          <TabsTrigger value="progress" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Tiến Độ
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Lịch Sử
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="signature" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PenTool className="h-5 w-5" />
+                Ký Xác Nhận Lương Tháng {selectedMonth}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {monthStatus?.employee_completion.is_100_percent_complete ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <span className="text-green-700">
+                      100% nhân viên đã ký lương
+                    </span>
+                  </div>
+
+                  {monthStatus.management_signatures.giam_doc ? (
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <p className="text-green-800 font-medium">
+                        ✅ Đã ký xác nhận
+                      </p>
+                      <p className="text-sm text-green-600">
+                        Ký bởi:{" "}
+                        {
+                          monthStatus.management_signatures.giam_doc
+                            .signed_by_name
+                        }
+                      </p>
+                      <p className="text-sm text-green-600">
+                        Thời gian:{" "}
+                        {formatTimestampFromDBRaw(
+                          monthStatus.management_signatures.giam_doc.signed_at,
                         )}
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-4 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-5 w-5 text-yellow-500" />
-                      <span className="text-yellow-800 font-medium">
-                        Chờ nhân viên ký đủ
-                      </span>
+                      </p>
                     </div>
-                    <p className="text-sm text-yellow-700">
-                      Hiện tại:{" "}
-                      {monthStatus?.employee_completion.signed_employees}/
-                      {monthStatus?.employee_completion.total_employees} nhân
-                      viên đã ký (
-                      {monthStatus?.employee_completion.completion_percentage.toFixed(
-                        1,
-                      )}
-                      %)
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="progress" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tiến Độ Ký Xác Nhận</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {monthStatus && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Updated to green color scheme to match signature cards */}
-                      <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                        <div className="text-2xl font-bold text-green-600">
-                          {monthStatus.management_signatures.giam_doc
-                            ? "✅"
-                            : "⏳"}
-                        </div>
-                        <p className="text-sm text-green-800">Giám Đốc</p>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                        <div className="text-2xl font-bold text-green-600">
-                          {monthStatus.management_signatures.ke_toan
-                            ? "✅"
-                            : "⏳"}
-                        </div>
-                        <p className="text-sm text-green-800">Kế Toán</p>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                        <div className="text-2xl font-bold text-green-600">
-                          {monthStatus.management_signatures.nguoi_lap_bieu
-                            ? "✅"
-                            : "⏳"}
-                        </div>
-                        <p className="text-sm text-green-800">Người Lập Biểu</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="history" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Lịch Sử Ký Xác Nhận</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {signatureHistory.map((signature) => (
-                    <div
-                      key={signature.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  ) : (
+                    <Button
+                      onClick={handleSignature}
+                      disabled={isSigning}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div>
-                        <p className="font-medium">
-                          {signature.signed_by_name}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {signature.signature_type} - {signature.salary_month}
-                        </p>
-                      </div>
-                      <Badge variant="secondary">
-                        {formatTimestampFromDBRaw(signature.signed_at)}
-                      </Badge>
-                    </div>
-                  ))}
+                      {isSigning ? (
+                        <>
+                          <Clock className="h-4 w-4 mr-2 animate-spin" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          <PenTool className="h-4 w-4 mr-2" />
+                          Ký Xác Nhận Giám Đốc
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+              ) : (
+                <div className="p-4 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-5 w-5 text-yellow-500" />
+                    <span className="text-yellow-800 font-medium">
+                      Chờ nhân viên ký đủ
+                    </span>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    Hiện tại:{" "}
+                    {monthStatus?.employee_completion.signed_employees}/
+                    {monthStatus?.employee_completion.total_employees} nhân viên
+                    đã ký (
+                    {monthStatus?.employee_completion.completion_percentage.toFixed(
+                      1,
+                    )}
+                    %)
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
+        <TabsContent value="progress" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tiến Độ Ký Xác Nhận</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {monthStatus && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Updated to green color scheme to match signature cards */}
+                    <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-2xl font-bold text-green-600">
+                        {monthStatus.management_signatures.giam_doc
+                          ? "✅"
+                          : "⏳"}
+                      </div>
+                      <p className="text-sm text-green-800">Giám Đốc</p>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-2xl font-bold text-green-600">
+                        {monthStatus.management_signatures.ke_toan
+                          ? "✅"
+                          : "⏳"}
+                      </div>
+                      <p className="text-sm text-green-800">Kế Toán</p>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-2xl font-bold text-green-600">
+                        {monthStatus.management_signatures.nguoi_lap_bieu
+                          ? "✅"
+                          : "⏳"}
+                      </div>
+                      <p className="text-sm text-green-800">Người Lập Biểu</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lịch Sử Ký Xác Nhận</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {signatureHistory.map((signature) => (
+                  <div
+                    key={signature.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">{signature.signed_by_name}</p>
+                      <p className="text-sm text-gray-600">
+                        {signature.signature_type} - {signature.salary_month}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">
+                      {formatTimestampFromDBRaw(signature.signed_at)}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       {/* Employee List Modal */}
       <EmployeeListModal
         isOpen={showEmployeeModal}

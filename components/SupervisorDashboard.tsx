@@ -33,7 +33,6 @@ import {
   Users,
   DollarSign,
   FileCheck,
-  LogOut,
   Eye,
   TrendingUp,
   Calendar,
@@ -47,6 +46,7 @@ import {
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
 import DashboardCache from "@/utils/dashboardCache";
+import { PageLoading } from "@/components/ui/skeleton-patterns";
 
 interface User {
   employee_id: string;
@@ -140,12 +140,10 @@ interface DepartmentStats {
 
 interface SupervisorDashboardProps {
   user: User;
-  onLogout: () => void;
 }
 
 export default function SupervisorDashboard({
   user,
-  onLogout,
 }: SupervisorDashboardProps) {
   const [payrollData, setPayrollData] = useState<PayrollRecord[]>([]);
   const [departmentStats, setDepartmentStats] =
@@ -378,180 +376,298 @@ export default function SupervisorDashboard({
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <PageLoading variant="dashboard" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 space-y-4 sm:space-y-0">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                Dashboard Tổ Trưởng
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
-                Xin chào, {user.username} | Department: {user.department}
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() - i);
-                    const value = date.toISOString().slice(0, 7);
-                    const label = date.toLocaleDateString("vi-VN", {
-                      year: "numeric",
-                      month: "long",
-                    });
-                    return (
-                      <SelectItem
-                        key={`supervisor-month-${i}-${value}`}
-                        value={value}
-                      >
-                        {label}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                onClick={onLogout}
-                className="w-full sm:w-auto"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Đăng xuất
-              </Button>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Dashboard Tổ Trưởng
+          </h1>
+          <p className="text-sm text-gray-600">
+            Xin chào, {user.username} | Department: {user.department}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 12 }, (_, i) => {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const value = date.toISOString().slice(0, 7);
+                const label = date.toLocaleDateString("vi-VN", {
+                  year: "numeric",
+                  month: "long",
+                });
+                return (
+                  <SelectItem
+                    key={`supervisor-month-${i}-${value}`}
+                    value={value}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </div>
+      {/* Overview Stats */}
+      {departmentStats && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium truncate">
+                Tổng Nhân Viên
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl sm:text-2xl font-bold">
+                {departmentStats.totalEmployees}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                Department {departmentStats.department}
+              </p>
+            </CardContent>
+          </Card>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Overview Stats */}
-        {departmentStats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <Card className="hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium truncate">
-                  Tổng Nhân Viên
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium truncate">
+                Tổng Lương
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl sm:text-2xl font-bold">
+                {(departmentStats.totalSalary / 1000000).toFixed(1)}M
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                VND tháng {selectedMonth}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium truncate">
+                Đã Ký
+              </CardTitle>
+              <FileCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl sm:text-2xl font-bold">
+                {departmentStats.signedPercentage}%
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {departmentStats.signedCount}/{departmentStats.totalEmployees}{" "}
+                nhân viên
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium truncate">
+                Lương TB
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl sm:text-2xl font-bold">
+                {(departmentStats.averageSalary / 1000).toFixed(0)}K
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                VND/người/tháng
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <Tabs defaultValue="employees" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger
+            value="overview"
+            className="text-xs sm:text-sm px-2 py-2"
+          >
+            <span className="hidden sm:inline">Tổng Quan</span>
+            <span className="sm:hidden">Tổng Quan</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="employees"
+            className="text-xs sm:text-sm px-2 py-2"
+          >
+            <span className="hidden sm:inline">Danh Sách Nhân Viên</span>
+            <span className="sm:hidden">Nhân Viên</span>
+          </TabsTrigger>
+          <TabsTrigger value="trends" className="text-xs sm:text-sm px-2 py-2">
+            <span className="hidden sm:inline">Xu Hướng</span>
+            <span className="sm:hidden">Xu Hướng</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold">
+                Tổng Quan Department
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Thống kê tổng quan tháng {selectedMonth}
+              </p>
+            </div>
+            <Button
+              onClick={() => handleExportExcel("overview")}
+              disabled={exportingExcel}
+              variant="outline"
+              className="flex items-center gap-2 w-full sm:w-auto h-9 sm:h-8 touch-manipulation"
+            >
+              {exportingExcel ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">Đang xuất...</span>
+                  <span className="sm:hidden">Xuất...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">Xuất Tổng Quan</span>
+                  <span className="sm:hidden">Xuất</span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base sm:text-lg">
+                  Tình Trạng Ký Lương
                 </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <CardDescription className="text-sm">
+                  Phân bố theo trạng thái ký
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">
-                  {departmentStats.totalEmployees}
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  Department {departmentStats.department}
-                </p>
+                <ResponsiveContainer
+                  width="100%"
+                  height={250}
+                  className="sm:h-[300px]"
+                >
+                  <BarChart
+                    data={[
+                      {
+                        name: "Đã ký",
+                        count: departmentStats?.signedCount || 0,
+                        percentage: parseFloat(
+                          departmentStats?.signedPercentage || "0",
+                        ),
+                      },
+                      {
+                        name: "Chưa ký",
+                        count:
+                          (departmentStats?.totalEmployees || 0) -
+                          (departmentStats?.signedCount || 0),
+                        percentage:
+                          100 -
+                          parseFloat(departmentStats?.signedPercentage || "0"),
+                      },
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="name"
+                      fontSize={12}
+                      tick={{ fontSize: 10 }}
+                      className="sm:text-sm"
+                    />
+                    <YAxis
+                      fontSize={12}
+                      tick={{ fontSize: 10 }}
+                      className="sm:text-sm"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        fontSize: "12px",
+                        padding: "8px",
+                        borderRadius: "6px",
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium truncate">
-                  Tổng Lương
-                </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông Tin Department</CardTitle>
+                <CardDescription>Chi tiết về {user.department}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">
-                  {(departmentStats.totalSalary / 1000000).toFixed(1)}M
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Tổng nhân viên
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {departmentStats?.totalEmployees || 0}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Tỷ lệ ký</p>
+                    <p className="text-2xl font-bold">
+                      {departmentStats?.signedPercentage || 0}%
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Tổng lương</p>
+                    <p className="text-lg font-semibold">
+                      {((departmentStats?.totalSalary || 0) / 1000000).toFixed(
+                        1,
+                      )}
+                      M VND
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Lương trung bình
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {((departmentStats?.averageSalary || 0) / 1000).toFixed(
+                        0,
+                      )}
+                      K VND
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  VND tháng {selectedMonth}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium truncate">
-                  Đã Ký
-                </CardTitle>
-                <FileCheck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">
-                  {departmentStats.signedPercentage}%
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {departmentStats.signedCount}/{departmentStats.totalEmployees}{" "}
-                  nhân viên
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow duration-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium truncate">
-                  Lương TB
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">
-                  {(departmentStats.averageSalary / 1000).toFixed(0)}K
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  VND/người/tháng
-                </p>
               </CardContent>
             </Card>
           </div>
-        )}
+        </TabsContent>
 
-        <Tabs defaultValue="employees" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger
-              value="overview"
-              className="text-xs sm:text-sm px-2 py-2"
-            >
-              <span className="hidden sm:inline">Tổng Quan</span>
-              <span className="sm:hidden">Tổng Quan</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="employees"
-              className="text-xs sm:text-sm px-2 py-2"
-            >
-              <span className="hidden sm:inline">Danh Sách Nhân Viên</span>
-              <span className="sm:hidden">Nhân Viên</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="trends"
-              className="text-xs sm:text-sm px-2 py-2"
-            >
-              <span className="hidden sm:inline">Xu Hướng</span>
-              <span className="sm:hidden">Xu Hướng</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <TabsContent value="employees" className="space-y-4 sm:space-y-6">
+          <Card>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h3 className="text-base sm:text-lg font-semibold">
-                  Tổng Quan Department
-                </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Thống kê tổng quan tháng {selectedMonth}
-                </p>
+                <CardTitle className="text-base sm:text-lg">
+                  Danh Sách Nhân Viên - {user.department}
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Tháng {selectedMonth}
+                </CardDescription>
               </div>
               <Button
-                onClick={() => handleExportExcel("overview")}
+                onClick={() => handleExportExcel("employees")}
                 disabled={exportingExcel}
-                variant="outline"
-                className="flex items-center gap-2 w-full sm:w-auto h-9 sm:h-8 touch-manipulation"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto h-9 sm:h-8 touch-manipulation"
               >
                 {exportingExcel ? (
                   <>
@@ -562,459 +678,307 @@ export default function SupervisorDashboard({
                 ) : (
                   <>
                     <Download className="h-4 w-4" />
-                    <span className="hidden sm:inline">Xuất Tổng Quan</span>
+                    <span className="hidden sm:inline">Xuất Excel</span>
                     <span className="sm:hidden">Xuất</span>
                   </>
                 )}
               </Button>
-            </div>
+            </CardHeader>
+            <CardContent>
+              {/* Mobile Card Layout */}
+              <div className="block sm:hidden space-y-3">
+                {payrollData.map((payroll, index) => (
+                  <Card key={payroll.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">
+                            {payroll.employees?.full_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            #{index + 1} • Mã: {payroll.employee_id}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleViewEmployee(payroll.employee_id)
+                          }
+                          className="ml-2 h-8 w-8 p-0 touch-manipulation"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                      </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">
-                    Tình Trạng Ký Lương
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Phân bố theo trạng thái ký
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer
-                    width="100%"
-                    height={250}
-                    className="sm:h-[300px]"
-                  >
-                    <BarChart
-                      data={[
-                        {
-                          name: "Đã ký",
-                          count: departmentStats?.signedCount || 0,
-                          percentage: parseFloat(
-                            departmentStats?.signedPercentage || "0",
-                          ),
-                        },
-                        {
-                          name: "Chưa ký",
-                          count:
-                            (departmentStats?.totalEmployees || 0) -
-                            (departmentStats?.signedCount || 0),
-                          percentage:
-                            100 -
-                            parseFloat(
-                              departmentStats?.signedPercentage || "0",
-                            ),
-                        },
-                      ]}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="name"
-                        fontSize={12}
-                        tick={{ fontSize: 10 }}
-                        className="sm:text-sm"
-                      />
-                      <YAxis
-                        fontSize={12}
-                        tick={{ fontSize: 10 }}
-                        className="sm:text-sm"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          fontSize: "12px",
-                          padding: "8px",
-                          borderRadius: "6px",
-                        }}
-                      />
-                      <Bar dataKey="count" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">
+                            Chức vụ:
+                          </span>
+                          <Badge
+                            variant={getChucVuBadge(
+                              payroll.employees?.chuc_vu || "nhan_vien",
+                            )}
+                            className="ml-1 text-xs"
+                          >
+                            {payroll.employees?.chuc_vu === "nhan_vien"
+                              ? "NV"
+                              : payroll.employees?.chuc_vu === "to_truong"
+                                ? "TT"
+                                : payroll.employees?.chuc_vu === "truong_phong"
+                                  ? "TP"
+                                  : payroll.employees?.chuc_vu}
+                          </Badge>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Trạng thái:
+                          </span>
+                          <Badge
+                            variant={getStatusColor(payroll.is_signed)}
+                            className="ml-1 text-xs"
+                          >
+                            {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                          </Badge>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Ngày công:
+                          </span>
+                          <p className="font-medium mt-1">
+                            {payroll.ngay_cong_trong_gio || 0} ngày
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Thưởng Chuyên Cần:
+                          </span>
+                          <p className="font-medium mt-1">
+                            {(
+                              payroll.tien_khen_thuong_chuyen_can || 0
+                            ).toLocaleString()}{" "}
+                            VND
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Hệ số LV:
+                          </span>
+                          <p className="font-medium mt-1">
+                            {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Thông Tin Department</CardTitle>
-                  <CardDescription>
-                    Chi tiết về {user.department}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        Tổng nhân viên
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {departmentStats?.totalEmployees || 0}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Tỷ lệ ký</p>
-                      <p className="text-2xl font-bold">
-                        {departmentStats?.signedPercentage || 0}%
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        Tổng lương
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {(
-                          (departmentStats?.totalSalary || 0) / 1000000
-                        ).toFixed(1)}
-                        M VND
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        Lương trung bình
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {((departmentStats?.averageSalary || 0) / 1000).toFixed(
-                          0,
-                        )}
-                        K VND
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="employees" className="space-y-4 sm:space-y-6">
-            <Card>
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <CardTitle className="text-base sm:text-lg">
-                    Danh Sách Nhân Viên - {user.department}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    Tháng {selectedMonth}
-                  </CardDescription>
-                </div>
-                <Button
-                  onClick={() => handleExportExcel("employees")}
-                  disabled={exportingExcel}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto h-9 sm:h-8 touch-manipulation"
-                >
-                  {exportingExcel ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="hidden sm:inline">Đang xuất...</span>
-                      <span className="sm:hidden">Xuất...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      <span className="hidden sm:inline">Xuất Excel</span>
-                      <span className="sm:hidden">Xuất</span>
-                    </>
-                  )}
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {/* Mobile Card Layout */}
-                <div className="block sm:hidden space-y-3">
-                  {payrollData.map((payroll, index) => (
-                    <Card key={payroll.id} className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm truncate">
-                              {payroll.employees?.full_name}
-                            </p>
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between items-center">
+                          <div>
                             <p className="text-xs text-muted-foreground">
-                              #{index + 1} • Mã: {payroll.employee_id}
+                              Lương thực nhận
+                            </p>
+                            <p className="text-sm font-semibold">
+                              {(
+                                payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                              ).toLocaleString()}{" "}
+                              VND
                             </p>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table Layout */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-center p-2 sm:p-3 w-16">STT</th>
+                      <th className="text-left p-2 sm:p-3 min-w-[100px]">
+                        Mã NV
+                      </th>
+                      <th className="text-left p-2 sm:p-3 min-w-[150px]">
+                        Họ Tên
+                      </th>
+                      <th className="text-left p-2 sm:p-3 min-w-[120px]">
+                        Chức Vụ
+                      </th>
+                      <th className="text-center p-2 sm:p-3 min-w-[90px]">
+                        Ngày Công
+                      </th>
+                      <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                        Thưởng Chuyên Cần
+                      </th>
+                      <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                        Hệ Số LV
+                      </th>
+                      <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                        Lương Thực Nhận
+                      </th>
+                      <th className="text-center p-2 sm:p-3 min-w-[100px]">
+                        Trạng Thái
+                      </th>
+                      <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                        Thao Tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payrollData.map((payroll, index) => (
+                      <tr
+                        key={payroll.id}
+                        className="border-b hover:bg-gray-50"
+                      >
+                        <td className="p-2 sm:p-3 text-center font-medium text-gray-500">
+                          {index + 1}
+                        </td>
+                        <td className="p-2 sm:p-3 font-medium font-mono text-xs sm:text-sm">
+                          {payroll.employee_id}
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          {payroll.employees?.full_name}
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <Badge
+                            variant={getChucVuBadge(
+                              payroll.employees?.chuc_vu || "nhan_vien",
+                            )}
+                          >
+                            {payroll.employees?.chuc_vu === "nhan_vien"
+                              ? "Nhân viên"
+                              : payroll.employees?.chuc_vu === "to_truong"
+                                ? "Tổ trưởng"
+                                : payroll.employees?.chuc_vu === "truong_phong"
+                                  ? "Trưởng phòng"
+                                  : payroll.employees?.chuc_vu}
+                          </Badge>
+                        </td>
+                        <td className="p-2 sm:p-3 text-center font-medium">
+                          {payroll.ngay_cong_trong_gio || 0} ngày
+                        </td>
+                        <td className="p-2 sm:p-3 text-right font-medium">
+                          {(
+                            payroll.tien_khen_thuong_chuyen_can || 0
+                          ).toLocaleString()}{" "}
+                          VND
+                        </td>
+                        <td className="p-2 sm:p-3 text-center font-medium">
+                          {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                        </td>
+                        <td className="p-2 sm:p-3 text-right font-semibold">
+                          {(
+                            payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                          ).toLocaleString()}{" "}
+                          VND
+                        </td>
+                        <td className="p-2 sm:p-3 text-center">
+                          <Badge variant={getStatusColor(payroll.is_signed)}>
+                            {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                          </Badge>
+                        </td>
+                        <td className="p-2 sm:p-3 text-center">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() =>
                               handleViewEmployee(payroll.employee_id)
                             }
-                            className="ml-2 h-8 w-8 p-0 touch-manipulation"
+                            className="h-8 w-8 p-0"
                           >
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-4 w-4" />
                           </Button>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <span className="text-muted-foreground">
-                              Chức vụ:
-                            </span>
-                            <Badge
-                              variant={getChucVuBadge(
-                                payroll.employees?.chuc_vu || "nhan_vien",
-                              )}
-                              className="ml-1 text-xs"
-                            >
-                              {payroll.employees?.chuc_vu === "nhan_vien"
-                                ? "NV"
-                                : payroll.employees?.chuc_vu === "to_truong"
-                                  ? "TT"
-                                  : payroll.employees?.chuc_vu ===
-                                      "truong_phong"
-                                    ? "TP"
-                                    : payroll.employees?.chuc_vu}
-                            </Badge>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Trạng thái:
-                            </span>
-                            <Badge
-                              variant={getStatusColor(payroll.is_signed)}
-                              className="ml-1 text-xs"
-                            >
-                              {payroll.is_signed ? "Đã ký" : "Chưa ký"}
-                            </Badge>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Ngày công:
-                            </span>
-                            <p className="font-medium mt-1">
-                              {payroll.ngay_cong_trong_gio || 0} ngày
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Thưởng Chuyên Cần:
-                            </span>
-                            <p className="font-medium mt-1">
-                              {(
-                                payroll.tien_khen_thuong_chuyen_can || 0
-                              ).toLocaleString()}{" "}
-                              VND
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Hệ số LV:
-                            </span>
-                            <p className="font-medium mt-1">
-                              {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="pt-2 border-t">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Lương thực nhận
-                              </p>
-                              <p className="text-sm font-semibold">
-                                {(
-                                  payroll.tien_luong_thuc_nhan_cuoi_ky || 0
-                                ).toLocaleString()}{" "}
-                                VND
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-
-                {/* Desktop Table Layout */}
-                <div className="hidden sm:block overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-center p-2 sm:p-3 w-16">STT</th>
-                        <th className="text-left p-2 sm:p-3 min-w-[100px]">
-                          Mã NV
-                        </th>
-                        <th className="text-left p-2 sm:p-3 min-w-[150px]">
-                          Họ Tên
-                        </th>
-                        <th className="text-left p-2 sm:p-3 min-w-[120px]">
-                          Chức Vụ
-                        </th>
-                        <th className="text-center p-2 sm:p-3 min-w-[90px]">
-                          Ngày Công
-                        </th>
-                        <th className="text-right p-2 sm:p-3 min-w-[120px]">
-                          Thưởng Chuyên Cần
-                        </th>
-                        <th className="text-center p-2 sm:p-3 min-w-[80px]">
-                          Hệ Số LV
-                        </th>
-                        <th className="text-right p-2 sm:p-3 min-w-[140px]">
-                          Lương Thực Nhận
-                        </th>
-                        <th className="text-center p-2 sm:p-3 min-w-[100px]">
-                          Trạng Thái
-                        </th>
-                        <th className="text-center p-2 sm:p-3 min-w-[80px]">
-                          Thao Tác
-                        </th>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {payrollData.map((payroll, index) => (
-                        <tr
-                          key={payroll.id}
-                          className="border-b hover:bg-gray-50"
-                        >
-                          <td className="p-2 sm:p-3 text-center font-medium text-gray-500">
-                            {index + 1}
-                          </td>
-                          <td className="p-2 sm:p-3 font-medium font-mono text-xs sm:text-sm">
-                            {payroll.employee_id}
-                          </td>
-                          <td className="p-2 sm:p-3">
-                            {payroll.employees?.full_name}
-                          </td>
-                          <td className="p-2 sm:p-3">
-                            <Badge
-                              variant={getChucVuBadge(
-                                payroll.employees?.chuc_vu || "nhan_vien",
-                              )}
-                            >
-                              {payroll.employees?.chuc_vu === "nhan_vien"
-                                ? "Nhân viên"
-                                : payroll.employees?.chuc_vu === "to_truong"
-                                  ? "Tổ trưởng"
-                                  : payroll.employees?.chuc_vu ===
-                                      "truong_phong"
-                                    ? "Trưởng phòng"
-                                    : payroll.employees?.chuc_vu}
-                            </Badge>
-                          </td>
-                          <td className="p-2 sm:p-3 text-center font-medium">
-                            {payroll.ngay_cong_trong_gio || 0} ngày
-                          </td>
-                          <td className="p-2 sm:p-3 text-right font-medium">
-                            {(
-                              payroll.tien_khen_thuong_chuyen_can || 0
-                            ).toLocaleString()}{" "}
-                            VND
-                          </td>
-                          <td className="p-2 sm:p-3 text-center font-medium">
-                            {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                          </td>
-                          <td className="p-2 sm:p-3 text-right font-semibold">
-                            {(
-                              payroll.tien_luong_thuc_nhan_cuoi_ky || 0
-                            ).toLocaleString()}{" "}
-                            VND
-                          </td>
-                          <td className="p-2 sm:p-3 text-center">
-                            <Badge variant={getStatusColor(payroll.is_signed)}>
-                              {payroll.is_signed ? "Đã ký" : "Chưa ký"}
-                            </Badge>
-                          </td>
-                          <td className="p-2 sm:p-3 text-center">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleViewEmployee(payroll.employee_id)
-                              }
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="trends" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Xu Hướng Department</h3>
+              <p className="text-sm text-muted-foreground">
+                Phân tích xu hướng 6 tháng gần nhất
+              </p>
+            </div>
+            <Button
+              onClick={() => handleExportExcel("trends")}
+              disabled={exportingExcel}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              {exportingExcel ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Đang xuất...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Xuất Xu Hướng
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Xu Hướng Tỷ Lệ Ký</CardTitle>
+                <CardDescription>6 tháng gần nhất</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={monthlyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="monthLabel" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="signedPercentage"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                      name="Tỷ lệ ký (%)"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="trends" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-semibold">Xu Hướng Department</h3>
-                <p className="text-sm text-muted-foreground">
-                  Phân tích xu hướng 6 tháng gần nhất
-                </p>
-              </div>
-              <Button
-                onClick={() => handleExportExcel("trends")}
-                disabled={exportingExcel}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                {exportingExcel ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Đang xuất...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" />
-                    Xuất Xu Hướng
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Xu Hướng Tỷ Lệ Ký</CardTitle>
-                  <CardDescription>6 tháng gần nhất</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={monthlyTrend}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="monthLabel" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line
-                        type="monotone"
-                        dataKey="signedPercentage"
-                        stroke="#8884d8"
-                        strokeWidth={2}
-                        name="Tỷ lệ ký (%)"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Xu Hướng Tổng Lương</CardTitle>
-                  <CardDescription>
-                    6 tháng gần nhất (triệu VND)
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={monthlyTrend}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="monthLabel" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line
-                        type="monotone"
-                        dataKey="totalSalary"
-                        stroke="#82ca9d"
-                        strokeWidth={2}
-                        name="Tổng lương (M VND)"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-
+            <Card>
+              <CardHeader>
+                <CardTitle>Xu Hướng Tổng Lương</CardTitle>
+                <CardDescription>6 tháng gần nhất (triệu VND)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={monthlyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="monthLabel" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="totalSalary"
+                      stroke="#82ca9d"
+                      strokeWidth={2}
+                      name="Tổng lương (M VND)"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
       {/* Payroll Detail Modal */}
       {selectedPayrollData && (
         <PayrollDetailModal

@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  ArrowLeft,
   Shield,
   RefreshCw,
   Search,
@@ -234,313 +233,293 @@ export default function PasswordResetHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/admin/dashboard")}
-                className="flex items-center gap-2"
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <Shield className="w-6 h-6" />
+          Lịch Sử Đổi Mật Khẩu
+        </h1>
+        <p className="text-sm text-gray-600">
+          Theo dõi các hoạt động đổi mật khẩu qua chức năng Quên Mật Khẩu
+        </p>
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Bộ Lọc</CardTitle>
+          <CardDescription>
+            Lọc lịch sử theo mã nhân viên, IP address, trạng thái, và khoảng
+            thời gian
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="employee-code">Mã Nhân Viên</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="employee-code"
+                  placeholder="Nhập mã NV..."
+                  value={filters.employeeCode}
+                  onChange={(e) =>
+                    handleFilterChange("employeeCode", e.target.value)
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ip-address">IP Address</Label>
+              <div className="relative">
+                <Network className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="ip-address"
+                  placeholder="VD: 192.168.1.1"
+                  value={filters.ipAddress}
+                  onChange={(e) =>
+                    handleFilterChange("ipAddress", e.target.value)
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Trạng Thái</Label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => handleFilterChange("status", value)}
               >
-                <ArrowLeft className="h-4 w-4" />
-                Quay lại Dashboard
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <Shield className="w-6 h-6" />
-                  Lịch Sử Đổi Mật Khẩu
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Theo dõi các hoạt động đổi mật khẩu qua chức năng Quên Mật
-                  Khẩu
-                </p>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả</SelectItem>
+                  <SelectItem value="forgot_password_success">
+                    Thành công
+                  </SelectItem>
+                  <SelectItem value="forgot_password_failed">
+                    Thất bại
+                  </SelectItem>
+                  <SelectItem value="forgot_password_blocked">
+                    Bị khóa
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="start-date">Từ Ngày</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) =>
+                    handleFilterChange("startDate", e.target.value)
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="end-date">Đến Ngày</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) =>
+                    handleFilterChange("endDate", e.target.value)
+                  }
+                  className="pl-10"
+                />
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          <div className="flex gap-2 mt-4">
+            <Button onClick={handleApplyFilters} className="flex-1">
+              <Search className="w-4 h-4 mr-2" />
+              Áp Dụng Bộ Lọc
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleResetFilters}
+              className="flex-1"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Đặt Lại
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Bộ Lọc</CardTitle>
-            <CardDescription>
-              Lọc lịch sử theo mã nhân viên, IP address, trạng thái, và khoảng
-              thời gian
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="employee-code">Mã Nhân Viên</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="employee-code"
-                    placeholder="Nhập mã NV..."
-                    value={filters.employeeCode}
-                    onChange={(e) =>
-                      handleFilterChange("employeeCode", e.target.value)
-                    }
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ip-address">IP Address</Label>
-                <div className="relative">
-                  <Network className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="ip-address"
-                    placeholder="VD: 192.168.1.1"
-                    value={filters.ipAddress}
-                    onChange={(e) =>
-                      handleFilterChange("ipAddress", e.target.value)
-                    }
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Trạng Thái</Label>
-                <Select
-                  value={filters.status}
-                  onValueChange={(value) => handleFilterChange("status", value)}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Chọn trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả</SelectItem>
-                    <SelectItem value="forgot_password_success">
-                      Thành công
-                    </SelectItem>
-                    <SelectItem value="forgot_password_failed">
-                      Thất bại
-                    </SelectItem>
-                    <SelectItem value="forgot_password_blocked">
-                      Bị khóa
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="start-date">Từ Ngày</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="start-date"
-                    type="date"
-                    value={filters.startDate}
-                    onChange={(e) =>
-                      handleFilterChange("startDate", e.target.value)
-                    }
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="end-date">Đến Ngày</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="end-date"
-                    type="date"
-                    value={filters.endDate}
-                    onChange={(e) =>
-                      handleFilterChange("endDate", e.target.value)
-                    }
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Danh Sách Lịch Sử</CardTitle>
+              <CardDescription>
+                Tổng số: {pagination.total} bản ghi
+              </CardDescription>
             </div>
-
-            <div className="flex gap-2 mt-4">
-              <Button onClick={handleApplyFilters} className="flex-1">
-                <Search className="w-4 h-4 mr-2" />
-                Áp Dụng Bộ Lọc
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleResetFilters}
-                className="flex-1"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Đặt Lại
-              </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadData}
+              disabled={loading}
+            >
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
+              Làm mới
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Danh Sách Lịch Sử</CardTitle>
-                <CardDescription>
-                  Tổng số: {pagination.total} bản ghi
-                </CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadData}
-                disabled={loading}
-              >
-                <RefreshCw
-                  className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-                />
-                Làm mới
-              </Button>
+          ) : logs.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>Không có dữ liệu lịch sử</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Thời Gian</TableHead>
+                      <TableHead>Mã NV</TableHead>
+                      <TableHead>Tên NV</TableHead>
+                      <TableHead>Phòng Ban</TableHead>
+                      <TableHead>Trạng Thái</TableHead>
+                      <TableHead>IP Address</TableHead>
+                      <TableHead>Chi Tiết</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map((log) => {
+                      const details = parseDetails(log.details);
+                      return (
+                        <TableRow key={log.id}>
+                          <TableCell className="whitespace-nowrap">
+                            {formatDateTime(log.created_at)}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {log.employee_id || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {log.employee?.full_name || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {log.employee?.department || "N/A"}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(log.action)}</TableCell>
+                          <TableCell className="font-mono text-sm">
+                            {log.ip_address || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {details && (
+                              <div className="text-xs text-gray-600 space-y-1">
+                                {details.user_agent && (
+                                  <div>
+                                    <span className="font-semibold">
+                                      User Agent:
+                                    </span>{" "}
+                                    {details.user_agent}
+                                  </div>
+                                )}
+                                {details.reason && (
+                                  <div>
+                                    <span className="font-semibold">
+                                      Lý do:
+                                    </span>{" "}
+                                    {details.reason}
+                                  </div>
+                                )}
+                                {details.fail_count !== undefined && (
+                                  <div>
+                                    <span className="font-semibold">
+                                      Số lần thất bại:
+                                    </span>{" "}
+                                    {details.fail_count}
+                                  </div>
+                                )}
+                                {details.first_time_change !== undefined && (
+                                  <div>
+                                    <span className="font-semibold">
+                                      Lần đầu đổi:
+                                    </span>{" "}
+                                    {details.first_time_change ? "Có" : "Không"}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
-            ) : logs.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Không có dữ liệu lịch sử</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Thời Gian</TableHead>
-                        <TableHead>Mã NV</TableHead>
-                        <TableHead>Tên NV</TableHead>
-                        <TableHead>Phòng Ban</TableHead>
-                        <TableHead>Trạng Thái</TableHead>
-                        <TableHead>IP Address</TableHead>
-                        <TableHead>Chi Tiết</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {logs.map((log) => {
-                        const details = parseDetails(log.details);
-                        return (
-                          <TableRow key={log.id}>
-                            <TableCell className="whitespace-nowrap">
-                              {formatDateTime(log.created_at)}
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {log.employee_id || "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {log.employee?.full_name || "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {log.employee?.department || "N/A"}
-                            </TableCell>
-                            <TableCell>{getStatusBadge(log.action)}</TableCell>
-                            <TableCell className="font-mono text-sm">
-                              {log.ip_address || "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {details && (
-                                <div className="text-xs text-gray-600 space-y-1">
-                                  {details.user_agent && (
-                                    <div>
-                                      <span className="font-semibold">
-                                        User Agent:
-                                      </span>{" "}
-                                      {details.user_agent}
-                                    </div>
-                                  )}
-                                  {details.reason && (
-                                    <div>
-                                      <span className="font-semibold">
-                                        Lý do:
-                                      </span>{" "}
-                                      {details.reason}
-                                    </div>
-                                  )}
-                                  {details.fail_count !== undefined && (
-                                    <div>
-                                      <span className="font-semibold">
-                                        Số lần thất bại:
-                                      </span>{" "}
-                                      {details.fail_count}
-                                    </div>
-                                  )}
-                                  {details.first_time_change !== undefined && (
-                                    <div>
-                                      <span className="font-semibold">
-                                        Lần đầu đổi:
-                                      </span>{" "}
-                                      {details.first_time_change
-                                        ? "Có"
-                                        : "Không"}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
 
-                {pagination.totalPages > 1 && (
-                  <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                    <div className="text-sm text-gray-600">
-                      Trang {pagination.page} / {pagination.totalPages}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setPagination((prev) => ({
-                            ...prev,
-                            page: prev.page - 1,
-                          }))
-                        }
-                        disabled={pagination.page === 1}
-                      >
-                        Trang trước
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setPagination((prev) => ({
-                            ...prev,
-                            page: prev.page + 1,
-                          }))
-                        }
-                        disabled={pagination.page === pagination.totalPages}
-                      >
-                        Trang sau
-                      </Button>
-                    </div>
+              {pagination.totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                  <div className="text-sm text-gray-600">
+                    Trang {pagination.page} / {pagination.totalPages}
                   </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: prev.page - 1,
+                        }))
+                      }
+                      disabled={pagination.page === 1}
+                    >
+                      Trang trước
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: prev.page + 1,
+                        }))
+                      }
+                      disabled={pagination.page === pagination.totalPages}
+                    >
+                      Trang sau
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

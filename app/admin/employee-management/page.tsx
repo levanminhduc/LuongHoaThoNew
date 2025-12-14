@@ -479,7 +479,7 @@ export default function EmployeeManagementPage() {
                             <span className="text-muted-foreground">
                               Chức vụ:
                             </span>
-                            <p className="font-medium mt-1">
+                            <div className="font-medium mt-1">
                               <Badge variant="outline" className="text-xs">
                                 {
                                   roleLabels[
@@ -487,7 +487,7 @@ export default function EmployeeManagementPage() {
                                   ]
                                 }
                               </Badge>
-                            </p>
+                            </div>
                           </div>
                           <div>
                             <span className="text-muted-foreground">
@@ -507,7 +507,7 @@ export default function EmployeeManagementPage() {
                             <span className="text-muted-foreground">
                               Trạng thái:
                             </span>
-                            <p className="font-medium mt-1">
+                            <div className="font-medium mt-1">
                               <Badge
                                 variant={
                                   employee.is_active ? "default" : "secondary"
@@ -518,7 +518,7 @@ export default function EmployeeManagementPage() {
                                   ? "Hoạt động"
                                   : "Không hoạt động"}
                               </Badge>
-                            </p>
+                            </div>
                           </div>
                         </div>
                       </div>
