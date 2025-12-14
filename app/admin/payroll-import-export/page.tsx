@@ -29,7 +29,6 @@ import {
   FileSpreadsheet,
   CheckCircle,
   AlertTriangle,
-  Clock,
   ArrowLeft,
   RefreshCw,
   Eye,
@@ -54,7 +53,19 @@ import {
 } from "@/lib/hooks/use-mapping-config";
 import { ImportPreviewSection } from "./components/ImportPreviewSection";
 import ImportErrorModal from "@/components/payroll-import/ImportErrorModal";
+import {
+  ImportProgress,
+  ImportResultSummary,
+} from "@/components/ui/import-export-widgets";
 import * as XLSX from "xlsx";
+
+type ImportStatus =
+  | "idle"
+  | "processing"
+  | "validating"
+  | "importing"
+  | "complete"
+  | "error";
 
 interface ImportResult {
   success: boolean;
@@ -104,6 +115,7 @@ export default function PayrollImportExportPage() {
   const [analysisError, setAnalysisError] = useState("");
 
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
 
   const router = useRouter();
   const { configurations, defaultConfig } = useMappingConfig();
@@ -276,6 +288,7 @@ export default function PayrollImportExportPage() {
     }
 
     setLoading(true);
+    setImportStatus("processing");
     setError("");
     setMessage("");
     setProgress(0);
@@ -288,7 +301,7 @@ export default function PayrollImportExportPage() {
         throw new Error("Không tìm thấy token xác thực");
       }
 
-      // Simulate progress
+      setImportStatus("importing");
       const progressInterval = setInterval(() => {
         setProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
@@ -326,6 +339,7 @@ export default function PayrollImportExportPage() {
         if (result.success) {
           setResults(resultWithErrors);
           setMessage(result.message || "Import thành công!");
+          setImportStatus("complete");
           const batchId =
             result.data?.importBatchId ||
             result.importBatchId ||
@@ -336,6 +350,7 @@ export default function PayrollImportExportPage() {
         } else {
           setResults(resultWithErrors);
           setMessage(result.message || "Import hoàn tất với một số lỗi");
+          setImportStatus(importErrors.length > 0 ? "error" : "complete");
           const batchId =
             result.data?.importBatchId ||
             result.importBatchId ||
@@ -352,6 +367,7 @@ export default function PayrollImportExportPage() {
     } catch (error) {
       console.error("Import error:", error);
       setError(error instanceof Error ? error.message : "Lỗi khi import");
+      setImportStatus("error");
       setProgress(0);
     } finally {
       setLoading(false);
@@ -364,7 +380,7 @@ export default function PayrollImportExportPage() {
     setError("");
     setMessage("");
     setProgress(0);
-    // Reset file input
+    setImportStatus("idle");
     const fileInput = document.getElementById("file-input") as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
@@ -924,15 +940,14 @@ export default function PayrollImportExportPage() {
                   )}
                 </div>
 
-                {/* Progress */}
+                {/* Progress Widget */}
                 {loading && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Đang xử lý...</span>
-                      <span>{progress}%</span>
-                    </div>
-                    <Progress value={progress} className="w-full" />
-                  </div>
+                  <ImportProgress
+                    fileName={selectedFile?.name}
+                    progress={progress}
+                    status={importStatus}
+                    message="Đang import dữ liệu lương..."
+                  />
                 )}
 
                 {/* Action Buttons */}
@@ -1016,59 +1031,31 @@ export default function PayrollImportExportPage() {
           </Alert>
         )}
 
-        {/* Results Display */}
+        {/* Results Display - Using ImportResultSummary Widget */}
         {results && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {results.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
-                )}
-                Kết Quả Import
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {results.totalRecords}
-                  </div>
-                  <div className="text-sm text-gray-600">Tổng Records</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {results.successCount}
-                  </div>
-                  <div className="text-sm text-gray-600">Thành Công</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    {results.errorCount}
-                  </div>
-                  <div className="text-sm text-gray-600">Lỗi</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {results.overwriteCount || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Ghi Đè</div>
-                </div>
-              </div>
+          <div className="mt-6 space-y-4">
+            <ImportResultSummary
+              totalRecords={results.totalRecords}
+              successCount={results.successCount}
+              errorCount={results.errorCount}
+              skippedCount={results.skippedCount}
+              overwriteCount={results.overwriteCount}
+              processingTime={results.processingTime}
+              onViewErrors={
+                results.errors && results.errors.length > 0
+                  ? () => setShowErrorModal(true)
+                  : undefined
+              }
+            />
 
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>Thời gian xử lý: {results.processingTime}</span>
-                </div>
-              </div>
-
-              {/* Error Details */}
-              {results.errors && results.errors.length > 0 && (
-                <div className="mt-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-red-700">Chi Tiết Lỗi:</h4>
+            {/* Error Actions - Export Button */}
+            {results.errors && results.errors.length > 0 && (
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-red-700">
+                      Chi Tiết Lỗi ({results.errors.length} lỗi)
+                    </h4>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -1077,7 +1064,7 @@ export default function PayrollImportExportPage() {
                         className="text-red-600 border-red-300 hover:bg-red-50"
                       >
                         <Eye className="h-4 w-4 mr-2" />
-                        Xem Tất Cả {results.errors.length} Lỗi
+                        Xem Chi Tiết
                       </Button>
                       <Button
                         variant="outline"
@@ -1096,15 +1083,15 @@ export default function PayrollImportExportPage() {
                                   Authorization: `Bearer ${token}`,
                                 },
                                 body: JSON.stringify({
-                                  errors: results.errors.map((error) => ({
-                                    row: error.row,
-                                    column: error.field,
-                                    field: error.field,
+                                  errors: results.errors.map((err) => ({
+                                    row: err.row,
+                                    column: err.field,
+                                    field: err.field,
                                     currentValue:
-                                      error.employee_id || error.salary_month,
-                                    errorType: error.errorType || "validation",
+                                      err.employee_id || err.salary_month,
+                                    errorType: err.errorType || "validation",
                                     severity: "medium",
-                                    message: error.error,
+                                    message: err.error,
                                   })),
                                   format: "excel",
                                   fileName: "import_errors",
@@ -1123,8 +1110,8 @@ export default function PayrollImportExportPage() {
                               window.URL.revokeObjectURL(url);
                               document.body.removeChild(a);
                             }
-                          } catch (error) {
-                            console.error("Export error:", error);
+                          } catch (exportErr) {
+                            console.error("Export error:", exportErr);
                           }
                         }}
                         className="text-blue-600 border-blue-300 hover:bg-blue-50"
@@ -1134,29 +1121,10 @@ export default function PayrollImportExportPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="max-h-60 overflow-y-auto space-y-2">
-                    {results.errors.slice(0, 10).map((error, index: number) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-red-50 border-l-4 border-red-300 rounded text-sm"
-                      >
-                        <div className="font-medium text-red-800">
-                          Row {error.row}: {error.employee_id || "UNKNOWN"} -{" "}
-                          {error.salary_month || "UNKNOWN"}
-                        </div>
-                        <div className="text-red-700 mt-1">{error.error}</div>
-                      </div>
-                    ))}
-                    {results.errors.length > 10 && (
-                      <div className="text-center text-sm text-gray-500 py-2">
-                        Và {results.errors.length - 10} lỗi khác...
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
 
         {/* Import Preview Section */}

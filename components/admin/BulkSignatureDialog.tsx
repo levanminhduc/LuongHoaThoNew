@@ -12,7 +12,12 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Users } from "lucide-react";
-import { toast } from "sonner";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showBulkSignatureSuccessToast,
+  showNetworkErrorToast,
+} from "@/lib/toast-utils";
 
 interface SignatureStats {
   total_employees: number;
@@ -80,10 +85,10 @@ export function BulkSignatureDialog({
       if (response.ok) {
         setStats(data);
       } else {
-        toast.error(data.error || "Lỗi khi lấy thống kê");
+        showErrorToast(data.error || "Lỗi khi lấy thống kê");
       }
     } catch (err) {
-      toast.error("Lỗi kết nối server");
+      showNetworkErrorToast();
     } finally {
       setLoadingStats(false);
     }
@@ -91,7 +96,7 @@ export function BulkSignatureDialog({
 
   const handleBulkSign = async () => {
     if (!stats || stats.unsigned === 0) {
-      toast.error("Không có chữ ký nào cần ký!");
+      showErrorToast("Không có chữ ký nào cần ký!");
       return;
     }
 
@@ -116,16 +121,18 @@ export function BulkSignatureDialog({
 
       if (response.ok) {
         setResult(data);
-        toast.success(data.message);
+        showBulkSignatureSuccessToast(data.signed_count, data.total_processed, {
+          onViewDetails: onSuccess,
+        });
         onSuccess?.();
-        fetchStats(); // Refresh stats
+        fetchStats();
       } else {
         setError(data.error || "Có lỗi xảy ra");
-        toast.error(data.error || "Có lỗi xảy ra");
+        showErrorToast(data.error || "Có lỗi xảy ra");
       }
     } catch (err) {
       setError("Lỗi kết nối server");
-      toast.error("Lỗi kết nối server");
+      showNetworkErrorToast();
     } finally {
       setLoading(false);
     }

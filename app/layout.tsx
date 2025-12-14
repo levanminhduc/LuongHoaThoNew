@@ -54,7 +54,7 @@ export default function RootLayout({
             </SafeClientComponent>
           ) : null}
           {children}
-          <Toaster />
+          <Toaster position="top-center" />
         </ErrorBoundary>
       </body>
     </html>

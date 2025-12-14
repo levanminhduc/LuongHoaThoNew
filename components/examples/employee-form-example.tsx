@@ -23,7 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "sonner";
+import { showSuccessToast, showErrorToast } from "@/lib/toast-utils";
 import { Loader2, Eye, EyeOff, Search } from "lucide-react";
 
 interface Employee {
@@ -283,12 +283,12 @@ export default function EmployeeFormExample({
       }
 
       const result = await response.json();
-      toast.success(result.message);
+      showSuccessToast(result.message);
       form.reset();
       onSuccess?.();
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
+      showErrorToast(error instanceof Error ? error.message : "Có lỗi xảy ra");
     } finally {
       setIsSubmitting(false);
     }

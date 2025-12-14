@@ -1,13 +1,13 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TableSkeleton,
-  PayrollTableSkeleton,
   DashboardCardsSkeleton,
   FormSkeleton,
   EmployeeListSkeleton,
-  ImportProgressSkeleton,
 } from "@/components/ui/skeleton-patterns";
 import {
   DeleteAlertDialog,
@@ -275,7 +275,9 @@ export default function UXExamplesPage() {
       <DeleteAlertDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        onConfirm={() => deleteMutation.mutate(undefined)}
+        onConfirm={() => {
+          deleteMutation.mutate(undefined);
+        }}
         itemName="Nhân viên NV001"
         loading={deleteMutation.isLoading}
       />

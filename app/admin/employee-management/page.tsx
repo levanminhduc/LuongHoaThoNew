@@ -56,7 +56,12 @@ import {
   UserX,
   FileText,
 } from "lucide-react";
-import { toast } from "sonner";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showDeleteSuccessToast,
+  showUpdateSuccessToast,
+} from "@/lib/toast-utils";
 import EmployeeFormExample from "@/components/examples/employee-form-example";
 import EmployeeAuditLogs from "./components/EmployeeAuditLogs";
 import SecurityNotice from "./components/SecurityNotice";
@@ -148,7 +153,7 @@ export default function EmployeeManagementPage() {
       setDepartments(data.departments);
     } catch (error) {
       console.error("Error fetching employees:", error);
-      toast.error("Lỗi khi tải danh sách nhân viên");
+      showErrorToast("Lỗi khi tải danh sách nhân viên");
     } finally {
       setLoading(false);
     }
@@ -196,11 +201,12 @@ export default function EmployeeManagementPage() {
       }
 
       const result = await response.json();
-      toast.success(result.message);
+      const employee = employees.find((e) => e.employee_id === employeeId);
+      showDeleteSuccessToast(employee?.full_name || employeeId, "nhân viên");
       fetchEmployees();
     } catch (error) {
       console.error("Error deleting employee:", error);
-      toast.error("Lỗi khi xóa nhân viên");
+      showErrorToast("Lỗi khi xóa nhân viên");
     } finally {
       setDeletingId(null);
     }
@@ -209,13 +215,13 @@ export default function EmployeeManagementPage() {
   const handleEmployeeCreated = () => {
     setIsCreateDialogOpen(false);
     fetchEmployees();
-    toast.success("Tạo nhân viên thành công");
+    showSuccessToast("Tạo nhân viên thành công");
   };
 
   const handleEmployeeUpdated = () => {
     setEditingEmployee(null);
     fetchEmployees();
-    toast.success("Cập nhật nhân viên thành công");
+    showUpdateSuccessToast("Thông tin nhân viên");
   };
 
   const activeEmployees = employees.filter((emp) => emp.is_active).length;
