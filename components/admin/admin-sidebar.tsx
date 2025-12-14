@@ -143,7 +143,10 @@ export function AdminSidebar() {
   const toolItems = useMemo(() => adminToolsItems, []);
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar
+      collapsible="icon"
+      className="border-r !top-8 sm:!top-9 !h-[calc(100svh-2rem)] sm:!h-[calc(100svh-2.25rem)]"
+    >
       <SidebarHeader className="border-b px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">

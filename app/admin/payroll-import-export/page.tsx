@@ -631,10 +631,10 @@ export default function PayrollImportExportPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Import/Export Lương Nhân Viên
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-sm sm:text-base text-gray-600 mt-2">
           Quản lý dữ liệu lương: Tải template, export dữ liệu và import file
           Excel
         </p>
@@ -642,7 +642,7 @@ export default function PayrollImportExportPage() {
 
       {/* Main Content */}
       <Tabs defaultValue="export" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid grid-cols-3 gap-2 w-full">
           <TabsTrigger value="export" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
             Export & Template
@@ -670,7 +670,7 @@ export default function PayrollImportExportPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Export Type Selection */}
                 <div className="space-y-4">
                   <Label htmlFor="export-type">Loại Export</Label>
@@ -723,11 +723,11 @@ export default function PayrollImportExportPage() {
               </div>
 
               {/* Export Button */}
-              <div className="flex justify-center gap-3">
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <Button
                   onClick={() => handleExport()}
                   disabled={exportLoading}
-                  className="flex items-center gap-2 px-8"
+                  className="flex items-center gap-2 px-8 w-full sm:w-auto"
                 >
                   {exportLoading ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
@@ -743,7 +743,7 @@ export default function PayrollImportExportPage() {
                   variant="outline"
                   onClick={handleGenerateConfigTemplate}
                   disabled={exportLoading}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full sm:w-auto"
                 >
                   <FileSpreadsheet className="h-4 w-4" />
                   Template từ Config
@@ -753,7 +753,7 @@ export default function PayrollImportExportPage() {
                   variant="outline"
                   onClick={handleGenerateAliasTemplate}
                   disabled={exportLoading}
-                  className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                  className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 w-full sm:w-auto"
                 >
                   <FileSpreadsheet className="h-4 w-4" />
                   Template từ Aliases
@@ -763,7 +763,7 @@ export default function PayrollImportExportPage() {
               {/* Export Info */}
               <Alert>
                 <FileSpreadsheet className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="text-sm sm:text-base">
                   <strong>Lưu ý:</strong>
                   <ul className="mt-2 space-y-1 text-sm">
                     <li>
@@ -864,7 +864,7 @@ export default function PayrollImportExportPage() {
               {/* Analysis Info */}
               <Alert>
                 <Eye className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="text-sm sm:text-base">
                   <strong>Analysis Features:</strong>
                   <ul className="mt-2 space-y-1 text-sm">
                     <li>
@@ -935,11 +935,11 @@ export default function PayrollImportExportPage() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <Button
                   onClick={handleImport}
                   disabled={!selectedFile || loading}
-                  className="flex items-center gap-2 px-8"
+                  className="flex items-center gap-2 px-8 w-full sm:w-auto"
                 >
                   {loading ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
@@ -954,7 +954,7 @@ export default function PayrollImportExportPage() {
                     variant="outline"
                     onClick={resetForm}
                     disabled={loading}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 w-full sm:w-auto"
                   >
                     <RefreshCw className="h-4 w-4" />
                     Reset
@@ -965,7 +965,7 @@ export default function PayrollImportExportPage() {
               {/* Import Info */}
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
+                <AlertDescription className="text-sm sm:text-base">
                   <strong>Quy tắc Import:</strong>
                   <ul className="mt-2 space-y-1 text-sm">
                     <li>
@@ -1036,16 +1036,16 @@ export default function PayrollImportExportPage() {
           {results.errors && results.errors.length > 0 && (
             <Card>
               <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <h4 className="font-medium text-red-700">
                     Chi Tiết Lỗi ({results.errors.length} lỗi)
                   </h4>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setShowErrorModal(true)}
-                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      className="w-full sm:w-auto text-red-600 border-red-300 hover:bg-red-50"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Xem Chi Tiết
@@ -1098,7 +1098,7 @@ export default function PayrollImportExportPage() {
                           console.error("Export error:", exportErr);
                         }
                       }}
-                      className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                      className="w-full sm:w-auto text-blue-600 border-blue-300 hover:bg-blue-50"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Tải Báo Cáo Lỗi Excel
