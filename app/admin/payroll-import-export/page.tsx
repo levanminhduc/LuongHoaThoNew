@@ -628,10 +628,10 @@ export default function PayrollImportExportPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
           Import/Export Lương Nhân Viên
         </h1>
         <p className="text-sm sm:text-base text-gray-600 mt-2">
@@ -641,7 +641,7 @@ export default function PayrollImportExportPage() {
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="export" className="space-y-6">
+      <Tabs defaultValue="export" className="space-y-4 sm:space-y-6">
         <TabsList className="grid grid-cols-3 gap-2 w-full">
           <TabsTrigger value="export" className="flex items-center gap-2">
             <Download className="h-4 w-4" />

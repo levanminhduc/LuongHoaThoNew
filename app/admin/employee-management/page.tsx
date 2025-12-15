@@ -228,19 +228,21 @@ export default function EmployeeManagementPage() {
   const inactiveEmployees = employees.filter((emp) => !emp.is_active).length;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <SecurityNotice />
 
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Quản Lý Nhân Viên</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
+            Quản Lý Nhân Viên
+          </h1>
           <p className="text-muted-foreground">
             Quản lý thông tin nhân viên trong hệ thống
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Thêm Nhân Viên
             </Button>
@@ -259,7 +261,7 @@ export default function EmployeeManagementPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -268,7 +270,12 @@ export default function EmployeeManagementPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pagination.total}</div>
+            <div className="text-lg sm:text-2xl font-bold">
+              {pagination.total}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Tất cả nhân viên
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -279,9 +286,12 @@ export default function EmployeeManagementPage() {
             <UserCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-lg sm:text-2xl font-bold text-green-600">
               {activeEmployees}
             </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Nhân viên active
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -292,9 +302,12 @@ export default function EmployeeManagementPage() {
             <UserX className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-lg sm:text-2xl font-bold text-red-600">
               {inactiveEmployees}
             </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Nhân viên inactive
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -302,21 +315,21 @@ export default function EmployeeManagementPage() {
       <Card>
         <CardHeader>
           <CardTitle>Danh Sách Nhân Viên</CardTitle>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Tìm kiếm theo mã NV, tên, hoặc SĐT..."
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full sm:w-auto flex-1"
               />
             </div>
             <Select
               value={selectedDepartment}
               onValueChange={(value) => handleFilterChange("department", value)}
             >
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Chọn phòng ban" />
               </SelectTrigger>
               <SelectContent>
@@ -334,7 +347,7 @@ export default function EmployeeManagementPage() {
               value={selectedRole}
               onValueChange={(value) => handleFilterChange("role", value)}
             >
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Chọn chức vụ" />
               </SelectTrigger>
               <SelectContent>
@@ -346,6 +359,13 @@ export default function EmployeeManagementPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              onClick={fetchEmployees}
+              className="w-full sm:w-auto"
+            >
+              Làm mới
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -356,7 +376,7 @@ export default function EmployeeManagementPage() {
           ) : (
             <>
               {/* Mobile Card Layout */}
-              <div className="block sm:hidden space-y-3">
+              <div className="md:hidden space-y-3">
                 {employees.length > 0 ? (
                   employees.map((employee) => (
                     <Card
@@ -364,162 +384,134 @@ export default function EmployeeManagementPage() {
                       className="p-4 hover:shadow-md transition-shadow duration-200"
                     >
                       <div className="space-y-3">
-                        <div className="flex justify-between items-start gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm truncate">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground font-mono">
+                              {employee.employee_id}
+                            </p>
+                            <h4 className="font-semibold text-base">
                               {employee.full_name}
                             </h4>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Mã: {employee.employee_id}
-                            </p>
                           </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setEditingEmployee(employee)}
-                                  className="h-9 w-9 p-0 touch-manipulation"
-                                  title="Chỉnh sửa"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-                                <DialogHeader>
-                                  <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
-                                  <DialogDescription>
-                                    Cập nhật thông tin nhân viên{" "}
-                                    {employee.full_name}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <ScrollArea className="max-h-[65vh] pr-4">
-                                  {editingEmployee && (
-                                    <EmployeeFormExample
-                                      employee={editingEmployee}
-                                      onSuccess={handleEmployeeUpdated}
-                                    />
-                                  )}
-                                </ScrollArea>
-                              </DialogContent>
-                            </Dialog>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setAuditLogsEmployee(employee)}
-                                  className="h-9 w-9 p-0 touch-manipulation"
-                                  title="Lịch sử"
-                                >
-                                  <FileText className="w-4 h-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-4xl">
-                                <DialogHeader>
-                                  <DialogTitle>Lịch Sử Thay Đổi</DialogTitle>
-                                  <DialogDescription>
-                                    Audit logs cho nhân viên{" "}
-                                    {employee.full_name}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                {auditLogsEmployee && (
-                                  <EmployeeAuditLogs
-                                    employeeId={auditLogsEmployee.employee_id}
-                                    employeeName={auditLogsEmployee.full_name}
-                                  />
-                                )}
-                              </DialogContent>
-                            </Dialog>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  disabled={deletingId === employee.employee_id}
-                                  className="h-9 w-9 p-0 touch-manipulation"
-                                  title="Xóa"
-                                >
-                                  {deletingId === employee.employee_id ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                  ) : (
-                                    <Trash2 className="w-4 h-4 text-red-600" />
-                                  )}
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Xác nhận xóa
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Bạn có chắc chắn muốn xóa nhân viên{" "}
-                                    <strong>{employee.full_name}</strong>? Hành
-                                    động này không thể hoàn tác.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Hủy</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() =>
-                                      handleDelete(employee.employee_id)
-                                    }
-                                  >
-                                    Xóa
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                          <div className="flex flex-wrap gap-2 justify-end">
+                            <Badge variant="secondary">
+                              {employee.department || "-"}
+                            </Badge>
+                            <Badge variant="outline">
+                              {
+                                roleLabels[
+                                  employee.chuc_vu as keyof typeof roleLabels
+                                ]
+                              }
+                            </Badge>
+                            <Badge
+                              variant={
+                                employee.is_active ? "default" : "secondary"
+                              }
+                            >
+                              {employee.is_active
+                                ? "Hoạt động"
+                                : "Không hoạt động"}
+                            </Badge>
                           </div>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <span className="text-muted-foreground">
-                              Chức vụ:
-                            </span>
-                            <div className="font-medium mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {
-                                  roleLabels[
-                                    employee.chuc_vu as keyof typeof roleLabels
-                                  ]
-                                }
-                              </Badge>
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Phòng ban:
-                            </span>
-                            <p className="font-medium mt-1">
-                              {employee.department || "-"}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">SĐT:</span>
-                            <p className="font-medium mt-1">
-                              {employee.phone_number || "-"}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Trạng thái:
-                            </span>
-                            <div className="font-medium mt-1">
-                              <Badge
-                                variant={
-                                  employee.is_active ? "default" : "secondary"
-                                }
-                                className="text-xs"
+                        <div className="flex flex-wrap gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingEmployee(employee)}
+                                className="touch-manipulation"
+                                title="Chỉnh sửa"
                               >
-                                {employee.is_active
-                                  ? "Hoạt động"
-                                  : "Không hoạt động"}
-                              </Badge>
-                            </div>
-                          </div>
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+                              <DialogHeader>
+                                <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
+                                <DialogDescription>
+                                  Cập nhật thông tin nhân viên{" "}
+                                  {employee.full_name}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <ScrollArea className="max-h-[65vh] pr-4">
+                                {editingEmployee && (
+                                  <EmployeeFormExample
+                                    employee={editingEmployee}
+                                    onSuccess={handleEmployeeUpdated}
+                                  />
+                                )}
+                              </ScrollArea>
+                            </DialogContent>
+                          </Dialog>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setAuditLogsEmployee(employee)}
+                                className="touch-manipulation"
+                                title="Lịch sử"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl">
+                              <DialogHeader>
+                                <DialogTitle>Lịch Sử Thay Đổi</DialogTitle>
+                                <DialogDescription>
+                                  Audit logs cho nhân viên {employee.full_name}
+                                </DialogDescription>
+                              </DialogHeader>
+                              {auditLogsEmployee && (
+                                <EmployeeAuditLogs
+                                  employeeId={auditLogsEmployee.employee_id}
+                                  employeeName={auditLogsEmployee.full_name}
+                                />
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={deletingId === employee.employee_id}
+                                className="touch-manipulation"
+                                title="Xóa"
+                              >
+                                {deletingId === employee.employee_id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                ) : (
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Xác nhận xóa
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Bạn có chắc chắn muốn xóa nhân viên{" "}
+                                  <strong>{employee.full_name}</strong>? Hành
+                                  động này không thể hoàn tác.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    handleDelete(employee.employee_id)
+                                  }
+                                >
+                                  Xóa
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </Card>
@@ -532,7 +524,7 @@ export default function EmployeeManagementPage() {
               </div>
 
               {/* Desktop Table Layout */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div className="hidden md:block border rounded-lg overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>

@@ -12,12 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import DepartmentDebugInfo from "@/components/debug/DepartmentDebugInfo";
 import {
   Building2,
   Users,
   Shield,
-  Settings,
   Plus,
   Eye,
   UserCheck,
@@ -56,6 +56,7 @@ export default function DepartmentManagementPage() {
   const [permissions, setPermissions] = useState<DepartmentPermission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     checkAuthentication();
@@ -141,6 +142,10 @@ export default function DepartmentManagementPage() {
     );
   };
 
+  const filteredDepartments = departments.filter((dept) =>
+    dept.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -150,11 +155,11 @@ export default function DepartmentManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             Quản Lý Phân Quyền Department
           </h1>
           <p className="text-sm text-gray-600">
@@ -192,7 +197,7 @@ export default function DepartmentManagementPage() {
       )}
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -201,8 +206,10 @@ export default function DepartmentManagementPage() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{departments.length}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg sm:text-2xl font-bold">
+              {departments.length}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               Departments trong hệ thống
             </p>
           </CardContent>
@@ -216,10 +223,10 @@ export default function DepartmentManagementPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-lg sm:text-2xl font-bold">
               {departments.reduce((sum, dept) => sum + dept.employeeCount, 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               Nhân viên trong tất cả departments
             </p>
           </CardContent>
@@ -231,10 +238,10 @@ export default function DepartmentManagementPage() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-lg sm:text-2xl font-bold">
               {permissions.filter((p) => p.is_active).length}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               Department permissions active
             </p>
           </CardContent>
@@ -248,7 +255,7 @@ export default function DepartmentManagementPage() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-lg sm:text-2xl font-bold">
               {
                 new Set(
                   permissions
@@ -257,118 +264,188 @@ export default function DepartmentManagementPage() {
                 ).size
               }
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               Managers được cấp quyền
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Departments Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {departments.map((dept) => (
-          <Card key={dept.name} className="relative">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  {dept.name}
-                </span>
-                <Badge
-                  variant={
-                    getPermissionCount(dept.name) > 0 ? "default" : "secondary"
-                  }
-                >
-                  {getPermissionCount(dept.name)} quyền
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                {dept.employeeCount} nhân viên • {dept.payrollCount} bảng lương
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Managers</p>
-                  <p className="font-semibold">{dept.managers.length}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Supervisors</p>
-                  <p className="font-semibold">{dept.supervisors.length}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Đã ký</p>
-                  <p className="font-semibold">{dept.signedPercentage}%</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Lương TB</p>
-                  <p className="font-semibold">
-                    {(dept.averageSalary / 1000).toFixed(0)}K
-                  </p>
-                </div>
-              </div>
-
-              {/* Managers with permissions */}
-              {getManagersWithPermissions(dept.name).length > 0 && (
-                <div className="border-t pt-3">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Managers có quyền:
-                  </p>
-                  <div className="space-y-1">
-                    {getManagersWithPermissions(dept.name).map((perm) => (
-                      <Badge
-                        key={perm.id}
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        {perm.employees?.full_name || perm.employee_id}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() =>
-                    router.push(
-                      `/admin/department-management/assign-permissions?department=${encodeURIComponent(dept.name)}`,
-                    )
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Cấp Quyền
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() =>
-                    router.push(
-                      `/admin/department-management/permissions?department=${encodeURIComponent(dept.name)}`,
-                    )
-                  }
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Xem Chi Tiết
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+        <Input
+          placeholder="Tìm kiếm department..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full sm:w-auto flex-1"
+        />
+        <Button
+          variant="outline"
+          onClick={loadData}
+          className="w-full sm:w-auto"
+        >
+          Làm mới
+        </Button>
       </div>
 
-      {departments.length === 0 && !loading && (
+      {/* Departments Grid */}
+      {filteredDepartments.length > 0 && (
+        <>
+          <div className="hidden md:block border rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+              {filteredDepartments.map((dept) => (
+                <Card key={dept.name} className="relative">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        {dept.name}
+                      </span>
+                      <Badge
+                        variant={
+                          getPermissionCount(dept.name) > 0
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {getPermissionCount(dept.name)} quyền
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      {dept.employeeCount} nhân viên • {dept.payrollCount} bảng
+                      lương
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Managers</p>
+                        <p className="font-semibold">{dept.managers.length}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Supervisors</p>
+                        <p className="font-semibold">
+                          {dept.supervisors.length}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Đã ký</p>
+                        <p className="font-semibold">
+                          {dept.signedPercentage}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Lương TB</p>
+                        <p className="font-semibold">
+                          {(dept.averageSalary / 1000).toFixed(0)}K
+                        </p>
+                      </div>
+                    </div>
+
+                    {getManagersWithPermissions(dept.name).length > 0 && (
+                      <div className="border-t pt-3">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                          Managers có quyền:
+                        </p>
+                        <div className="space-y-1">
+                          {getManagersWithPermissions(dept.name).map((perm) => (
+                            <Badge
+                              key={perm.id}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {perm.employees?.full_name || perm.employee_id}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() =>
+                          router.push(
+                            `/admin/department-management/assign-permissions?department=${encodeURIComponent(dept.name)}`,
+                          )
+                        }
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Cấp Quyền
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() =>
+                          router.push(
+                            `/admin/department-management/permissions?department=${encodeURIComponent(dept.name)}`,
+                          )
+                        }
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Xem Chi Tiết
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="md:hidden space-y-3">
+            {filteredDepartments.map((dept) => (
+              <Card key={dept.name}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-semibold text-base">{dept.name}</span>
+                    <Badge>{dept.employeeCount} nhân viên</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {dept.employeeCount} nhân viên • {dept.payrollCount} bảng
+                    lương
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        router.push(
+                          `/admin/department-management/assign-permissions?department=${encodeURIComponent(dept.name)}`,
+                        )
+                      }
+                    >
+                      Cấp Quyền
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        router.push(
+                          `/admin/department-management/permissions?department=${encodeURIComponent(dept.name)}`,
+                        )
+                      }
+                    >
+                      Xem Chi Tiết
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {filteredDepartments.length === 0 && !loading && (
         <Card className="text-center py-12">
           <CardContent>
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Chưa có departments</h3>
             <p className="text-muted-foreground mb-4">
-              Hệ thống chưa có departments nào. Hãy thêm nhân viên và
-              departments trước.
+              {departments.length === 0
+                ? "Hệ thống chưa có departments nào. Hãy thêm nhân viên và departments trước."
+                : "Không tìm thấy department phù hợp."}
             </p>
           </CardContent>
         </Card>

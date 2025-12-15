@@ -223,10 +223,10 @@ export default function TestColumnMappingPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
           Test Column Mapping System
         </h1>
         <p className="text-gray-600 mt-2">

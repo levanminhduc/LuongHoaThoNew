@@ -215,7 +215,7 @@ export default function DataValidationPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
             Kiểm Tra Dữ Liệu Lương
           </h1>
           <p className="text-muted-foreground">
@@ -223,9 +223,9 @@ export default function DataValidationPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Chọn tháng" />
             </SelectTrigger>
@@ -243,6 +243,7 @@ export default function DataValidationPage() {
             disabled={refreshing}
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
           >
             <RefreshCw
               className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
@@ -263,7 +264,7 @@ export default function DataValidationPage() {
       {/* Statistics Cards */}
       {data && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -272,10 +273,10 @@ export default function DataValidationPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-lg sm:text-2xl font-bold">
                   {data.stats.totalEmployees}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Nhân viên đang hoạt động
                 </p>
               </CardContent>
@@ -289,10 +290,10 @@ export default function DataValidationPage() {
                 <UserCheck className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-lg sm:text-2xl font-bold text-green-600">
                   {data.stats.employeesWithPayroll}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Đã có lương tháng {selectedMonth.split("-")[1]}/
                   {selectedMonth.split("-")[0]}
                 </p>
@@ -307,10 +308,10 @@ export default function DataValidationPage() {
                 <UserX className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-lg sm:text-2xl font-bold text-red-600">
                   {data.stats.missingEmployees}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Nhân viên chưa có lương
                 </p>
               </CardContent>
@@ -325,11 +326,11 @@ export default function DataValidationPage() {
               </CardHeader>
               <CardContent>
                 <div
-                  className={`text-2xl font-bold ${getStatusColor(data.stats.percentage)}`}
+                  className={`text-lg sm:text-2xl font-bold ${getStatusColor(data.stats.percentage)}`}
                 >
                   {data.stats.percentage}%
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Dữ liệu đã được nhập
                 </p>
               </CardContent>
@@ -375,45 +376,78 @@ export default function DataValidationPage() {
                   </p>
                 </div>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[120px]">Mã NV</TableHead>
-                        <TableHead>Họ Tên</TableHead>
-                        <TableHead>Phòng Ban</TableHead>
-                        <TableHead>Chức Vụ</TableHead>
-                        <TableHead className="text-center">
-                          Trạng Thái
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {data.missingEmployees.map((employee) => (
-                        <TableRow key={employee.employee_id}>
-                          <TableCell className="font-mono text-sm">
-                            {employee.employee_id}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {employee.full_name}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {employee.department}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                employee.chuc_vu === "nhan_vien"
-                                  ? "secondary"
-                                  : "default"
-                              }
-                            >
-                              {formatChucVu(employee.chuc_vu)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
+                <>
+                  <div className="hidden md:block rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[120px]">Mã NV</TableHead>
+                          <TableHead>Họ Tên</TableHead>
+                          <TableHead>Phòng Ban</TableHead>
+                          <TableHead>Chức Vụ</TableHead>
+                          <TableHead className="text-center">
+                            Trạng Thái
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {data.missingEmployees.map((employee) => (
+                          <TableRow key={employee.employee_id}>
+                            <TableCell className="font-mono text-sm">
+                              {employee.employee_id}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {employee.full_name}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {employee.department}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  employee.chuc_vu === "nhan_vien"
+                                    ? "secondary"
+                                    : "default"
+                                }
+                              >
+                                {formatChucVu(employee.chuc_vu)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge
+                                variant={
+                                  employee.is_active ? "default" : "destructive"
+                                }
+                                className={
+                                  employee.is_active
+                                    ? "bg-green-100 text-green-800"
+                                    : ""
+                                }
+                              >
+                                {employee.is_active
+                                  ? "Hoạt động"
+                                  : "Không hoạt động"}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="md:hidden space-y-3">
+                    {data.missingEmployees.map((employee) => (
+                      <Card
+                        key={employee.employee_id}
+                        className="border-l-4 border-l-red-500"
+                      >
+                        <CardContent className="p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-sm font-semibold">
+                              {employee.employee_id}
+                            </span>
                             <Badge
                               variant={
                                 employee.is_active ? "default" : "destructive"
@@ -428,12 +462,29 @@ export default function DataValidationPage() {
                                 ? "Hoạt động"
                                 : "Không hoạt động"}
                             </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                          </div>
+                          <div className="text-sm font-medium">
+                            {employee.full_name}
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <Badge variant="outline">
+                              {employee.department}
+                            </Badge>
+                            <Badge
+                              variant={
+                                employee.chuc_vu === "nhan_vien"
+                                  ? "secondary"
+                                  : "default"
+                              }
+                            >
+                              {formatChucVu(employee.chuc_vu)}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

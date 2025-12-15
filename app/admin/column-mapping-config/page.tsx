@@ -315,10 +315,10 @@ export default function ColumnMappingConfigPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
           Cấu Hình Column Mapping
         </h1>
         <p className="text-gray-600 mt-2">
@@ -361,7 +361,7 @@ export default function ColumnMappingConfigPage() {
         <TabsContent value="aliases">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Database className="h-5 w-5 text-blue-600" />
@@ -374,7 +374,7 @@ export default function ColumnMappingConfigPage() {
                 </div>
                 <Button
                   onClick={openCreateDialog}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4" />
                   Thêm Alias
@@ -383,7 +383,7 @@ export default function ColumnMappingConfigPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Filter */}
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                 <div className="flex-1">
                   <Label htmlFor="field-filter">Lọc theo Database Field</Label>
                   <Select
@@ -407,7 +407,7 @@ export default function ColumnMappingConfigPage() {
                   variant="outline"
                   onClick={loadAliases}
                   disabled={loading}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full sm:w-auto"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
@@ -417,7 +417,7 @@ export default function ColumnMappingConfigPage() {
               </div>
 
               {/* Aliases Table */}
-              <div className="border rounded-lg">
+              <div className="hidden md:block border rounded-lg">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -501,6 +501,68 @@ export default function ColumnMappingConfigPage() {
                     )}
                   </TableBody>
                 </Table>
+              </div>
+              <div className="md:hidden space-y-3">
+                {filteredAliases.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500">
+                    {loading ? "Đang tải..." : "Không có aliases nào"}
+                  </div>
+                ) : (
+                  filteredAliases.map((alias) => (
+                    <div
+                      key={alias.id}
+                      className="border rounded-lg p-4 space-y-3"
+                    >
+                      <div className="space-y-1">
+                        <div className="text-sm text-gray-500">
+                          Database Field
+                        </div>
+                        <div className="font-semibold">
+                          {getFieldLabel(alias.database_field)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {alias.database_field}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-500">Alias Name</div>
+                        <div className="font-medium">{alias.alias_name}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={getConfidenceColor(alias.confidence_score)}
+                        >
+                          {alias.confidence_score}%
+                        </Badge>
+                        <Badge
+                          variant={alias.is_active ? "default" : "secondary"}
+                        >
+                          {alias.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(alias)}
+                          className="flex items-center gap-1 w-full"
+                        >
+                          <Edit className="h-3 w-3" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteAlias(alias)}
+                          className="flex items-center gap-1 text-red-600 hover:text-red-700 w-full"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

@@ -233,11 +233,11 @@ export default function PasswordResetHistoryPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Shield className="w-6 h-6" />
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
           Lịch Sử Đổi Mật Khẩu
         </h1>
         <p className="text-sm text-gray-600">

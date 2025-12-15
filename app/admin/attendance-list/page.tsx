@@ -201,7 +201,7 @@ export default function AttendanceListPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -210,7 +210,7 @@ export default function AttendanceListPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold">Danh Sách Bảng Công</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">Danh Sách Bảng Công</h1>
       </div>
 
       <Card>
