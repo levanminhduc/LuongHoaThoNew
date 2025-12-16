@@ -31,7 +31,9 @@ import {
   Calendar,
   User,
   Building2,
+  Loader2,
 } from "lucide-react";
+import { DeleteAlertDialog } from "@/components/ui/alert-dialogs";
 
 interface DepartmentPermission {
   id: number;
@@ -94,6 +96,10 @@ function PermissionsContent() {
   const [departmentFilterState, setDepartmentFilterState] = useState<string>(
     departmentFilter || "all",
   );
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [permissionToDelete, setPermissionToDelete] =
+    useState<DepartmentPermission | null>(null);
+  const [revokingId, setRevokingId] = useState<number | null>(null);
 
   useEffect(() => {
     checkAuthentication();
@@ -183,11 +189,8 @@ function PermissionsContent() {
   };
 
   const revokePermission = async (permissionId: number) => {
-    if (!confirm("Bạn có chắc chắn muốn thu hồi quyền này?")) {
-      return;
-    }
-
     try {
+      setRevokingId(permissionId);
       const token = localStorage.getItem("admin_token");
 
       const response = await fetch(
@@ -210,7 +213,22 @@ function PermissionsContent() {
     } catch (error) {
       console.error("Error revoking permission:", error);
       alert("Có lỗi xảy ra khi thu hồi quyền");
+    } finally {
+      setRevokingId(null);
     }
+  };
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    setShowDeleteDialog(open);
+    if (!open) {
+      setPermissionToDelete(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!permissionToDelete) return;
+    await revokePermission(permissionToDelete.id);
+    handleDeleteDialogChange(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -487,10 +505,18 @@ function PermissionsContent() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => revokePermission(permission.id)}
+                          disabled={revokingId === permission.id}
+                          onClick={() => {
+                            setPermissionToDelete(permission);
+                            setShowDeleteDialog(true);
+                          }}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {revokingId === permission.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       )}
                     </td>
@@ -526,6 +552,26 @@ function PermissionsContent() {
           </div>
         </CardContent>
       </Card>
+
+      <DeleteAlertDialog
+        open={showDeleteDialog}
+        onOpenChange={handleDeleteDialogChange}
+        onConfirm={handleConfirmDelete}
+        itemName={
+          permissionToDelete?.employees?.full_name ||
+          permissionToDelete?.employee_id
+        }
+        title="Thu hồi quyền truy cập"
+        description={
+          permissionToDelete
+            ? `Bạn có chắc chắn muốn thu hồi quyền của nhân viên "${
+                permissionToDelete.employees?.full_name ||
+                permissionToDelete.employee_id
+              }" đối với department "${permissionToDelete.department}"?`
+            : undefined
+        }
+        loading={!!permissionToDelete && revokingId === permissionToDelete.id}
+      />
     </div>
   );
 }

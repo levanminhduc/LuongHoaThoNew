@@ -35,17 +35,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { DeleteAlertDialog } from "@/components/ui/alert-dialogs";
 import {
   Plus,
   Search,
@@ -119,6 +109,10 @@ export default function EmployeeManagementPage() {
   const [auditLogsEmployee, setAuditLogsEmployee] = useState<Employee | null>(
     null,
   );
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
+    null,
+  );
 
   const fetchEmployees = async () => {
     try {
@@ -182,6 +176,19 @@ export default function EmployeeManagementPage() {
       setSelectedRole(value);
     }
     setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    setShowDeleteDialog(open);
+    if (!open) {
+      setEmployeeToDelete(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!employeeToDelete) return;
+    await handleDelete(employeeToDelete.employee_id);
+    handleDeleteDialogChange(false);
   };
 
   const handleDelete = async (employeeId: string) => {
@@ -473,45 +480,23 @@ export default function EmployeeManagementPage() {
                               )}
                             </DialogContent>
                           </Dialog>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={deletingId === employee.employee_id}
-                                className="touch-manipulation"
-                                title="Xóa"
-                              >
-                                {deletingId === employee.employee_id ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                ) : (
-                                  <Trash2 className="w-4 h-4 text-red-600" />
-                                )}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Xác nhận xóa
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Bạn có chắc chắn muốn xóa nhân viên{" "}
-                                  <strong>{employee.full_name}</strong>? Hành
-                                  động này không thể hoàn tác.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Hủy</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleDelete(employee.employee_id)
-                                  }
-                                >
-                                  Xóa
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={deletingId === employee.employee_id}
+                            className="touch-manipulation"
+                            title="Xóa"
+                            onClick={() => {
+                              setEmployeeToDelete(employee);
+                              setShowDeleteDialog(true);
+                            }}
+                          >
+                            {deletingId === employee.employee_id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            )}
+                          </Button>
                         </div>
                       </div>
                     </Card>
@@ -629,45 +614,21 @@ export default function EmployeeManagementPage() {
                                   )}
                                 </DialogContent>
                               </Dialog>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={
-                                      deletingId === employee.employee_id
-                                    }
-                                  >
-                                    {deletingId === employee.employee_id ? (
-                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                    ) : (
-                                      <Trash2 className="w-4 h-4 text-red-600" />
-                                    )}
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Xác nhận xóa
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Bạn có chắc chắn muốn xóa nhân viên{" "}
-                                      <strong>{employee.full_name}</strong>?
-                                      Hành động này không thể hoàn tác.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Hủy</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() =>
-                                        handleDelete(employee.employee_id)
-                                      }
-                                    >
-                                      Xóa
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={deletingId === employee.employee_id}
+                                onClick={() => {
+                                  setEmployeeToDelete(employee);
+                                  setShowDeleteDialog(true);
+                                }}
+                              >
+                                {deletingId === employee.employee_id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                ) : (
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                )}
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -723,6 +684,22 @@ export default function EmployeeManagementPage() {
           )}
         </CardContent>
       </Card>
+
+      <DeleteAlertDialog
+        open={showDeleteDialog}
+        onOpenChange={handleDeleteDialogChange}
+        onConfirm={handleConfirmDelete}
+        itemName={employeeToDelete?.full_name}
+        title="Xác nhận xóa"
+        description={
+          employeeToDelete
+            ? `Bạn có chắc chắn muốn xóa nhân viên "${employeeToDelete.full_name}"? Hành động này không thể hoàn tác.`
+            : undefined
+        }
+        loading={
+          !!employeeToDelete && deletingId === employeeToDelete.employee_id
+        }
+      />
     </div>
   );
 }
