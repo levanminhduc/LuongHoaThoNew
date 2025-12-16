@@ -18,6 +18,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Loader2,
   Search,
   User,
@@ -32,6 +40,7 @@ import {
   FileText,
   Lock,
   Trash2,
+  X,
 } from "lucide-react";
 
 const STORAGE_KEY = "salary_lookup_credentials";
@@ -69,6 +78,7 @@ function clearCredentials(): void {
 }
 import Link from "next/link";
 import { PayrollDetailModal } from "./payroll-detail-modal";
+import { PayrollDetailModalT13 } from "./payroll-detail-modal-t13";
 import { ResetPasswordModal } from "./reset-password-modal";
 import { SalaryHistoryModal } from "./salary-history-modal";
 import { ForgotPasswordModal } from "./forgot-password-modal";
@@ -148,6 +158,11 @@ interface PayrollResult {
   // Lương thực nhận
   tien_luong_thuc_nhan_cuoi_ky?: number;
 
+  // T13 fields
+  chi_dot_1_13?: number;
+  chi_dot_2_13?: number;
+  tong_luong_13?: number;
+
   // Thông tin ký nhận
   is_signed?: boolean;
   signed_at?: string;
@@ -160,6 +175,7 @@ export function EmployeeLookup() {
   const [cccd, setCccd] = useState("");
   const [showCccd, setShowCccd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [t13Loading, setT13Loading] = useState(false);
   const [result, setResult] = useState<PayrollResult | null>(null);
   const [error, setError] = useState("");
   const [signingLoading, setSigningLoading] = useState(false);
@@ -172,6 +188,13 @@ export function EmployeeLookup() {
   const [rememberPassword, setRememberPassword] = useState(false);
   const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
   const salaryInfoRef = useRef<HTMLDivElement>(null);
+
+  // T13 State
+  const [t13Result, setT13Result] = useState<PayrollResult | null>(null);
+  const [showT13Modal, setShowT13Modal] = useState(false);
+  const [showT13DetailModal, setShowT13DetailModal] = useState(false);
+  const [t13SigningLoading, setT13SigningLoading] = useState(false);
+  const [t13SignSuccess, setT13SignSuccess] = useState(false);
 
   const employeeIdInputRef = useRef<HTMLInputElement>(null);
   const cursorPositionRef = useRef<number | null>(null);
@@ -314,6 +337,100 @@ export function EmployeeLookup() {
     }
   };
 
+  const handleT13Submit = async () => {
+    if (!employeeId || !cccd) {
+      setError("Vui lòng nhập đầy đủ Mã Nhân Viên và Mật khẩu / CCCD");
+      return;
+    }
+
+    setT13Loading(true);
+    setError("");
+    setT13Result(null);
+
+    try {
+      const response = await fetch("/api/employee/lookup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employee_id: employeeId.trim(),
+          cccd: cccd.trim(),
+          is_t13: true,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setT13Result(data.payroll);
+        setShowT13Modal(true);
+
+        if (rememberPassword) {
+          saveCredentials(employeeId.trim(), cccd.trim());
+          setHasSavedCredentials(true);
+        } else {
+          clearCredentials();
+          setHasSavedCredentials(false);
+        }
+      } else {
+        setError(data.error || "Không tìm thấy thông tin lương T13");
+      }
+    } catch {
+      setError("Có lỗi xảy ra khi tra cứu thông tin");
+    } finally {
+      setT13Loading(false);
+    }
+  };
+
+  const handleSignT13 = async () => {
+    if (!t13Result || !employeeId || !cccd) return;
+
+    setT13SigningLoading(true);
+    // Note: We don't clear global error here to avoid messing up main UI, 
+    // but we could use a local error state for the modal if needed.
+    // For now we'll rely on alerts inside the modal or global error if critical.
+
+    try {
+      const vietnamTime = getVietnamTimestamp();
+
+      const response = await fetch("/api/employee/sign-salary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employee_id: employeeId.trim(),
+          cccd: cccd.trim(),
+          salary_month: t13Result.salary_month,
+          client_timestamp: vietnamTime,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setT13SignSuccess(true);
+        setT13Result({
+          ...t13Result,
+          is_signed: true,
+          signed_at: data.data.signed_at,
+          signed_at_display: data.data.signed_at_display,
+          signed_by_name: data.data.employee_name || data.data.signed_by,
+        });
+        setTimeout(() => setT13SignSuccess(false), 5000);
+      } else {
+        console.error("Sign T13 error:", response.status, data);
+        alert(data.error || "Không thể ký nhận lương. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Lỗi kết nối mạng. Vui lòng thử lại.");
+    } finally {
+      setT13SigningLoading(false);
+    }
+  };
+
   useLayoutEffect(() => {
     if (cursorPositionRef.current === null || !employeeIdInputRef.current) {
       return;
@@ -451,22 +568,43 @@ export function EmployeeLookup() {
               </Alert>
             )}
 
-            <div className="flex gap-4">
-              <Button type="submit" disabled={loading} className="flex-1">
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang tra cứu...
-                  </>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Tra Cứu
-                  </>
-                )}
-              </Button>
+            <div className="space-y-3">
+              <div className="flex gap-4">
+                <Button type="submit" disabled={loading || t13Loading} className="flex-1">
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang tra cứu...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Tra Cứu
+                    </>
+                  )}
+                </Button>
 
-              <Button variant="outline" asChild>
+                <Button
+                  type="button"
+                  disabled={loading || t13Loading}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700"
+                  onClick={handleT13Submit}
+                >
+                  {t13Loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Tra Cứu T13
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <Button variant="outline" asChild className="w-full">
                 <Link href="/">Quay Lại</Link>
               </Button>
             </div>
@@ -779,7 +917,229 @@ export function EmployeeLookup() {
         </Card>
       )}
 
-      {/* Payroll Detail Modal */}
+      {/* T13 Result Modal */}
+      <Dialog open={showT13Modal} onOpenChange={setShowT13Modal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <div className="p-6 pb-2 shrink-0">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-700">
+                <User className="w-5 h-5" />
+                Thông Tin Lương Tháng 13
+              </DialogTitle>
+              <DialogDescription>
+                Kết quả tra cứu cho mã nhân viên: {t13Result?.employee_id}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 pt-2">
+            {t13Result && (
+              <div className="space-y-6">
+                {/* Personal Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium">Họ và Tên:</span>
+                      <span>{t13Result.full_name}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Chức vụ:</span>
+                      <Badge variant="outline">
+                        {t13Result.position || "Không xác định"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Salary Details */}
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <DollarSign className="w-5 h-5" />
+                      Chi Tiết Lương
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-flow-col sm:auto-cols-max gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowT13DetailModal(true)}
+                        className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+                      >
+                        <FileText className="w-4 h-4 flex-shrink-0" />
+                        <span>Xem Chi Tiết Đầy Đủ</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Chi Đợt 1 & Chi Đợt 2 */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Chi Đợt 1 */}
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardHeader className="pb-1 pt-3 px-2">
+                        <div className="text-center">
+                          <p className="text-xs font-medium text-blue-600 uppercase">
+                            Chi Đợt 1
+                          </p>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 pb-3 text-center px-2">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-blue-700">
+                            {formatCurrency(t13Result.chi_dot_1_13 || 0)}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Chi Đợt 2 */}
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardHeader className="pb-1 pt-3 px-2">
+                        <div className="text-center">
+                          <p className="text-xs font-medium text-blue-600 uppercase">
+                            Chi Đợt 2
+                          </p>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 pb-3 text-center px-2">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-blue-700">
+                            {formatCurrency(t13Result.chi_dot_2_13 || 0)}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Tổng Lương Tháng 13 (Full width) */}
+                  <Card className="bg-green-50 border-green-200 shadow-sm">
+                    <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                      <p className="text-sm font-bold text-green-600 uppercase mb-1">
+                        Tổng Lương Tháng 13
+                      </p>
+                      <p className="text-3xl font-extrabold text-green-700">
+                        {formatCurrency(t13Result.tong_luong_13 || 0)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Separator />
+
+                {/* Signature Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <PenTool className="w-5 h-5" />
+                    Ký Nhận Lương
+                  </h3>
+
+                  {t13SignSuccess && (
+                    <Alert className="border-green-200 bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-700">
+                        Đã ký nhận lương T13 thành công!
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {t13Result.is_signed ? (
+                    <Card className="bg-green-50 border-green-200">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="w-6 h-6 text-green-600" />
+                          <div>
+                            <p className="font-medium text-green-800">
+                              Đã ký nhận lương
+                            </p>
+                            <p className="text-sm text-green-600">
+                              Người ký: {t13Result.signed_by_name}
+                            </p>
+                            {t13Result.signed_at && (
+                              <p className="text-sm text-green-600">
+                                Thời gian: {t13Result.signed_at_display}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="bg-amber-50 border-amber-200">
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-6 h-6 text-amber-600" />
+                            <div>
+                              <p className="font-medium text-amber-800">
+                                Chưa ký nhận lương
+                              </p>
+                              <p className="text-sm text-amber-600">
+                                Vui lòng ký nhận để xác nhận bạn đã nhận thông tin
+                                lương tháng {t13Result.salary_month}
+                              </p>
+                            </div>
+                          </div>
+
+                          <Button
+                            onClick={handleSignT13}
+                            disabled={t13SigningLoading}
+                            className="w-full bg-green-600 hover:bg-green-700"
+                          >
+                            {t13SigningLoading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Đang ký nhận...
+                              </>
+                            ) : (
+                              <>
+                                <PenTool className="mr-2 h-4 w-4" />
+                                Ký Nhận Lương{" "}
+                                {t13Result.salary_month_display ||
+                                  formatSalaryMonth(t13Result.salary_month)}
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div className="text-sm text-gray-500 text-center">
+                  <p>Nguồn dữ liệu: {t13Result.source_file}</p>
+                  <p className="mt-1">
+                    <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham
+                    khảo.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 pt-2 shrink-0">
+            <DialogFooter className="sm:justify-center">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowT13Modal(false)}
+                className="w-full bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800 h-12 text-base font-medium"
+              >
+                <X className="w-5 h-5 mr-2" />
+                Đóng Lại
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payroll Detail Modal (Regular) */}
       {result && (
         <PayrollDetailModal
           isOpen={showDetailModal}
@@ -788,14 +1148,23 @@ export function EmployeeLookup() {
         />
       )}
 
+      {/* Payroll Detail Modal T13 (Separate) */}
+      {t13Result && (
+        <PayrollDetailModalT13
+          isOpen={showT13DetailModal}
+          onClose={() => setShowT13DetailModal(false)}
+          payrollData={t13Result}
+        />
+      )}
+
       {/* Reset Password Modal - Using CCCD */}
-      {employeeId && result && (
+      {employeeId && (result || t13Result) && (
         <ResetPasswordModal
           isOpen={showPasswordModal}
           onClose={() => setShowPasswordModal(false)}
           employeeId={employeeId}
           cccd={cccd}
-          employeeName={result.full_name}
+          employeeName={showT13Modal && t13Result ? t13Result.full_name : result?.full_name || ""}
           onPasswordReset={() => {
             setMustChangePassword(false);
             setError("");
@@ -804,14 +1173,14 @@ export function EmployeeLookup() {
       )}
 
       {/* Salary History Modal */}
-      {employeeId && result && (
+      {employeeId && (result || t13Result) && (
         <SalaryHistoryModal
           isOpen={showHistoryModal}
           onClose={() => setShowHistoryModal(false)}
           employeeId={employeeId}
           cccd={cccd}
-          currentMonth={result.salary_month}
-          employeeName={result.full_name}
+          currentMonth={showT13Modal && t13Result ? t13Result.salary_month : result?.salary_month || ""}
+          employeeName={showT13Modal && t13Result ? t13Result.full_name : result?.full_name || ""}
         />
       )}
 

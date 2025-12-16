@@ -7,8 +7,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,6 +24,7 @@ import {
   TrendingUp,
   Minus,
   Banknote,
+  X,
 } from "lucide-react";
 import {
   formatSalaryMonth,
@@ -153,31 +156,32 @@ export function PayrollDetailModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-hidden payroll-detail-modal modal-event-isolation"
+        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden payroll-detail-modal modal-event-isolation"
         onClick={(e) => e.stopPropagation()}
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calculator className="w-5 h-5" />
-            Chi Tiết Lương Đầy Đủ - {payrollData.full_name}
-          </DialogTitle>
-          <DialogDescription>
-            Thông tin chi tiết lương của nhân viên
-          </DialogDescription>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-sm text-muted-foreground">Tháng lương:</span>
-            <Badge variant="outline">
-              {payrollData.salary_month_display ||
-                formatSalaryMonth(payrollData.salary_month)}
-            </Badge>
-            <span className="text-sm text-muted-foreground">|</span>
-            <span className="text-sm text-muted-foreground">Mã NV:</span>
-            <Badge>{payrollData.employee_id}</Badge>
-          </div>
-        </DialogHeader>
+        <div className="p-6 pb-2 shrink-0">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              Chi Tiết Lương Đầy Đủ - {payrollData.full_name}
+            </DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết lương của nhân viên
+            </DialogDescription>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-sm text-muted-foreground">Tháng lương:</span>
+              <Badge variant="outline">
+                {payrollData.salary_month_display ||
+                  formatSalaryMonth(payrollData.salary_month)}
+              </Badge>
+              <span className="text-sm text-muted-foreground">|</span>
+              <span className="text-sm text-muted-foreground">Mã NV:</span>
+              <Badge>{payrollData.employee_id}</Badge>
+            </div>
+          </DialogHeader>
+        </div>
 
-        <ScrollArea className="h-[70vh] pr-4">
-          <div className="space-y-6">
+        <div className="flex-1 overflow-y-auto w-full border-t border-b p-6 space-y-6">
             {/* Hệ số và thông số cơ bản */}
             <Card>
               <CardHeader className="pb-3">
@@ -502,8 +506,21 @@ export function PayrollDetailModal({
                 khảo. Vui lòng liên hệ phòng nhân sự nếu có thắc mắc.
               </p>
             </div>
-          </div>
-        </ScrollArea>
+        </div>
+
+        <div className="p-6 pt-4 pb-6 shrink-0 bg-background">
+          <DialogFooter className="sm:justify-center">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className="w-full bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800 h-12 text-base font-medium"
+            >
+              <X className="w-5 h-5 mr-2" />
+              Đóng Lại
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
