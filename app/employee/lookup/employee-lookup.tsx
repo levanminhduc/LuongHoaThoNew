@@ -921,7 +921,7 @@ export function EmployeeLookup() {
 
       {/* T13 Result Modal */}
       <Dialog open={showT13Modal} onOpenChange={setShowT13Modal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
           <div className="p-6 pb-2 shrink-0">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-amber-700">
@@ -993,7 +993,7 @@ export function EmployeeLookup() {
                       <CardContent className="pt-0 pb-3 text-center px-2">
                         <div className="text-center">
                           <p className="text-lg font-bold text-blue-700">
-                            {formatNumber(t13Result.so_thang_chia_13 || 0)}
+                            {Math.round(t13Result.so_thang_chia_13 || 0)}
                           </p>
                         </div>
                       </CardContent>
@@ -1153,13 +1153,13 @@ export function EmployeeLookup() {
 
                 <Separator />
 
-                <div className="text-sm text-gray-500 text-center">
+                {/* <div className="text-sm text-gray-500 text-center">
                   <p>Nguồn dữ liệu: {t13Result.source_file}</p>
                   <p className="mt-1">
                     <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham
                     khảo.
                   </p>
-                </div>
+                </div> */}
               </div>
             )}
           </div>

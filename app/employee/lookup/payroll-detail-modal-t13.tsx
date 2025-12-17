@@ -39,7 +39,7 @@ interface PayrollResult {
   cccd: string;
   position: string;
   salary_month: string;
-  salary_month_display?: string; 
+  salary_month_display?: string;
   total_income: number;
   deductions: number;
   net_salary: number;
@@ -146,14 +146,24 @@ export function PayrollDetailModalT13({
     label,
     value,
     highlight = false,
+    className = "",
   }: {
     label: string;
     value: number | undefined;
     highlight?: boolean;
+    className?: string;
   }) => (
-    <div className={`flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0 ${highlight ? 'bg-amber-50 px-2 rounded-md -mx-2' : ''}`}>
-      <span className={`text-sm ${highlight ? 'text-amber-800 font-bold' : 'text-gray-600 font-medium'}`}>{label}:</span>
-      <span className={`text-sm ${highlight ? 'text-amber-700 font-bold' : 'font-semibold text-gray-900'}`}>
+    <div
+      className={`flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0 ${highlight ? "bg-amber-50 px-2 rounded-md -mx-2" : ""} ${className ? `px-2 rounded-md -mx-2 ${className}` : ""}`}
+    >
+      <span
+        className={`text-sm ${highlight ? "text-amber-800 font-bold" : "text-gray-600 font-medium"}`}
+      >
+        {label}:
+      </span>
+      <span
+        className={`text-sm ${highlight ? "text-amber-700 font-bold" : "font-semibold text-gray-900"}`}
+      >
         {formatCurrencyLocal(value)}
       </span>
     </div>
@@ -176,7 +186,10 @@ export function PayrollDetailModalT13({
             </DialogDescription>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-sm text-muted-foreground">Kỳ lương:</span>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              <Badge
+                variant="outline"
+                className="bg-green-50 text-green-700 border-green-200"
+              >
                 {payrollData.salary_month_display ||
                   formatSalaryMonth(payrollData.salary_month)}
               </Badge>
@@ -188,116 +201,160 @@ export function PayrollDetailModalT13({
         </div>
 
         <div className="flex-1 overflow-y-auto w-full border-t border-b p-6 space-y-6">
-            
-            {/* Chi tiết 12 tháng (Đưa lên trên) */}
-            <Card className="border-green-100">
-              <CardHeader className="pb-3 bg-green-50/30">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-green-600" />
-                  <span className="text-green-700">Chi Tiết Các Tháng</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 pt-4">
-                <DetailRow label="Tháng 01" value={payrollData.t13_thang_01} />
-                <DetailRow label="Tháng 02" value={payrollData.t13_thang_02} />
-                <DetailRow label="Tháng 03" value={payrollData.t13_thang_03} />
-                <DetailRow label="Tháng 04" value={payrollData.t13_thang_04} />
-                <DetailRow label="Tháng 05" value={payrollData.t13_thang_05} />
-                <DetailRow label="Tháng 06" value={payrollData.t13_thang_06} />
-                <DetailRow label="Tháng 07" value={payrollData.t13_thang_07} />
-                <DetailRow label="Tháng 08" value={payrollData.t13_thang_08} />
-                <DetailRow label="Tháng 09" value={payrollData.t13_thang_09} />
-                <DetailRow label="Tháng 10" value={payrollData.t13_thang_10} />
-                <DetailRow label="Tháng 11" value={payrollData.t13_thang_11} />
-                <DetailRow label="Tháng 12" value={payrollData.t13_thang_12} />
-              </CardContent>
-            </Card>
+          {/* Chi tiết 12 tháng (Đưa lên trên) */}
+          <Card className="border-green-100">
+            <CardHeader className="pb-3 bg-green-50/30">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-green-600" />
+                <span className="text-green-700">Chi Tiết Các Tháng</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 pt-4">
+              {/* Tháng 12/2024 lên đầu - Có màu nền */}
+              <DetailRow
+                label="Tháng 12/2024"
+                value={payrollData.t13_thang_12}
+                className="bg-slate-100"
+              />
 
-            <Separator />
+              {/* Các tháng 2025 - Xen kẽ màu */}
+              <DetailRow
+                label="Tháng 01/2025"
+                value={payrollData.t13_thang_01}
+              />
+              <DetailRow
+                label="Tháng 02/2025"
+                value={payrollData.t13_thang_02}
+                className="bg-slate-100"
+              />
+              <DetailRow
+                label="Tháng 03/2025"
+                value={payrollData.t13_thang_03}
+              />
+              <DetailRow
+                label="Tháng 04/2025"
+                value={payrollData.t13_thang_04}
+                className="bg-slate-100"
+              />
+              <DetailRow
+                label="Tháng 05/2025"
+                value={payrollData.t13_thang_05}
+              />
+              <DetailRow
+                label="Tháng 06/2025"
+                value={payrollData.t13_thang_06}
+                className="bg-slate-100"
+              />
+              <DetailRow
+                label="Tháng 07/2025"
+                value={payrollData.t13_thang_07}
+              />
+              <DetailRow
+                label="Tháng 08/2025"
+                value={payrollData.t13_thang_08}
+                className="bg-slate-100"
+              />
+              <DetailRow
+                label="Tháng 09/2025"
+                value={payrollData.t13_thang_09}
+              />
+              <DetailRow
+                label="Tháng 10/2025"
+                value={payrollData.t13_thang_10}
+                className="bg-slate-100"
+              />
+              <DetailRow
+                label="Tháng 11/2025"
+                value={payrollData.t13_thang_11}
+              />
+            </CardContent>
+          </Card>
 
-            {/* Phần Tổng Quan (Summary) - Đưa xuống dưới và đổi màu Xanh */}
-            <div className="space-y-4">
-               {/* Số Tháng Chia & Tổng SP 12 Tháng */}
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardHeader className="pb-1 pt-3 px-2">
-                    <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
-                      Số Tháng Chia
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-3 text-center px-2">
-                    <p className="text-lg font-bold text-blue-700">
-                      {formatNumberLocal(payrollData.so_thang_chia_13)}
-                    </p>
-                  </CardContent>
-                </Card>
+          <Separator />
 
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardHeader className="pb-1 pt-3 px-2">
-                    <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
-                      Tổng SP 12 Tháng
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-3 text-center px-2">
-                    <p className="text-lg font-bold text-blue-700">
-                      {formatCurrencyLocal(payrollData.tong_sp_12_thang)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-               {/* Chi Đợt 1 & Chi Đợt 2 */}
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardHeader className="pb-1 pt-3 px-2">
-                    <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
-                      Chi Đợt 1
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-3 text-center px-2">
-                    <p className="text-lg font-bold text-blue-700">
-                      {formatCurrencyLocal(payrollData.chi_dot_1_13)}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardHeader className="pb-1 pt-3 px-2">
-                    <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
-                      Chi Đợt 2
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-3 text-center px-2">
-                    <p className="text-lg font-bold text-blue-700">
-                      {formatCurrencyLocal(payrollData.chi_dot_2_13)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-               {/* Tổng Lương Tháng 13 (Full width - Quan trọng nhất) */}
-               <Card className="bg-green-50 border-green-200 shadow-sm">
-                <CardContent className="p-4 flex flex-col items-center justify-center text-center">
-                  <p className="text-sm font-bold text-green-600 uppercase mb-1">
-                    Tổng Lương Tháng 13
+          {/* Phần Tổng Quan (Summary) - Đưa xuống dưới và đổi màu Xanh */}
+          <div className="space-y-4">
+            {/* Số Tháng Chia & Tổng SP 12 Tháng */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader className="pb-1 pt-3 px-2">
+                  <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
+                    Số Tháng Chia
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 pb-3 text-center px-2">
+                  <p className="text-lg font-bold text-blue-700">
+                    {Math.round(payrollData.so_thang_chia_13 || 0)}
                   </p>
-                  <p className="text-3xl font-extrabold text-green-700">
-                    {formatCurrencyLocal(payrollData.tong_luong_13)}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader className="pb-1 pt-3 px-2">
+                  <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
+                    Tổng SP 12 Tháng
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 pb-3 text-center px-2">
+                  <p className="text-lg font-bold text-blue-700">
+                    {formatCurrencyLocal(payrollData.tong_sp_12_thang)}
                   </p>
                 </CardContent>
               </Card>
             </div>
-            
-             <div className="text-sm text-gray-500 text-center pt-2">
-              <p>Nguồn dữ liệu: {payrollData.source_file}</p>
+
+            {/* Chi Đợt 1 & Chi Đợt 2 */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader className="pb-1 pt-3 px-2">
+                  <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
+                    Chi Đợt 1
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 pb-3 text-center px-2">
+                  <p className="text-lg font-bold text-blue-700">
+                    {formatCurrencyLocal(payrollData.chi_dot_1_13)}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader className="pb-1 pt-3 px-2">
+                  <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
+                    Chi Đợt 2
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 pb-3 text-center px-2">
+                  <p className="text-lg font-bold text-blue-700">
+                    {formatCurrencyLocal(payrollData.chi_dot_2_13)}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
+
+            {/* Tổng Lương Tháng 13 (Full width - Quan trọng nhất) */}
+            <Card className="bg-green-50 border-green-200 shadow-sm">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                <p className="text-sm font-bold text-green-600 uppercase mb-1">
+                  Tổng Lương Tháng 13
+                </p>
+                <p className="text-3xl font-extrabold text-green-700">
+                  {formatCurrencyLocal(payrollData.tong_luong_13)}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-sm text-gray-500 text-center pt-2">
+            <p>Nguồn dữ liệu: {payrollData.source_file}</p>
+          </div>
         </div>
 
         <div className="p-6 pt-4 pb-6 shrink-0 bg-background">
           <DialogFooter className="sm:justify-center">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onClose}
               className="w-full bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800 h-12 text-base font-medium"
             >

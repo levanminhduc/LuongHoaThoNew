@@ -1,13 +1,18 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import TickerGate from "@/components/TickerGate";
 import { ENABLE_TICKER } from "@/lib/features";
 import ErrorBoundary from "@/components/error-boundary";
 import { SafeClientComponent } from "@/components/safe-client-component";
 import { Toaster } from "@/components/ui/sonner";
+
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Tra Cứu Lương Hoà Thọ Điện Bàn",
@@ -28,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" className={inter.variable}>
       <head>
         <meta
           name="viewport"
@@ -36,15 +41,8 @@ export default function RootLayout({
         />
         <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon" />
         <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon" />
-        <style>{`
-        html {
-          font-family: ${GeistSans.style.fontFamily};
-          --font-sans: ${GeistSans.variable};
-          --font-mono: ${GeistMono.variable};
-        }
-      `}</style>
       </head>
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className={inter.className}>
         <ErrorBoundary>
           {ENABLE_TICKER ? (
             <SafeClientComponent componentName="TickerGate" fallback={null}>
