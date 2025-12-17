@@ -119,6 +119,23 @@ export class PayrollValidator {
       "thuong_hieu_qua_lam_viec",
       "thuong_khac",
       "tien_luong_thuc_nhan_cuoi_ky",
+      "chi_dot_1_13",
+      "chi_dot_2_13",
+      "tong_luong_13",
+      "so_thang_chia_13",
+      "tong_sp_12_thang",
+      "t13_thang_01",
+      "t13_thang_02",
+      "t13_thang_03",
+      "t13_thang_04",
+      "t13_thang_05",
+      "t13_thang_06",
+      "t13_thang_07",
+      "t13_thang_08",
+      "t13_thang_09",
+      "t13_thang_10",
+      "t13_thang_11",
+      "t13_thang_12",
     ];
 
     numericFields.forEach((field) => {
@@ -355,6 +372,65 @@ export class PayrollValidator {
         ),
       );
     }
+
+    // Validate T13 calculation consistency
+    const chiDot1 = Number(data.chi_dot_1_13) || 0;
+    const chiDot2 = Number(data.chi_dot_2_13) || 0;
+    const tongLuong13 = Number(data.tong_luong_13) || 0;
+
+    if (tongLuong13 > 0 && (chiDot1 > 0 || chiDot2 > 0)) {
+      const calculatedTotal = chiDot1 + chiDot2;
+      if (Math.abs(tongLuong13 - calculatedTotal) > calculatedTotal * 0.01) {
+        result.warnings.push(
+          ApiErrorHandler.createValidationError(
+            "tong_luong_13",
+            `Tổng lương tháng 13 (${tongLuong13.toLocaleString()}) không khớp với tổng chi đợt 1 + đợt 2 (${calculatedTotal.toLocaleString()})`,
+            context.row,
+            context.employee_id,
+            context.salary_month,
+            context.file_type,
+          ),
+        );
+      }
+    }
+
+    // Validate T13 monthly details sum
+    const monthlyT13Fields = [
+      "t13_thang_01",
+      "t13_thang_02",
+      "t13_thang_03",
+      "t13_thang_04",
+      "t13_thang_05",
+      "t13_thang_06",
+      "t13_thang_07",
+      "t13_thang_08",
+      "t13_thang_09",
+      "t13_thang_10",
+      "t13_thang_11",
+      "t13_thang_12",
+    ];
+
+    const totalMonthlyT13 = monthlyT13Fields.reduce(
+      (sum, field) => sum + (Number(data[field]) || 0),
+      0,
+    );
+
+    const tongSp12Thang = Number(data.tong_sp_12_thang) || 0;
+
+    if (tongSp12Thang > 0 && totalMonthlyT13 > 0) {
+      if (Math.abs(tongSp12Thang - totalMonthlyT13) > totalMonthlyT13 * 0.01) {
+        result.warnings.push(
+          ApiErrorHandler.createValidationError(
+            "tong_sp_12_thang",
+            `Tổng SP 12 tháng (${tongSp12Thang.toLocaleString()}) không khớp với tổng chi tiết các tháng (${totalMonthlyT13.toLocaleString()})`,
+            context.row,
+            context.employee_id,
+            context.salary_month,
+            context.file_type,
+          ),
+        );
+      }
+    }
   }
 
   /**
@@ -372,6 +448,23 @@ export class PayrollValidator {
       "he_so_luong_co_ban",
       "so_gio_lam_viec_thuc_te",
       "so_ngay_lam_viec_thuc_te",
+      "chi_dot_1_13",
+      "chi_dot_2_13",
+      "tong_luong_13",
+      "so_thang_chia_13",
+      "tong_sp_12_thang",
+      "t13_thang_01",
+      "t13_thang_02",
+      "t13_thang_03",
+      "t13_thang_04",
+      "t13_thang_05",
+      "t13_thang_06",
+      "t13_thang_07",
+      "t13_thang_08",
+      "t13_thang_09",
+      "t13_thang_10",
+      "t13_thang_11",
+      "t13_thang_12",
     ];
 
     shouldBePositive.forEach((field) => {
@@ -418,6 +511,39 @@ export class PayrollValidator {
         );
       }
     }
+
+    // Validate T13 specific ranges
+    const soThangChia = Number(data.so_thang_chia_13) || 0;
+    if (soThangChia > 0 && (soThangChia < 1 || soThangChia > 12)) {
+      result.errors.push(
+        ApiErrorHandler.createValidationError(
+          "so_thang_chia_13",
+          `Số tháng chia phải từ 1 đến 12 (giá trị hiện tại: ${soThangChia})`,
+          context.row,
+          context.employee_id,
+          context.salary_month,
+          context.file_type,
+        ),
+      );
+    }
+
+    // Validate T13 reasonable amount
+    const tongLuong13 = Number(data.tong_luong_13) || 0;
+    if (tongLuong13 > 0) {
+      if (tongLuong13 > 200000000) {
+        // More than 200M VND
+        result.warnings.push(
+          ApiErrorHandler.createValidationError(
+            "tong_luong_13",
+            `Tổng lương tháng 13 (${tongLuong13.toLocaleString()} VND) có vẻ cao bất thường`,
+            context.row,
+            context.employee_id,
+            context.salary_month,
+            context.file_type,
+          ),
+        );
+      }
+    }
   }
 
   /**
@@ -431,7 +557,7 @@ export class PayrollValidator {
     // Validate CCCD format if provided
     if (data.cccd) {
       const cccdPattern = /^\d{12}$/;
-      if (!cccdPattern.test(data.cccd)) {
+      if (!cccdPattern.test(String(data.cccd))) {
         result.errors.push(
           ApiErrorHandler.createValidationError(
             "cccd",

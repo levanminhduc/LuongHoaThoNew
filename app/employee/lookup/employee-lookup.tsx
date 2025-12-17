@@ -165,6 +165,20 @@ interface PayrollResult {
   so_thang_chia_13?: number;
   tong_sp_12_thang?: number;
 
+  // Chi tiết 12 tháng cho Tháng 13
+  t13_thang_01?: number;
+  t13_thang_02?: number;
+  t13_thang_03?: number;
+  t13_thang_04?: number;
+  t13_thang_05?: number;
+  t13_thang_06?: number;
+  t13_thang_07?: number;
+  t13_thang_08?: number;
+  t13_thang_09?: number;
+  t13_thang_10?: number;
+  t13_thang_11?: number;
+  t13_thang_12?: number;
+
   // Thông tin ký nhận
   is_signed?: boolean;
   signed_at?: string;
@@ -389,7 +403,7 @@ export function EmployeeLookup() {
     if (!t13Result || !employeeId || !cccd) return;
 
     setT13SigningLoading(true);
-    // Note: We don't clear global error here to avoid messing up main UI, 
+    // Note: We don't clear global error here to avoid messing up main UI,
     // but we could use a local error state for the modal if needed.
     // For now we'll rely on alerts inside the modal or global error if critical.
 
@@ -572,7 +586,11 @@ export function EmployeeLookup() {
 
             <div className="space-y-3">
               <div className="flex gap-4">
-                <Button type="submit" disabled={loading || t13Loading} className="flex-1">
+                <Button
+                  type="submit"
+                  disabled={loading || t13Loading}
+                  className="flex-1"
+                >
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1120,8 +1138,8 @@ export function EmployeeLookup() {
                                 Chưa ký nhận lương
                               </p>
                               <p className="text-sm text-amber-600">
-                                Vui lòng ký nhận để xác nhận bạn đã nhận thông tin
-                                lương tháng {t13Result.salary_month}
+                                Vui lòng ký nhận để xác nhận bạn đã nhận thông
+                                tin lương tháng {t13Result.salary_month}
                               </p>
                             </div>
                           </div>
@@ -1166,9 +1184,9 @@ export function EmployeeLookup() {
 
           <div className="p-6 pt-2 shrink-0">
             <DialogFooter className="sm:justify-center">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setShowT13Modal(false)}
                 className="w-full bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800 h-12 text-base font-medium"
               >
@@ -1205,7 +1223,11 @@ export function EmployeeLookup() {
           onClose={() => setShowPasswordModal(false)}
           employeeId={employeeId}
           cccd={cccd}
-          employeeName={showT13Modal && t13Result ? t13Result.full_name : result?.full_name || ""}
+          employeeName={
+            showT13Modal && t13Result
+              ? t13Result.full_name
+              : result?.full_name || ""
+          }
           onPasswordReset={() => {
             setMustChangePassword(false);
             setError("");
@@ -1220,8 +1242,16 @@ export function EmployeeLookup() {
           onClose={() => setShowHistoryModal(false)}
           employeeId={employeeId}
           cccd={cccd}
-          currentMonth={showT13Modal && t13Result ? t13Result.salary_month : result?.salary_month || ""}
-          employeeName={showT13Modal && t13Result ? t13Result.full_name : result?.full_name || ""}
+          currentMonth={
+            showT13Modal && t13Result
+              ? t13Result.salary_month
+              : result?.salary_month || ""
+          }
+          employeeName={
+            showT13Modal && t13Result
+              ? t13Result.full_name
+              : result?.full_name || ""
+          }
         />
       )}
 
