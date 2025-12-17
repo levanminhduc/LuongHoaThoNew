@@ -26,15 +26,14 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
 
-    // Get query parameters
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const month = searchParams.get("month");
     const search = searchParams.get("search");
+    const payrollType = searchParams.get("payroll_type") || "monthly";
 
     const offset = (page - 1) * limit;
 
-    // Build query for own department only
     let query = supabase
       .from("payrolls")
       .select(
@@ -50,7 +49,12 @@ export async function GET(request: NextRequest) {
       )
       .eq("employees.department", auth.user.department);
 
-    // Apply filters
+    if (payrollType === "t13") {
+      query = query.eq("payroll_type", "t13");
+    } else {
+      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
+    }
+
     if (month) {
       query = query.eq("salary_month", month);
     }
@@ -61,11 +65,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get total count for pagination
-    const { count } = await supabase
+    let countQuery = supabase
       .from("payrolls")
       .select("*", { count: "exact", head: true })
       .eq("employees.department", auth.user.department);
+
+    if (payrollType === "t13") {
+      countQuery = countQuery.eq("payroll_type", "t13");
+    } else {
+      countQuery = countQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
+    const { count } = await countQuery;
 
     // Get paginated data
     const { data: payrolls, error } = await query
@@ -105,6 +118,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil((count || 0) / limit),
       },
       department: auth.user.department,
+      payrollType,
     });
   } catch (error) {
     console.error("My department payroll error:", error);

@@ -32,15 +32,17 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const { searchParams } = new URL(request.url);
+    const payrollType = searchParams.get("payroll_type") || "monthly";
 
-    // Get recent payroll records
-    const { data: payrolls, error: payrollsError } = await supabase
+    let query = supabase
       .from("payrolls")
       .select(
         `
         id,
         employee_id,
         salary_month,
+        payroll_type,
         tien_luong_thuc_nhan_cuoi_ky,
         source_file,
         import_batch_id,
@@ -50,6 +52,14 @@ export async function GET(request: NextRequest) {
       )
       .order("created_at", { ascending: false })
       .limit(100);
+
+    if (payrollType === "t13") {
+      query = query.eq("payroll_type", "t13");
+    } else {
+      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
+    }
+
+    const { data: payrolls, error: payrollsError } = await query;
 
     if (payrollsError) {
       console.error("Error fetching payrolls:", payrollsError);
@@ -96,6 +106,7 @@ export async function GET(request: NextRequest) {
       payrolls: payrolls || [],
       stats,
       monthlyStats,
+      payrollType,
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);

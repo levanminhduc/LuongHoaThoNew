@@ -84,27 +84,31 @@ export function validateSalaryMonth(
   }
 
   const trimmedValue = String(value).trim();
-  const monthPattern = /^\d{4}-\d{2}$/;
+  const monthlyPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
+  const t13Pattern = /^\d{4}-(13|T13)$/i;
 
-  if (!monthPattern.test(trimmedValue)) {
+  if (!monthlyPattern.test(trimmedValue) && !t13Pattern.test(trimmedValue)) {
     return {
       row,
       employee_id: employeeId,
       salary_month: trimmedValue,
-      error: `Tháng không hợp lệ: "${trimmedValue}". Định dạng đúng: YYYY-MM (VD: 2024-01)`,
+      error: `Tháng không hợp lệ: "${trimmedValue}". Định dạng đúng: YYYY-MM (01-12) hoặc YYYY-13 (lương T13)`,
       errorType: "validation",
       field: "salary_month",
       originalData,
     };
   }
 
-  const [year, month] = trimmedValue.split("-").map(Number);
-  if (month < 1 || month > 12) {
+  const [yearStr, monthStr] = trimmedValue.split("-");
+  const year = Number(yearStr);
+  const month = monthStr.toUpperCase() === "T13" ? 13 : Number(monthStr);
+
+  if (month < 1 || month > 13) {
     return {
       row,
       employee_id: employeeId,
       salary_month: trimmedValue,
-      error: `Tháng không hợp lệ: "${trimmedValue}". Tháng phải từ 01 đến 12`,
+      error: `Tháng không hợp lệ: "${trimmedValue}". Tháng phải từ 01 đến 12, hoặc 13 (lương T13)`,
       errorType: "validation",
       field: "salary_month",
       originalData,

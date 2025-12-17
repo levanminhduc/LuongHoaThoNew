@@ -14,26 +14,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse request body
-    const { salary_month, admin_note, batch_size = 50 } = await request.json();
+    const {
+      salary_month,
+      admin_note,
+      batch_size = 50,
+      is_t13 = false,
+    } = await request.json();
 
-    if (!salary_month || !/^\d{4}-\d{2}$/.test(salary_month)) {
-      return NextResponse.json(
-        { error: "Định dạng tháng không hợp lệ (YYYY-MM)" },
-        { status: 400 },
-      );
+    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
+    const formatMsg = is_t13
+      ? "Định dạng tháng không hợp lệ (YYYY-13)"
+      : "Định dạng tháng không hợp lệ (YYYY-MM)";
+
+    if (!salary_month || !monthPattern.test(salary_month)) {
+      return NextResponse.json({ error: formatMsg }, { status: 400 });
     }
 
     const supabase = createServiceClient();
+    const payrollType = is_t13 ? "t13" : "monthly";
 
-    // 3. Get ONLY unsigned payrolls for the month
-    // ✅ FIX: Simplified query without JOIN to avoid RLS issues
-    const { data: unsignedPayrolls, error: fetchError } = await supabase
+    let unsignedQuery = supabase
       .from("payrolls")
       .select("employee_id")
       .eq("salary_month", salary_month)
-      .eq("is_signed", false) // ✅ ONLY unsigned
-      .order("employee_id");
+      .eq("is_signed", false);
+
+    if (is_t13) {
+      unsignedQuery = unsignedQuery.eq("payroll_type", "t13");
+    } else {
+      unsignedQuery = unsignedQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
+    const { data: unsignedPayrolls, error: fetchError } =
+      await unsignedQuery.order("employee_id");
 
     if (fetchError) {
       console.error("Error fetching unsigned payrolls:", fetchError);
@@ -64,11 +79,20 @@ export async function POST(request: NextRequest) {
     const unsignedCount = unsignedPayrolls.length;
     const employeeIds = unsignedPayrolls.map((p) => p.employee_id);
 
-    // 5. Get total statistics
-    const { count: totalCount } = await supabase
+    let totalQuery = supabase
       .from("payrolls")
       .select("*", { count: "exact", head: true })
       .eq("salary_month", salary_month);
+
+    if (is_t13) {
+      totalQuery = totalQuery.eq("payroll_type", "t13");
+    } else {
+      totalQuery = totalQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
+    const { count: totalCount } = await totalQuery;
 
     const alreadySignedCount = (totalCount || 0) - unsignedCount;
 
@@ -118,6 +142,7 @@ export async function POST(request: NextRequest) {
             p_admin_id: auth.user.employee_id,
             p_admin_name: auth.user.username,
             p_bulk_batch_id: bulkBatchId,
+            p_payroll_type: payrollType,
           },
         );
 
@@ -156,7 +181,6 @@ export async function POST(request: NextRequest) {
     const completedTime = Date.now();
     const duration = Math.round((completedTime - startTime) / 1000);
 
-    // 9. Insert bulk signature log
     const { error: logError } = await supabase
       .from("admin_bulk_signature_logs")
       .insert({
@@ -164,6 +188,7 @@ export async function POST(request: NextRequest) {
         admin_id: auth.user.employee_id,
         admin_name: auth.user.username,
         salary_month,
+        payroll_type: payrollType,
         total_unsigned_before: unsignedCount,
         total_processed: unsignedCount,
         success_count: totalSuccessful,
@@ -181,11 +206,12 @@ export async function POST(request: NextRequest) {
       console.error("Failed to insert bulk signature log:", logError);
     }
 
-    // 10. Return response
+    const typeLabel = is_t13 ? "lương tháng 13" : "lương";
     return NextResponse.json({
       success: true,
-      message: `Hoàn thành ký hàng loạt! ${totalSuccessful}/${unsignedCount} thành công`,
+      message: `Hoàn thành ký hàng loạt ${typeLabel}! ${totalSuccessful}/${unsignedCount} thành công`,
       bulk_batch_id: bulkBatchId,
+      payroll_type: payrollType,
       statistics: {
         total_employees_in_month: totalCount || 0,
         already_signed_before: alreadySignedCount,

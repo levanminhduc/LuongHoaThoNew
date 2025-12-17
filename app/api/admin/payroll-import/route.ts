@@ -331,14 +331,16 @@ export async function POST(request: NextRequest) {
       }
 
       try {
+        const isT13Month = /^\d{4}-(13|T13)$/i.test(salaryMonth);
+        const payrollType = isT13Month ? "t13" : "monthly";
+
         const recordData: Record<string, unknown> = {
           employee_id: employeeId,
           salary_month: salaryMonth,
+          payroll_type: payrollType,
           source_file: file.name,
           import_batch_id: batchId,
           import_status: "imported",
-          created_at: getVietnamTimestamp(),
-          updated_at: getVietnamTimestamp(),
         };
 
         Object.entries(fieldMapping).forEach(([colIndex, field]) => {
@@ -352,17 +354,33 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        const { data: existingRecord } = await supabase
+        const { data: existingRecord, error: checkError } = await supabase
           .from("payrolls")
           .select("id")
           .eq("employee_id", recordData.employee_id as string)
           .eq("salary_month", recordData.salary_month as string)
           .single();
 
+        if (checkError && checkError.code !== "PGRST116") {
+          errors.push({
+            row: rowNumber,
+            employee_id: employeeId,
+            salary_month: salaryMonth,
+            error: `Lỗi kiểm tra duplicate: ${checkError.message}`,
+            errorType: "database",
+            originalData,
+          });
+          continue;
+        }
+
         if (existingRecord) {
+          const updateData = {
+            ...recordData,
+            updated_at: getVietnamTimestamp(),
+          };
           const { error: updateError } = await supabase
             .from("payrolls")
-            .update(recordData)
+            .update(updateData)
             .eq("employee_id", employeeId)
             .eq("salary_month", salaryMonth);
 
@@ -380,9 +398,14 @@ export async function POST(request: NextRequest) {
             successCount++;
           }
         } else {
+          const insertData = {
+            ...recordData,
+            created_at: getVietnamTimestamp(),
+            updated_at: getVietnamTimestamp(),
+          };
           const { error: insertError } = await supabase
             .from("payrolls")
-            .insert(recordData);
+            .insert(insertData);
 
           if (insertError) {
             errors.push({

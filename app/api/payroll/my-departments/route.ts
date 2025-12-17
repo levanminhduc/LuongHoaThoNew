@@ -26,16 +26,15 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
 
-    // Get query parameters
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const month = searchParams.get("month");
     const search = searchParams.get("search");
     const department = searchParams.get("department");
+    const payrollType = searchParams.get("payroll_type") || "monthly";
 
     const offset = (page - 1) * limit;
 
-    // Get allowed departments for this truong_phong
     const allowedDepartments = auth.user.allowed_departments || [];
     if (allowedDepartments.length === 0) {
       return NextResponse.json(
@@ -46,7 +45,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build query for assigned departments only
     let query = supabase
       .from("payrolls")
       .select(
@@ -62,7 +60,12 @@ export async function GET(request: NextRequest) {
       )
       .in("employees.department", allowedDepartments);
 
-    // Apply filters
+    if (payrollType === "t13") {
+      query = query.eq("payroll_type", "t13");
+    } else {
+      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
+    }
+
     if (month) {
       query = query.eq("salary_month", month);
     }
@@ -77,11 +80,20 @@ export async function GET(request: NextRequest) {
       query = query.eq("employees.department", department);
     }
 
-    // Get total count for pagination
-    const { count } = await supabase
+    let countQuery = supabase
       .from("payrolls")
       .select("*", { count: "exact", head: true })
       .in("employees.department", allowedDepartments);
+
+    if (payrollType === "t13") {
+      countQuery = countQuery.eq("payroll_type", "t13");
+    } else {
+      countQuery = countQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
+    const { count } = await countQuery;
 
     // Get paginated data
     const { data: payrolls, error } = await query
@@ -121,6 +133,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil((count || 0) / limit),
       },
       allowed_departments: allowedDepartments,
+      payrollType,
     });
   } catch (error) {
     console.error("My departments payroll error:", error);

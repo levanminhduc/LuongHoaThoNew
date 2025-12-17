@@ -151,7 +151,7 @@ Log chi tiết ký tên
 
 Chữ ký quản lý (3 loại: giam_doc, ke_toan, nguoi_lap_bieu)
 
-- **Unique constraint**: (`salary_month`, `signature_type`, `is_active`) - mỗi role ký 1 lần/tháng
+- **Unique constraint**: (`salary_month`, `signature_type`) WHERE `is_active = true` - mỗi role ký 1 lần/tháng cho tất cả loại lương
 - **Vietnam timezone handling**: All timestamps use Vietnam time (+7 hours)
 
 #### 5. department_permissions
@@ -225,11 +225,18 @@ Hệ thống hỗ trợ import **2 files Excel cùng lúc** (File 1: thông tin 
 
 ### Special Import Features
 
-1. **Auto-fix data**: Tự động sửa lỗi format (số âm, format date, trim spaces)
-2. **Duplicate detection**: Phát hiện và handle duplicates theo strategy
-3. **Cross-field validation**: Validate tổng lương = lương cơ bản + phụ cấp + thưởng - khấu trừ
-4. **Batch processing**: Import theo batch với error tracking
-5. **Rollback support**: Transaction-based import với rollback on error
+1. **T13 Auto-Detection**: Tự động phát hiện lương tháng 13 từ `salary_month` pattern
+   - Pattern: `/^\d{4}-(13|T13)$/i` (ví dụ: "2024-13", "2024-T13")
+   - Auto-set `payroll_type = "t13"` nếu match, ngược lại `payroll_type = "monthly"`
+   - Không cần checkbox hay flag từ frontend
+2. **Auto-fix data**: Tự động sửa lỗi format (số âm, format date, trim spaces)
+3. **Duplicate detection**: Phát hiện và handle duplicates theo strategy
+   - Duplicate key: `(employee_id, salary_month)` - chỉ 2 cột
+   - `payroll_type` không tham gia vào duplicate check
+   - Khi import lại cùng employee + month → tự động UPDATE record cũ
+4. **Cross-field validation**: Validate tổng lương = lương cơ bản + phụ cấp + thưởng - khấu trừ
+5. **Batch processing**: Import theo batch với error tracking
+6. **Rollback support**: Transaction-based import với rollback on error
 
 ### Column Alias Management
 
@@ -279,7 +286,7 @@ Hệ thống hỗ trợ import **2 files Excel cùng lúc** (File 1: thông tin 
 
 - Each role có thể ký **1 lần duy nhất** cho mỗi tháng
 - Lưu vào `management_signatures` table
-- Unique constraint: (`salary_month`, `signature_type`, `is_active`)
+- Unique constraint: (`salary_month`, `signature_type`) WHERE `is_active = true`
 - API: `/api/management-signature` (POST)
 
 ### Bulk Signature Operations

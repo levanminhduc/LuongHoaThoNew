@@ -49,8 +49,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
     const salaryMonth = searchParams.get("salary_month");
+    const payrollType = searchParams.get("payroll_type") || "monthly";
 
-    console.log("📋 Search params:", { query, salaryMonth });
+    console.log("📋 Search params:", { query, salaryMonth, payrollType });
 
     if (!query || query.length < 2) {
       console.log("❌ Invalid query length");
@@ -202,8 +203,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Search employees with their payroll data
-    // Use left join to avoid RLS issues and handle missing employee data gracefully
     console.log("🔍 Building query...");
     let payrollQuery = supabase
       .from("payrolls")
@@ -212,6 +211,7 @@ export async function GET(request: NextRequest) {
         id,
         employee_id,
         salary_month,
+        payroll_type,
         tien_luong_thuc_nhan_cuoi_ky,
         source_file,
         created_at,
@@ -229,9 +229,16 @@ export async function GET(request: NextRequest) {
       .or(`employee_id.ilike.%${query}%`)
       .order("created_at", { ascending: false });
 
+    if (payrollType === "t13") {
+      payrollQuery = payrollQuery.eq("payroll_type", "t13");
+    } else {
+      payrollQuery = payrollQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
     console.log("📊 Query built, adding filters...");
 
-    // Filter by salary month if provided
     if (salaryMonth && salaryMonth !== "__EMPTY__") {
       console.log("📅 Adding month filter:", salaryMonth);
       payrollQuery = payrollQuery.eq("salary_month", salaryMonth);

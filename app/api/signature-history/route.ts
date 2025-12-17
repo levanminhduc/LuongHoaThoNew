@@ -23,17 +23,20 @@ export async function GET(request: NextRequest) {
     const signatureTypeParam = searchParams.get("signature_type");
     const limitParam = searchParams.get("limit");
     const offsetParam = searchParams.get("offset");
+    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const isT13 = payrollType === "t13";
 
     const months = monthsParam ? monthsParam.split(",") : [];
     const signatureType = signatureTypeParam;
     const limit = limitParam ? parseInt(limitParam) : 50;
     const offset = offsetParam ? parseInt(offsetParam) : 0;
 
-    if (months.some((month) => !/^\d{4}-\d{2}$/.test(month))) {
-      return NextResponse.json(
-        { error: "Định dạng tháng không hợp lệ (YYYY-MM)" },
-        { status: 400 },
-      );
+    const monthPattern = isT13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
+    if (months.some((month) => !monthPattern.test(month))) {
+      const formatMsg = isT13
+        ? "Định dạng tháng không hợp lệ (YYYY-13)"
+        : "Định dạng tháng không hợp lệ (YYYY-MM)";
+      return NextResponse.json({ error: formatMsg }, { status: 400 });
     }
 
     if (
@@ -64,6 +67,12 @@ export async function GET(request: NextRequest) {
         .select("*", { count: "exact" })
         .eq("is_active", true);
 
+      if (isT13) {
+        query = query.eq("payroll_type", "t13");
+      } else {
+        query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
+      }
+
       if (months.length > 0) {
         query = query.in("salary_month", months);
       }
@@ -76,7 +85,7 @@ export async function GET(request: NextRequest) {
         query = query.eq("signed_by_id", auth.user.employee_id);
       }
 
-      const { data: countData, count } = await query;
+      const { count } = await query;
 
       totalCount = count || 0;
 
@@ -84,6 +93,14 @@ export async function GET(request: NextRequest) {
         .from("management_signatures")
         .select("*")
         .eq("is_active", true);
+
+      if (isT13) {
+        signatureQuery = signatureQuery.eq("payroll_type", "t13");
+      } else {
+        signatureQuery = signatureQuery.or(
+          "payroll_type.eq.monthly,payroll_type.is.null",
+        );
+      }
 
       if (months.length > 0) {
         signatureQuery = signatureQuery.in("salary_month", months);

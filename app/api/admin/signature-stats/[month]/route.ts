@@ -16,34 +16,51 @@ export async function GET(
     }
 
     const { month } = await params;
+    const { searchParams } = new URL(request.url);
+    const isT13 = searchParams.get("is_t13") === "true";
 
-    if (!/^\d{4}-\d{2}$/.test(month)) {
-      return NextResponse.json(
-        { error: "Định dạng tháng không hợp lệ (YYYY-MM)" },
-        { status: 400 },
-      );
+    const monthPattern = isT13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
+    const formatMsg = isT13
+      ? "Định dạng tháng không hợp lệ (YYYY-13)"
+      : "Định dạng tháng không hợp lệ (YYYY-MM)";
+
+    if (!monthPattern.test(month)) {
+      return NextResponse.json({ error: formatMsg }, { status: 400 });
     }
 
     const supabase = createServiceClient();
 
-    // Parallel queries for better performance
+    const buildQuery = () => {
+      let q = supabase
+        .from("payrolls")
+        .select("*", { count: "exact", head: true })
+        .eq("salary_month", month);
+      if (isT13) {
+        q = q.eq("payroll_type", "t13");
+      } else {
+        q = q.or("payroll_type.eq.monthly,payroll_type.is.null");
+      }
+      return q;
+    };
+
+    const buildSignedQuery = (signed: boolean) => {
+      let q = supabase
+        .from("payrolls")
+        .select("*", { count: "exact", head: true })
+        .eq("salary_month", month)
+        .eq("is_signed", signed);
+      if (isT13) {
+        q = q.eq("payroll_type", "t13");
+      } else {
+        q = q.or("payroll_type.eq.monthly,payroll_type.is.null");
+      }
+      return q;
+    };
+
     const [totalResult, signedResult, unsignedResult] = await Promise.all([
-      supabase
-        .from("payrolls")
-        .select("*", { count: "exact", head: true })
-        .eq("salary_month", month),
-
-      supabase
-        .from("payrolls")
-        .select("*", { count: "exact", head: true })
-        .eq("salary_month", month)
-        .eq("is_signed", true),
-
-      supabase
-        .from("payrolls")
-        .select("*", { count: "exact", head: true })
-        .eq("salary_month", month)
-        .eq("is_signed", false),
+      buildQuery(),
+      buildSignedQuery(true),
+      buildSignedQuery(false),
     ]);
 
     const totalCount = totalResult.count || 0;
@@ -53,6 +70,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       month,
+      payroll_type: isT13 ? "t13" : "monthly",
       total_employees: totalCount,
       already_signed: signedCount,
       unsigned: unsignedCount,

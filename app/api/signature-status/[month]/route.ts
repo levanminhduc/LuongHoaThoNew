@@ -22,20 +22,34 @@ export async function GET(
     }
 
     const { month } = await params;
+    const { searchParams } = new URL(request.url);
+    const isT13 = searchParams.get("is_t13") === "true";
 
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-      return NextResponse.json(
-        { error: "Định dạng tháng không hợp lệ (YYYY-MM)" },
-        { status: 400 },
-      );
+    const monthPattern = isT13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
+    const formatMsg = isT13
+      ? "Định dạng tháng không hợp lệ (YYYY-13)"
+      : "Định dạng tháng không hợp lệ (YYYY-MM)";
+
+    if (!month || !monthPattern.test(month)) {
+      return NextResponse.json({ error: formatMsg }, { status: 400 });
     }
 
     const supabase = createServiceClient();
 
-    const { data: payrolls, error: payrollError } = await supabase
+    let payrollQuery = supabase
       .from("payrolls")
       .select("employee_id, is_signed")
       .eq("salary_month", month);
+
+    if (isT13) {
+      payrollQuery = payrollQuery.eq("payroll_type", "t13");
+    } else {
+      payrollQuery = payrollQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
+    const { data: payrolls, error: payrollError } = await payrollQuery;
 
     if (payrollError) {
       console.error("Error fetching payrolls:", payrollError);
@@ -79,12 +93,21 @@ export async function GET(
     }
 
     let managementSignatures: Record<string, unknown> = {};
+    const payrollType = isT13 ? "t13" : "monthly";
     try {
-      const { data: signatures, error: sigError } = await supabase
+      let sigQuery = supabase
         .from("management_signatures")
         .select("*")
         .eq("salary_month", month)
         .eq("is_active", true);
+
+      if (isT13) {
+        sigQuery = sigQuery.eq("payroll_type", "t13");
+      } else {
+        sigQuery = sigQuery.or("payroll_type.eq.monthly,payroll_type.is.null");
+      }
+
+      const { data: signatures, error: sigError } = await sigQuery;
 
       if (!sigError && signatures) {
         signatures.forEach((sig) => {
@@ -95,6 +118,7 @@ export async function GET(
             department: sig.department,
             signed_at: sig.signed_at,
             notes: sig.notes,
+            payroll_type: sig.payroll_type,
           };
         });
       }
@@ -119,6 +143,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       month,
+      payroll_type: isT13 ? "t13" : "monthly",
       employee_completion: {
         total_employees: totalCount,
         signed_employees: signedCount,

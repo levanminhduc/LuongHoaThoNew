@@ -19,13 +19,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { salary_month, signature_type, notes, device_info } = body;
+    const { salary_month, signature_type, notes, device_info, is_t13 } = body;
 
-    if (!salary_month || !/^\d{4}-\d{2}$/.test(salary_month)) {
-      return NextResponse.json(
-        { error: "Định dạng tháng không hợp lệ (YYYY-MM)" },
-        { status: 400 },
-      );
+    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
+    const formatMsg = is_t13
+      ? "Định dạng tháng không hợp lệ (YYYY-13)"
+      : "Định dạng tháng không hợp lệ (YYYY-MM)";
+
+    if (!salary_month || !monthPattern.test(salary_month)) {
+      return NextResponse.json({ error: formatMsg }, { status: 400 });
     }
 
     if (
@@ -46,11 +48,22 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const payrollType = is_t13 ? "t13" : "monthly";
 
-    const { data: payrolls, error: payrollError } = await supabase
+    let payrollQuery = supabase
       .from("payrolls")
       .select("employee_id, is_signed", { count: "exact" })
       .eq("salary_month", salary_month);
+
+    if (is_t13) {
+      payrollQuery = payrollQuery.eq("payroll_type", "t13");
+    } else {
+      payrollQuery = payrollQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
+    const { data: payrolls, error: payrollError } = await payrollQuery;
 
     if (payrollError) {
       console.error("Error fetching payrolls:", payrollError);
@@ -104,13 +117,23 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const { data: existingSignature, error: existingError } = await supabase
+      let existingQuery = supabase
         .from("management_signatures")
         .select("*")
         .eq("salary_month", salary_month)
         .eq("signature_type", signature_type)
-        .eq("is_active", true)
-        .single();
+        .eq("is_active", true);
+
+      if (is_t13) {
+        existingQuery = existingQuery.eq("payroll_type", "t13");
+      } else {
+        existingQuery = existingQuery.or(
+          "payroll_type.eq.monthly,payroll_type.is.null",
+        );
+      }
+
+      const { data: existingSignature, error: existingError } =
+        await existingQuery.single();
 
       if (!existingError && existingSignature) {
         return NextResponse.json(
@@ -137,13 +160,13 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-real-ip") ||
       "unknown";
 
-    // Tạo timestamp theo timezone Việt Nam
     const vietnamTime = getVietnamTimestamp();
 
     const signatureRecord = {
       id: crypto.randomUUID(),
       signature_type,
       salary_month,
+      payroll_type: payrollType,
       signed_by_id: employee.employee_id,
       signed_by_name: employee.full_name,
       department: employee.department,

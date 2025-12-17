@@ -5,12 +5,10 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 export async function POST(request: NextRequest) {
   try {
-    const { employee_id, cccd, salary_month, client_timestamp } =
-      await request.json();
+    const { employee_id, cccd, salary_month, is_t13 } = await request.json();
 
     if (!employee_id || !cccd || !salary_month) {
       return NextResponse.json(
@@ -22,6 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const payrollType = is_t13 ? "t13" : "monthly";
 
     // Bước 1: Verify nhân viên và password
     const { data: employee, error: employeeError } = await supabase
@@ -66,7 +65,6 @@ export async function POST(request: NextRequest) {
     // Để database function tự tạo Vietnam time từ server UTC
     console.log("Using server-side Vietnam timezone conversion");
 
-    // Gọi function ký tên tự động - KHÔNG gửi client_timestamp
     const { data: signResult, error: signError } = await supabase.rpc(
       "auto_sign_salary",
       {
@@ -74,7 +72,7 @@ export async function POST(request: NextRequest) {
         p_salary_month: salary_month.trim(),
         p_ip_address: clientIP,
         p_device_info: userAgent,
-        // ✅ KHÔNG gửi p_client_timestamp để tránh double conversion
+        p_payroll_type: payrollType,
       },
     );
 
@@ -101,17 +99,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: errorMessage }, { status: statusCode });
     }
 
+    const salaryMonthDisplay = is_t13
+      ? `Lương Tháng 13 - ${signResult.salary_month.split("-")[0]}`
+      : formatSalaryMonth(signResult.salary_month);
+
     return NextResponse.json({
       success: true,
-      message: "Ký nhận lương thành công!",
+      message: is_t13
+        ? "Ký nhận lương tháng 13 thành công!"
+        : "Ký nhận lương thành công!",
       data: {
-        employee_name: signResult.signed_by, // Keep for backward compatibility
-        signed_by: signResult.signed_by, // ✅ Add this field for consistency
-        signed_at: signResult.signed_at, // Raw timestamp for processing
-        signed_at_display: formatSignatureTime(signResult.signed_at), // Formatted for display
+        employee_name: signResult.signed_by,
+        signed_by: signResult.signed_by,
+        signed_at: signResult.signed_at,
+        signed_at_display: formatSignatureTime(signResult.signed_at),
         employee_id: signResult.employee_id,
         salary_month: signResult.salary_month,
-        salary_month_display: formatSalaryMonth(signResult.salary_month),
+        salary_month_display: salaryMonthDisplay,
+        payroll_type: payrollType,
       },
     });
   } catch (error) {

@@ -211,6 +211,7 @@ export function EmployeeLookup() {
   const [showT13DetailModal, setShowT13DetailModal] = useState(false);
   const [t13SigningLoading, setT13SigningLoading] = useState(false);
   const [t13SignSuccess, setT13SignSuccess] = useState(false);
+  const [showT13HistoryModal, setShowT13HistoryModal] = useState(false);
 
   const employeeIdInputRef = useRef<HTMLInputElement>(null);
   const cursorPositionRef = useRef<number | null>(null);
@@ -988,6 +989,15 @@ export function EmployeeLookup() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setShowT13HistoryModal(true)}
+                        className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300"
+                      >
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <span>Lịch Sử T13</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setShowT13DetailModal(true)}
                         className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
                       >
@@ -1235,23 +1245,29 @@ export function EmployeeLookup() {
         />
       )}
 
-      {/* Salary History Modal */}
-      {employeeId && (result || t13Result) && (
+      {/* Salary History Modal - Lương Thường */}
+      {employeeId && result && (
         <SalaryHistoryModal
           isOpen={showHistoryModal}
           onClose={() => setShowHistoryModal(false)}
           employeeId={employeeId}
           cccd={cccd}
-          currentMonth={
-            showT13Modal && t13Result
-              ? t13Result.salary_month
-              : result?.salary_month || ""
-          }
-          employeeName={
-            showT13Modal && t13Result
-              ? t13Result.full_name
-              : result?.full_name || ""
-          }
+          currentMonth={result.salary_month}
+          employeeName={result.full_name}
+          isT13={false}
+        />
+      )}
+
+      {/* Salary History Modal - T13 */}
+      {employeeId && t13Result && (
+        <SalaryHistoryModal
+          isOpen={showT13HistoryModal}
+          onClose={() => setShowT13HistoryModal(false)}
+          employeeId={employeeId}
+          cccd={cccd}
+          currentMonth={t13Result.salary_month}
+          employeeName={t13Result.full_name}
+          isT13={true}
         />
       )}
 

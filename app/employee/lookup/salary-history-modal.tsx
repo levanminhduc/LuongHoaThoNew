@@ -103,6 +103,24 @@ interface PayrollResult {
 
   tien_luong_thuc_nhan_cuoi_ky?: number;
 
+  chi_dot_1_13?: number;
+  chi_dot_2_13?: number;
+  tong_luong_13?: number;
+  so_thang_chia_13?: number;
+  tong_sp_12_thang?: number;
+  t13_thang_01?: number;
+  t13_thang_02?: number;
+  t13_thang_03?: number;
+  t13_thang_04?: number;
+  t13_thang_05?: number;
+  t13_thang_06?: number;
+  t13_thang_07?: number;
+  t13_thang_08?: number;
+  t13_thang_09?: number;
+  t13_thang_10?: number;
+  t13_thang_11?: number;
+  t13_thang_12?: number;
+
   is_signed?: boolean;
   signed_at?: string;
   signed_at_display?: string;
@@ -116,6 +134,7 @@ interface SalaryHistoryModalProps {
   cccd: string;
   currentMonth: string;
   employeeName: string;
+  isT13?: boolean;
 }
 
 export function SalaryHistoryModal({
@@ -125,6 +144,7 @@ export function SalaryHistoryModal({
   cccd,
   currentMonth,
   employeeName,
+  isT13 = false,
 }: SalaryHistoryModalProps) {
   const [months, setMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
@@ -157,6 +177,7 @@ export function SalaryHistoryModal({
           action: "list_months",
           employee_id: employeeId,
           cccd: cccd,
+          is_t13: isT13,
         }),
       });
 
@@ -169,7 +190,11 @@ export function SalaryHistoryModal({
         setMonths(filteredMonths);
 
         if (filteredMonths.length === 0) {
-          setError("Chưa có lịch sử lương trước đó");
+          setError(
+            isT13
+              ? "Chưa có lịch sử lương tháng 13 trước đó"
+              : "Chưa có lịch sử lương trước đó",
+          );
         }
       } else {
         setError(data.error || "Không thể tải danh sách tháng lương");
@@ -197,6 +222,7 @@ export function SalaryHistoryModal({
           employee_id: employeeId,
           cccd: cccd,
           salary_month: month,
+          is_t13: isT13,
         }),
       });
 
@@ -261,10 +287,13 @@ export function SalaryHistoryModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Lịch Sử Lương - {employeeName}
+            {isT13 ? "Lịch Sử Lương Tháng 13" : "Lịch Sử Lương"} -{" "}
+            {employeeName}
           </DialogTitle>
           <DialogDescription>
-            Xem thông tin lương các tháng trước
+            {isT13
+              ? "Xem thông tin lương tháng 13 các năm trước"
+              : "Xem thông tin lương các tháng trước"}
           </DialogDescription>
         </DialogHeader>
 
@@ -295,7 +324,9 @@ export function SalaryHistoryModal({
                   <SelectItem key={month} value={month}>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-blue-500" />
-                      {formatSalaryMonth(month)}
+                      {isT13
+                        ? `Lương Tháng 13 - ${month.split("-")[0]}`
+                        : formatSalaryMonth(month)}
                     </div>
                   </SelectItem>
                 ))}
@@ -322,335 +353,476 @@ export function SalaryHistoryModal({
           {payrollData && !loadingPayroll && (
             <ScrollArea className="h-[60vh] pr-4">
               <div className="space-y-6">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Calculator className="w-4 h-4 text-blue-600" />
-                      <span className="text-blue-700">
-                        Hệ Số và Thông Số Cơ Bản
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="Hệ Số Làm Việc"
-                      value={payrollData.he_so_lam_viec}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Hệ Số Phụ Cấp Kết Quả"
-                      value={payrollData.he_so_phu_cap_ket_qua}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Hệ Số Lương Cơ Bản"
-                      value={payrollData.he_so_luong_co_ban}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Lương Tối Thiểu Công Ty"
-                      value={payrollData.luong_toi_thieu_cty}
-                      isCurrency
-                    />
-                  </CardContent>
-                </Card>
+                {isT13 ? (
+                  <>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Calculator className="w-4 h-4 text-amber-600" />
+                          <span className="text-amber-700">
+                            Thông Tin Lương Tháng 13
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Số Tháng Chia"
+                          value={payrollData.so_thang_chia_13}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Tổng SP 12 Tháng"
+                          value={payrollData.tong_sp_12_thang}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Chi Đợt 1"
+                          value={payrollData.chi_dot_1_13}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Chi Đợt 2"
+                          value={payrollData.chi_dot_2_13}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
 
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-green-600" />
-                      <span className="text-green-700">Thời Gian Làm Việc</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="Ngày Công Trong Giờ"
-                      value={payrollData.ngay_cong_trong_gio}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Giờ Công Tăng Ca"
-                      value={payrollData.gio_cong_tang_ca}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Giờ Ăn Ca"
-                      value={payrollData.gio_an_ca}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Tổng Giờ Làm Việc"
-                      value={payrollData.tong_gio_lam_viec}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Tổng Hệ Số Quy Đổi"
-                      value={payrollData.tong_he_so_quy_doi}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Ngày Công Chủ Nhật"
-                      value={payrollData.ngay_cong_chu_nhat}
-                      isNumber
-                    />
-                  </CardContent>
-                </Card>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span className="text-blue-700">
+                            Chi Tiết 12 Tháng
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Tháng 01"
+                          value={payrollData.t13_thang_01}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 02"
+                          value={payrollData.t13_thang_02}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 03"
+                          value={payrollData.t13_thang_03}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 04"
+                          value={payrollData.t13_thang_04}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 05"
+                          value={payrollData.t13_thang_05}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 06"
+                          value={payrollData.t13_thang_06}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 07"
+                          value={payrollData.t13_thang_07}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 08"
+                          value={payrollData.t13_thang_08}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 09"
+                          value={payrollData.t13_thang_09}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 10"
+                          value={payrollData.t13_thang_10}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 11"
+                          value={payrollData.t13_thang_11}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tháng 12"
+                          value={payrollData.t13_thang_12}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
 
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-purple-600" />
-                      <span className="text-purple-700">
-                        Lương Sản Phẩm và Đơn Giá
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="Tổng Lương Sản Phẩm Công Đoạn"
-                      value={payrollData.tong_luong_san_pham_cong_doan}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Đơn Giá Tiền Lương Trên Giờ"
-                      value={payrollData.don_gia_tien_luong_tren_gio}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tiền Lương Sản Phẩm Trong Giờ"
-                      value={payrollData.tien_luong_san_pham_trong_gio}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tiền Lương Tăng Ca"
-                      value={payrollData.tien_luong_tang_ca}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tiền Lương 30p Ăn Ca"
-                      value={payrollData.tien_luong_30p_an_ca}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tiền Tăng Ca Vượt"
-                      value={payrollData.tien_tang_ca_vuot}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Lương CNKCP Vượt"
-                      value={payrollData.luong_cnkcp_vuot}
-                      isCurrency
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Gift className="w-4 h-4 text-orange-600" />
-                      <span className="text-orange-700">Thưởng và Phụ Cấp</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="Tiền Khen Thưởng Chuyên Cần"
-                      value={payrollData.tien_khen_thuong_chuyen_can}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Lương Học Việc PC Lương"
-                      value={payrollData.luong_hoc_viec_pc_luong}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tổng Cộng Tiền Lương Sản Phẩm"
-                      value={payrollData.tong_cong_tien_luong_san_pham}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Hỗ Trợ Thời Tiết Nóng"
-                      value={payrollData.ho_tro_thoi_tiet_nong}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Bổ Sung Lương"
-                      value={payrollData.bo_sung_luong}
-                      isCurrency
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-indigo-600" />
-                      <span className="text-indigo-700">
-                        Bảo Hiểm và Phúc Lợi
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="BHXH 21.5%"
-                      value={payrollData.bhxh_21_5_percent}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="PC CDCS PCCC ATVSV"
-                      value={payrollData.pc_cdcs_pccc_atvsv}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Lương Phụ Nữ Hành Kinh"
-                      value={payrollData.luong_phu_nu_hanh_kinh}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tiền Con Bú Thai 7 Tháng"
-                      value={payrollData.tien_con_bu_thai_7_thang}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Hỗ Trợ Gửi Con Nhà Trẻ"
-                      value={payrollData.ho_tro_gui_con_nha_tre}
-                      isCurrency
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-teal-600" />
-                      <span className="text-teal-700">Phép và Lễ</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="Ngày Công Phép Lễ"
-                      value={payrollData.ngay_cong_phep_le}
-                      isNumber
-                    />
-                    <DetailRow
-                      label="Tiền Phép Lễ"
-                      value={payrollData.tien_phep_le}
-                      isCurrency
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-emerald-600" />
-                      <span className="text-emerald-700">
-                        Tổng Lương và Phụ Cấp Khác
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="Tổng Cộng Tiền Lương"
-                      value={payrollData.tong_cong_tien_luong}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tiền Bốc Vác"
-                      value={payrollData.tien_boc_vac}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Hỗ Trợ Xăng Xe"
-                      value={payrollData.ho_tro_xang_xe}
-                      isCurrency
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Minus className="w-4 h-4 text-red-600" />
-                      <span className="text-red-700">Thuế và Khấu Trừ</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1">
-                    <DetailRow
-                      label="Thuế TNCN Năm 2024"
-                      value={payrollData.thue_tncn_nam_2024}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Tạm Ứng"
-                      value={payrollData.tam_ung}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Thuế TNCN"
-                      value={payrollData.thue_tncn}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="BHXH BHTN BHYT Total"
-                      value={payrollData.bhxh_bhtn_bhyt_total}
-                      isCurrency
-                    />
-                    <DetailRow
-                      label="Truy Thu Thẻ BHYT"
-                      value={payrollData.truy_thu_the_bhyt}
-                      isCurrency
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-green-50 border-green-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Banknote className="w-4 h-4 text-green-600" />
-                      <span className="text-green-700">Lương Thực Nhận</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center p-4 bg-white rounded-lg border border-green-200">
-                      <p className="text-sm text-green-600 font-medium mb-2">
-                        Tiền Lương Thực Nhận Cuối Kỳ
-                      </p>
-                      <p className="text-2xl font-bold text-green-700">
-                        {formatCurrencyLocal(
-                          payrollData.tien_luong_thuc_nhan_cuoi_ky,
-                        )}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {payrollData.is_signed && (
-                  <Card className="bg-blue-50 border-blue-200">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <PenTool className="w-4 h-4 text-blue-600" />
-                        <span className="text-blue-700">Thông Tin Ký Nhận</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                        <div>
-                          <p className="font-medium text-green-800">
-                            Đã ký nhận lương
+                    <Card className="bg-green-50 border-green-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Banknote className="w-4 h-4 text-green-600" />
+                          <span className="text-green-700">
+                            Tổng Lương Tháng 13
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                          <p className="text-sm text-green-600 font-medium mb-2">
+                            Tổng Lương Tháng 13
                           </p>
-                          <p className="text-sm text-green-600">
-                            Người ký: {payrollData.signed_by_name}
+                          <p className="text-2xl font-bold text-green-700">
+                            {formatCurrencyLocal(payrollData.tong_luong_13)}
                           </p>
-                          {payrollData.signed_at_display && (
-                            <p className="text-sm text-green-600">
-                              Thời gian: {payrollData.signed_at_display}
-                            </p>
-                          )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </>
+                ) : (
+                  <>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Calculator className="w-4 h-4 text-blue-600" />
+                          <span className="text-blue-700">
+                            Hệ Số và Thông Số Cơ Bản
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Hệ Số Làm Việc"
+                          value={payrollData.he_so_lam_viec}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Hệ Số Phụ Cấp Kết Quả"
+                          value={payrollData.he_so_phu_cap_ket_qua}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Hệ Số Lương Cơ Bản"
+                          value={payrollData.he_so_luong_co_ban}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Lương Tối Thiểu Công Ty"
+                          value={payrollData.luong_toi_thieu_cty}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-green-600" />
+                          <span className="text-green-700">
+                            Thời Gian Làm Việc
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Ngày Công Trong Giờ"
+                          value={payrollData.ngay_cong_trong_gio}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Giờ Công Tăng Ca"
+                          value={payrollData.gio_cong_tang_ca}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Giờ Ăn Ca"
+                          value={payrollData.gio_an_ca}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Tổng Giờ Làm Việc"
+                          value={payrollData.tong_gio_lam_viec}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Tổng Hệ Số Quy Đổi"
+                          value={payrollData.tong_he_so_quy_doi}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Ngày Công Chủ Nhật"
+                          value={payrollData.ngay_cong_chu_nhat}
+                          isNumber
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-purple-600" />
+                          <span className="text-purple-700">
+                            Lương Sản Phẩm và Đơn Giá
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Tổng Lương Sản Phẩm Công Đoạn"
+                          value={payrollData.tong_luong_san_pham_cong_doan}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Đơn Giá Tiền Lương Trên Giờ"
+                          value={payrollData.don_gia_tien_luong_tren_gio}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tiền Lương Sản Phẩm Trong Giờ"
+                          value={payrollData.tien_luong_san_pham_trong_gio}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tiền Lương Tăng Ca"
+                          value={payrollData.tien_luong_tang_ca}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tiền Lương 30p Ăn Ca"
+                          value={payrollData.tien_luong_30p_an_ca}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tiền Tăng Ca Vượt"
+                          value={payrollData.tien_tang_ca_vuot}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Lương CNKCP Vượt"
+                          value={payrollData.luong_cnkcp_vuot}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Gift className="w-4 h-4 text-orange-600" />
+                          <span className="text-orange-700">
+                            Thưởng và Phụ Cấp
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Tiền Khen Thưởng Chuyên Cần"
+                          value={payrollData.tien_khen_thuong_chuyen_can}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Lương Học Việc PC Lương"
+                          value={payrollData.luong_hoc_viec_pc_luong}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tổng Cộng Tiền Lương Sản Phẩm"
+                          value={payrollData.tong_cong_tien_luong_san_pham}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Hỗ Trợ Thời Tiết Nóng"
+                          value={payrollData.ho_tro_thoi_tiet_nong}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Bổ Sung Lương"
+                          value={payrollData.bo_sung_luong}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-indigo-600" />
+                          <span className="text-indigo-700">
+                            Bảo Hiểm và Phúc Lợi
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="BHXH 21.5%"
+                          value={payrollData.bhxh_21_5_percent}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="PC CDCS PCCC ATVSV"
+                          value={payrollData.pc_cdcs_pccc_atvsv}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Lương Phụ Nữ Hành Kinh"
+                          value={payrollData.luong_phu_nu_hanh_kinh}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tiền Con Bú Thai 7 Tháng"
+                          value={payrollData.tien_con_bu_thai_7_thang}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Hỗ Trợ Gửi Con Nhà Trẻ"
+                          value={payrollData.ho_tro_gui_con_nha_tre}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-teal-600" />
+                          <span className="text-teal-700">Phép và Lễ</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Ngày Công Phép Lễ"
+                          value={payrollData.ngay_cong_phep_le}
+                          isNumber
+                        />
+                        <DetailRow
+                          label="Tiền Phép Lễ"
+                          value={payrollData.tien_phep_le}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-emerald-600" />
+                          <span className="text-emerald-700">
+                            Tổng Lương và Phụ Cấp Khác
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Tổng Cộng Tiền Lương"
+                          value={payrollData.tong_cong_tien_luong}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tiền Bốc Vác"
+                          value={payrollData.tien_boc_vac}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Hỗ Trợ Xăng Xe"
+                          value={payrollData.ho_tro_xang_xe}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Minus className="w-4 h-4 text-red-600" />
+                          <span className="text-red-700">Thuế và Khấu Trừ</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <DetailRow
+                          label="Thuế TNCN Năm 2024"
+                          value={payrollData.thue_tncn_nam_2024}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Tạm Ứng"
+                          value={payrollData.tam_ung}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Thuế TNCN"
+                          value={payrollData.thue_tncn}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="BHXH BHTN BHYT Total"
+                          value={payrollData.bhxh_bhtn_bhyt_total}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="Truy Thu Thẻ BHYT"
+                          value={payrollData.truy_thu_the_bhyt}
+                          isCurrency
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-green-50 border-green-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Banknote className="w-4 h-4 text-green-600" />
+                          <span className="text-green-700">
+                            Lương Thực Nhận
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center p-4 bg-white rounded-lg border border-green-200">
+                          <p className="text-sm text-green-600 font-medium mb-2">
+                            Tiền Lương Thực Nhận Cuối Kỳ
+                          </p>
+                          <p className="text-2xl font-bold text-green-700">
+                            {formatCurrencyLocal(
+                              payrollData.tien_luong_thuc_nhan_cuoi_ky,
+                            )}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {payrollData.is_signed && (
+                      <Card className="bg-blue-50 border-blue-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <PenTool className="w-4 h-4 text-blue-600" />
+                            <span className="text-blue-700">
+                              Thông Tin Ký Nhận
+                            </span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <div>
+                              <p className="font-medium text-green-800">
+                                Đã ký nhận lương
+                              </p>
+                              <p className="text-sm text-green-600">
+                                Người ký: {payrollData.signed_by_name}
+                              </p>
+                              {payrollData.signed_at_display && (
+                                <p className="text-sm text-green-600">
+                                  Thời gian: {payrollData.signed_at_display}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
                 )}
 
                 <Separator />

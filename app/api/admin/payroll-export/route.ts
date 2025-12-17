@@ -128,10 +128,9 @@ export async function GET(request: NextRequest) {
 
     const month = searchParams.get("month");
     const department = searchParams.get("department");
+    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const isT13 = payrollType === "t13";
 
-    // Build query with role-based filtering
-    // Use explicit FK constraint name to avoid ambiguity (2 FKs: payrolls_employee_id_fkey and fk_payrolls_signed_by_admin)
-    // IMPORTANT: Must use !inner for department filter to work (INNER JOIN vs LEFT JOIN)
     let query = supabase
       .from("payrolls")
       .select(
@@ -145,7 +144,12 @@ export async function GET(request: NextRequest) {
       )
       .order("employee_id");
 
-    // Apply month filter
+    if (isT13) {
+      query = query.eq("payroll_type", "t13");
+    } else {
+      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
+    }
+
     if (month) {
       query = query.eq("salary_month", month);
     }
@@ -507,10 +511,11 @@ export async function GET(request: NextRequest) {
     // Row 2: Empty
     titleRows.push(new Array(totalColumns).fill(""));
 
-    // Row 3: Company name in A3, Report title in P3 (index 15)
     const row3 = new Array(totalColumns).fill("");
     row3[0] = "TỔNG CTY CP DỆT MAY HÒA THỌ";
-    row3[15] = "BẢNG THANH TOÁN TIỀN LƯƠNG";
+    row3[15] = isT13
+      ? "BẢNG THANH TOÁN LƯƠNG THÁNG 13"
+      : "BẢNG THANH TOÁN TIỀN LƯƠNG";
     titleRows.push(row3);
 
     // Row 4: Company branch in A4, Month/Year in P4 (index 15)
@@ -833,13 +838,13 @@ export async function GET(request: NextRequest) {
     // Create meaningful filename (safe for download)
     const timestamp = new Date().toISOString().slice(0, 10);
 
-    // Convert to ASCII-safe filename
     const safeDepartmentName = departmentName
-      .replace(/[^\w\s-]/g, "") // Remove special chars
-      .replace(/\s+/g, "_") // Replace spaces with underscores
-      .substring(0, 20); // Limit length
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "_")
+      .substring(0, 20);
 
-    const filename = `Luong_${safeDepartmentName}_${monthName}_${timestamp}.xlsx`;
+    const typePrefix = isT13 ? "Luong13" : "Luong";
+    const filename = `${typePrefix}_${safeDepartmentName}_${monthName}_${timestamp}.xlsx`;
     console.log("Safe filename:", filename);
 
     // Return Excel file

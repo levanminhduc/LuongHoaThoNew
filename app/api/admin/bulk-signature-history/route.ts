@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month");
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
+    const payrollType = searchParams.get("payroll_type") || "monthly";
 
     const supabase = createServiceClient();
 
@@ -27,6 +28,12 @@ export async function GET(request: NextRequest) {
 
     if (month) {
       query = query.eq("salary_month", month);
+    }
+
+    if (payrollType === "t13") {
+      query = query.eq("payroll_type", "t13");
+    } else {
+      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
     }
 
     const { data, error, count } = await query;

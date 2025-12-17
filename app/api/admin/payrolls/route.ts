@@ -4,7 +4,6 @@ import { verifyAdminToken } from "@/lib/auth-middleware";
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
     const admin = verifyAdminToken(request);
     if (!admin) {
       return NextResponse.json(
@@ -14,12 +13,21 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const { searchParams } = new URL(request.url);
+    const payrollType = searchParams.get("payroll_type") || "monthly";
 
-    // Get all payroll records
-    const { data: payrolls, error: payrollsError } = await supabase
-      .from("payrolls")
-      .select("*")
-      .order("created_at", { ascending: false });
+    let query = supabase.from("payrolls").select("*");
+
+    if (payrollType === "t13") {
+      query = query.eq("payroll_type", "t13");
+    } else {
+      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
+    }
+
+    const { data: payrolls, error: payrollsError } = await query.order(
+      "created_at",
+      { ascending: false },
+    );
 
     if (payrollsError) {
       console.error("Error fetching payrolls:", payrollsError);
@@ -29,12 +37,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate statistics
     const stats = {
       totalRecords: payrolls?.length || 0,
       totalEmployees: new Set(payrolls?.map((p) => p.employee_id)).size || 0,
       totalSalary:
-        payrolls?.reduce((sum, p) => sum + (p.net_salary || 0), 0) || 0,
+        payrollType === "t13"
+          ? payrolls?.reduce((sum, p) => sum + (p.tong_luong_13 || 0), 0) || 0
+          : payrolls?.reduce((sum, p) => sum + (p.net_salary || 0), 0) || 0,
+      payrollType,
     };
 
     return NextResponse.json({

@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month");
     const department = searchParams.get("department");
     const search = searchParams.get("search");
+    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const isT13 = payrollType === "t13";
 
     if (!month) {
       return NextResponse.json(
@@ -34,11 +36,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: payrollsData } = await supabase
+    let payrollQuery = supabase
       .from("payrolls")
       .select("employee_id, is_signed, tien_luong_thuc_nhan_cuoi_ky")
       .eq("salary_month", month)
       .eq("is_signed", false);
+
+    if (isT13) {
+      payrollQuery = payrollQuery.eq("payroll_type", "t13");
+    } else {
+      payrollQuery = payrollQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
+    }
+
+    const { data: payrollsData } = await payrollQuery;
 
     if (!payrollsData || payrollsData.length === 0) {
       return NextResponse.json(
@@ -144,7 +156,8 @@ export async function GET(request: NextRequest) {
     });
 
     const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `NV_Chua_Ky_${month}_${timestamp}.xlsx`;
+    const typePrefix = isT13 ? "NV_Chua_Ky_T13" : "NV_Chua_Ky";
+    const filename = `${typePrefix}_${month}_${timestamp}.xlsx`;
 
     return new NextResponse(excelBuffer, {
       status: 200,
