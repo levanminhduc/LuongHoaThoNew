@@ -99,6 +99,8 @@ interface PayrollResult {
   chi_dot_1_13?: number;
   chi_dot_2_13?: number;
   tong_luong_13?: number;
+  so_thang_chia_13?: number;
+  tong_sp_12_thang?: number;
 
   // Chi tiết 12 tháng
   t13_thang_01?: number;
@@ -215,6 +217,35 @@ export function PayrollDetailModalT13({
 
             {/* Phần Tổng Quan (Summary) - Đưa xuống dưới và đổi màu Xanh */}
             <div className="space-y-4">
+               {/* Số Tháng Chia & Tổng SP 12 Tháng */}
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardHeader className="pb-1 pt-3 px-2">
+                    <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
+                      Số Tháng Chia
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-3 text-center px-2">
+                    <p className="text-lg font-bold text-blue-700">
+                      {formatNumberLocal(payrollData.so_thang_chia_13)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardHeader className="pb-1 pt-3 px-2">
+                    <CardTitle className="text-xs font-medium text-blue-600 uppercase text-center">
+                      Tổng SP 12 Tháng
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-3 text-center px-2">
+                    <p className="text-lg font-bold text-blue-700">
+                      {formatCurrencyLocal(payrollData.tong_sp_12_thang)}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
                {/* Chi Đợt 1 & Chi Đợt 2 */}
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-blue-50 border-blue-200">

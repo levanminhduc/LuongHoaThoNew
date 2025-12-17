@@ -162,6 +162,8 @@ interface PayrollResult {
   chi_dot_1_13?: number;
   chi_dot_2_13?: number;
   tong_luong_13?: number;
+  so_thang_chia_13?: number;
+  tong_sp_12_thang?: number;
 
   // Thông tin ký nhận
   is_signed?: boolean;
@@ -579,7 +581,7 @@ export function EmployeeLookup() {
                   ) : (
                     <>
                       <Search className="mr-2 h-4 w-4" />
-                      Tra Cứu
+                      TRA CỨU LƯƠNG
                     </>
                   )}
                 </Button>
@@ -598,7 +600,7 @@ export function EmployeeLookup() {
                   ) : (
                     <>
                       <Search className="mr-2 h-4 w-4" />
-                      Tra Cứu T13
+                      TRA CỨU LƯƠNG THÁNG 13
                     </>
                   )}
                 </Button>
@@ -975,6 +977,45 @@ export function EmployeeLookup() {
                         <span>Xem Chi Tiết Đầy Đủ</span>
                       </Button>
                     </div>
+                  </div>
+
+                  {/* Số Tháng Chia & Tổng SP 12 Tháng */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Số Tháng Chia */}
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardHeader className="pb-1 pt-3 px-2">
+                        <div className="text-center">
+                          <p className="text-xs font-medium text-blue-600 uppercase">
+                            Số Tháng Chia
+                          </p>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 pb-3 text-center px-2">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-blue-700">
+                            {formatNumber(t13Result.so_thang_chia_13 || 0)}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Tổng SP 12 Tháng */}
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardHeader className="pb-1 pt-3 px-2">
+                        <div className="text-center">
+                          <p className="text-xs font-medium text-blue-600 uppercase">
+                            Tổng SP 12 Tháng
+                          </p>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 pb-3 text-center px-2">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-blue-700">
+                            {formatCurrency(t13Result.tong_sp_12_thang || 0)}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
                   {/* Chi Đợt 1 & Chi Đợt 2 */}
