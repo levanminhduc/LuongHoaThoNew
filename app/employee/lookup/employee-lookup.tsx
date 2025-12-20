@@ -421,6 +421,7 @@ export function EmployeeLookup() {
           cccd: cccd.trim(),
           salary_month: t13Result.salary_month,
           client_timestamp: vietnamTime,
+          is_t13: true,
         }),
       });
 

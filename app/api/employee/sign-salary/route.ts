@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
         p_salary_month: salary_month.trim(),
         p_ip_address: clientIP,
         p_device_info: userAgent,
-        p_payroll_type: payrollType,
       },
     );
 

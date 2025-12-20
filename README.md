@@ -1,77 +1,88 @@
-# Hệ Thống Quản Lý Lương Nhân Viên
+# Hệ Thống Quản Lý Lương MAY HÒA THỌ ĐIỆN BÀN
 
-Ứng dụng web được xây dựng bằng Next.js và Supabase để quản lý và tra cứu thông tin lương nhân viên.
+Hệ thống quản lý lương cho công ty May Hòa Thọ Điện Bàn - cho phép import dữ liệu lương từ Excel, nhân viên tra cứu và ký nhận lương, quản lý ký duyệt theo cấp bậc.
 
-## 🆕 **RECENT UPDATES (2025-08-04)**
+## 🛠️ Tech Stack
 
-### **🚀 MAJOR FIXES & IMPROVEMENTS**
+| Layer | Công nghệ |
+|-------|-----------|
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui |
+| Backend | Next.js API Routes |
+| Database | Supabase PostgreSQL + RLS |
+| Auth | JWT + bcrypt |
+| File | xlsx, xlsx-js-style |
 
-#### **🏢 Department Management System Enhancements**
+## 🔑 8 Roles (RBAC)
 
-- ✅ **Enhanced Employee Count Logic**: Cập nhật logic count employees để hiển thị chính xác
-- ✅ **Active Departments Filter**: Hiển thị departments có ít nhất 1 employee active (73 departments)
-- ✅ **Total Employees Count**: Count TẤT CẢ employees bao gồm cả inactive (1578 employees)
-- ✅ **API Response Structure**: Cập nhật `/api/admin/departments` với fields mới
-- ✅ **Frontend Compatibility**: Đảm bảo UI components hoạt động với data structure mới
-- ✅ **Permission System**: Tất cả tính năng permission management hoạt động bình thường
+| Role | Quyền hạn |
+|------|-----------|
+| `admin` | Full access |
+| `giam_doc` | Xem + ký duyệt lương theo departments |
+| `ke_toan` | Xem + ký duyệt + quản lý tài chính |
+| `nguoi_lap_bieu` | Tạo + ký duyệt bảng lương |
+| `truong_phong` | Xem lương departments được phân quyền |
+| `to_truong` | Xem lương department của mình |
+| `van_phong` | Quản lý thông tin nhân viên |
+| `nhan_vien` | Chỉ xem lương của mình |
 
-#### **🔧 Critical Import System Fixes (2025-08-02)**
+## 🗄️ Database Tables Chính
 
-- ✅ **Fixed Import Issue**: Giải quyết vấn đề chỉ import được 1 cột "Hệ Số Làm Việc"
-- ✅ **Enhanced API Route**: `/api/admin/payroll-import` với aliases support từ database
-- ✅ **Database Integration**: Function `createHeaderToFieldMapping()` load aliases và configurations
-- ✅ **Initialization Fix**: Sửa lỗi "Cannot access 'supabase' before initialization"
-- ✅ **Data Processing**: Cải thiện logic xử lý empty values và number conversion
+| Table | Mô tả |
+|-------|-------|
+| `employees` | Thông tin nhân viên (PK: employee_id) |
+| `payrolls` | Dữ liệu lương 39 cột (Unique: employee_id + salary_month) |
+| `signature_logs` | Log ký nhận nhân viên |
+| `management_signatures` | Chữ ký quản lý (3 loại) |
+| `department_permissions` | Phân quyền department |
+| `column_aliases` | Mapping tên cột Excel |
 
-#### **🕐 Vietnam Timezone Implementation (+7)**
+## 📥 Excel Import System
 
-- ✅ **Import Timestamps**: Tất cả import records ghi đúng múi giờ Việt Nam
-- ✅ **Signature Function**: Database function `auto_sign_salary` với Vietnam timezone
-- ✅ **Display Formatting**: Frontend hiển thị thời gian theo Asia/Ho_Chi_Minh
-- ✅ **Utility Functions**: `getVietnamTimestamp()` và `formatDateVietnam()`
+**Luồng xử lý:**
+```
+Excel -> Column Detection -> Auto-Mapping -> Validation -> Database
+```
 
-#### **📊 Database Schema Updates**
+**Tính năng:**
+- Flexible column mapping với alias
+- Dual file import (2 files cùng lúc)
+- T13 auto-detection từ salary_month pattern
+- Duplicate handling: skip/overwrite/merge
+- Cross-field validation (+/-10% tolerance)
 
-- ✅ **New Column**: Thêm cột `tien_tang_ca_vuot` vào bảng payrolls
-- ✅ **SQL Scripts**: Script 17 với safe deployment và verification
-- ✅ **TypeScript Support**: Interface updates cho cột mới
+## ✍️ Signature System
 
-#### **🎯 Import Success Rate**
+**Employee Flow:**
+1. Login -> Xem lương -> Click "Ký Nhận"
+2. Gọi `auto_sign_salary()` -> Update `payrolls` + Insert `signature_logs`
 
-- ✅ **Before Fix**: 1/39 cột (2.6% success rate)
-- ✅ **After Fix**: 39/39 cột (100% success rate)
-- ✅ **Aliases Integration**: Load 40+ aliases từ database
-- ✅ **Debug Logging**: Chi tiết mapping process và field counts
+**Management Flow (3-tier):**
+- `giam_doc`, `ke_toan`, `nguoi_lap_bieu` - mỗi role ký 1 lần/tháng
+- Lưu vào `management_signatures`
 
-### **🔧 Enhanced Column Mapping System**
+## ⏰ Vietnam Timezone
 
-- ✅ **40+ Column Aliases** đã được setup với confidence scores 80-100%
-- ✅ **Smart Auto-Mapping** với 4 strategies: exact, alias, fuzzy, configuration
-- ✅ **Column Mapping Analysis** với visual preview và confidence scoring
-- ✅ **Generate Template từ Aliases** với user-friendly headers
-- ✅ **97.6% Alias Coverage** cho tất cả payroll fields
+**QUAN TRỌNG:** Tất cả timestamps dùng Vietnam time (+7 hours)
 
-### **🎨 UI/UX Improvements**
+## 🔒 Security
 
-- ✅ **Visual Mapping Indicators**: Color-coded badges cho mapping types
-- ✅ **Mapping Statistics Dashboard**: Detailed breakdown và success rates
-- ✅ **Enhanced Suggested Actions**: Context-aware recommendations
-- ✅ **Real-time Analysis**: Instant feedback khi upload Excel files
+- JWT expires 24h
+- bcrypt 12 rounds cho password/CCCD
+- Row Level Security (RLS) trên tất cả tables
+- IP + Device tracking cho audit trail
 
-### **⚡ Performance & Accuracy**
+## 🚀 Quick Start
 
-- ✅ **Improved Mapping Accuracy**: Từ ~60% lên 97.6% với aliases
-- ✅ **Faster Import Process**: Smart auto-mapping giảm manual work
-- ✅ **Better Error Prevention**: Confidence-based validation
-- ✅ **User-Friendly Templates**: Headers dễ hiểu cho end users
+```bash
+npm install          # Cài đặt dependencies
+npm run dev          # Development server
+npm run build        # Production build
+npm run format       # Format code
+npm run lint         # Check linting
+npm run typecheck    # Check TypeScript
+```
 
-### **🏢 Department Management System (Updated 2025-08-04)**
-
-- ✅ **Accurate Employee Count**: 1578 total employees (bao gồm cả inactive)
-- ✅ **Active Departments**: 73 departments có ít nhất 1 employee active
-- ✅ **Enhanced API Logic**: Cập nhật `/api/admin/departments` với logic count mới
-- ✅ **Permission Management**: Department permissions hoạt động với data structure mới
-- ✅ **Role-based Access**: Admin, truong_phong, to_truong filtering hoạt động chính xác
+---
 
 ## Tính Năng
 
