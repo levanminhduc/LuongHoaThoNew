@@ -587,7 +587,7 @@ export function EmployeeLookup() {
             )}
 
             <div className="space-y-3">
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   type="submit"
                   disabled={loading || t13Loading}
