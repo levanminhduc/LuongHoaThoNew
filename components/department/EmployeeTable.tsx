@@ -422,7 +422,7 @@ export default function EmployeeTable({
       {/* Desktop Table Layout */}
       <Card className="hidden sm:block overflow-hidden">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
             <Table className="min-w-max">
               <TableHeader>
                 <TableRow>
@@ -464,11 +464,11 @@ export default function EmployeeTable({
                       </TableHead>
                     </>
                   )}
-                  <TableHead className="text-center min-w-[100px]">
+                  <TableHead className={`text-center min-w-[100px] ${onViewEmployee ? "sticky right-[80px] bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
                     Trạng Thái
                   </TableHead>
                   {onViewEmployee && (
-                    <TableHead className="text-center min-w-[80px]">
+                    <TableHead className="text-center min-w-[80px] sticky right-0 bg-background z-10">
                       Thao Tác
                     </TableHead>
                   )}
@@ -526,7 +526,7 @@ export default function EmployeeTable({
                           </TableCell>
                         </>
                       )}
-                      <TableCell className="text-center">
+                      <TableCell className={`text-center ${onViewEmployee ? "sticky right-[80px] bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
                         <Badge
                           variant={payroll.is_signed ? "default" : "secondary"}
                         >
@@ -534,7 +534,7 @@ export default function EmployeeTable({
                         </Badge>
                       </TableCell>
                       {onViewEmployee && (
-                        <TableCell className="text-center">
+                        <TableCell className="text-center sticky right-0 bg-background z-10">
                           <Button
                             variant="outline"
                             size="sm"

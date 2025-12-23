@@ -56,6 +56,50 @@ import {
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
 
+// Helper function to format month label
+const formatMonthLabel = (value: string) => {
+  const [year, month] = value.split("-");
+
+  if (month === "13") {
+    return `Lương Tháng 13 - ${year}`;
+  }
+
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return date.toLocaleDateString("vi-VN", {
+    year: "numeric",
+    month: "long",
+  });
+};
+
+// Helper function to generate month options including T13
+const generateMonthOptions = (years = 2) => {
+  const options: { value: string; label: string }[] = [];
+  const currentYear = new Date().getFullYear();
+
+  for (let i = 0; i < years; i++) {
+    const year = currentYear - i;
+    const month13Value = `${year}-13`;
+    options.push({ value: month13Value, label: formatMonthLabel(month13Value) });
+
+    for (let month = 12; month >= 1; month--) {
+      const monthValue = `${year}-${String(month).padStart(2, "0")}`;
+      options.push({ value: monthValue, label: formatMonthLabel(monthValue) });
+    }
+  }
+
+  return options;
+};
+
+// Helper function to get payroll query params
+const getPayrollQueryParams = (selectedMonth: string) => {
+  if (selectedMonth.endsWith("-13")) {
+    const year = selectedMonth.split("-")[0];
+    return `payroll_type=t13&year=${year}`;
+  }
+
+  return `month=${selectedMonth}`;
+};
+
 interface DepartmentStats {
   name: string;
   employeeCount: number;
@@ -125,8 +169,9 @@ export default function OverviewModal({
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
       const response = await fetch(
-        `/api/admin/departments?include_stats=true&month=${selectedMonth}`,
+        `/api/admin/departments?include_stats=true&${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -168,8 +213,9 @@ export default function OverviewModal({
     setExportingDepartment(departmentName);
     try {
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
       const response = await fetch(
-        `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(departmentName)}`,
+        `/api/admin/payroll-export?${queryParams}&department=${encodeURIComponent(departmentName)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -250,25 +296,20 @@ export default function OverviewModal({
               Tổng Quan Hệ Thống
             </DialogTitle>
             <p className="text-sm text-gray-600 mt-1">
-              Thống kê và phân tích dữ liệu tháng {selectedMonth}
+              Thống kê và phân tích dữ liệu {formatMonthLabel(selectedMonth)}
             </p>
           </div>
           <div className="flex items-center space-x-4">
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-52">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => {
-                  const date = new Date();
-                  date.setMonth(date.getMonth() - i);
-                  const value = date.toISOString().slice(0, 7);
-                  return (
-                    <SelectItem key={value} value={value}>
-                      {value}
-                    </SelectItem>
-                  );
-                })}
+                {generateMonthOptions(2).map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -339,7 +380,7 @@ export default function OverviewModal({
                     {totalStats.totalEmployees}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    Có dữ liệu lương tháng {selectedMonth}
+                    Có dữ liệu {formatMonthLabel(selectedMonth)}
                   </p>
                 </CardContent>
               </Card>
@@ -370,7 +411,7 @@ export default function OverviewModal({
               <Card className="hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium truncate">
-                    Tổng Lương
+                    {selectedMonth.endsWith("-13") ? "Tổng Lương T13" : "Tổng Lương"}
                   </CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>
@@ -379,7 +420,7 @@ export default function OverviewModal({
                     {(totalStats.totalSalary / 1000000).toFixed(1)}M
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    VND tháng {selectedMonth}
+                    VND {formatMonthLabel(selectedMonth)}
                   </p>
                 </CardContent>
               </Card>
@@ -599,6 +640,7 @@ export default function OverviewModal({
         departmentName={selectedDepartmentForDetail}
         month={selectedMonth}
         onViewEmployee={handleViewEmployeeFromDepartment}
+        initialPayrollType={selectedMonth.endsWith("-13") ? "t13" : "monthly"}
       />
 
       {/* Payroll Detail Modal (from department detail modal) */}

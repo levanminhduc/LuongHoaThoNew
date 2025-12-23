@@ -52,6 +52,50 @@ import {
 import DashboardCache from "@/utils/dashboardCache";
 import { PageLoading } from "@/components/ui/skeleton-patterns";
 
+// Helper function to format month label
+const formatMonthLabel = (value: string) => {
+  const [year, month] = value.split("-");
+
+  if (month === "13") {
+    return `Lương Tháng 13 - ${year}`;
+  }
+
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return date.toLocaleDateString("vi-VN", {
+    year: "numeric",
+    month: "long",
+  });
+};
+
+// Helper function to generate month options including T13
+const generateMonthOptions = (years = 2) => {
+  const options: { value: string; label: string }[] = [];
+  const currentYear = new Date().getFullYear();
+
+  for (let i = 0; i < years; i++) {
+    const year = currentYear - i;
+    const month13Value = `${year}-13`;
+    options.push({ value: month13Value, label: formatMonthLabel(month13Value) });
+
+    for (let month = 12; month >= 1; month--) {
+      const monthValue = `${year}-${String(month).padStart(2, "0")}`;
+      options.push({ value: monthValue, label: formatMonthLabel(monthValue) });
+    }
+  }
+
+  return options;
+};
+
+// Helper function to get payroll query params
+const getPayrollQueryParams = (selectedMonth: string) => {
+  if (selectedMonth.endsWith("-13")) {
+    const year = selectedMonth.split("-")[0];
+    return `payroll_type=t13&year=${year}`;
+  }
+
+  return `month=${selectedMonth}`;
+};
+
 interface User {
   employee_id: string;
   username: string;
@@ -209,9 +253,10 @@ export default function SupervisorDashboard({
 
     try {
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
 
       const payrollResponse = await fetch(
-        `/api/payroll/my-department?month=${selectedMonth}&limit=100`,
+        `/api/payroll/my-department?${queryParams}&limit=100`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -343,8 +388,9 @@ export default function SupervisorDashboard({
     try {
       setExportingExcel(true);
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
 
-      const url = `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(user.department)}`;
+      const url = `/api/admin/payroll-export?${queryParams}&department=${encodeURIComponent(user.department)}`;
       let filename = `Luong_${user.department}_${selectedMonth}`;
 
       if (exportType === "overview") {
@@ -415,37 +461,17 @@ export default function SupervisorDashboard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-52">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => {
-                const date = new Date();
-                date.setMonth(date.getMonth() - i);
-                const value = date.toISOString().slice(0, 7);
-                const label = date.toLocaleDateString("vi-VN", {
-                  year: "numeric",
-                  month: "long",
-                });
-                return (
-                  <SelectItem
-                    key={`supervisor-month-${i}-${value}`}
-                    value={value}
-                  >
-                    {label}
-                  </SelectItem>
-                );
-              })}
+              {generateMonthOptions(2).map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          {/* T13 Access Button - cùng hàng với chọn tháng */}
-          <Button
-            onClick={() => setShowT13Modal(true)}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md transition-all hover:shadow-lg"
-          >
-            <Gift className="mr-2 h-4 w-4" />
-            Xem Lương Tháng 13
-          </Button>
         </div>
       </div>
 
@@ -472,7 +498,7 @@ export default function SupervisorDashboard({
           <Card className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium truncate">
-                Tổng Lương
+                {selectedMonth.endsWith("-13") ? "Tổng Lương T13" : "Tổng Lương"}
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
@@ -481,7 +507,7 @@ export default function SupervisorDashboard({
                 {(departmentStats.totalSalary / 1000000).toFixed(1)}M
               </div>
               <p className="text-xs text-muted-foreground truncate">
-                VND tháng {selectedMonth}
+                VND {formatMonthLabel(selectedMonth)}
               </p>
             </CardContent>
           </Card>
@@ -555,7 +581,7 @@ export default function SupervisorDashboard({
                 Tổng Quan Department
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Thống kê tổng quan tháng {selectedMonth}
+                Thống kê tổng quan {formatMonthLabel(selectedMonth)}
               </p>
             </div>
             <Button
@@ -691,10 +717,10 @@ export default function SupervisorDashboard({
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <CardTitle className="text-base sm:text-lg">
-                  Danh Sách Nhân Viên - {user.department}
+                  {selectedMonth.endsWith("-13") ? "Danh Sách Nhân Viên (Lương T13)" : "Danh Sách Nhân Viên"} - {user.department}
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  Tháng {selectedMonth}
+                  {formatMonthLabel(selectedMonth)}
                 </CardDescription>
               </div>
               <Button

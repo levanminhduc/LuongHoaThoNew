@@ -110,76 +110,77 @@ export default function DepartmentSummaryCards({
         </Card>
       </div>
 
-      {/* Row 2: Detailed Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <Card className="hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">
-              Tổng Ngày Công
-            </CardTitle>
-            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
-            <div className="text-base sm:text-xl lg:text-2xl font-bold">
-              {stats.totalWorkDays || 0}
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
-              Ngày công tháng {month}
-            </p>
-          </CardContent>
-        </Card>
+      {!isT13 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Tổng Ngày Công
+              </CardTitle>
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold">
+                {stats.totalWorkDays || 0}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                Ngày công tháng {month}
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">
-              Tổng Giờ TC
-            </CardTitle>
-            <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
-            <div className="text-base sm:text-xl lg:text-2xl font-bold">
-              {stats.totalOvertimeHours || 0}
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
-              Giờ tăng ca tháng {month}
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Tổng Giờ TC
+              </CardTitle>
+              <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold">
+                {stats.totalOvertimeHours || 0}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                Giờ tăng ca tháng {month}
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">
-              Tổng Phụ Cấp
-            </CardTitle>
-            <Gift className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
-            <div className="text-base sm:text-xl lg:text-2xl font-bold">
-              {((stats.totalAllowances || 0) / 1000000).toFixed(1)}M
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
-              VND tháng {month}
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Tổng Phụ Cấp
+              </CardTitle>
+              <Gift className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold">
+                {((stats.totalAllowances || 0) / 1000000).toFixed(1)}M
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                VND tháng {month}
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className="hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium truncate">
-              Tổng Khấu Trừ
-            </CardTitle>
-            <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
-            <div className="text-base sm:text-xl lg:text-2xl font-bold">
-              {((stats.totalDeductions || 0) / 1000000).toFixed(1)}M
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
-              VND tháng {month}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Tổng Khấu Trừ
+              </CardTitle>
+              <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold">
+                {((stats.totalDeductions || 0) / 1000000).toFixed(1)}M
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                VND tháng {month}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

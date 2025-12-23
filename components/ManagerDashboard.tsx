@@ -49,6 +49,47 @@ import {
 import DashboardCache from "@/utils/dashboardCache";
 import { PageLoading } from "@/components/ui/skeleton-patterns";
 
+const formatMonthLabel = (value: string) => {
+  const [year, month] = value.split("-");
+
+  if (month === "13") {
+    return `Lương Tháng 13 - ${year}`;
+  }
+
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return date.toLocaleDateString("vi-VN", {
+    year: "numeric",
+    month: "long",
+  });
+};
+
+const generateMonthOptions = (years = 2) => {
+  const options: { value: string; label: string }[] = [];
+  const currentYear = new Date().getFullYear();
+
+  for (let i = 0; i < years; i++) {
+    const year = currentYear - i;
+    const month13Value = `${year}-13`;
+    options.push({ value: month13Value, label: formatMonthLabel(month13Value) });
+
+    for (let month = 12; month >= 1; month--) {
+      const monthValue = `${year}-${String(month).padStart(2, "0")}`;
+      options.push({ value: monthValue, label: formatMonthLabel(monthValue) });
+    }
+  }
+
+  return options;
+};
+
+const getPayrollQueryParams = (selectedMonth: string) => {
+  if (selectedMonth.endsWith("-13")) {
+    const year = selectedMonth.split("-")[0];
+    return `payroll_type=t13&year=${year}`;
+  }
+
+  return `month=${selectedMonth}`;
+};
+
 interface User {
   employee_id: string;
   username: string;
@@ -176,8 +217,9 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
 
     try {
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
       const response = await fetch(
-        `/api/admin/departments?include_stats=true&month=${selectedMonth}`,
+        `/api/admin/departments?include_stats=true&${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -206,10 +248,11 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
   const loadPayrollData = async () => {
     try {
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
       const url =
         selectedDepartment === "all"
-          ? `/api/payroll/my-departments?month=${selectedMonth}&limit=50`
-          : `/api/payroll/my-departments?month=${selectedMonth}&department=${selectedDepartment}&limit=50`;
+          ? `/api/payroll/my-departments?${queryParams}&limit=50`
+          : `/api/payroll/my-departments?${queryParams}&department=${selectedDepartment}&limit=50`;
 
       const response = await fetch(url, {
         headers: {
@@ -240,8 +283,9 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
     setExportingDepartment(departmentName);
     try {
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
       const response = await fetch(
-        `/api/admin/payroll-export?month=${selectedMonth}&department=${encodeURIComponent(departmentName)}`,
+        `/api/admin/payroll-export?${queryParams}&department=${encodeURIComponent(departmentName)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -286,8 +330,9 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
     setExportingData(true);
     try {
       const token = localStorage.getItem("admin_token");
+      const queryParams = getPayrollQueryParams(selectedMonth);
 
-      let url = `/api/admin/payroll-export?month=${selectedMonth}`;
+      let url = `/api/admin/payroll-export?${queryParams}`;
       let filename = `payroll-${selectedMonth}`;
 
       if (selectedDepartment !== "all") {
@@ -431,24 +476,15 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
         </div>
         <div className="flex items-center gap-2">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => {
-                const date = new Date();
-                date.setMonth(date.getMonth() - i);
-                const value = date.toISOString().slice(0, 7);
-                const label = date.toLocaleDateString("vi-VN", {
-                  year: "numeric",
-                  month: "long",
-                });
-                return (
-                  <SelectItem key={`month-${i}-${value}`} value={value}>
-                    {label}
-                  </SelectItem>
-                );
-              })}
+              {generateMonthOptions(2).map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -492,7 +528,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
         <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium truncate">
-              Tổng Lương
+              {selectedMonth.endsWith("-13") ? "Tổng Lương T13" : "Tổng Lương"}
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
@@ -501,7 +537,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
               {(totalStats.totalSalary / 1000000).toFixed(1)}M
             </div>
             <p className="text-xs text-muted-foreground truncate">
-              VND tháng {selectedMonth}
+              VND {formatMonthLabel(selectedMonth)}
             </p>
           </CardContent>
         </Card>
@@ -791,10 +827,10 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base sm:text-lg">
-                  Dữ Liệu Lương - {selectedDepartment}
+                  {selectedMonth.endsWith("-13") ? "Dữ Liệu Lương T13" : "Dữ Liệu Lương"} - {selectedDepartment}
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  Tháng {selectedMonth}
+                  {formatMonthLabel(selectedMonth)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -961,6 +997,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
         departmentName={selectedDepartmentForDetail}
         month={selectedMonth}
         onViewEmployee={handleViewEmployeeFromDepartment}
+        initialPayrollType={selectedMonth.endsWith("-13") ? "t13" : "monthly"}
       />
 
       {/* Payroll Detail Modal (from payroll tab) */}
