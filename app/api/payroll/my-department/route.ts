@@ -127,7 +127,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// GET department statistics for to_truong
 export async function POST(request: NextRequest) {
   try {
     const auth = verifyToken(request);
@@ -141,18 +140,21 @@ export async function POST(request: NextRequest) {
     const { month } = await request.json();
     const supabase = createServiceClient();
 
-    // Get department statistics
+    const isT13 = month?.endsWith("-13");
+    const salaryMonthFilter = month || new Date().toISOString().slice(0, 7);
+
     const { data: stats, error } = await supabase
       .from("payrolls")
       .select(
         `
         tien_luong_thuc_nhan_cuoi_ky,
+        tong_luong_13,
         is_signed,
         employees!payrolls_employee_id_fkey!inner(department)
       `,
       )
       .eq("employees.department", auth.user.department)
-      .eq("salary_month", month || new Date().toISOString().slice(0, 7));
+      .eq("salary_month", salaryMonthFilter);
 
     if (error) {
       return NextResponse.json(
@@ -163,11 +165,22 @@ export async function POST(request: NextRequest) {
 
     const totalEmployees = stats?.length || 0;
     const signedCount = stats?.filter((s) => s.is_signed).length || 0;
-    const totalSalary =
-      stats?.reduce(
-        (sum, s) => sum + (s.tien_luong_thuc_nhan_cuoi_ky || 0),
-        0,
-      ) || 0;
+    
+    interface StatRecord {
+      tien_luong_thuc_nhan_cuoi_ky: number | null;
+      tong_luong_13: number | null;
+      is_signed: boolean;
+    }
+    
+    const totalSalary = isT13
+      ? stats?.reduce(
+          (sum: number, s: StatRecord) => sum + (s.tong_luong_13 || 0),
+          0,
+        ) || 0
+      : stats?.reduce(
+          (sum: number, s: StatRecord) => sum + (s.tien_luong_thuc_nhan_cuoi_ky || 0),
+          0,
+        ) || 0;
 
     return NextResponse.json({
       success: true,

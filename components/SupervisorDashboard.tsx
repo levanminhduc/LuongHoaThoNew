@@ -52,6 +52,13 @@ import {
 import DashboardCache from "@/utils/dashboardCache";
 import { PageLoading } from "@/components/ui/skeleton-patterns";
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+};
+
 // Helper function to format month label
 const formatMonthLabel = (value: string) => {
   const [year, month] = value.split("-");
@@ -109,13 +116,11 @@ interface PayrollRecord {
   employee_id: string;
   salary_month: string;
 
-  // Hệ số và thông số cơ bản
   he_so_lam_viec?: number;
   he_so_phu_cap_ket_qua?: number;
   he_so_luong_co_ban?: number;
   luong_toi_thieu_cty?: number;
 
-  // Thời gian làm việc
   ngay_cong_trong_gio?: number;
   gio_cong_tang_ca?: number;
   gio_an_ca?: number;
@@ -123,7 +128,6 @@ interface PayrollRecord {
   tong_he_so_quy_doi?: number;
   ngay_cong_chu_nhat?: number;
 
-  // Lương sản phẩm và đơn giá
   tong_luong_san_pham_cong_doan?: number;
   don_gia_tien_luong_tren_gio?: number;
   tien_luong_san_pham_trong_gio?: number;
@@ -137,38 +141,37 @@ interface PayrollRecord {
   tien_tang_ca_vuot?: number;
   luong_cnkcp_vuot?: number;
 
-  // Bảo hiểm và phúc lợi
   bhxh_21_5_percent?: number;
   pc_cdcs_pccc_atvsv?: number;
   luong_phu_nu_hanh_kinh?: number;
   tien_con_bu_thai_7_thang?: number;
   ho_tro_gui_con_nha_tre?: number;
 
-  // Phép và lễ
   ngay_cong_phep_le?: number;
   tien_phep_le?: number;
 
-  // Tổng lương và phụ cấp khác
   tong_cong_tien_luong?: number;
   tien_boc_vac?: number;
   ho_tro_xang_xe?: number;
 
-  // Thuế và khấu trừ
   thue_tncn_nam_2024?: number;
   tam_ung?: number;
   thue_tncn?: number;
   bhxh_bhtn_bhyt_total?: number;
   truy_thu_the_bhyt?: number;
 
-  // Lương thực nhận
   tien_luong_thuc_nhan_cuoi_ky: number;
 
-  // Thông tin ký nhận
+  so_thang_chia_13?: number;
+  tong_sp_12_thang?: number;
+  chi_dot_1_13?: number;
+  chi_dot_2_13?: number;
+  tong_luong_13?: number;
+
   is_signed: boolean;
   signed_at: string | null;
   signed_by_name?: string;
 
-  // Employee relationship
   employees: {
     employee_id?: string;
     full_name: string;
@@ -211,10 +214,10 @@ export default function SupervisorDashboard({
   const [monthlyTrend, setMonthlyTrend] = useState<TrendItem[]>([]);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [showPayrollModal, setShowPayrollModal] = useState(false);
+  const [showPayrollModalT13, setShowPayrollModalT13] = useState(false);
   const [selectedPayrollData, setSelectedPayrollData] =
     useState<PayrollResult | null>(null);
   
-  // State for T13 modal
   const [showT13Modal, setShowT13Modal] = useState(false);
   const [t13PayrollData, setT13PayrollData] = useState<PayrollResult | null>(null);
   const [showT13PayrollDetail, setShowT13PayrollDetail] = useState(false);
@@ -367,13 +370,19 @@ export default function SupervisorDashboard({
   };
 
   const handleViewEmployee = (employeeId: string) => {
-    // Find the payroll record for this employee
     const payrollRecord = payrollData.find((p) => p.employee_id === employeeId);
     if (payrollRecord) {
-      // Transform to PayrollResult format and open modal
       const payrollResult = transformPayrollRecordToResult(payrollRecord);
-      setSelectedPayrollData(payrollResult);
-      setShowPayrollModal(true);
+      payrollResult.source_file = "Supervisor Dashboard";
+      
+      if (selectedMonth.endsWith("-13")) {
+        payrollResult.payroll_type = 't13';
+        setSelectedPayrollData(payrollResult);
+        setShowPayrollModalT13(true);
+      } else {
+        setSelectedPayrollData(payrollResult);
+        setShowPayrollModal(true);
+      }
     }
   };
 
@@ -466,7 +475,11 @@ export default function SupervisorDashboard({
             </SelectTrigger>
             <SelectContent>
               {generateMonthOptions(2).map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className={option.value.endsWith("-13") ? "text-amber-600 font-semibold" : ""}
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -744,7 +757,6 @@ export default function SupervisorDashboard({
               </Button>
             </CardHeader>
             <CardContent>
-              {/* Mobile Card Layout - Show on screens smaller than lg */}
               <div className="block lg:hidden space-y-3">
                 {payrollData.map((payroll, index) => (
                   <Card key={payroll.id} className="p-4">
@@ -801,46 +813,83 @@ export default function SupervisorDashboard({
                             {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                           </Badge>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Ngày công:
-                          </span>
-                          <p className="font-medium mt-1">
-                            {payroll.ngay_cong_trong_gio || 0} ngày
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Thưởng Chuyên Cần:
-                          </span>
-                          <p className="font-medium mt-1">
-                            {(
-                              payroll.tien_khen_thuong_chuyen_can || 0
-                            ).toLocaleString()}{" "}
-                            VND
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Hệ số LV:
-                          </span>
-                          <p className="font-medium mt-1">
-                            {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                          </p>
-                        </div>
+                        {selectedMonth.endsWith("-13") ? (
+                          <>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Số Tháng:
+                              </span>
+                              <p className="font-medium mt-1">
+                                {payroll.so_thang_chia_13 || 0}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Tổng SP 12T:
+                              </span>
+                              <p className="font-medium mt-1">
+                                {formatCurrency(payroll.tong_sp_12_thang || 0)}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Chi Đợt 1:
+                              </span>
+                              <p className="font-medium mt-1">
+                                {formatCurrency(payroll.chi_dot_1_13 || 0)}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Chi Đợt 2:
+                              </span>
+                              <p className="font-medium mt-1">
+                                {formatCurrency(payroll.chi_dot_2_13 || 0)}
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Ngày công:
+                              </span>
+                              <p className="font-medium mt-1">
+                                {payroll.ngay_cong_trong_gio || 0} ngày
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Thưởng Chuyên Cần:
+                              </span>
+                              <p className="font-medium mt-1">
+                                {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Hệ số LV:
+                              </span>
+                              <p className="font-medium mt-1">
+                                {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       <div className="pt-2 border-t">
                         <div className="flex justify-between items-center">
                           <div>
                             <p className="text-xs text-muted-foreground">
-                              Lương thực nhận
+                              {selectedMonth.endsWith("-13") ? "Tổng Lương T13" : "Lương thực nhận"}
                             </p>
                             <p className="text-sm font-semibold">
-                              {(
-                                payroll.tien_luong_thuc_nhan_cuoi_ky || 0
-                              ).toLocaleString()}{" "}
-                              VND
+                              {formatCurrency(
+                                selectedMonth.endsWith("-13")
+                                  ? payroll.tong_luong_13 || 0
+                                  : payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                              )}
                             </p>
                           </div>
                         </div>
@@ -850,7 +899,6 @@ export default function SupervisorDashboard({
                 ))}
               </div>
 
-              {/* Desktop Table Layout - Show on lg screens and up */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -865,18 +913,40 @@ export default function SupervisorDashboard({
                       <th className="text-left p-2 sm:p-3 min-w-[120px]">
                         Chức Vụ
                       </th>
-                      <th className="text-center p-2 sm:p-3 min-w-[90px]">
-                        Ngày Công
-                      </th>
-                      <th className="text-right p-2 sm:p-3 min-w-[120px]">
-                        Thưởng Chuyên Cần
-                      </th>
-                      <th className="text-center p-2 sm:p-3 min-w-[80px]">
-                        Hệ Số LV
-                      </th>
-                      <th className="text-right p-2 sm:p-3 min-w-[140px]">
-                        Lương Thực Nhận
-                      </th>
+                      {selectedMonth.endsWith("-13") ? (
+                        <>
+                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                            Số Tháng
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                            Tổng SP 12 Tháng
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                            Chi Đợt 1
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                            Chi Đợt 2
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                            Tổng Lương T13
+                          </th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="text-center p-2 sm:p-3 min-w-[90px]">
+                            Ngày Công
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                            Thưởng Chuyên Cần
+                          </th>
+                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                            Hệ Số LV
+                          </th>
+                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                            Lương Thực Nhận
+                          </th>
+                        </>
+                      )}
                       <th className="text-center p-2 sm:p-3 min-w-[100px]">
                         Trạng Thái
                       </th>
@@ -915,24 +985,40 @@ export default function SupervisorDashboard({
                                   : payroll.employees?.chuc_vu}
                           </Badge>
                         </td>
-                        <td className="p-2 sm:p-3 text-center font-medium">
-                          {payroll.ngay_cong_trong_gio || 0} ngày
-                        </td>
-                        <td className="p-2 sm:p-3 text-right font-medium">
-                          {(
-                            payroll.tien_khen_thuong_chuyen_can || 0
-                          ).toLocaleString()}{" "}
-                          VND
-                        </td>
-                        <td className="p-2 sm:p-3 text-center font-medium">
-                          {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                        </td>
-                        <td className="p-2 sm:p-3 text-right font-semibold">
-                          {(
-                            payroll.tien_luong_thuc_nhan_cuoi_ky || 0
-                          ).toLocaleString()}{" "}
-                          VND
-                        </td>
+                        {selectedMonth.endsWith("-13") ? (
+                          <>
+                            <td className="p-2 sm:p-3 text-center font-medium">
+                              {payroll.so_thang_chia_13 || 0}
+                            </td>
+                            <td className="p-2 sm:p-3 text-right font-medium">
+                              {formatCurrency(payroll.tong_sp_12_thang || 0)}
+                            </td>
+                            <td className="p-2 sm:p-3 text-right font-medium">
+                              {formatCurrency(payroll.chi_dot_1_13 || 0)}
+                            </td>
+                            <td className="p-2 sm:p-3 text-right font-medium">
+                              {formatCurrency(payroll.chi_dot_2_13 || 0)}
+                            </td>
+                            <td className="p-2 sm:p-3 text-right font-semibold">
+                              {formatCurrency(payroll.tong_luong_13 || 0)}
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="p-2 sm:p-3 text-center font-medium">
+                              {payroll.ngay_cong_trong_gio || 0} ngày
+                            </td>
+                            <td className="p-2 sm:p-3 text-right font-medium">
+                              {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
+                            </td>
+                            <td className="p-2 sm:p-3 text-center font-medium">
+                              {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                            </td>
+                            <td className="p-2 sm:p-3 text-right font-semibold">
+                              {formatCurrency(payroll.tien_luong_thuc_nhan_cuoi_ky || 0)}
+                            </td>
+                          </>
+                        )}
                         <td className="p-2 sm:p-3 text-center">
                           <Badge variant={getStatusColor(payroll.is_signed)}>
                             {payroll.is_signed ? "Đã ký" : "Chưa ký"}
@@ -1042,16 +1128,25 @@ export default function SupervisorDashboard({
           </div>
         </TabsContent>
       </Tabs>
-      {/* Payroll Detail Modal */}
       {selectedPayrollData && (
-        <PayrollDetailModal
-          isOpen={showPayrollModal}
-          onClose={() => {
-            setShowPayrollModal(false);
-            setSelectedPayrollData(null);
-          }}
-          payrollData={selectedPayrollData}
-        />
+        <>
+          <PayrollDetailModal
+            isOpen={showPayrollModal}
+            onClose={() => {
+              setShowPayrollModal(false);
+              setSelectedPayrollData(null);
+            }}
+            payrollData={selectedPayrollData}
+          />
+          <PayrollDetailModalT13
+            isOpen={showPayrollModalT13}
+            onClose={() => {
+              setShowPayrollModalT13(false);
+              setSelectedPayrollData(null);
+            }}
+            payrollData={selectedPayrollData}
+          />
+        </>
       )}
 
       {/* Department Detail Modal for T13 */}
