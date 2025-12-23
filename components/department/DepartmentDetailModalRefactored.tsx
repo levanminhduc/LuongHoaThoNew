@@ -425,9 +425,9 @@ export default function DepartmentDetailModalRefactored({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="h-[70vh] sm:h-[75vh] pr-2 sm:pr-4 touch-pan-y">
+        <ScrollArea className="h-[70vh] sm:h-[75vh] touch-pan-y">
           {loading ? (
-            <div className="space-y-4">
+            <div className="space-y-4 pr-2 sm:pr-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
                   <Skeleton key={i} className="h-24" />
@@ -436,14 +436,14 @@ export default function DepartmentDetailModalRefactored({
               <Skeleton className="h-96" />
             </div>
           ) : error ? (
-            <div className="text-center py-8">
+            <div className="text-center py-8 pr-2 sm:pr-4">
               <p className="text-red-600">{error}</p>
               <Button onClick={() => loadDepartmentDetail()} className="mt-4">
                 Thử Lại
               </Button>
             </div>
           ) : departmentData ? (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-4 sm:space-y-6 pr-2 sm:pr-4">
               {/* Summary Cards */}
               <DepartmentSummaryCards
                 stats={(() => {

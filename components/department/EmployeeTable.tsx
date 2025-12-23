@@ -245,7 +245,7 @@ export default function EmployeeTable({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       {/* Search and Filter Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-2 flex-1">
@@ -420,10 +420,10 @@ export default function EmployeeTable({
       </div>
 
       {/* Desktop Table Layout */}
-      <Card className="hidden sm:block overflow-hidden">
+      <Card className="hidden sm:block">
         <CardContent className="p-0">
-          <div className="overflow-x-auto relative">
-            <Table className="min-w-max">
+          <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
+            <Table className="min-w-[1000px] w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center w-16">STT</TableHead>
@@ -464,11 +464,11 @@ export default function EmployeeTable({
                       </TableHead>
                     </>
                   )}
-                  <TableHead className={`text-center min-w-[100px] ${onViewEmployee ? "sticky right-[80px] bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
+                  <TableHead className={`text-center min-w-[100px] ${onViewEmployee ? "sticky right-[80px] bg-background z-[2] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-[2] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
                     Trạng Thái
                   </TableHead>
                   {onViewEmployee && (
-                    <TableHead className="text-center min-w-[80px] sticky right-0 bg-background z-10">
+                    <TableHead className="text-center min-w-[80px] sticky right-0 bg-background z-[2]">
                       Thao Tác
                     </TableHead>
                   )}
@@ -526,7 +526,7 @@ export default function EmployeeTable({
                           </TableCell>
                         </>
                       )}
-                      <TableCell className={`text-center ${onViewEmployee ? "sticky right-[80px] bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-10 shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
+                      <TableCell className={`text-center ${onViewEmployee ? "sticky right-[80px] bg-background z-[1] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-[1] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
                         <Badge
                           variant={payroll.is_signed ? "default" : "secondary"}
                         >
@@ -534,7 +534,7 @@ export default function EmployeeTable({
                         </Badge>
                       </TableCell>
                       {onViewEmployee && (
-                        <TableCell className="text-center sticky right-0 bg-background z-10">
+                        <TableCell className="text-center sticky right-0 bg-background z-[1]">
                           <Button
                             variant="outline"
                             size="sm"
