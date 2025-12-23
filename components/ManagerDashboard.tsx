@@ -481,7 +481,11 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
             </SelectTrigger>
             <SelectContent>
               {generateMonthOptions(2).map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className={option.value.endsWith("-13") ? "text-amber-600 font-semibold" : ""}
+                >
                   {option.label}
                 </SelectItem>
               ))}

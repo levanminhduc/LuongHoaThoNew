@@ -258,7 +258,12 @@ export async function GET(
     const signedCount = payrolls?.filter((p) => p.is_signed).length || 0;
     const totalSalary =
       payrolls?.reduce(
-        (sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0),
+        (sum, p) => {
+          if (payrollType === "t13") {
+            return sum + (p.tong_luong_13 || 0);
+          }
+          return sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0);
+        },
         0,
       ) || 0;
     const averageSalary =

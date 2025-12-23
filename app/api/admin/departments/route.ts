@@ -98,6 +98,7 @@ export async function GET(request: NextRequest) {
         .select(
           `
           tien_luong_thuc_nhan_cuoi_ky,
+          tong_luong_13,
           is_signed,
           payroll_type,
           salary_month,
@@ -153,6 +154,7 @@ export async function GET(request: NextRequest) {
 
     interface PayrollWithEmployee {
       tien_luong_thuc_nhan_cuoi_ky: number;
+      tong_luong_13: number;
       is_signed: boolean;
       employees: { department: string } | { department: string }[];
     }
@@ -180,7 +182,12 @@ export async function GET(request: NextRequest) {
       const payrollCount = deptPayrolls.length;
       const signedCount = deptPayrolls.filter((p) => p.is_signed).length;
       const totalSalary = deptPayrolls.reduce(
-        (sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0),
+        (sum, p) => {
+          if (payrollType === "t13") {
+            return sum + (p.tong_luong_13 || 0);
+          }
+          return sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0);
+        },
         0,
       );
 
