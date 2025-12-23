@@ -24,7 +24,15 @@ NODE_ENV=production
 
 **Lưu ý:** Thay thế các giá trị `your_*` bằng thông tin thực tế từ Supabase project của bạn.
 
-## Bước 2: Build Docker Image
+## Bước 2: Đồng Bộ package-lock.json
+
+Trước khi build Docker image, đảm bảo `package-lock.json` đồng bộ với `package.json`:
+
+```bash
+npm install
+```
+
+## Bước 3: Build Docker Image
 
 Mở terminal/PowerShell tại thư mục dự án và chạy:
 
@@ -32,9 +40,9 @@ Mở terminal/PowerShell tại thư mục dự án và chạy:
 docker build -t luong-hoatho-app .
 ```
 
-Quá trình build sẽ mất khoảng 2-3 phút.
+Quá trình build sẽ mất khoảng 1-2 phút. Image có kích thước khoảng **313MB**.
 
-## Bước 3: Chạy Container Với Docker Compose
+## Bước 4: Chạy Container Với Docker Compose
 
 ```bash
 docker compose up
@@ -46,7 +54,7 @@ Hoặc chạy ở chế độ background:
 docker compose up -d
 ```
 
-## Bước 4: Truy Cập Ứng Dụng
+## Bước 5: Truy Cập Ứng Dụng
 
 Mở trình duyệt và truy cập:
 
@@ -86,13 +94,27 @@ docker compose down -v
 docker ps
 ```
 
+### Kiểm tra kích thước image
+
+```bash
+docker images luong-hoatho-app
+```
+
 ## Troubleshooting
 
-### Lỗi: "Your project's URL and Key are required"
+### Lỗi: "npm ci can only install packages when your package.json and package-lock.json are in sync"
 
-- Kiểm tra file `.env` đã được tạo và có đầy đủ thông tin
-- Đảm bảo các biến môi trường không có khoảng trắng thừa
-- Restart Docker Desktop và thử lại
+Chạy lệnh sau để đồng bộ lock file:
+
+```bash
+npm install
+```
+
+Sau đó build lại Docker image.
+
+### Lỗi: "NEXT_PUBLIC_SUPABASE_URL is not set"
+
+Đảm bảo file `.env` tồn tại và chứa các biến môi trường cần thiết. Entrypoint script sẽ kiểm tra và báo lỗi nếu thiếu biến.
 
 ### Lỗi: Port 3000 đã được sử dụng
 
@@ -115,13 +137,50 @@ docker compose logs
 
 ```
 .
-├── Dockerfile          # Định nghĩa cách build image
-├── compose.yml         # Cấu hình Docker Compose
-├── .dockerignore       # Files/folders bỏ qua khi build
-├── .env               # Biến môi trường (không commit)
-├── .env.example       # Template cho .env
-└── Docker.md          # File hướng dẫn này
+├── Dockerfile              # Định nghĩa cách build image (multi-stage build)
+├── docker-entrypoint.sh    # Script inject env vars tại runtime
+├── compose.yml             # Cấu hình Docker Compose
+├── .dockerignore           # Files/folders bỏ qua khi build
+├── .env                    # Biến môi trường (không commit)
+├── .env.example            # Template cho .env
+└── Docker.md               # File hướng dẫn này
 ```
+
+## Thông Tin Kỹ Thuật
+
+- **Base Image:** `node:20-alpine`
+- **Build Type:** Multi-stage build (deps → builder → runner)
+- **Output Mode:** Next.js standalone
+- **Image Size:** ~313MB
+- **Port:** 3000
+- **User:** nextjs (non-root)
+
+## Runtime Environment Injection
+
+### Cách Hoạt Động
+
+Docker image được build **không chứa bất kỳ secret nào**. Các biến `NEXT_PUBLIC_*` được thay thế bằng placeholder tại build time:
+
+1. **Build time:** Next.js được build với placeholder values (URL hợp lệ để build thành công):
+   - `NEXT_PUBLIC_SUPABASE_URL` → `https://placeholder.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → `placeholder-anon-key`
+
+2. **Runtime:** Khi container khởi động, `docker-entrypoint.sh` sẽ:
+   - Đọc các biến môi trường thực từ file `.env`
+   - Tìm và thay thế placeholder trong các file JS bundle
+   - Khởi động Next.js server
+
+### Lợi Ích
+
+- **Bảo mật:** Image không chứa credentials, có thể chia sẻ an toàn
+- **Linh hoạt:** Cùng một image có thể chạy với nhiều môi trường khác nhau (dev, staging, production)
+- **CI/CD friendly:** Build image một lần, deploy nhiều nơi với config khác nhau
+
+### Lưu Ý
+
+- Các biến `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY` **bắt buộc** phải có trong file `.env`
+- Container sẽ không khởi động nếu thiếu các biến này
+- Các biến khác như `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET` được đọc trực tiếp từ environment tại runtime (không cần inject vào bundle)
 
 ## Lưu Ý Bảo Mật
 
@@ -129,3 +188,5 @@ docker compose logs
 - File `.env` đã được thêm vào `.gitignore`
 - Sử dụng JWT_SECRET mạnh và ngẫu nhiên cho production
 - Không chia sẻ SUPABASE_SERVICE_ROLE_KEY với người khác
+- Container chạy với user non-root (nextjs) để tăng bảo mật
+- Image không chứa secrets, an toàn để push lên registry công khai

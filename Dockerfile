@@ -17,16 +17,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ARG SUPABASE_SERVICE_ROLE_KEY
-ARG JWT_SECRET
-
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
-ENV JWT_SECRET=$JWT_SECRET
+ENV NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder-anon-key
+ENV SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key
+ENV JWT_SECRET=placeholder-jwt-secret-at-least-32-chars
 ENV SKIP_ENV_VALIDATION=true
 
 RUN npm run build
@@ -47,6 +42,8 @@ RUN chown nextjs:nodejs .next
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 
 USER nextjs
 
@@ -55,5 +52,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
-
+ENTRYPOINT ["./docker-entrypoint.sh"]
