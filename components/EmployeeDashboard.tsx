@@ -91,7 +91,13 @@ export default function EmployeeDashboard({
   );
   const [loading, setLoading] = useState(true);
   const [monthlyBreakdown, setMonthlyBreakdown] = useState<
-    Array<Record<string, unknown>>
+    Array<{
+      month: string;
+      grossSalary: number;
+      netSalary: number;
+      tax: number;
+      insurance: number;
+    }>
   >([]);
 
   useEffect(() => {
@@ -199,22 +205,30 @@ export default function EmployeeDashboard({
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-4 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                 Dashboard Nhân Viên
               </h1>
-              <p className="text-sm text-gray-600">
-                Xin chào, {user.username} | Mã NV: {user.employee_id} |
-                Department: {user.department}
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-medium">{user.username}</span>
+                <span className="mx-2 text-gray-300">|</span>
+                <span>ID: {user.employee_id}</span>
+                <span className="hidden sm:inline">
+                  <span className="mx-2 text-gray-300">|</span>
+                  <span>{user.department}</span>
+                </span>
+                <span className="block sm:hidden text-xs text-gray-500 mt-0.5">
+                  {user.department}
+                </span>
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex w-full md:w-auto items-center space-x-3">
               <Select
                 value={selectedYear.toString()}
                 onValueChange={(value) => setSelectedYear(parseInt(value))}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full md:w-32 min-h-[44px] md:min-h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,19 +245,24 @@ export default function EmployeeDashboard({
                   })}
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={onLogout}>
+              <Button
+                variant="outline"
+                onClick={onLogout}
+                className="shrink-0 min-h-[44px] md:min-h-10 touch-manipulation"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
-                Đăng xuất
+                <span className="hidden sm:inline">Đăng xuất</span>
+                <span className="sm:hidden">Thoát</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Overview Stats */}
         {yearlySummary && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -316,87 +335,168 @@ export default function EmployeeDashboard({
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Thông Tin Cá Nhân</CardTitle>
+                <CardDescription>Chi tiết nhân viên</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Mã nhân viên
+                    </p>
+                    <p className="font-semibold">{user.employee_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Họ tên</p>
+                    <p className="font-semibold">{user.username}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Department
+                    </p>
+                    <p className="font-semibold">{user.department}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Chức vụ</p>
+                    <Badge variant="secondary">Nhân viên</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {yearlySummary && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Thông Tin Cá Nhân</CardTitle>
-                  <CardDescription>Chi tiết nhân viên</CardDescription>
+                  <CardTitle>Tổng Kết Năm {selectedYear}</CardTitle>
+                  <CardDescription>Thống kê lương và thuế</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Mã nhân viên
+                      <p className="text-muted-foreground">Tổng lương gốc</p>
+                      <p className="font-semibold text-base sm:text-sm">
+                        {formatCurrency(yearlySummary.totalGrossSalary)}
                       </p>
-                      <p className="font-semibold">{user.employee_id}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Họ tên</p>
-                      <p className="font-semibold">{user.username}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Department
+                      <p className="text-muted-foreground">
+                        Tổng lương thực nhận
                       </p>
-                      <p className="font-semibold">{user.department}</p>
+                      <p className="font-semibold text-base sm:text-sm text-green-600 sm:text-foreground">
+                        {formatCurrency(yearlySummary.totalNetSalary)}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Chức vụ</p>
-                      <Badge variant="secondary">Nhân viên</Badge>
+                      <p className="text-muted-foreground">Tổng thuế TNCN</p>
+                      <p className="font-semibold text-base sm:text-sm">
+                        {formatCurrency(yearlySummary.totalTax)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Tổng BHXH/BHYT</p>
+                      <p className="font-semibold text-base sm:text-sm">
+                        {formatCurrency(yearlySummary.totalInsurance)}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-
-              {yearlySummary && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tổng Kết Năm {selectedYear}</CardTitle>
-                    <CardDescription>Thống kê lương và thuế</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Tổng lương gốc</p>
-                        <p className="font-semibold">
-                          {formatCurrency(yearlySummary.totalGrossSalary)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">
-                          Tổng lương thực nhận
-                        </p>
-                        <p className="font-semibold">
-                          {formatCurrency(yearlySummary.totalNetSalary)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Tổng thuế TNCN</p>
-                        <p className="font-semibold">
-                          {formatCurrency(yearlySummary.totalTax)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Tổng BHXH/BHYT</p>
-                        <p className="font-semibold">
-                          {formatCurrency(yearlySummary.totalInsurance)}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            )}
+          </div>
           </TabsContent>
 
           <TabsContent value="payroll" className="space-y-6">
-            <Card>
-              <CardHeader>
+            <Card className="overflow-hidden">
+              <CardHeader className="px-4 py-4 sm:px-6">
                 <CardTitle>Lịch Sử Lương</CardTitle>
                 <CardDescription>12 tháng gần nhất</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
+              <CardContent className="p-0 sm:p-6">
+                {/* Mobile View: Card Layout */}
+                <div className="block lg:hidden space-y-4 px-4 pb-4">
+                  {payrollData.map((payroll) => (
+                    <div
+                      key={payroll.id}
+                      className="bg-white border rounded-lg shadow-sm overflow-hidden"
+                    >
+                      <div className="p-4 border-b bg-gray-50/50 flex justify-between items-center">
+                        <div className="font-medium">
+                          {payroll.salary_month}
+                        </div>
+                        <Badge variant={getStatusColor(payroll.is_signed)}>
+                          {payroll.is_signed ? "Đã ký" : "Chưa ký"}
+                        </Badge>
+                      </div>
+                      <div className="p-4 space-y-3 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">
+                            Lương Gốc
+                          </span>
+                          <span>
+                            {formatCurrency(payroll.tong_cong_tien_luong || 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">
+                            Thuế TNCN
+                          </span>
+                          <span>{formatCurrency(payroll.thue_tncn || 0)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">
+                            BHXH/BHYT
+                          </span>
+                          <span>
+                            {formatCurrency(payroll.bhxh_bhtn_bhyt_total || 0)}
+                          </span>
+                        </div>
+                        <div className="pt-2 border-t flex justify-between items-center font-medium text-base">
+                          <span>Thực Nhận</span>
+                          <span className="text-blue-600">
+                            {formatCurrency(
+                              payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
+                            )}
+                          </span>
+                        </div>
+                        {payroll.is_signed && (
+                          <div className="pt-2 border-t flex justify-between items-center text-xs text-muted-foreground">
+                            <span>Ngày ký</span>
+                            <span>
+                              {payroll.signed_at
+                                ? new Date(
+                                    payroll.signed_at,
+                                  ).toLocaleDateString("vi-VN")
+                                : "-"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="bg-gray-50 px-4 py-3 flex justify-end border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto h-11 sm:h-9"
+                          onClick={() =>
+                            handleDownloadPayslip(
+                              payroll.id,
+                              payroll.salary_month,
+                            )
+                          }
+                          disabled={!payroll.is_signed}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Tải Phiếu Lương
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop View: Table Layout */}
+                <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">

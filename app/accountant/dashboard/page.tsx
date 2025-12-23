@@ -177,42 +177,45 @@ export default function AccountantDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div className="space-y-4 sm:space-y-6 pb-20 sm:pb-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
             Dashboard Kế Toán
           </h1>
           <p className="text-sm text-gray-600">Tháng: {selectedMonth}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowOverviewModal(true)}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Xem Tổng Quan
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowUnsignedModal(true)}
-            disabled={!monthStatus}
-            className="border-red-200 hover:bg-red-50"
-          >
-            <UserX className="h-4 w-4 mr-2 text-red-600" />
-            <span className="text-red-700">Chưa Ký</span>
-            {monthStatus && (
-              <Badge className="ml-2 bg-red-600 text-white">
-                {monthStatus.employee_completion.total_employees -
-                  monthStatus.employee_completion.signed_employees}
-              </Badge>
-            )}
-          </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowOverviewModal(true)}
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Tổng Quan
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowUnsignedModal(true)}
+              disabled={!monthStatus}
+              className="w-full border-red-200 hover:bg-red-50 sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
+            >
+              <UserX className="mr-2 h-4 w-4 text-red-600" />
+              <span className="text-red-700">Chưa Ký</span>
+              {monthStatus && (
+                <Badge className="ml-2 bg-red-600 text-white">
+                  {monthStatus.employee_completion.total_employees -
+                    monthStatus.employee_completion.signed_employees}
+                </Badge>
+              )}
+            </Button>
+          </div>
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40 min-h-[44px] sm:min-h-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -221,7 +224,7 @@ export default function AccountantDashboard() {
                 date.setMonth(date.getMonth() - i);
                 const value = date.toISOString().slice(0, 7);
                 return (
-                  <SelectItem key={value} value={value}>
+                  <SelectItem key={value} value={value} className="min-h-[44px] sm:min-h-0">
                     {date.toLocaleDateString("vi-VN", {
                       year: "numeric",
                       month: "long",
@@ -241,9 +244,9 @@ export default function AccountantDashboard() {
       )}
 
       {monthStatus && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 mb-6 sm:mb-8">
           <Card
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200"
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-md"
             onClick={() => setShowEmployeeModal(true)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -256,13 +259,13 @@ export default function AccountantDashboard() {
               <div className="text-2xl font-bold">
                 {monthStatus.employee_completion.total_employees}
               </div>
-              <p className="text-xs text-green-100">
-                Cần xác nhận tài chính • Click để xem chi tiết
+              <p className="text-xs text-green-100 mt-1">
+                Cần xác nhận tài chính • Chạm để xem
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Đã Ký Lương</CardTitle>
               <CheckCircle className="h-4 w-4" />
@@ -271,7 +274,7 @@ export default function AccountantDashboard() {
               <div className="text-2xl font-bold">
                 {monthStatus.employee_completion.signed_employees}
               </div>
-              <p className="text-xs text-blue-100">
+              <p className="text-xs text-blue-100 mt-1">
                 {monthStatus.employee_completion.completion_percentage.toFixed(
                   1,
                 )}
@@ -280,7 +283,7 @@ export default function AccountantDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Xác Nhận KT</CardTitle>
               <PenTool className="h-4 w-4" />
@@ -289,13 +292,13 @@ export default function AccountantDashboard() {
               <div className="text-2xl font-bold">
                 {monthStatus.management_signatures.ke_toan ? "✅" : "⏳"}
               </div>
-              <p className="text-xs text-green-100">
+              <p className="text-xs text-green-100 mt-1">
                 {monthStatus.management_signatures.ke_toan ? "Đã ký" : "Chờ ký"}
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Trạng Thái</CardTitle>
               <BarChart3 className="h-4 w-4" />
@@ -306,7 +309,7 @@ export default function AccountantDashboard() {
                   ? "SẴN SÀNG"
                   : "CHỜ"}
               </div>
-              <p className="text-xs text-orange-100">
+              <p className="text-xs text-orange-100 mt-1">
                 {monthStatus.summary.is_fully_signed
                   ? "Hoàn thành"
                   : "Đang xử lý"}
@@ -316,26 +319,35 @@ export default function AccountantDashboard() {
         </div>
       )}
 
-      <Tabs defaultValue="financial" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="financial" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Xác Nhận Tài Chính
+      <Tabs defaultValue="financial" className="space-y-4 sm:space-y-6">
+        <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-3 sm:bg-muted sm:p-1">
+          <TabsTrigger 
+            value="financial" 
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <DollarSign className="mr-2 h-4 w-4" />
+            Xác Nhận TC
           </TabsTrigger>
-          <TabsTrigger value="verification" className="flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            Kiểm Tra Tính Toán
+          <TabsTrigger 
+            value="verification" 
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <Calculator className="mr-2 h-4 w-4" />
+            Kiểm Tra
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Lịch Sử KT
+          <TabsTrigger 
+            value="history" 
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Lịch Sử
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="financial" className="space-y-6">
+        <TabsContent value="financial" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <DollarSign className="h-5 w-5" />
                 Xác Nhận Tài Chính Lương Tháng {selectedMonth}
               </CardTitle>
@@ -355,7 +367,7 @@ export default function AccountantDashboard() {
                       <p className="text-green-800 font-medium">
                         ✅ Đã xác nhận tài chính
                       </p>
-                      <p className="text-sm text-green-600">
+                      <p className="text-sm text-green-600 mt-1">
                         Ký bởi:{" "}
                         {
                           monthStatus.management_signatures.ke_toan
@@ -381,7 +393,7 @@ export default function AccountantDashboard() {
                         <h4 className="font-medium text-blue-800 mb-2">
                           Checklist Xác Nhận Tài Chính:
                         </h4>
-                        <ul className="text-sm text-blue-700 space-y-1">
+                        <ul className="text-sm text-blue-700 space-y-1 pl-1">
                           <li>✅ Kiểm tra tổng số tiền lương</li>
                           <li>✅ Xác minh các khoản khấu trừ</li>
                           <li>✅ Đối chiếu với ngân sách tháng</li>
@@ -391,16 +403,16 @@ export default function AccountantDashboard() {
                       <Button
                         onClick={handleSignature}
                         disabled={isSigning}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] text-base"
                       >
                         {isSigning ? (
                           <>
-                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            <Clock className="h-5 w-5 mr-2 animate-spin" />
                             Đang xử lý...
                           </>
                         ) : (
                           <>
-                            <PenTool className="h-4 w-4 mr-2" />
+                            <PenTool className="h-5 w-5 mr-2" />
                             Ký Xác Nhận Kế Toán
                           </>
                         )}
@@ -436,7 +448,7 @@ export default function AccountantDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="verification" className="space-y-6">
+        <TabsContent value="verification" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Kiểm Tra Tính Toán Lương</CardTitle>
@@ -492,7 +504,7 @@ export default function AccountantDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-6">
+        <TabsContent value="history" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Lịch Sử Xác Nhận Kế Toán</CardTitle>
@@ -503,7 +515,7 @@ export default function AccountantDashboard() {
                   signatureHistory.map((signature) => (
                     <div
                       key={signature.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-3 bg-gray-50 rounded-lg gap-2"
                     >
                       <div>
                         <p className="font-medium">
@@ -518,7 +530,7 @@ export default function AccountantDashboard() {
                           </p>
                         )}
                       </div>
-                      <Badge variant="secondary">
+                      <Badge variant="secondary" className="w-fit">
                         {formatTimestampFromDBRaw(signature.signed_at)}
                       </Badge>
                     </div>

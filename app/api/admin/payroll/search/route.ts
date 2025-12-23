@@ -9,6 +9,7 @@ const JWT_SECRET =
 interface EmployeeInfo {
   full_name: string | null;
   department: string | null;
+  chuc_vu?: string | null;
 }
 
 // Verify admin token
@@ -399,7 +400,7 @@ export async function GET(request: NextRequest) {
             employee_id: record.employee_id,
             full_name: employeeData?.full_name || "N/A",
             department: employeeData?.department || "N/A",
-            position: employee?.chuc_vu || "N/A",
+            position: employeeData?.chuc_vu || "N/A",
             salary_month: record.salary_month,
             net_salary: record.tien_luong_thuc_nhan_cuoi_ky || 0,
             source_file: record.source_file || "N/A",

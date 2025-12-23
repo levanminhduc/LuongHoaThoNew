@@ -288,16 +288,22 @@ export default function DepartmentDetailModal({
           bValue = b.employees?.full_name || "";
       }
 
-      if (typeof aValue === "string") {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+      const aString = typeof aValue === "string" ? aValue.toLowerCase() : null;
+      const bString = typeof bValue === "string" ? bValue.toLowerCase() : null;
+
+      if (aString !== null && bString !== null) {
+        if (aString < bString) return sortOrder === "asc" ? -1 : 1;
+        if (aString > bString) return sortOrder === "asc" ? 1 : -1;
+        return 0;
       }
 
-      if (sortOrder === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+        return 0;
       }
+
+      return 0;
     });
 
     return filtered;
@@ -328,31 +334,34 @@ export default function DepartmentDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              <span className="truncate">
-                Chi Tiết Bộ Phận - {departmentName}
-              </span>
+      <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0 sm:p-6">
+        <div className="px-4 py-3 sm:px-0 sm:py-0 border-b sm:border-none">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2 max-w-[80%]">
+                <Building2 className="w-5 h-5 flex-shrink-0" />
+                <span className="truncate text-base sm:text-lg">
+                  Chi Tiết Bộ Phận - {departmentName}
+                </span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+                <X className="w-4 h-4" />
+              </Button>
+            </DialogTitle>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mt-1">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              Tháng: {month}
+              {error && (
+                <Badge variant="destructive" className="ml-2">
+                  Có lỗi
+                </Badge>
+              )}
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </DialogTitle>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="w-4 h-4" />
-            Tháng: {month}
-            {error && (
-              <Badge variant="destructive" className="ml-2">
-                Có lỗi
-              </Badge>
-            )}
-          </div>
-        </DialogHeader>
+          </DialogHeader>
+        </div>
 
-        <ScrollArea className="h-[75vh] pr-4">
+        <ScrollArea className="h-[calc(95vh-80px)] sm:h-[75vh] px-4 sm:px-0 sm:pr-4">
+          <div className="py-4 sm:py-0">
           {loading ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -372,7 +381,7 @@ export default function DepartmentDetailModal({
           ) : departmentData ? (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">

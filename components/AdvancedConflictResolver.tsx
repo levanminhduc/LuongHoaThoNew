@@ -117,12 +117,27 @@ export function AdvancedConflictResolver({
     },
   ]);
 
-  const [customRule, setCustomRule] = useState({
+  type FieldRuleAction =
+    | "existing"
+    | "new"
+    | "latest"
+    | "highest"
+    | "lowest"
+    | "merge";
+  type RuleAction = ResolutionRule["action"];
+ 
+  const [customRule, setCustomRule] = useState<{
+    name: string;
+    description: string;
+    condition: string;
+    action: RuleAction;
+    field_rules: Record<string, FieldRuleAction>;
+  }>({
     name: "",
     description: "",
     condition: "",
-    action: "merge_smart" as const,
-    field_rules: {} as Record<string, string>,
+    action: "merge_smart",
+    field_rules: {},
   });
 
   interface Resolution {
@@ -212,51 +227,64 @@ export function AdvancedConflictResolver({
     [conflicts, resolutions],
   );
 
+  const toDateSafe = (value: unknown) => {
+    if (value instanceof Date) return value;
+    if (typeof value === "string" || typeof value === "number") {
+      return new Date(value);
+    }
+    return new Date(NaN);
+  };
+ 
+  const toNumberSafe = (value: unknown) => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : NaN;
+    }
+    return NaN;
+  };
+ 
   const smartMerge = (
     existing: Record<string, unknown>,
     newData: Record<string, unknown>,
     conflictFields: string[],
   ): Record<string, unknown> => {
-    const merged = { ...existing };
-
+    const merged: Record<string, unknown> = { ...existing };
+ 
     Object.keys(newData).forEach((key) => {
+      const newVal = newData[key];
+      const existingVal = existing[key];
+ 
       if (!conflictFields.includes(key)) {
-        // No conflict, use new value if it's not null/empty
-        if (
-          newData[key] !== null &&
-          newData[key] !== undefined &&
-          newData[key] !== ""
-        ) {
-          merged[key] = newData[key];
+        if (newVal !== null && newVal !== undefined && newVal !== "") {
+          merged[key] = newVal;
         }
-      } else {
-        // Conflict exists, apply smart logic
-        if (key.includes("date") || key.includes("time")) {
-          // For dates, use the latest
-          const existingDate = new Date(existing[key]);
-          const newDate = new Date(newData[key]);
-          merged[key] = newDate > existingDate ? newData[key] : existing[key];
-        } else if (
-          key.includes("luong") ||
-          key.includes("salary") ||
-          key.includes("tien")
-        ) {
-          // For money fields, use the higher value
-          const existingValue = parseFloat(existing[key]) || 0;
-          const newValue = parseFloat(newData[key]) || 0;
-          merged[key] = Math.max(existingValue, newValue);
-        } else {
-          // Default: use new value if it's not empty
-          merged[key] =
-            newData[key] !== null &&
-            newData[key] !== undefined &&
-            newData[key] !== ""
-              ? newData[key]
-              : existing[key];
-        }
+        return;
       }
+ 
+      if (key.includes("date") || key.includes("time")) {
+        const existingDate = toDateSafe(existingVal).getTime();
+        const newDate = toDateSafe(newVal).getTime();
+        merged[key] = newDate > existingDate ? newVal : existingVal;
+        return;
+      }
+ 
+      if (key.includes("luong") || key.includes("salary") || key.includes("tien")) {
+        const existingValue = toNumberSafe(existingVal);
+        const newValue = toNumberSafe(newVal);
+        merged[key] = Number.isFinite(newValue)
+          ? (Number.isFinite(existingValue)
+              ? Math.max(existingValue, newValue)
+              : newValue)
+          : existingVal;
+        return;
+      }
+ 
+      merged[key] = newVal !== null && newVal !== undefined && newVal !== ""
+        ? newVal
+        : existingVal;
     });
-
+ 
     merged.updated_at = new Date().toISOString();
     return merged;
   };
@@ -264,15 +292,15 @@ export function AdvancedConflictResolver({
   const applyFieldRules = (
     existing: Record<string, unknown>,
     newData: Record<string, unknown>,
-    fieldRules: Record<string, string>,
+    fieldRules: Record<string, FieldRuleAction>,
   ) => {
-    const resolved = { ...existing };
-
+    const resolved: Record<string, unknown> = { ...existing };
+ 
     Object.keys(fieldRules).forEach((field) => {
       const rule = fieldRules[field];
       const existingValue = existing[field];
       const newValue = newData[field];
-
+ 
       switch (rule) {
         case "existing":
           resolved[field] = existingValue;
@@ -281,25 +309,34 @@ export function AdvancedConflictResolver({
           resolved[field] = newValue;
           break;
         case "latest":
-          // Assume new data is latest
           resolved[field] = newValue;
           break;
-        case "highest":
-          const existingNum = parseFloat(existingValue) || 0;
-          const newNum = parseFloat(newValue) || 0;
-          resolved[field] = Math.max(existingNum, newNum);
+        case "highest": {
+          const existingNum = toNumberSafe(existingValue);
+          const newNum = toNumberSafe(newValue);
+          resolved[field] = Number.isFinite(newNum)
+            ? (Number.isFinite(existingNum)
+                ? Math.max(existingNum, newNum)
+                : newNum)
+            : existingValue;
           break;
-        case "lowest":
-          const existingNumLow = parseFloat(existingValue) || Infinity;
-          const newNumLow = parseFloat(newValue) || Infinity;
-          resolved[field] = Math.min(existingNumLow, newNumLow);
+        }
+        case "lowest": {
+          const existingNumLow = toNumberSafe(existingValue);
+          const newNumLow = toNumberSafe(newValue);
+          resolved[field] = Number.isFinite(newNumLow)
+            ? (Number.isFinite(existingNumLow)
+                ? Math.min(existingNumLow, newNumLow)
+                : newNumLow)
+            : existingValue;
           break;
+        }
         case "merge":
           resolved[field] = `${existingValue} | ${newValue}`;
           break;
       }
     });
-
+ 
     resolved.updated_at = new Date().toISOString();
     return resolved;
   };
@@ -332,10 +369,20 @@ export function AdvancedConflictResolver({
 
   const applyAllResolutions = useCallback(() => {
     if (onResolveConflicts) {
-      const resolutionArray = Array.from(resolutions.values());
+      const resolutionArray: ConflictResolution[] = Array.from(
+        resolutions.values(),
+      ).map((r) => ({
+        employee_id: conflicts.find((c) => c.id === r.conflict_id)?.employee_id || "",
+        salary_month:
+          conflicts.find((c) => c.id === r.conflict_id)?.salary_month || "",
+        resolved_data: r.resolved_data ?? {},
+        resolution_method: r.resolution_type,
+        conflict_fields:
+          conflicts.find((c) => c.id === r.conflict_id)?.conflict_fields || [],
+      }));
       onResolveConflicts(resolutionArray);
     }
-  }, [resolutions, onResolveConflicts]);
+  }, [resolutions, onResolveConflicts, conflicts]);
 
   const getConflictSeverity = (conflict: ConflictRecord) => {
     const criticalFields = [
@@ -470,7 +517,7 @@ export function AdvancedConflictResolver({
                                       >
                                         <span>{field}:</span>
                                         <span>
-                                          {conflict.existing_data[field]}
+                                          {String(conflict.existing_data[field] ?? "")}
                                         </span>
                                       </div>
                                     ))}
@@ -487,7 +534,7 @@ export function AdvancedConflictResolver({
                                         className="flex justify-between"
                                       >
                                         <span>{field}:</span>
-                                        <span>{conflict.new_data[field]}</span>
+                                        <span>{String(conflict.new_data[field] ?? "")}</span>
                                       </div>
                                     ))}
                                   </div>
@@ -571,7 +618,7 @@ export function AdvancedConflictResolver({
                     <Label>Action</Label>
                     <Select
                       value={customRule.action}
-                      onValueChange={(value: string) =>
+                      onValueChange={(value: RuleAction) =>
                         setCustomRule((prev) => ({ ...prev, action: value }))
                       }
                     >

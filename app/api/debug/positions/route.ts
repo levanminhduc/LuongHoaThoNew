@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
               employee_id: emp.employee_id,
               full_name: emp.full_name,
               department: emp.department,
+              chuc_vu: emp.chuc_vu,
             });
           }
           return acc;

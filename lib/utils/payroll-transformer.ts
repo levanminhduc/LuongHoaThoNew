@@ -65,10 +65,32 @@ interface PayrollRecord {
   // Lương thực nhận
   tien_luong_thuc_nhan_cuoi_ky?: number;
 
+  // Các trường mới cho T13
+  chi_dot_1_13?: number;
+  chi_dot_2_13?: number;
+  tong_luong_13?: number;
+  so_thang_chia_13?: number;
+  tong_sp_12_thang?: number;
+
+  // Chi tiết 12 tháng T13
+  t13_thang_01?: number;
+  t13_thang_02?: number;
+  t13_thang_03?: number;
+  t13_thang_04?: number;
+  t13_thang_05?: number;
+  t13_thang_06?: number;
+  t13_thang_07?: number;
+  t13_thang_08?: number;
+  t13_thang_09?: number;
+  t13_thang_10?: number;
+  t13_thang_11?: number;
+  t13_thang_12?: number;
+
   // Thông tin ký nhận
   is_signed: boolean;
   signed_at: string | null;
   signed_by_name?: string;
+  payroll_type?: 'monthly' | 't13';
 
   // Employee relationship
   employees: {
@@ -91,6 +113,28 @@ interface PayrollResult {
   deductions: number;
   net_salary: number;
   source_file: string;
+  payroll_type?: "monthly" | "t13";
+
+  // T13 summary fields
+  chi_dot_1_13?: number;
+  chi_dot_2_13?: number;
+  tong_luong_13?: number;
+  so_thang_chia_13?: number;
+  tong_sp_12_thang?: number;
+
+  // T13 monthly detail fields
+  t13_thang_01?: number;
+  t13_thang_02?: number;
+  t13_thang_03?: number;
+  t13_thang_04?: number;
+  t13_thang_05?: number;
+  t13_thang_06?: number;
+  t13_thang_07?: number;
+  t13_thang_08?: number;
+  t13_thang_09?: number;
+  t13_thang_10?: number;
+  t13_thang_11?: number;
+  t13_thang_12?: number;
 
   // All the same payroll fields as PayrollRecord
   he_so_lam_viec?: number;
@@ -162,12 +206,32 @@ export function transformPayrollRecordToResult(
     cccd: "", // Not available in PayrollRecord, will be empty
     position: payrollRecord.employees?.chuc_vu || "",
     salary_month: payrollRecord.salary_month,
+    payroll_type: payrollRecord.payroll_type,
 
     // Calculated summary values
     total_income: totalIncome,
     deductions: deductions,
     net_salary: netSalary,
     source_file: "Supervisor Dashboard", // Indicate source
+
+    // T13 fields mapping
+    chi_dot_1_13: payrollRecord.chi_dot_1_13,
+    chi_dot_2_13: payrollRecord.chi_dot_2_13,
+    tong_luong_13: payrollRecord.tong_luong_13,
+    so_thang_chia_13: payrollRecord.so_thang_chia_13,
+    tong_sp_12_thang: payrollRecord.tong_sp_12_thang,
+    t13_thang_01: payrollRecord.t13_thang_01,
+    t13_thang_02: payrollRecord.t13_thang_02,
+    t13_thang_03: payrollRecord.t13_thang_03,
+    t13_thang_04: payrollRecord.t13_thang_04,
+    t13_thang_05: payrollRecord.t13_thang_05,
+    t13_thang_06: payrollRecord.t13_thang_06,
+    t13_thang_07: payrollRecord.t13_thang_07,
+    t13_thang_08: payrollRecord.t13_thang_08,
+    t13_thang_09: payrollRecord.t13_thang_09,
+    t13_thang_10: payrollRecord.t13_thang_10,
+    t13_thang_11: payrollRecord.t13_thang_11,
+    t13_thang_12: payrollRecord.t13_thang_12,
 
     // Copy all payroll detail fields
     he_so_lam_viec: payrollRecord.he_so_lam_viec,

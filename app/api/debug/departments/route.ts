@@ -123,7 +123,14 @@ export async function GET(request: NextRequest) {
         },
         {} as Record<
           string,
-          { managers: number; supervisors: number; employees: number }
+          {
+            total: number;
+            active: number;
+            inactive: number;
+            managers: number;
+            supervisors: number;
+            employees: number;
+          }
         >,
       ) || {};
 

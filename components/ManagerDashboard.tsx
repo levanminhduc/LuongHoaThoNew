@@ -41,6 +41,7 @@ import {
 import { DepartmentDetailModalRefactored } from "./department";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
+import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
 import {
   transformPayrollRecordToResult,
   type PayrollResult,
@@ -109,11 +110,14 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
 
   // Payroll Detail Modal state (from payroll tab)
   const [showPayrollModal, setShowPayrollModal] = useState(false);
+  const [showPayrollModalT13, setShowPayrollModalT13] = useState(false);
   const [selectedPayrollData, setSelectedPayrollData] =
     useState<PayrollResult | null>(null);
 
   // Payroll Detail Modal state (from department detail modal)
   const [showDepartmentPayrollModal, setShowDepartmentPayrollModal] =
+    useState(false);
+  const [showDepartmentPayrollModalT13, setShowDepartmentPayrollModalT13] =
     useState(false);
   const [selectedDepartmentPayrollData, setSelectedDepartmentPayrollData] =
     useState<PayrollResult | null>(null);
@@ -343,14 +347,22 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
       // Set source file to indicate Manager Dashboard
       payrollResult.source_file = "Manager Dashboard";
       setSelectedPayrollData(payrollResult);
-      setShowPayrollModal(true);
+      if (payrollResult.payroll_type === 't13') {
+        setShowPayrollModalT13(true);
+      } else {
+        setShowPayrollModal(true);
+      }
     }
   };
 
   const handleViewEmployeeFromDepartment = (payrollData: PayrollResult) => {
     // Handle payroll detail modal from department detail modal
     setSelectedDepartmentPayrollData(payrollData);
-    setShowDepartmentPayrollModal(true);
+    if (payrollData.payroll_type === 't13') {
+      setShowDepartmentPayrollModalT13(true);
+    } else {
+      setShowDepartmentPayrollModal(true);
+    }
   };
 
   const totalStats = useMemo(
@@ -519,22 +531,25 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
       </div>
 
       <Tabs defaultValue="departments" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
+        <TabsList className="flex flex-wrap w-full h-auto gap-2 bg-muted p-1">
           <TabsTrigger
             value="overview"
-            className="text-xs sm:text-sm px-2 py-2"
+            className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
             <span className="hidden sm:inline">Tổng Quan</span>
             <span className="sm:hidden">Tổng Quan</span>
           </TabsTrigger>
           <TabsTrigger
             value="departments"
-            className="text-xs sm:text-sm px-2 py-2"
+            className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
             <span className="hidden sm:inline">Chi Tiết Các Bộ Phận</span>
             <span className="sm:hidden">Departments</span>
           </TabsTrigger>
-          <TabsTrigger value="payroll" className="text-xs sm:text-sm px-2 py-2">
+          <TabsTrigger 
+            value="payroll" 
+            className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
             <span className="hidden sm:inline">Dữ Liệu Lương</span>
             <span className="sm:hidden">Lương</span>
           </TabsTrigger>
@@ -552,35 +567,33 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer
-                  width="100%"
-                  height={250}
-                  className="sm:h-[300px]"
-                >
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="name"
-                      fontSize={12}
-                      tick={{ fontSize: 10 }}
-                      className="sm:text-sm"
-                    />
-                    <YAxis
-                      fontSize={12}
-                      tick={{ fontSize: 10 }}
-                      className="sm:text-sm"
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        fontSize: "12px",
-                        padding: "8px",
-                        borderRadius: "6px",
-                      }}
-                    />
-                    <Bar dataKey="employees" fill="#8884d8" name="Nhân viên" />
-                    <Bar dataKey="signed" fill="#82ca9d" name="Đã ký" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-[220px] sm:h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="name"
+                        fontSize={12}
+                        tick={{ fontSize: 10 }}
+                        className="sm:text-sm"
+                      />
+                      <YAxis
+                        fontSize={12}
+                        tick={{ fontSize: 10 }}
+                        className="sm:text-sm"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          fontSize: "12px",
+                          padding: "8px",
+                          borderRadius: "6px",
+                        }}
+                      />
+                      <Bar dataKey="employees" fill="#8884d8" name="Nhân viên" />
+                      <Bar dataKey="signed" fill="#82ca9d" name="Đã ký" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
 
@@ -594,44 +607,42 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer
-                  width="100%"
-                  height={250}
-                  className="sm:h-[300px]"
-                >
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percentage }) =>
-                        `${name}: ${percentage}%`
-                      }
-                      outerRadius={60}
-                      className="sm:outerRadius-80"
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {pieData.map((_, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number) =>
-                        `${(value / 1000000).toFixed(1)}M VND`
-                      }
-                      contentStyle={{
-                        fontSize: "12px",
-                        padding: "8px",
-                        borderRadius: "6px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="h-[220px] sm:h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percentage }) =>
+                          `${name}: ${percentage}%`
+                        }
+                        outerRadius={60}
+                        className="sm:outerRadius-80"
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {pieData.map((_, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) =>
+                          `${(value / 1000000).toFixed(1)}M VND`
+                        }
+                        contentStyle={{
+                          fontSize: "12px",
+                          padding: "8px",
+                          borderRadius: "6px",
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -787,8 +798,8 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Mobile Card Layout */}
-                <div className="block sm:hidden space-y-3">
+                {/* Mobile Card Layout - Show on screens smaller than lg */}
+                <div className="block lg:hidden space-y-3">
                   {payrollData.map((payroll) => (
                     <Card key={payroll.id} className="p-4">
                       <div className="space-y-2">
@@ -816,9 +827,9 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                               onClick={() =>
                                 handleViewEmployee(payroll.employee_id)
                               }
-                              className="h-8 w-8 p-0 touch-manipulation"
+                              className="h-11 w-11 sm:h-8 sm:w-8 p-0 touch-manipulation"
                             >
-                              <Eye className="h-3 w-3" />
+                              <Eye className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -857,8 +868,8 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                   ))}
                 </div>
 
-                {/* Desktop Table Layout */}
-                <div className="hidden sm:block overflow-x-auto">
+                {/* Desktop Table Layout - Show on lg screens and up */}
+                <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
@@ -954,26 +965,46 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
 
       {/* Payroll Detail Modal (from payroll tab) */}
       {selectedPayrollData && (
-        <PayrollDetailModal
-          isOpen={showPayrollModal}
-          onClose={() => {
-            setShowPayrollModal(false);
-            setSelectedPayrollData(null);
-          }}
-          payrollData={selectedPayrollData}
-        />
+        <>
+          <PayrollDetailModal
+            isOpen={showPayrollModal}
+            onClose={() => {
+              setShowPayrollModal(false);
+              setSelectedPayrollData(null);
+            }}
+            payrollData={selectedPayrollData}
+          />
+          <PayrollDetailModalT13
+            isOpen={showPayrollModalT13}
+            onClose={() => {
+              setShowPayrollModalT13(false);
+              setSelectedPayrollData(null);
+            }}
+            payrollData={selectedPayrollData}
+          />
+        </>
       )}
 
       {/* Payroll Detail Modal (from department detail modal) */}
       {selectedDepartmentPayrollData && (
-        <PayrollDetailModal
-          isOpen={showDepartmentPayrollModal}
-          onClose={() => {
-            setShowDepartmentPayrollModal(false);
-            setSelectedDepartmentPayrollData(null);
-          }}
-          payrollData={selectedDepartmentPayrollData}
-        />
+        <>
+          <PayrollDetailModal
+            isOpen={showDepartmentPayrollModal}
+            onClose={() => {
+              setShowDepartmentPayrollModal(false);
+              setSelectedDepartmentPayrollData(null);
+            }}
+            payrollData={selectedDepartmentPayrollData}
+          />
+          <PayrollDetailModalT13
+            isOpen={showDepartmentPayrollModalT13}
+            onClose={() => {
+              setShowDepartmentPayrollModalT13(false);
+              setSelectedDepartmentPayrollData(null);
+            }}
+            payrollData={selectedDepartmentPayrollData}
+          />
+        </>
       )}
     </div>
   );

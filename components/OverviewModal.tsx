@@ -50,6 +50,7 @@ import { type JWTPayload } from "@/lib/auth";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { DepartmentDetailModalRefactored } from "./department";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
+import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
 import {
   transformPayrollRecordToResult,
   type PayrollResult,
@@ -106,6 +107,8 @@ export default function OverviewModal({
 
   // Payroll Detail Modal state (from department detail modal)
   const [showDepartmentPayrollModal, setShowDepartmentPayrollModal] =
+    useState(false);
+  const [showDepartmentPayrollModalT13, setShowDepartmentPayrollModalT13] =
     useState(false);
   const [selectedDepartmentPayrollData, setSelectedDepartmentPayrollData] =
     useState<PayrollResult | null>(null);
@@ -201,7 +204,13 @@ export default function OverviewModal({
   const handleViewEmployeeFromDepartment = (payrollData: PayrollResult) => {
     // Handle payroll detail modal from department detail modal
     setSelectedDepartmentPayrollData(payrollData);
-    setShowDepartmentPayrollModal(true);
+    
+    // Check if it is T13 data
+    if (payrollData.payroll_type === 't13') {
+      setShowDepartmentPayrollModalT13(true);
+    } else {
+      setShowDepartmentPayrollModal(true);
+    }
   };
 
   const totalStats = departments.reduce(
@@ -594,14 +603,24 @@ export default function OverviewModal({
 
       {/* Payroll Detail Modal (from department detail modal) */}
       {selectedDepartmentPayrollData && (
-        <PayrollDetailModal
-          isOpen={showDepartmentPayrollModal}
-          onClose={() => {
-            setShowDepartmentPayrollModal(false);
-            setSelectedDepartmentPayrollData(null);
-          }}
-          payrollData={selectedDepartmentPayrollData}
-        />
+        <>
+          <PayrollDetailModal
+            isOpen={showDepartmentPayrollModal}
+            onClose={() => {
+              setShowDepartmentPayrollModal(false);
+              setSelectedDepartmentPayrollData(null);
+            }}
+            payrollData={selectedDepartmentPayrollData}
+          />
+          <PayrollDetailModalT13
+            isOpen={showDepartmentPayrollModalT13}
+            onClose={() => {
+              setShowDepartmentPayrollModalT13(false);
+              setSelectedDepartmentPayrollData(null);
+            }}
+            payrollData={selectedDepartmentPayrollData}
+          />
+        </>
       )}
     </Dialog>
   );

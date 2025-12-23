@@ -74,7 +74,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     `https://${host}`,
     `http://${host}`,
     process.env.NEXT_PUBLIC_APP_URL,
-  ].filter(Boolean);
+  ].filter((v): v is string => Boolean(v));
 
   const isValidOrigin = origin && allowedOrigins.includes(origin);
   const isValidReferer =

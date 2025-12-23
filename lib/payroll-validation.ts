@@ -184,8 +184,9 @@ export class PayrollValidator {
   ): void {
     // Validate salary month format (YYYY-MM)
     if (data.salary_month) {
+      const salaryMonth = String(data.salary_month);
       const monthPattern = /^\d{4}-\d{2}$/;
-      if (!monthPattern.test(data.salary_month)) {
+      if (!monthPattern.test(salaryMonth)) {
         result.errors.push(
           ApiErrorHandler.createValidationError(
             "salary_month",
@@ -198,7 +199,7 @@ export class PayrollValidator {
         );
       } else {
         // Validate month range
-        const [year, month] = data.salary_month.split("-").map(Number);
+        const [year, month] = salaryMonth.split("-").map(Number);
         if (month < 1 || month > 12) {
           result.errors.push(
             ApiErrorHandler.createValidationError(
@@ -231,8 +232,9 @@ export class PayrollValidator {
 
     // Validate employee ID format
     if (data.employee_id) {
+      const employeeId = String(data.employee_id);
       const empIdPattern = /^[A-Z0-9]{3,20}$/;
-      if (!empIdPattern.test(data.employee_id)) {
+      if (!empIdPattern.test(employeeId)) {
         result.warnings.push(
           ApiErrorHandler.createValidationError(
             "employee_id",

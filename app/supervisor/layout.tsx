@@ -8,7 +8,7 @@ import {
 } from "@/components/shared/role-sidebar";
 import { RoleHeader } from "@/components/shared/role-header";
 import { NavigationProgress } from "@/components/admin/navigation-progress";
-import { LayoutDashboard, Users, FileSpreadsheet } from "lucide-react";
+import { LayoutDashboard, Users, FileSpreadsheet, Gift } from "lucide-react";
 
 const EXCLUDED_PATHS = ["/supervisor/login"];
 
@@ -31,6 +31,11 @@ const navGroups: RoleNavGroup[] = [
         title: "Bảng Lương Tổ",
         icon: FileSpreadsheet,
         href: "/supervisor/dashboard",
+      },
+      {
+        title: "Lương Tháng 13",
+        icon: Gift,
+        href: "/supervisor/dashboard?tab=t13",
       },
     ],
   },

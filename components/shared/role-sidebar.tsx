@@ -111,9 +111,9 @@ export function RoleSidebar({
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => (
+                {group.items.map((item, itemIndex) => (
                   <NavMenuItem
-                    key={item.href}
+                    key={`${item.href}-${item.title}-${itemIndex}`}
                     item={item}
                     isActive={isActive(item.href)}
                     onNavigate={handleNavigate}

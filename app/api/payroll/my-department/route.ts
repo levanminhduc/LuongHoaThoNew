@@ -31,8 +31,14 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month");
     const search = searchParams.get("search");
     const payrollType = searchParams.get("payroll_type") || "monthly";
+    const year = searchParams.get("year") || new Date().getFullYear().toString();
 
     const offset = (page - 1) * limit;
+
+    // Determine salary_month based on payroll type
+    // T13: salary_month = 'YYYY-13' (e.g., '2025-13')
+    // Monthly: salary_month = 'YYYY-MM' (e.g., '2025-01')
+    const salaryMonthFilter = payrollType === "t13" ? `${year}-13` : month;
 
     let query = supabase
       .from("payrolls")
@@ -49,14 +55,9 @@ export async function GET(request: NextRequest) {
       )
       .eq("employees.department", auth.user.department);
 
-    if (payrollType === "t13") {
-      query = query.eq("payroll_type", "t13");
-    } else {
-      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-    }
-
-    if (month) {
-      query = query.eq("salary_month", month);
+    // Apply salary_month filter
+    if (salaryMonthFilter) {
+      query = query.eq("salary_month", salaryMonthFilter);
     }
 
     if (search) {
@@ -65,17 +66,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Count query with same salary_month filter
     let countQuery = supabase
       .from("payrolls")
       .select("*", { count: "exact", head: true })
       .eq("employees.department", auth.user.department);
 
-    if (payrollType === "t13") {
-      countQuery = countQuery.eq("payroll_type", "t13");
-    } else {
-      countQuery = countQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
+    if (salaryMonthFilter) {
+      countQuery = countQuery.eq("salary_month", salaryMonthFilter);
     }
 
     const { count } = await countQuery;

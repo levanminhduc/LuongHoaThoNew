@@ -21,16 +21,24 @@ export async function GET(request: NextRequest) {
     // Get unique batch IDs with counts
     const batchCounts = batchIds?.reduce(
       (
-        acc: Record<string, { batch_id: string; count: number }>,
-        record: { import_batch_id: string },
+        acc: Record<
+          string,
+          {
+            batch_id: string;
+            count: number;
+            latest_created?: string | null;
+            source_file?: string | null;
+          }
+        >,
+        record: { import_batch_id: string; created_at?: string | null; source_file?: string | null },
       ) => {
         const batchId = record.import_batch_id;
         if (!acc[batchId]) {
           acc[batchId] = {
             batch_id: batchId,
             count: 0,
-            latest_created: record.created_at,
-            source_file: record.source_file,
+            latest_created: record.created_at ?? null,
+            source_file: record.source_file ?? null,
           };
         }
         acc[batchId].count++;

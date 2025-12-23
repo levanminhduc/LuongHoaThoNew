@@ -92,6 +92,25 @@ interface PayrollRecord {
   signature_ip?: string;
   signature_device?: string;
 
+  // T13 fields
+  tong_luong_13?: number;
+  chi_dot_1_13?: number;
+  chi_dot_2_13?: number;
+  so_thang_chia_13?: number;
+  tong_sp_12_thang?: number;
+  t13_thang_01?: number;
+  t13_thang_02?: number;
+  t13_thang_03?: number;
+  t13_thang_04?: number;
+  t13_thang_05?: number;
+  t13_thang_06?: number;
+  t13_thang_07?: number;
+  t13_thang_08?: number;
+  t13_thang_09?: number;
+  t13_thang_10?: number;
+  t13_thang_11?: number;
+  t13_thang_12?: number;
+
   employees: {
     employee_id: string;
     full_name: string;
@@ -102,6 +121,7 @@ interface PayrollRecord {
 
 interface EmployeeTableProps {
   payrolls: PayrollRecord[];
+  payrollType?: "monthly" | "t13";
   onFiltersChange?: (filters: {
     searchTerm: string;
     statusFilter: string;
@@ -113,6 +133,7 @@ interface EmployeeTableProps {
 
 export default function EmployeeTable({
   payrolls,
+  payrollType = "monthly",
   onFiltersChange,
   onViewEmployee,
 }: EmployeeTableProps) {
@@ -169,8 +190,10 @@ export default function EmployeeTable({
           bValue = b.employee_id;
           break;
         case "salary":
-          aValue = a.tien_luong_thuc_nhan_cuoi_ky;
-          bValue = b.tien_luong_thuc_nhan_cuoi_ky;
+          // Use T13 salary if available and higher than monthly salary (simple heuristic for T13 mode)
+          // Or just use the standard field which should be populated correctly based on record type
+          aValue = a.tong_luong_13 || a.tien_luong_thuc_nhan_cuoi_ky;
+          bValue = b.tong_luong_13 || b.tien_luong_thuc_nhan_cuoi_ky;
           break;
         case "position":
           aValue = a.employees?.chuc_vu || "";
@@ -290,27 +313,27 @@ export default function EmployeeTable({
           paginatedPayrolls.map((payroll, index) => (
             <Card
               key={payroll.id}
-              className="p-4 hover:shadow-md transition-shadow duration-200"
+              className="hover:shadow-md transition-shadow duration-200 overflow-hidden"
             >
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
+              <div className="p-3 space-y-3">
+                <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded flex-shrink-0">
                         #{(currentPage - 1) * pageSize + index + 1}
                       </span>
                       <h4 className="font-semibold text-sm truncate">
                         {payroll.employees?.full_name}
                       </h4>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Mã: {payroll.employee_id}
+                    <p className="text-xs text-muted-foreground mt-1 font-mono">
+                      {payroll.employee_id}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge
                       variant={payroll.is_signed ? "default" : "secondary"}
-                      className="text-xs"
+                      className="text-[10px] px-1.5 h-5"
                     >
                       {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                     </Badge>
@@ -322,84 +345,125 @@ export default function EmployeeTable({
                         className="h-8 w-8 p-0 touch-manipulation"
                         title="Xem chi tiết lương"
                       >
-                        <Eye className="h-3 w-3" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="text-muted-foreground">Chức vụ:</span>
-                    <p className="font-medium mt-1">
-                      {payroll.employees?.chuc_vu}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Ngày công:</span>
-                    <p className="font-medium mt-1">
-                      {payroll.ngay_cong_trong_gio || 0} ngày
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">
-                      Thưởng Chuyên Cần:
-                    </span>
-                    <p className="font-medium mt-1">
-                      {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Hệ số LV:</span>
-                    <p className="font-medium mt-1">
-                      {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                    </p>
-                  </div>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs bg-muted/30 p-2 rounded-md">
+                  {payrollType === "monthly" ? (
+                    <>
+                      <div className="space-y-0.5">
+                        <span className="text-muted-foreground">Chức vụ</span>
+                        <p className="font-medium truncate">{payroll.employees?.chuc_vu}</p>
+                      </div>
+                      <div className="space-y-0.5 text-right">
+                        <span className="text-muted-foreground">Ngày công</span>
+                        <p className="font-medium">{payroll.ngay_cong_trong_gio || 0}</p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-muted-foreground">Thưởng CC</span>
+                        <p className="font-medium">
+                          {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5 text-right">
+                        <span className="text-muted-foreground">Hệ số LV</span>
+                        <p className="font-medium">{(payroll.he_so_lam_viec || 0).toFixed(2)}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-0.5">
+                        <span className="text-muted-foreground">Số Tháng</span>
+                        <p className="font-medium">{payroll.so_thang_chia_13 || 0}</p>
+                      </div>
+                      <div className="space-y-0.5 text-right">
+                        <span className="text-muted-foreground">Tổng SP 12T</span>
+                        <p className="font-medium">{formatCurrency(payroll.tong_sp_12_thang || 0)}</p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-muted-foreground">Chi Đợt 1</span>
+                        <p className="font-medium">{formatCurrency(payroll.chi_dot_1_13 || 0)}</p>
+                      </div>
+                      <div className="space-y-0.5 text-right">
+                        <span className="text-muted-foreground">Chi Đợt 2</span>
+                        <p className="font-medium">{formatCurrency(payroll.chi_dot_2_13 || 0)}</p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <div className="pt-2 border-t">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">
-                      Lương thực nhận:
-                    </span>
-                    <span className="font-semibold text-sm">
-                      {formatCurrency(payroll.tien_luong_thuc_nhan_cuoi_ky)}
-                    </span>
-                  </div>
+                <div className="pt-2 border-t flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">
+                    {payrollType === "t13"
+                      ? "Tổng Lương T13:"
+                      : "Thực nhận:"}
+                  </span>
+                  <span className="font-bold text-sm text-primary">
+                    {formatCurrency(
+                      payrollType === "t13"
+                        ? payroll.tong_luong_13 || 0
+                        : payroll.tien_luong_thuc_nhan_cuoi_ky,
+                    )}
+                  </span>
                 </div>
               </div>
             </Card>
           ))
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg">
             Không có dữ liệu
           </div>
         )}
       </div>
 
       {/* Desktop Table Layout */}
-      <Card className="hidden sm:block">
+      <Card className="hidden sm:block overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-max">
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center w-16">STT</TableHead>
                   <TableHead className="min-w-[100px]">Mã NV</TableHead>
                   <TableHead className="min-w-[150px]">Họ Tên</TableHead>
-                  <TableHead className="min-w-[120px]">Chức Vụ</TableHead>
-                  <TableHead className="text-center min-w-[80px]">
-                    Ngày Công
-                  </TableHead>
-                  <TableHead className="text-right min-w-[120px]">
-                    Thưởng Chuyên Cần
-                  </TableHead>
-                  <TableHead className="text-center min-w-[80px]">
-                    Hệ Số LV
-                  </TableHead>
-                  <TableHead className="text-right min-w-[140px]">
-                    Thực Nhận
-                  </TableHead>
+                  {payrollType === "monthly" ? (
+                    <>
+                      <TableHead className="min-w-[120px]">Chức Vụ</TableHead>
+                      <TableHead className="text-center min-w-[80px]">
+                        Ngày Công
+                      </TableHead>
+                      <TableHead className="text-right min-w-[120px]">
+                        Thưởng Chuyên Cần
+                      </TableHead>
+                      <TableHead className="text-center min-w-[80px]">
+                        Hệ Số LV
+                      </TableHead>
+                      <TableHead className="text-right min-w-[140px]">
+                        Lương Thực Lĩnh
+                      </TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead className="text-center min-w-[80px]">
+                        Số Tháng
+                      </TableHead>
+                      <TableHead className="text-right min-w-[140px]">
+                        Tổng SP 12 Tháng
+                      </TableHead>
+                      <TableHead className="text-right min-w-[120px]">
+                        Chi Đợt 1
+                      </TableHead>
+                      <TableHead className="text-right min-w-[120px]">
+                        Chi Đợt 2
+                      </TableHead>
+                      <TableHead className="text-right min-w-[140px]">
+                        Tổng Lương T13
+                      </TableHead>
+                    </>
+                  )}
                   <TableHead className="text-center min-w-[100px]">
                     Trạng Thái
                   </TableHead>
@@ -423,21 +487,45 @@ export default function EmployeeTable({
                       <TableCell className="font-medium">
                         {payroll.employees?.full_name}
                       </TableCell>
-                      <TableCell>{payroll.employees?.chuc_vu}</TableCell>
-                      <TableCell className="text-center">
-                        {payroll.ngay_cong_trong_gio || 0}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(
-                          payroll.tien_khen_thuong_chuyen_can || 0,
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(payroll.tien_luong_thuc_nhan_cuoi_ky)}
-                      </TableCell>
+                      {payrollType === "monthly" ? (
+                        <>
+                          <TableCell>{payroll.employees?.chuc_vu}</TableCell>
+                          <TableCell className="text-center">
+                            {payroll.ngay_cong_trong_gio || 0}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(
+                              payroll.tien_khen_thuong_chuyen_can || 0,
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center font-medium">
+                            {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {formatCurrency(
+                              payroll.tien_luong_thuc_nhan_cuoi_ky,
+                            )}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell className="text-center font-medium">
+                            {payroll.so_thang_chia_13 || 0}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(payroll.tong_sp_12_thang || 0)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(payroll.chi_dot_1_13 || 0)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(payroll.chi_dot_2_13 || 0)}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {formatCurrency(payroll.tong_luong_13 || 0)}
+                          </TableCell>
+                        </>
+                      )}
                       <TableCell className="text-center">
                         <Badge
                           variant={payroll.is_signed ? "default" : "secondary"}

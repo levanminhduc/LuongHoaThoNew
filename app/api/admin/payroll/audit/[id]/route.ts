@@ -7,18 +7,22 @@ const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
 
 interface AuditLog {
+  id: number;
   changed_at: string;
   change_reason: string;
   changed_by: string;
+  change_ip?: string | null;
   field_name: string;
   old_value: string | null;
   new_value: string | null;
 }
 
 interface AuditGroup {
+  id: number;
   changed_at: string;
   change_reason: string;
   changed_by: string;
+  change_ip?: string | null;
   changes: Array<{
     field_name: string;
     old_value: string | null;

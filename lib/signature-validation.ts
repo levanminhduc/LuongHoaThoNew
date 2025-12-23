@@ -1,11 +1,10 @@
 import { z } from "zod";
-
-export const SignatureTypeSchema = z.enum(
-  ["giam_doc", "ke_toan", "nguoi_lap_bieu"],
-  {
-    errorMap: () => ({ message: "Loại chữ ký không hợp lệ" }),
-  },
-);
+ 
+export const SignatureTypeSchema = z.enum([
+  "giam_doc",
+  "ke_toan",
+  "nguoi_lap_bieu",
+]);
 
 export const MonthSchema = z.string().regex(/^\d{4}-\d{2}$/, {
   message: "Định dạng tháng không hợp lệ (YYYY-MM)",
@@ -101,7 +100,7 @@ export function validateManagementSignatureRequest(
     return ManagementSignatureRequestSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       throw new Error(firstError.message);
     }
     throw error;
@@ -115,7 +114,7 @@ export function validateSignatureHistoryQuery(
     return SignatureHistoryQuerySchema.parse(query);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       throw new Error(firstError.message);
     }
     throw error;
@@ -129,7 +128,7 @@ export function validateSignatureStatusParams(
     return SignatureStatusParamsSchema.parse(params);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       throw new Error(firstError.message);
     }
     throw error;
@@ -143,7 +142,7 @@ export function validateSignatureProgressParams(
     return SignatureProgressParamsSchema.parse(params);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       throw new Error(firstError.message);
     }
     throw error;
@@ -177,7 +176,7 @@ export function validateEmployeeId(employeeId: unknown): string {
     return EmployeeIdSchema.parse(employeeId);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       throw new Error(firstError.message);
     }
     throw error;

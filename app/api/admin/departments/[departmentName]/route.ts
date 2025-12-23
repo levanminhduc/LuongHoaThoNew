@@ -25,8 +25,9 @@ export async function GET(
     }
 
     // Only management roles can access this endpoint
+    // Includes: giam_doc, ke_toan, nguoi_lap_bieu, truong_phong, to_truong
     if (
-      !["giam_doc", "ke_toan", "nguoi_lap_bieu", "truong_phong"].includes(
+      !["giam_doc", "ke_toan", "nguoi_lap_bieu", "truong_phong", "to_truong"].includes(
         auth.user.role,
       )
     ) {
@@ -43,10 +44,23 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const month =
       searchParams.get("month") || new Date().toISOString().slice(0, 7);
+    const payrollType = searchParams.get("payroll_type") as 'monthly' | 't13' | null;
+    const year = searchParams.get("year") || new Date().getFullYear().toString();
 
     // Check if user has permission to access this department
-    const allowedDepartments = auth.user.allowed_departments || [];
-    if (!allowedDepartments.includes(departmentName)) {
+    // For to_truong: use auth.user.department
+    // For other management roles: use allowed_departments
+    let hasAccess = false;
+    if (auth.user.role === "to_truong") {
+      // to_truong can only access their own department
+      hasAccess = auth.user.department === departmentName;
+    } else {
+      // Other management roles use allowed_departments
+      const allowedDepartments = auth.user.allowed_departments || [];
+      hasAccess = allowedDepartments.includes(departmentName);
+    }
+    
+    if (!hasAccess) {
       return NextResponse.json(
         {
           error: "Không có quyền truy cập department này",
@@ -82,13 +96,20 @@ export async function GET(
     // Get payroll data for the department in the specified month
     // Query payroll data với employees join
     // Sử dụng order by created_at thay vì employees(full_name) vì Supabase không hỗ trợ ordering by nested relationship fields
-    const { data: payrolls, error: payrollsError } = await supabase
+    
+    // Determine salary_month based on payroll type
+    // T13: salary_month = 'YYYY-13' (e.g., '2025-13')
+    // Monthly: salary_month = 'YYYY-MM' (e.g., '2025-01')
+    const salaryMonthFilter = payrollType === "t13" ? `${year}-13` : month;
+    
+    let payrollQuery = supabase
       .from("payrolls")
       .select(
         `
         id,
         employee_id,
         salary_month,
+        payroll_type,
         source_file,
         import_batch_id,
         import_status,
@@ -139,6 +160,23 @@ export async function GET(
         signature_device,
         created_at,
         updated_at,
+        chi_dot_1_13,
+        chi_dot_2_13,
+        tong_luong_13,
+        so_thang_chia_13,
+        tong_sp_12_thang,
+        t13_thang_01,
+        t13_thang_02,
+        t13_thang_03,
+        t13_thang_04,
+        t13_thang_05,
+        t13_thang_06,
+        t13_thang_07,
+        t13_thang_08,
+        t13_thang_09,
+        t13_thang_10,
+        t13_thang_11,
+        t13_thang_12,
         employees!payrolls_employee_id_fkey!inner(
           employee_id,
           full_name,
@@ -148,8 +186,11 @@ export async function GET(
       `,
       )
       .eq("employees.department", departmentName)
-      .eq("salary_month", month)
-      .order("created_at", { ascending: false });
+      .eq("salary_month", salaryMonthFilter);
+
+    // Note: We no longer filter by payroll_type since T13 is identified by salary_month = 'YYYY-13'
+
+    const { data: payrolls, error: payrollsError } = await payrollQuery.order("created_at", { ascending: false });
 
     if (payrollsError) {
       console.error("Payrolls query error:", payrollsError);
@@ -171,24 +212,41 @@ export async function GET(
       );
     }
 
-    // Get historical payroll data for trends (last 6 months)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    const startMonth = sixMonthsAgo.toISOString().slice(0, 7);
-
-    const { data: historicalPayrolls, error: historicalError } = await supabase
+    // Get historical payroll data for trends
+    // For T13: Get last 5 years of T13 data (YYYY-13)
+    // For monthly: Get last 6 months of data
+    let historicalQuery = supabase
       .from("payrolls")
       .select(
         `
         salary_month,
         tien_luong_thuc_nhan_cuoi_ky,
         is_signed,
+        payroll_type,
         employees!payrolls_employee_id_fkey!inner(department)
       `,
       )
-      .eq("employees.department", departmentName)
-      .gte("salary_month", startMonth)
-      .order("salary_month", { ascending: true });
+      .eq("employees.department", departmentName);
+
+    if (payrollType === "t13") {
+      // For T13: Get data for last 5 years (e.g., 2021-13, 2022-13, 2023-13, 2024-13, 2025-13)
+      const currentYear = parseInt(year);
+      const t13Months = [];
+      for (let i = 0; i < 5; i++) {
+        t13Months.push(`${currentYear - i}-13`);
+      }
+      historicalQuery = historicalQuery.in("salary_month", t13Months);
+    } else {
+      // For monthly: Get last 6 months
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const startMonth = sixMonthsAgo.toISOString().slice(0, 7);
+      historicalQuery = historicalQuery
+        .gte("salary_month", startMonth)
+        .not("salary_month", "like", "%-13"); // Exclude T13 records
+    }
+
+    const { data: historicalPayrolls, error: historicalError } = await historicalQuery.order("salary_month", { ascending: true });
 
     if (historicalError) {
       console.error("Historical payrolls query error:", historicalError);

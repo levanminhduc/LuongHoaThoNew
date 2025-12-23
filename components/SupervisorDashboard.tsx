@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -38,9 +39,12 @@ import {
   Calendar,
   Download,
   Loader2,
+  Gift,
 } from "lucide-react";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
+import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
+import DepartmentDetailModalRefactored from "@/components/department/DepartmentDetailModalRefactored";
 import {
   transformPayrollRecordToResult,
   type PayrollResult,
@@ -145,6 +149,7 @@ interface SupervisorDashboardProps {
 export default function SupervisorDashboard({
   user,
 }: SupervisorDashboardProps) {
+  const searchParams = useSearchParams();
   const [payrollData, setPayrollData] = useState<PayrollRecord[]>([]);
   const [departmentStats, setDepartmentStats] =
     useState<DepartmentStats | null>(null);
@@ -164,11 +169,24 @@ export default function SupervisorDashboard({
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [selectedPayrollData, setSelectedPayrollData] =
     useState<PayrollResult | null>(null);
+  
+  // State for T13 modal
+  const [showT13Modal, setShowT13Modal] = useState(false);
+  const [t13PayrollData, setT13PayrollData] = useState<PayrollResult | null>(null);
+  const [showT13PayrollDetail, setShowT13PayrollDetail] = useState(false);
 
   useEffect(() => {
     loadDepartmentData();
     loadMonthlyTrend();
   }, [selectedMonth]);
+
+  // Handle URL query params for T13
+  useEffect(() => {
+    const tab = searchParams?.get("tab");
+    if (tab === "t13") {
+      setShowT13Modal(true);
+    }
+  }, [searchParams]);
 
   const loadDepartmentData = async () => {
     const cachedPayroll = DashboardCache.getCacheData<PayrollRecord[]>(
@@ -314,6 +332,11 @@ export default function SupervisorDashboard({
     }
   };
 
+  const handleViewT13Employee = (payrollResult: PayrollResult) => {
+    setT13PayrollData(payrollResult);
+    setShowT13PayrollDetail(true);
+  };
+
   const handleExportExcel = async (
     exportType: "employees" | "overview" | "trends" = "employees",
   ) => {
@@ -390,7 +413,7 @@ export default function SupervisorDashboard({
             Xin chào, {user.username} | Department: {user.department}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -415,8 +438,17 @@ export default function SupervisorDashboard({
               })}
             </SelectContent>
           </Select>
+          {/* T13 Access Button - cùng hàng với chọn tháng */}
+          <Button
+            onClick={() => setShowT13Modal(true)}
+            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md transition-all hover:shadow-lg"
+          >
+            <Gift className="mr-2 h-4 w-4" />
+            Xem Lương Tháng 13
+          </Button>
         </div>
       </div>
+
       {/* Overview Stats */}
       {departmentStats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -492,22 +524,25 @@ export default function SupervisorDashboard({
       )}
 
       <Tabs defaultValue="employees" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
+        <TabsList className="flex flex-wrap w-full h-auto gap-2 bg-muted p-1">
           <TabsTrigger
             value="overview"
-            className="text-xs sm:text-sm px-2 py-2"
+            className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
             <span className="hidden sm:inline">Tổng Quan</span>
             <span className="sm:hidden">Tổng Quan</span>
           </TabsTrigger>
           <TabsTrigger
             value="employees"
-            className="text-xs sm:text-sm px-2 py-2"
+            className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
             <span className="hidden sm:inline">Danh Sách Nhân Viên</span>
             <span className="sm:hidden">Nhân Viên</span>
           </TabsTrigger>
-          <TabsTrigger value="trends" className="text-xs sm:text-sm px-2 py-2">
+          <TabsTrigger 
+            value="trends" 
+            className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
             <span className="hidden sm:inline">Xu Hướng</span>
             <span className="sm:hidden">Xu Hướng</span>
           </TabsTrigger>
@@ -527,7 +562,7 @@ export default function SupervisorDashboard({
               onClick={() => handleExportExcel("overview")}
               disabled={exportingExcel}
               variant="outline"
-              className="flex items-center gap-2 w-full sm:w-auto h-9 sm:h-8 touch-manipulation"
+              className="flex items-center gap-2 w-full sm:w-auto min-h-[44px] sm:h-9 sm:min-h-0 touch-manipulation"
             >
               {exportingExcel ? (
                 <>
@@ -556,53 +591,51 @@ export default function SupervisorDashboard({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer
-                  width="100%"
-                  height={250}
-                  className="sm:h-[300px]"
-                >
-                  <BarChart
-                    data={[
-                      {
-                        name: "Đã ký",
-                        count: departmentStats?.signedCount || 0,
-                        percentage: parseFloat(
-                          departmentStats?.signedPercentage || "0",
-                        ),
-                      },
-                      {
-                        name: "Chưa ký",
-                        count:
-                          (departmentStats?.totalEmployees || 0) -
-                          (departmentStats?.signedCount || 0),
-                        percentage:
-                          100 -
-                          parseFloat(departmentStats?.signedPercentage || "0"),
-                      },
-                    ]}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="name"
-                      fontSize={12}
-                      tick={{ fontSize: 10 }}
-                      className="sm:text-sm"
-                    />
-                    <YAxis
-                      fontSize={12}
-                      tick={{ fontSize: 10 }}
-                      className="sm:text-sm"
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        fontSize: "12px",
-                        padding: "8px",
-                        borderRadius: "6px",
-                      }}
-                    />
-                    <Bar dataKey="count" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-[220px] sm:h-[320px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          name: "Đã ký",
+                          count: departmentStats?.signedCount || 0,
+                          percentage: parseFloat(
+                            departmentStats?.signedPercentage || "0",
+                          ),
+                        },
+                        {
+                          name: "Chưa ký",
+                          count:
+                            (departmentStats?.totalEmployees || 0) -
+                            (departmentStats?.signedCount || 0),
+                          percentage:
+                            100 -
+                            parseFloat(departmentStats?.signedPercentage || "0"),
+                        },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="name"
+                        fontSize={12}
+                        tick={{ fontSize: 10 }}
+                        className="sm:text-sm"
+                      />
+                      <YAxis
+                        fontSize={12}
+                        tick={{ fontSize: 10 }}
+                        className="sm:text-sm"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          fontSize: "12px",
+                          padding: "8px",
+                          borderRadius: "6px",
+                        }}
+                      />
+                      <Bar dataKey="count" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
 
@@ -667,7 +700,7 @@ export default function SupervisorDashboard({
               <Button
                 onClick={() => handleExportExcel("employees")}
                 disabled={exportingExcel}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto h-9 sm:h-8 touch-manipulation"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto min-h-[44px] sm:h-9 sm:min-h-0 touch-manipulation"
               >
                 {exportingExcel ? (
                   <>
@@ -685,8 +718,8 @@ export default function SupervisorDashboard({
               </Button>
             </CardHeader>
             <CardContent>
-              {/* Mobile Card Layout */}
-              <div className="block sm:hidden space-y-3">
+              {/* Mobile Card Layout - Show on screens smaller than lg */}
+              <div className="block lg:hidden space-y-3">
                 {payrollData.map((payroll, index) => (
                   <Card key={payroll.id} className="p-4">
                     <div className="space-y-3">
@@ -705,9 +738,9 @@ export default function SupervisorDashboard({
                           onClick={() =>
                             handleViewEmployee(payroll.employee_id)
                           }
-                          className="ml-2 h-8 w-8 p-0 touch-manipulation"
+                          className="ml-2 h-11 w-11 sm:h-8 sm:w-8 p-0 touch-manipulation"
                         >
-                          <Eye className="h-3 w-3" />
+                          <Eye className="h-4 w-4" />
                         </Button>
                       </div>
 
@@ -791,8 +824,8 @@ export default function SupervisorDashboard({
                 ))}
               </div>
 
-              {/* Desktop Table Layout */}
-              <div className="hidden sm:block overflow-x-auto">
+              {/* Desktop Table Layout - Show on lg screens and up */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
@@ -901,7 +934,7 @@ export default function SupervisorDashboard({
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h3 className="text-lg font-semibold">Xu Hướng Department</h3>
               <p className="text-sm text-muted-foreground">
@@ -912,7 +945,7 @@ export default function SupervisorDashboard({
               onClick={() => handleExportExcel("trends")}
               disabled={exportingExcel}
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-auto min-h-[44px] sm:h-9 sm:min-h-0 touch-manipulation"
             >
               {exportingExcel ? (
                 <>
@@ -935,21 +968,23 @@ export default function SupervisorDashboard({
                 <CardDescription>6 tháng gần nhất</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="monthLabel" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="signedPercentage"
-                      stroke="#8884d8"
-                      strokeWidth={2}
-                      name="Tỷ lệ ký (%)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="h-[220px] sm:h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={monthlyTrend}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="monthLabel" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="signedPercentage"
+                        stroke="#8884d8"
+                        strokeWidth={2}
+                        name="Tỷ lệ ký (%)"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
 
@@ -959,21 +994,23 @@ export default function SupervisorDashboard({
                 <CardDescription>6 tháng gần nhất (triệu VND)</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="monthLabel" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="totalSalary"
-                      stroke="#82ca9d"
-                      strokeWidth={2}
-                      name="Tổng lương (M VND)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="h-[220px] sm:h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={monthlyTrend}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="monthLabel" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="totalSalary"
+                        stroke="#82ca9d"
+                        strokeWidth={2}
+                        name="Tổng lương (M VND)"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -988,6 +1025,28 @@ export default function SupervisorDashboard({
             setSelectedPayrollData(null);
           }}
           payrollData={selectedPayrollData}
+        />
+      )}
+
+      {/* Department Detail Modal for T13 */}
+      <DepartmentDetailModalRefactored
+        isOpen={showT13Modal}
+        onClose={() => setShowT13Modal(false)}
+        departmentName={user.department}
+        month={selectedMonth}
+        initialPayrollType="t13"
+        onViewEmployee={handleViewT13Employee}
+      />
+
+      {/* T13 Payroll Detail Modal */}
+      {t13PayrollData && (
+        <PayrollDetailModalT13
+          isOpen={showT13PayrollDetail}
+          onClose={() => {
+            setShowT13PayrollDetail(false);
+            setT13PayrollData(null);
+          }}
+          payrollData={t13PayrollData}
         />
       )}
     </div>

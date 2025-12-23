@@ -92,6 +92,9 @@ interface PayrollRecord {
   // Lương thực nhận cuối kỳ
   tien_luong_thuc_nhan_cuoi_ky: number;
 
+  // T13
+  tong_luong_13?: number;
+
   // Thông tin ký
   is_signed: boolean;
   signed_at: string | null;
@@ -155,6 +158,7 @@ interface DepartmentDetailModalProps {
   departmentName: string;
   month: string;
   onViewEmployee?: (payrollData: PayrollResult) => void;
+  initialPayrollType?: "monthly" | "t13";
 }
 
 export default function DepartmentDetailModalRefactored({
@@ -163,6 +167,7 @@ export default function DepartmentDetailModalRefactored({
   departmentName,
   month,
   onViewEmployee,
+  initialPayrollType = "monthly",
 }: DepartmentDetailModalProps) {
   const [departmentData, setDepartmentData] = useState<DepartmentDetail | null>(
     null,
@@ -171,48 +176,78 @@ export default function DepartmentDetailModalRefactored({
   const [error, setError] = useState("");
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState("employees");
+  const [payrollType, setPayrollType] = useState<"monthly" | "t13">(initialPayrollType);
+  // Year state for T13 - extract from month prop or use current year
+  const [t13Year, setT13Year] = useState<string>(() => {
+    // Extract year from month prop (format: YYYY-MM) or use current year
+    return month ? month.substring(0, 4) : new Date().getFullYear().toString();
+  });
 
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab("employees");
+      // Reset payroll type to initial when modal opens if provided, otherwise keep current
+      if (initialPayrollType) {
+        setPayrollType(initialPayrollType);
+      }
+    }
+  }, [isOpen, initialPayrollType]);
+
+  // Effect to reload data when payrollType or t13Year changes while modal is open
   useEffect(() => {
     if (isOpen && departmentName) {
       loadDepartmentDetail();
     }
-    // Reset states when modal opens
-    if (isOpen) {
-      setActiveTab("employees");
+  }, [isOpen, departmentName, month, payrollType, t13Year]);
+
+  // Update t13Year when month prop changes
+  useEffect(() => {
+    if (month) {
+      setT13Year(month.substring(0, 4));
     }
-  }, [isOpen, departmentName, month]);
+  }, [month]);
 
   const loadDepartmentDetail = async (forceRefresh: boolean = false) => {
     setLoading(true);
     setError("");
 
     try {
+      // Create a cache key that includes payrollType and year for T13
+      const cacheKeyMonth = payrollType === "t13" ? `${t13Year}-13` : month;
+      const cacheKey = `${departmentName}_${cacheKeyMonth}_${payrollType}`;
+      
       if (!forceRefresh) {
-        const cachedData = DepartmentCache.getCacheData(departmentName, month);
+        // We need to update cache utility to support custom keys or just append to month
+        // For now using the existing method but appending type to month for cache key purpose
+        // Note: Ideally DepartmentCache should be updated to handle payrollType explicitly
+        const cachedData = DepartmentCache.getCacheData(departmentName, cacheKeyMonth);
         if (cachedData) {
           setDepartmentData(cachedData);
           setLoading(false);
           return;
         }
       } else {
-        DepartmentCache.clearCache(departmentName, month);
+        DepartmentCache.clearCache(departmentName, cacheKeyMonth);
       }
 
       const token = localStorage.getItem("admin_token");
-      const response = await fetch(
-        `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      // Build URL with year parameter for T13
+      const apiUrl = payrollType === "t13"
+        ? `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}&year=${t13Year}`
+        : `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}`;
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (response.ok) {
         const data = await response.json();
         const departmentData = data.department;
 
-        DepartmentCache.setCacheData(departmentName, month, departmentData);
+        // Use correct cache key based on payroll type
+        DepartmentCache.setCacheData(departmentName, cacheKeyMonth, departmentData);
 
         setDepartmentData(departmentData);
       } else {
@@ -234,8 +269,12 @@ export default function DepartmentDetailModalRefactored({
     try {
       const token = localStorage.getItem("admin_token");
 
-      const url = `/api/admin/payroll-export?month=${month}&department=${encodeURIComponent(departmentName)}`;
+      const url = `/api/admin/payroll-export?month=${month}&department=${encodeURIComponent(departmentName)}&payroll_type=${payrollType}`;
       let filename = `department-${departmentName}-${month}`;
+      
+      if (payrollType === 't13') {
+        filename += "-t13";
+      }
 
       if (exportType === "summary") {
         filename += "-summary";
@@ -287,10 +326,13 @@ export default function DepartmentDetailModalRefactored({
     if (payrollRecord && onViewEmployee) {
       // Transform to PayrollResult format and call parent callback
       const payrollResult = transformPayrollRecordToResult(
-        payrollRecord as Record<string, unknown>,
+        payrollRecord as unknown as Parameters<typeof transformPayrollRecordToResult>[0],
       );
       // Set source file to indicate Department Detail
       payrollResult.source_file = "Department Detail";
+      // Add payroll type for proper modal handling downstream
+      payrollResult.payroll_type = payrollType;
+      
       onViewEmployee(payrollResult);
     }
   };
@@ -307,6 +349,43 @@ export default function DepartmentDetailModalRefactored({
               </span>
             </div>
             <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="bg-muted p-1 rounded-lg flex gap-1 mr-2">
+                <Button
+                  variant={payrollType === "monthly" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setPayrollType("monthly")}
+                  className={`h-7 px-3 text-xs ${payrollType === "monthly" ? "bg-white text-primary shadow-sm" : "text-muted-foreground"}`}
+                >
+                  Lương Tháng
+                </Button>
+                <Button
+                  variant={payrollType === "t13" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setPayrollType("t13")}
+                  className={`h-7 px-3 text-xs ${payrollType === "t13" ? "bg-white text-primary shadow-sm" : "text-muted-foreground"}`}
+                >
+                  Lương T13
+                </Button>
+              </div>
+              {/* Year selector for T13 */}
+              {payrollType === "t13" && (
+                <select
+                  value={t13Year}
+                  onChange={(e) => setT13Year(e.target.value)}
+                  className="h-7 px-2 text-xs border rounded-md bg-background"
+                  title="Chọn năm cho lương T13"
+                >
+                  {/* Generate last 5 years */}
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const year = new Date().getFullYear() - i;
+                    return (
+                      <option key={year} value={year.toString()}>
+                        Năm {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -332,7 +411,11 @@ export default function DepartmentDetailModalRefactored({
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>Tháng: {month}</span>
+              <span>
+                {payrollType === "t13"
+                  ? `Lương T13 - Năm ${t13Year}`
+                  : `Tháng: ${month}`}
+              </span>
             </div>
             {error && (
               <Badge variant="destructive" className="text-xs">
@@ -363,8 +446,25 @@ export default function DepartmentDetailModalRefactored({
             <div className="space-y-4 sm:space-y-6">
               {/* Summary Cards */}
               <DepartmentSummaryCards
-                stats={departmentData.stats}
+                stats={(() => {
+                  if (payrollType === "t13") {
+                    const totalSalaryT13 = departmentData.payrolls.reduce(
+                      (sum, p) => sum + (p.tong_luong_13 || 0),
+                      0
+                    );
+                    return {
+                      ...departmentData.stats,
+                      totalSalary: totalSalaryT13,
+                      averageSalary:
+                        departmentData.stats.payrollCount > 0
+                          ? totalSalaryT13 / departmentData.stats.payrollCount
+                          : 0,
+                    };
+                  }
+                  return departmentData.stats;
+                })()}
                 month={month}
+                payrollType={payrollType}
               />
 
               {/* Tabs Content */}
@@ -411,6 +511,7 @@ export default function DepartmentDetailModalRefactored({
                   <EmployeeTable
                     payrolls={departmentData.payrolls}
                     onViewEmployee={handleViewEmployee}
+                    payrollType={payrollType}
                   />
                 </TabsContent>
 

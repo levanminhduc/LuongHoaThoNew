@@ -177,42 +177,45 @@ export default function DirectorDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div className="space-y-4 sm:space-y-6 pb-20 sm:pb-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
             Dashboard Giám Đốc
           </h1>
           <p className="text-sm text-gray-600">Tháng: {selectedMonth}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowOverviewModal(true)}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Xem Tổng Quan
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowUnsignedModal(true)}
-            disabled={!monthStatus}
-            className="border-red-200 hover:bg-red-50"
-          >
-            <UserX className="h-4 w-4 mr-2 text-red-600" />
-            <span className="text-red-700">Chưa Ký</span>
-            {monthStatus && (
-              <Badge className="ml-2 bg-red-600 text-white">
-                {monthStatus.employee_completion.total_employees -
-                  monthStatus.employee_completion.signed_employees}
-              </Badge>
-            )}
-          </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowOverviewModal(true)}
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Tổng Quan
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowUnsignedModal(true)}
+              disabled={!monthStatus}
+              className="w-full border-red-200 hover:bg-red-50 sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
+            >
+              <UserX className="mr-2 h-4 w-4 text-red-600" />
+              <span className="text-red-700">Chưa Ký</span>
+              {monthStatus && (
+                <Badge className="ml-2 bg-red-600 text-white">
+                  {monthStatus.employee_completion.total_employees -
+                    monthStatus.employee_completion.signed_employees}
+                </Badge>
+              )}
+            </Button>
+          </div>
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40 min-h-[44px] sm:min-h-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -221,7 +224,7 @@ export default function DirectorDashboard() {
                 date.setMonth(date.getMonth() - i);
                 const value = date.toISOString().slice(0, 7);
                 return (
-                  <SelectItem key={value} value={value}>
+                  <SelectItem key={value} value={value} className="min-h-[44px] sm:min-h-0">
                     {date.toLocaleDateString("vi-VN", {
                       year: "numeric",
                       month: "long",
@@ -241,9 +244,9 @@ export default function DirectorDashboard() {
       )}
 
       {monthStatus && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 mb-6 sm:mb-8">
           <Card
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md"
             onClick={() => setShowEmployeeModal(true)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -256,13 +259,13 @@ export default function DirectorDashboard() {
               <div className="text-2xl font-bold">
                 {monthStatus.employee_completion.total_employees}
               </div>
-              <p className="text-xs text-blue-100">
-                Tháng: {selectedMonth} • Click để xem chi tiết
+              <p className="text-xs text-blue-100 mt-1">
+                Tháng: {selectedMonth} • Chạm để xem
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Đã Ký Lương</CardTitle>
               <CheckCircle className="h-4 w-4" />
@@ -271,7 +274,7 @@ export default function DirectorDashboard() {
               <div className="text-2xl font-bold">
                 {monthStatus.employee_completion.signed_employees}
               </div>
-              <p className="text-xs text-green-100">
+              <p className="text-xs text-green-100 mt-1">
                 {monthStatus.employee_completion.completion_percentage.toFixed(
                   1,
                 )}
@@ -280,7 +283,7 @@ export default function DirectorDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Ký Xác Nhận</CardTitle>
               <PenTool className="h-4 w-4" />
@@ -289,11 +292,11 @@ export default function DirectorDashboard() {
               <div className="text-2xl font-bold">
                 {monthStatus.summary.completed_signatures}/3
               </div>
-              <p className="text-xs text-green-100">Management signatures</p>
+              <p className="text-xs text-green-100 mt-1">Management signatures</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Trạng Thái</CardTitle>
               <BarChart3 className="h-4 w-4" />
@@ -304,7 +307,7 @@ export default function DirectorDashboard() {
                   ? "SẴN SÀNG"
                   : "CHỜ"}
               </div>
-              <p className="text-xs text-orange-100">
+              <p className="text-xs text-orange-100 mt-1">
                 {monthStatus.summary.is_fully_signed
                   ? "Hoàn thành"
                   : "Đang xử lý"}
@@ -314,26 +317,35 @@ export default function DirectorDashboard() {
         </div>
       )}
 
-      <Tabs defaultValue="signature" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="signature" className="flex items-center gap-2">
-            <PenTool className="h-4 w-4" />
+      <Tabs defaultValue="signature" className="space-y-4 sm:space-y-6">
+        <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-3 sm:bg-muted sm:p-1">
+          <TabsTrigger 
+            value="signature" 
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <PenTool className="mr-2 h-4 w-4" />
             Ký Xác Nhận
           </TabsTrigger>
-          <TabsTrigger value="progress" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
+          <TabsTrigger 
+            value="progress" 
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <TrendingUp className="mr-2 h-4 w-4" />
             Tiến Độ
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
+          <TabsTrigger 
+            value="history" 
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
             Lịch Sử
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="signature" className="space-y-6">
+        <TabsContent value="signature" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <PenTool className="h-5 w-5" />
                 Ký Xác Nhận Lương Tháng {selectedMonth}
               </CardTitle>
@@ -353,7 +365,7 @@ export default function DirectorDashboard() {
                       <p className="text-green-800 font-medium">
                         ✅ Đã ký xác nhận
                       </p>
-                      <p className="text-sm text-green-600">
+                      <p className="text-sm text-green-600 mt-1">
                         Ký bởi:{" "}
                         {
                           monthStatus.management_signatures.giam_doc
@@ -371,16 +383,16 @@ export default function DirectorDashboard() {
                     <Button
                       onClick={handleSignature}
                       disabled={isSigning}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] text-base"
                     >
                       {isSigning ? (
                         <>
-                          <Clock className="h-4 w-4 mr-2 animate-spin" />
+                          <Clock className="h-5 w-5 mr-2 animate-spin" />
                           Đang xử lý...
                         </>
                       ) : (
                         <>
-                          <PenTool className="h-4 w-4 mr-2" />
+                          <PenTool className="h-5 w-5 mr-2" />
                           Ký Xác Nhận Giám Đốc
                         </>
                       )}
@@ -411,7 +423,7 @@ export default function DirectorDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="progress" className="space-y-6">
+        <TabsContent value="progress" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Tiến Độ Ký Xác Nhận</CardTitle>
@@ -419,7 +431,7 @@ export default function DirectorDashboard() {
             <CardContent>
               {monthStatus && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* Updated to green color scheme to match signature cards */}
                     <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
                       <div className="text-2xl font-bold text-green-600">
@@ -427,7 +439,7 @@ export default function DirectorDashboard() {
                           ? "✅"
                           : "⏳"}
                       </div>
-                      <p className="text-sm text-green-800">Giám Đốc</p>
+                      <p className="text-sm text-green-800 mt-2">Giám Đốc</p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
                       <div className="text-2xl font-bold text-green-600">
@@ -435,7 +447,7 @@ export default function DirectorDashboard() {
                           ? "✅"
                           : "⏳"}
                       </div>
-                      <p className="text-sm text-green-800">Kế Toán</p>
+                      <p className="text-sm text-green-800 mt-2">Kế Toán</p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
                       <div className="text-2xl font-bold text-green-600">
@@ -443,7 +455,7 @@ export default function DirectorDashboard() {
                           ? "✅"
                           : "⏳"}
                       </div>
-                      <p className="text-sm text-green-800">Người Lập Biểu</p>
+                      <p className="text-sm text-green-800 mt-2">Người Lập Biểu</p>
                     </div>
                   </div>
                 </div>
@@ -452,7 +464,7 @@ export default function DirectorDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-6">
+        <TabsContent value="history" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Lịch Sử Ký Xác Nhận</CardTitle>
@@ -462,7 +474,7 @@ export default function DirectorDashboard() {
                 {signatureHistory.map((signature) => (
                   <div
                     key={signature.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-3 bg-gray-50 rounded-lg gap-2"
                   >
                     <div>
                       <p className="font-medium">{signature.signed_by_name}</p>
@@ -470,7 +482,7 @@ export default function DirectorDashboard() {
                         {signature.signature_type} - {signature.salary_month}
                       </p>
                     </div>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="w-fit">
                       {formatTimestampFromDBRaw(signature.signed_at)}
                     </Badge>
                   </div>

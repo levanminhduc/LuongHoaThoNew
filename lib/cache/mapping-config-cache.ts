@@ -77,7 +77,7 @@ export class MappingConfigCache {
     if (this.config.enableOptimistic && this.optimisticUpdates.has(key)) {
       this.stats.hits++;
       this.updateHitRate();
-      return this.optimisticUpdates.get(key);
+      return this.optimisticUpdates.get(key) as T;
     }
 
     const entry = this.cache.get(key);
@@ -98,7 +98,7 @@ export class MappingConfigCache {
 
     this.stats.hits++;
     this.updateHitRate();
-    return entry.data;
+    return entry.data as T;
   }
 
   set<T>(key: string, data: T, ttl?: number): void {
