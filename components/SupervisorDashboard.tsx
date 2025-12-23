@@ -82,7 +82,10 @@ const generateMonthOptions = (years = 2) => {
   for (let i = 0; i < years; i++) {
     const year = currentYear - i;
     const month13Value = `${year}-13`;
-    options.push({ value: month13Value, label: formatMonthLabel(month13Value) });
+    options.push({
+      value: month13Value,
+      label: formatMonthLabel(month13Value),
+    });
 
     for (let month = 12; month >= 1; month--) {
       const monthValue = `${year}-${String(month).padStart(2, "0")}`;
@@ -217,9 +220,11 @@ export default function SupervisorDashboard({
   const [showPayrollModalT13, setShowPayrollModalT13] = useState(false);
   const [selectedPayrollData, setSelectedPayrollData] =
     useState<PayrollResult | null>(null);
-  
+
   const [showT13Modal, setShowT13Modal] = useState(false);
-  const [t13PayrollData, setT13PayrollData] = useState<PayrollResult | null>(null);
+  const [t13PayrollData, setT13PayrollData] = useState<PayrollResult | null>(
+    null,
+  );
   const [showT13PayrollDetail, setShowT13PayrollDetail] = useState(false);
 
   useEffect(() => {
@@ -374,9 +379,9 @@ export default function SupervisorDashboard({
     if (payrollRecord) {
       const payrollResult = transformPayrollRecordToResult(payrollRecord);
       payrollResult.source_file = "Supervisor Dashboard";
-      
+
       if (selectedMonth.endsWith("-13")) {
-        payrollResult.payroll_type = 't13';
+        payrollResult.payroll_type = "t13";
         setSelectedPayrollData(payrollResult);
         setShowPayrollModalT13(true);
       } else {
@@ -478,7 +483,11 @@ export default function SupervisorDashboard({
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className={option.value.endsWith("-13") ? "text-amber-600 font-semibold" : ""}
+                  className={
+                    option.value.endsWith("-13")
+                      ? "text-amber-600 font-semibold"
+                      : ""
+                  }
                 >
                   {option.label}
                 </SelectItem>
@@ -511,7 +520,9 @@ export default function SupervisorDashboard({
           <Card className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium truncate">
-                {selectedMonth.endsWith("-13") ? "Tổng Lương T13" : "Tổng Lương"}
+                {selectedMonth.endsWith("-13")
+                  ? "Tổng Lương T13"
+                  : "Tổng Lương"}
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
@@ -578,8 +589,8 @@ export default function SupervisorDashboard({
             <span className="hidden sm:inline">Danh Sách Nhân Viên</span>
             <span className="sm:hidden">Nhân Viên</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="trends" 
+          <TabsTrigger
+            value="trends"
             className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
             <span className="hidden sm:inline">Xu Hướng</span>
@@ -648,7 +659,9 @@ export default function SupervisorDashboard({
                             (departmentStats?.signedCount || 0),
                           percentage:
                             100 -
-                            parseFloat(departmentStats?.signedPercentage || "0"),
+                            parseFloat(
+                              departmentStats?.signedPercentage || "0",
+                            ),
                         },
                       ]}
                     >
@@ -730,7 +743,10 @@ export default function SupervisorDashboard({
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <CardTitle className="text-base sm:text-lg">
-                  {selectedMonth.endsWith("-13") ? "Danh Sách Nhân Viên (Lương T13)" : "Danh Sách Nhân Viên"} - {user.department}
+                  {selectedMonth.endsWith("-13")
+                    ? "Danh Sách Nhân Viên (Lương T13)"
+                    : "Danh Sách Nhân Viên"}{" "}
+                  - {user.department}
                 </CardTitle>
                 <CardDescription className="text-sm">
                   {formatMonthLabel(selectedMonth)}
@@ -863,7 +879,9 @@ export default function SupervisorDashboard({
                                 Thưởng Chuyên Cần:
                               </span>
                               <p className="font-medium mt-1">
-                                {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
+                                {formatCurrency(
+                                  payroll.tien_khen_thuong_chuyen_can || 0,
+                                )}
                               </p>
                             </div>
                             <div>
@@ -882,13 +900,15 @@ export default function SupervisorDashboard({
                         <div className="flex justify-between items-center">
                           <div>
                             <p className="text-xs text-muted-foreground">
-                              {selectedMonth.endsWith("-13") ? "Tổng Lương T13" : "Lương thực nhận"}
+                              {selectedMonth.endsWith("-13")
+                                ? "Tổng Lương T13"
+                                : "Lương thực nhận"}
                             </p>
                             <p className="text-sm font-semibold">
                               {formatCurrency(
                                 selectedMonth.endsWith("-13")
                                   ? payroll.tong_luong_13 || 0
-                                  : payroll.tien_luong_thuc_nhan_cuoi_ky || 0
+                                  : payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
                               )}
                             </p>
                           </div>
@@ -1009,13 +1029,17 @@ export default function SupervisorDashboard({
                               {payroll.ngay_cong_trong_gio || 0} ngày
                             </td>
                             <td className="p-2 sm:p-3 text-right font-medium">
-                              {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
+                              {formatCurrency(
+                                payroll.tien_khen_thuong_chuyen_can || 0,
+                              )}
                             </td>
                             <td className="p-2 sm:p-3 text-center font-medium">
                               {(payroll.he_so_lam_viec || 0).toFixed(2)}
                             </td>
                             <td className="p-2 sm:p-3 text-right font-semibold">
-                              {formatCurrency(payroll.tien_luong_thuc_nhan_cuoi_ky || 0)}
+                              {formatCurrency(
+                                payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
+                              )}
                             </td>
                           </>
                         )}

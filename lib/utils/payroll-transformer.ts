@@ -90,7 +90,7 @@ interface PayrollRecord {
   is_signed: boolean;
   signed_at: string | null;
   signed_by_name?: string;
-  payroll_type?: 'monthly' | 't13';
+  payroll_type?: "monthly" | "t13";
 
   // Employee relationship
   employees: {

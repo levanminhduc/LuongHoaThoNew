@@ -44,6 +44,7 @@ import {
   Filter,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface ImportError {
   row: number;
@@ -56,7 +57,8 @@ interface ImportError {
     | "duplicate"
     | "employee_not_found"
     | "database"
-    | "format";
+    | "format"
+    | "system";
   originalData?: Record<string, unknown>;
 }
 
@@ -324,9 +326,15 @@ export default function ImportErrorModal({
         row: err.row,
         employee_id: err.employee_id,
         salary_month: err.salary_month,
-        errorType: err.errorType,
+        field: err.field,
+        column: err.field,
+        currentValue: err.employee_id || err.salary_month || "",
+        errorType: err.errorType || "validation",
+        severity: determineSeverity(err.errorType),
         error: err.error,
         message: err.error,
+        suggestion: getSuggestion(err.errorType, err.field),
+        expectedFormat: "",
         originalData: err.originalData,
       }));
 
@@ -353,7 +361,9 @@ export default function ImportErrorModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `bao_cao_loi_import_${new Date().toISOString().split("T")[0]}.xlsx`;
+      // Use Vietnam timezone for filename timestamp
+      const timestamp = getVietnamTimestamp().split(" ")[0]; // Get YYYY-MM-DD
+      a.download = `bao_cao_loi_import_${timestamp}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

@@ -176,7 +176,9 @@ export default function DepartmentDetailModalRefactored({
   const [error, setError] = useState("");
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState("employees");
-  const [payrollType, setPayrollType] = useState<"monthly" | "t13">(initialPayrollType);
+  const [payrollType, setPayrollType] = useState<"monthly" | "t13">(
+    initialPayrollType,
+  );
   // Year state for T13 - extract from month prop or use current year
   const [t13Year, setT13Year] = useState<string>(() => {
     // Extract year from month prop (format: YYYY-MM) or use current year
@@ -215,12 +217,15 @@ export default function DepartmentDetailModalRefactored({
       // Create a cache key that includes payrollType and year for T13
       const cacheKeyMonth = payrollType === "t13" ? `${t13Year}-13` : month;
       const cacheKey = `${departmentName}_${cacheKeyMonth}_${payrollType}`;
-      
+
       if (!forceRefresh) {
         // We need to update cache utility to support custom keys or just append to month
         // For now using the existing method but appending type to month for cache key purpose
         // Note: Ideally DepartmentCache should be updated to handle payrollType explicitly
-        const cachedData = DepartmentCache.getCacheData(departmentName, cacheKeyMonth);
+        const cachedData = DepartmentCache.getCacheData(
+          departmentName,
+          cacheKeyMonth,
+        );
         if (cachedData) {
           setDepartmentData(cachedData);
           setLoading(false);
@@ -232,10 +237,11 @@ export default function DepartmentDetailModalRefactored({
 
       const token = localStorage.getItem("admin_token");
       // Build URL with year parameter for T13
-      const apiUrl = payrollType === "t13"
-        ? `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}&year=${t13Year}`
-        : `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}`;
-      
+      const apiUrl =
+        payrollType === "t13"
+          ? `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}&year=${t13Year}`
+          : `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}`;
+
       const response = await fetch(apiUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -247,7 +253,11 @@ export default function DepartmentDetailModalRefactored({
         const departmentData = data.department;
 
         // Use correct cache key based on payroll type
-        DepartmentCache.setCacheData(departmentName, cacheKeyMonth, departmentData);
+        DepartmentCache.setCacheData(
+          departmentName,
+          cacheKeyMonth,
+          departmentData,
+        );
 
         setDepartmentData(departmentData);
       } else {
@@ -271,8 +281,8 @@ export default function DepartmentDetailModalRefactored({
 
       const url = `/api/admin/payroll-export?month=${month}&department=${encodeURIComponent(departmentName)}&payroll_type=${payrollType}`;
       let filename = `department-${departmentName}-${month}`;
-      
-      if (payrollType === 't13') {
+
+      if (payrollType === "t13") {
         filename += "-t13";
       }
 
@@ -326,13 +336,15 @@ export default function DepartmentDetailModalRefactored({
     if (payrollRecord && onViewEmployee) {
       // Transform to PayrollResult format and call parent callback
       const payrollResult = transformPayrollRecordToResult(
-        payrollRecord as unknown as Parameters<typeof transformPayrollRecordToResult>[0],
+        payrollRecord as unknown as Parameters<
+          typeof transformPayrollRecordToResult
+        >[0],
       );
       // Set source file to indicate Department Detail
       payrollResult.source_file = "Department Detail";
       // Add payroll type for proper modal handling downstream
       payrollResult.payroll_type = payrollType;
-      
+
       onViewEmployee(payrollResult);
     }
   };
@@ -450,7 +462,7 @@ export default function DepartmentDetailModalRefactored({
                   if (payrollType === "t13") {
                     const totalSalaryT13 = departmentData.payrolls.reduce(
                       (sum, p) => sum + (p.tong_luong_13 || 0),
-                      0
+                      0,
                     );
                     return {
                       ...departmentData.stats,

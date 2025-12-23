@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month");
     const search = searchParams.get("search");
     const payrollType = searchParams.get("payroll_type") || "monthly";
-    const year = searchParams.get("year") || new Date().getFullYear().toString();
+    const year =
+      searchParams.get("year") || new Date().getFullYear().toString();
 
     const offset = (page - 1) * limit;
 
@@ -165,20 +166,21 @@ export async function POST(request: NextRequest) {
 
     const totalEmployees = stats?.length || 0;
     const signedCount = stats?.filter((s) => s.is_signed).length || 0;
-    
+
     interface StatRecord {
       tien_luong_thuc_nhan_cuoi_ky: number | null;
       tong_luong_13: number | null;
       is_signed: boolean;
     }
-    
+
     const totalSalary = isT13
       ? stats?.reduce(
           (sum: number, s: StatRecord) => sum + (s.tong_luong_13 || 0),
           0,
         ) || 0
       : stats?.reduce(
-          (sum: number, s: StatRecord) => sum + (s.tien_luong_thuc_nhan_cuoi_ky || 0),
+          (sum: number, s: StatRecord) =>
+            sum + (s.tien_luong_thuc_nhan_cuoi_ky || 0),
           0,
         ) || 0;
 

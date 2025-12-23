@@ -335,77 +335,77 @@ export default function EmployeeDashboard({
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Thông Tin Cá Nhân</CardTitle>
-                <CardDescription>Chi tiết nhân viên</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Mã nhân viên
-                    </p>
-                    <p className="font-semibold">{user.employee_id}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Họ tên</p>
-                    <p className="font-semibold">{user.username}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Department
-                    </p>
-                    <p className="font-semibold">{user.department}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Chức vụ</p>
-                    <Badge variant="secondary">Nhân viên</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {yearlySummary && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Tổng Kết Năm {selectedYear}</CardTitle>
-                  <CardDescription>Thống kê lương và thuế</CardDescription>
+                  <CardTitle>Thông Tin Cá Nhân</CardTitle>
+                  <CardDescription>Chi tiết nhân viên</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-muted-foreground">Tổng lương gốc</p>
-                      <p className="font-semibold text-base sm:text-sm">
-                        {formatCurrency(yearlySummary.totalGrossSalary)}
+                      <p className="text-sm text-muted-foreground">
+                        Mã nhân viên
                       </p>
+                      <p className="font-semibold">{user.employee_id}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">
-                        Tổng lương thực nhận
-                      </p>
-                      <p className="font-semibold text-base sm:text-sm text-green-600 sm:text-foreground">
-                        {formatCurrency(yearlySummary.totalNetSalary)}
-                      </p>
+                      <p className="text-sm text-muted-foreground">Họ tên</p>
+                      <p className="font-semibold">{user.username}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Tổng thuế TNCN</p>
-                      <p className="font-semibold text-base sm:text-sm">
-                        {formatCurrency(yearlySummary.totalTax)}
+                      <p className="text-sm text-muted-foreground">
+                        Department
                       </p>
+                      <p className="font-semibold">{user.department}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Tổng BHXH/BHYT</p>
-                      <p className="font-semibold text-base sm:text-sm">
-                        {formatCurrency(yearlySummary.totalInsurance)}
-                      </p>
+                      <p className="text-sm text-muted-foreground">Chức vụ</p>
+                      <Badge variant="secondary">Nhân viên</Badge>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
-          </div>
+
+              {yearlySummary && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tổng Kết Năm {selectedYear}</CardTitle>
+                    <CardDescription>Thống kê lương và thuế</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Tổng lương gốc</p>
+                        <p className="font-semibold text-base sm:text-sm">
+                          {formatCurrency(yearlySummary.totalGrossSalary)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">
+                          Tổng lương thực nhận
+                        </p>
+                        <p className="font-semibold text-base sm:text-sm text-green-600 sm:text-foreground">
+                          {formatCurrency(yearlySummary.totalNetSalary)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Tổng thuế TNCN</p>
+                        <p className="font-semibold text-base sm:text-sm">
+                          {formatCurrency(yearlySummary.totalTax)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Tổng BHXH/BHYT</p>
+                        <p className="font-semibold text-base sm:text-sm">
+                          {formatCurrency(yearlySummary.totalInsurance)}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="payroll" className="space-y-6">

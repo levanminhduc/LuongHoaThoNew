@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 async function verifyAdminToken(token: string): Promise<boolean> {
   try {
@@ -159,11 +160,13 @@ export async function POST(request: NextRequest) {
         bookType: "xlsx",
       });
 
+      const vietnamDate = getVietnamTimestamp().slice(0, 10);
+
       return new NextResponse(excelBuffer, {
         headers: {
           "Content-Type":
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": `attachment; filename="${fileName}_${new Date().toISOString().split("T")[0]}.xlsx"`,
+          "Content-Disposition": `attachment; filename="${fileName}_${vietnamDate}.xlsx"`,
         },
       });
     } else if (format === "csv") {
@@ -175,10 +178,12 @@ export async function POST(request: NextRequest) {
         ),
       ].join("\n");
 
+      const vietnamDateCsv = getVietnamTimestamp().slice(0, 10);
+
       return new NextResponse(csvContent, {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename="${fileName}_${new Date().toISOString().split("T")[0]}.csv"`,
+          "Content-Disposition": `attachment; filename="${fileName}_${vietnamDateCsv}.csv"`,
         },
       });
     }
@@ -234,11 +239,13 @@ export async function GET(request: NextRequest) {
       bookType: "xlsx",
     });
 
+    const vietnamDate = getVietnamTimestamp().slice(0, 10);
+
     return new NextResponse(excelBuffer, {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="error_template_${new Date().toISOString().split("T")[0]}.xlsx"`,
+        "Content-Disposition": `attachment; filename="error_template_${vietnamDate}.xlsx"`,
       },
     });
   } catch (error) {

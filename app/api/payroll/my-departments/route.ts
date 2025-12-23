@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const department = searchParams.get("department");
     const payrollType = searchParams.get("payroll_type") || "monthly";
-    const year = searchParams.get("year") || new Date().getFullYear().toString();
+    const year =
+      searchParams.get("year") || new Date().getFullYear().toString();
 
     const offset = (page - 1) * limit;
 

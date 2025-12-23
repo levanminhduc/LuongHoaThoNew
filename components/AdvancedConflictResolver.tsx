@@ -125,7 +125,7 @@ export function AdvancedConflictResolver({
     | "lowest"
     | "merge";
   type RuleAction = ResolutionRule["action"];
- 
+
   const [customRule, setCustomRule] = useState<{
     name: string;
     description: string;
@@ -234,7 +234,7 @@ export function AdvancedConflictResolver({
     }
     return new Date(NaN);
   };
- 
+
   const toNumberSafe = (value: unknown) => {
     if (typeof value === "number") return value;
     if (typeof value === "string") {
@@ -243,48 +243,53 @@ export function AdvancedConflictResolver({
     }
     return NaN;
   };
- 
+
   const smartMerge = (
     existing: Record<string, unknown>,
     newData: Record<string, unknown>,
     conflictFields: string[],
   ): Record<string, unknown> => {
     const merged: Record<string, unknown> = { ...existing };
- 
+
     Object.keys(newData).forEach((key) => {
       const newVal = newData[key];
       const existingVal = existing[key];
- 
+
       if (!conflictFields.includes(key)) {
         if (newVal !== null && newVal !== undefined && newVal !== "") {
           merged[key] = newVal;
         }
         return;
       }
- 
+
       if (key.includes("date") || key.includes("time")) {
         const existingDate = toDateSafe(existingVal).getTime();
         const newDate = toDateSafe(newVal).getTime();
         merged[key] = newDate > existingDate ? newVal : existingVal;
         return;
       }
- 
-      if (key.includes("luong") || key.includes("salary") || key.includes("tien")) {
+
+      if (
+        key.includes("luong") ||
+        key.includes("salary") ||
+        key.includes("tien")
+      ) {
         const existingValue = toNumberSafe(existingVal);
         const newValue = toNumberSafe(newVal);
         merged[key] = Number.isFinite(newValue)
-          ? (Number.isFinite(existingValue)
-              ? Math.max(existingValue, newValue)
-              : newValue)
+          ? Number.isFinite(existingValue)
+            ? Math.max(existingValue, newValue)
+            : newValue
           : existingVal;
         return;
       }
- 
-      merged[key] = newVal !== null && newVal !== undefined && newVal !== ""
-        ? newVal
-        : existingVal;
+
+      merged[key] =
+        newVal !== null && newVal !== undefined && newVal !== ""
+          ? newVal
+          : existingVal;
     });
- 
+
     merged.updated_at = new Date().toISOString();
     return merged;
   };
@@ -295,12 +300,12 @@ export function AdvancedConflictResolver({
     fieldRules: Record<string, FieldRuleAction>,
   ) => {
     const resolved: Record<string, unknown> = { ...existing };
- 
+
     Object.keys(fieldRules).forEach((field) => {
       const rule = fieldRules[field];
       const existingValue = existing[field];
       const newValue = newData[field];
- 
+
       switch (rule) {
         case "existing":
           resolved[field] = existingValue;
@@ -315,9 +320,9 @@ export function AdvancedConflictResolver({
           const existingNum = toNumberSafe(existingValue);
           const newNum = toNumberSafe(newValue);
           resolved[field] = Number.isFinite(newNum)
-            ? (Number.isFinite(existingNum)
-                ? Math.max(existingNum, newNum)
-                : newNum)
+            ? Number.isFinite(existingNum)
+              ? Math.max(existingNum, newNum)
+              : newNum
             : existingValue;
           break;
         }
@@ -325,9 +330,9 @@ export function AdvancedConflictResolver({
           const existingNumLow = toNumberSafe(existingValue);
           const newNumLow = toNumberSafe(newValue);
           resolved[field] = Number.isFinite(newNumLow)
-            ? (Number.isFinite(existingNumLow)
-                ? Math.min(existingNumLow, newNumLow)
-                : newNumLow)
+            ? Number.isFinite(existingNumLow)
+              ? Math.min(existingNumLow, newNumLow)
+              : newNumLow
             : existingValue;
           break;
         }
@@ -336,7 +341,7 @@ export function AdvancedConflictResolver({
           break;
       }
     });
- 
+
     resolved.updated_at = new Date().toISOString();
     return resolved;
   };
@@ -372,7 +377,8 @@ export function AdvancedConflictResolver({
       const resolutionArray: ConflictResolution[] = Array.from(
         resolutions.values(),
       ).map((r) => ({
-        employee_id: conflicts.find((c) => c.id === r.conflict_id)?.employee_id || "",
+        employee_id:
+          conflicts.find((c) => c.id === r.conflict_id)?.employee_id || "",
         salary_month:
           conflicts.find((c) => c.id === r.conflict_id)?.salary_month || "",
         resolved_data: r.resolved_data ?? {},
@@ -517,7 +523,9 @@ export function AdvancedConflictResolver({
                                       >
                                         <span>{field}:</span>
                                         <span>
-                                          {String(conflict.existing_data[field] ?? "")}
+                                          {String(
+                                            conflict.existing_data[field] ?? "",
+                                          )}
                                         </span>
                                       </div>
                                     ))}
@@ -534,7 +542,11 @@ export function AdvancedConflictResolver({
                                         className="flex justify-between"
                                       >
                                         <span>{field}:</span>
-                                        <span>{String(conflict.new_data[field] ?? "")}</span>
+                                        <span>
+                                          {String(
+                                            conflict.new_data[field] ?? "",
+                                          )}
+                                        </span>
                                       </div>
                                     ))}
                                   </div>

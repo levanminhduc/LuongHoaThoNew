@@ -356,40 +356,58 @@ export default function EmployeeTable({
                     <>
                       <div className="space-y-0.5">
                         <span className="text-muted-foreground">Chức vụ</span>
-                        <p className="font-medium truncate">{payroll.employees?.chuc_vu}</p>
+                        <p className="font-medium truncate">
+                          {payroll.employees?.chuc_vu}
+                        </p>
                       </div>
                       <div className="space-y-0.5 text-right">
                         <span className="text-muted-foreground">Ngày công</span>
-                        <p className="font-medium">{payroll.ngay_cong_trong_gio || 0}</p>
+                        <p className="font-medium">
+                          {payroll.ngay_cong_trong_gio || 0}
+                        </p>
                       </div>
                       <div className="space-y-0.5">
                         <span className="text-muted-foreground">Thưởng CC</span>
                         <p className="font-medium">
-                          {formatCurrency(payroll.tien_khen_thuong_chuyen_can || 0)}
+                          {formatCurrency(
+                            payroll.tien_khen_thuong_chuyen_can || 0,
+                          )}
                         </p>
                       </div>
                       <div className="space-y-0.5 text-right">
                         <span className="text-muted-foreground">Hệ số LV</span>
-                        <p className="font-medium">{(payroll.he_so_lam_viec || 0).toFixed(2)}</p>
+                        <p className="font-medium">
+                          {(payroll.he_so_lam_viec || 0).toFixed(2)}
+                        </p>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="space-y-0.5">
                         <span className="text-muted-foreground">Số Tháng</span>
-                        <p className="font-medium">{payroll.so_thang_chia_13 || 0}</p>
+                        <p className="font-medium">
+                          {payroll.so_thang_chia_13 || 0}
+                        </p>
                       </div>
                       <div className="space-y-0.5 text-right">
-                        <span className="text-muted-foreground">Tổng SP 12T</span>
-                        <p className="font-medium">{formatCurrency(payroll.tong_sp_12_thang || 0)}</p>
+                        <span className="text-muted-foreground">
+                          Tổng SP 12T
+                        </span>
+                        <p className="font-medium">
+                          {formatCurrency(payroll.tong_sp_12_thang || 0)}
+                        </p>
                       </div>
                       <div className="space-y-0.5">
                         <span className="text-muted-foreground">Chi Đợt 1</span>
-                        <p className="font-medium">{formatCurrency(payroll.chi_dot_1_13 || 0)}</p>
+                        <p className="font-medium">
+                          {formatCurrency(payroll.chi_dot_1_13 || 0)}
+                        </p>
                       </div>
                       <div className="space-y-0.5 text-right">
                         <span className="text-muted-foreground">Chi Đợt 2</span>
-                        <p className="font-medium">{formatCurrency(payroll.chi_dot_2_13 || 0)}</p>
+                        <p className="font-medium">
+                          {formatCurrency(payroll.chi_dot_2_13 || 0)}
+                        </p>
                       </div>
                     </>
                   )}
@@ -397,9 +415,7 @@ export default function EmployeeTable({
 
                 <div className="pt-2 border-t flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">
-                    {payrollType === "t13"
-                      ? "Tổng Lương T13:"
-                      : "Thực nhận:"}
+                    {payrollType === "t13" ? "Tổng Lương T13:" : "Thực nhận:"}
                   </span>
                   <span className="font-bold text-sm text-primary">
                     {formatCurrency(
@@ -422,7 +438,7 @@ export default function EmployeeTable({
       {/* Desktop Table Layout */}
       <Card className="hidden sm:block">
         <CardContent className="p-0">
-          <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
+          <div className="w-full overflow-x-auto" style={{ maxWidth: "100%" }}>
             <Table className="min-w-[1000px] w-full">
               <TableHeader>
                 <TableRow>
@@ -464,7 +480,9 @@ export default function EmployeeTable({
                       </TableHead>
                     </>
                   )}
-                  <TableHead className={`text-center min-w-[100px] ${onViewEmployee ? "sticky right-[80px] bg-background z-[2] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-[2] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
+                  <TableHead
+                    className={`text-center min-w-[100px] ${onViewEmployee ? "sticky right-[80px] bg-background z-[2] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-[2] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}
+                  >
                     Trạng Thái
                   </TableHead>
                   {onViewEmployee && (
@@ -526,7 +544,9 @@ export default function EmployeeTable({
                           </TableCell>
                         </>
                       )}
-                      <TableCell className={`text-center ${onViewEmployee ? "sticky right-[80px] bg-background z-[1] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-[1] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}>
+                      <TableCell
+                        className={`text-center ${onViewEmployee ? "sticky right-[80px] bg-background z-[1] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]" : "sticky right-0 bg-background z-[1] shadow-[-2px_0_5px_rgba(0,0,0,0.1)]"}`}
+                      >
                         <Badge
                           variant={payroll.is_signed ? "default" : "secondary"}
                         >

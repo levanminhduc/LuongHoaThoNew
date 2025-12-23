@@ -79,7 +79,10 @@ const generateMonthOptions = (years = 2) => {
   for (let i = 0; i < years; i++) {
     const year = currentYear - i;
     const month13Value = `${year}-13`;
-    options.push({ value: month13Value, label: formatMonthLabel(month13Value) });
+    options.push({
+      value: month13Value,
+      label: formatMonthLabel(month13Value),
+    });
 
     for (let month = 12; month >= 1; month--) {
       const monthValue = `${year}-${String(month).padStart(2, "0")}`;
@@ -250,9 +253,9 @@ export default function OverviewModal({
   const handleViewEmployeeFromDepartment = (payrollData: PayrollResult) => {
     // Handle payroll detail modal from department detail modal
     setSelectedDepartmentPayrollData(payrollData);
-    
+
     // Check if it is T13 data
-    if (payrollData.payroll_type === 't13') {
+    if (payrollData.payroll_type === "t13") {
       setShowDepartmentPayrollModalT13(true);
     } else {
       setShowDepartmentPayrollModal(true);
@@ -411,7 +414,9 @@ export default function OverviewModal({
               <Card className="hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium truncate">
-                    {selectedMonth.endsWith("-13") ? "Tổng Lương T13" : "Tổng Lương"}
+                    {selectedMonth.endsWith("-13")
+                      ? "Tổng Lương T13"
+                      : "Tổng Lương"}
                   </CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </CardHeader>

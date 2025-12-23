@@ -70,7 +70,10 @@ const generateMonthOptions = (years = 2) => {
   for (let i = 0; i < years; i++) {
     const year = currentYear - i;
     const month13Value = `${year}-13`;
-    options.push({ value: month13Value, label: formatMonthLabel(month13Value) });
+    options.push({
+      value: month13Value,
+      label: formatMonthLabel(month13Value),
+    });
 
     for (let month = 12; month >= 1; month--) {
       const monthValue = `${year}-${String(month).padStart(2, "0")}`;
@@ -392,7 +395,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
       // Set source file to indicate Manager Dashboard
       payrollResult.source_file = "Manager Dashboard";
       setSelectedPayrollData(payrollResult);
-      if (payrollResult.payroll_type === 't13') {
+      if (payrollResult.payroll_type === "t13") {
         setShowPayrollModalT13(true);
       } else {
         setShowPayrollModal(true);
@@ -403,7 +406,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
   const handleViewEmployeeFromDepartment = (payrollData: PayrollResult) => {
     // Handle payroll detail modal from department detail modal
     setSelectedDepartmentPayrollData(payrollData);
-    if (payrollData.payroll_type === 't13') {
+    if (payrollData.payroll_type === "t13") {
       setShowDepartmentPayrollModalT13(true);
     } else {
       setShowDepartmentPayrollModal(true);
@@ -484,7 +487,11 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                 <SelectItem
                   key={option.value}
                   value={option.value}
-                  className={option.value.endsWith("-13") ? "text-amber-600 font-semibold" : ""}
+                  className={
+                    option.value.endsWith("-13")
+                      ? "text-amber-600 font-semibold"
+                      : ""
+                  }
                 >
                   {option.label}
                 </SelectItem>
@@ -586,8 +593,8 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
             <span className="hidden sm:inline">Chi Tiết Các Bộ Phận</span>
             <span className="sm:hidden">Departments</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="payroll" 
+          <TabsTrigger
+            value="payroll"
             className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
           >
             <span className="hidden sm:inline">Dữ Liệu Lương</span>
@@ -629,7 +636,11 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                           borderRadius: "6px",
                         }}
                       />
-                      <Bar dataKey="employees" fill="#8884d8" name="Nhân viên" />
+                      <Bar
+                        dataKey="employees"
+                        fill="#8884d8"
+                        name="Nhân viên"
+                      />
                       <Bar dataKey="signed" fill="#82ca9d" name="Đã ký" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -831,7 +842,10 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base sm:text-lg">
-                  {selectedMonth.endsWith("-13") ? "Dữ Liệu Lương T13" : "Dữ Liệu Lương"} - {selectedDepartment}
+                  {selectedMonth.endsWith("-13")
+                    ? "Dữ Liệu Lương T13"
+                    : "Dữ Liệu Lương"}{" "}
+                  - {selectedDepartment}
                 </CardTitle>
                 <CardDescription className="text-sm">
                   {formatMonthLabel(selectedMonth)}

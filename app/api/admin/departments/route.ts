@@ -20,8 +20,12 @@ export async function GET(request: NextRequest) {
     const includeStats = searchParams.get("include_stats") === "true";
     const month =
       searchParams.get("month") || new Date().toISOString().slice(0, 7);
-    const payrollType = searchParams.get("payroll_type") as 'monthly' | 't13' | null;
-    const year = searchParams.get("year") || new Date().getFullYear().toString();
+    const payrollType = searchParams.get("payroll_type") as
+      | "monthly"
+      | "t13"
+      | null;
+    const year =
+      searchParams.get("year") || new Date().getFullYear().toString();
 
     // Get ALL departments (including those with only inactive employees)
     const { data: allDepartments, error: allDeptError } = await supabase
@@ -92,7 +96,7 @@ export async function GET(request: NextRequest) {
     // Monthly: salary_month = 'YYYY-MM' (e.g., '2025-01')
     const buildPayrollQuery = () => {
       const salaryMonthFilter = payrollType === "t13" ? `${year}-13` : month;
-      
+
       const query = supabase
         .from("payrolls")
         .select(
@@ -181,15 +185,12 @@ export async function GET(request: NextRequest) {
 
       const payrollCount = deptPayrolls.length;
       const signedCount = deptPayrolls.filter((p) => p.is_signed).length;
-      const totalSalary = deptPayrolls.reduce(
-        (sum, p) => {
-          if (payrollType === "t13") {
-            return sum + (p.tong_luong_13 || 0);
-          }
-          return sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0);
-        },
-        0,
-      );
+      const totalSalary = deptPayrolls.reduce((sum, p) => {
+        if (payrollType === "t13") {
+          return sum + (p.tong_luong_13 || 0);
+        }
+        return sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0);
+      }, 0);
 
       const managers = allManagers
         .filter((m) => m.department === dept)

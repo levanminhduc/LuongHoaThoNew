@@ -420,10 +420,11 @@ export function createMappingConfigurationFromMapping(
 
 // Helper function to merge multiple mapping configurations
 export type FieldMapping = MappingConfiguration["field_mappings"] extends
-  (infer T)[] | undefined
+  | (infer T)[]
+  | undefined
   ? T
   : never;
- 
+
 export function mergeMappingConfigurations(
   configs: MappingConfiguration[],
   mergedName: string,

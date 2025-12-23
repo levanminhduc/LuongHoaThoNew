@@ -4,46 +4,48 @@ Hệ thống quản lý lương cho công ty May Hòa Thọ Điện Bàn - cho p
 
 ## 🛠️ Tech Stack
 
-| Layer | Công nghệ |
-|-------|-----------|
+| Layer    | Công nghệ                                                 |
+| -------- | --------------------------------------------------------- |
 | Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui |
-| Backend | Next.js API Routes |
-| Database | Supabase PostgreSQL + RLS |
-| Auth | JWT + bcrypt |
-| File | xlsx, xlsx-js-style |
+| Backend  | Next.js API Routes                                        |
+| Database | Supabase PostgreSQL + RLS                                 |
+| Auth     | JWT + bcrypt                                              |
+| File     | xlsx, xlsx-js-style                                       |
 
 ## 🔑 8 Roles (RBAC)
 
-| Role | Quyền hạn |
-|------|-----------|
-| `admin` | Full access |
-| `giam_doc` | Xem + ký duyệt lương theo departments |
-| `ke_toan` | Xem + ký duyệt + quản lý tài chính |
-| `nguoi_lap_bieu` | Tạo + ký duyệt bảng lương |
-| `truong_phong` | Xem lương departments được phân quyền |
-| `to_truong` | Xem lương department của mình |
-| `van_phong` | Quản lý thông tin nhân viên |
-| `nhan_vien` | Chỉ xem lương của mình |
+| Role             | Quyền hạn                             |
+| ---------------- | ------------------------------------- |
+| `admin`          | Full access                           |
+| `giam_doc`       | Xem + ký duyệt lương theo departments |
+| `ke_toan`        | Xem + ký duyệt + quản lý tài chính    |
+| `nguoi_lap_bieu` | Tạo + ký duyệt bảng lương             |
+| `truong_phong`   | Xem lương departments được phân quyền |
+| `to_truong`      | Xem lương department của mình         |
+| `van_phong`      | Quản lý thông tin nhân viên           |
+| `nhan_vien`      | Chỉ xem lương của mình                |
 
 ## 🗄️ Database Tables Chính
 
-| Table | Mô tả |
-|-------|-------|
-| `employees` | Thông tin nhân viên (PK: employee_id) |
-| `payrolls` | Dữ liệu lương 39 cột (Unique: employee_id + salary_month) |
-| `signature_logs` | Log ký nhận nhân viên |
-| `management_signatures` | Chữ ký quản lý (3 loại) |
-| `department_permissions` | Phân quyền department |
-| `column_aliases` | Mapping tên cột Excel |
+| Table                    | Mô tả                                                     |
+| ------------------------ | --------------------------------------------------------- |
+| `employees`              | Thông tin nhân viên (PK: employee_id)                     |
+| `payrolls`               | Dữ liệu lương 39 cột (Unique: employee_id + salary_month) |
+| `signature_logs`         | Log ký nhận nhân viên                                     |
+| `management_signatures`  | Chữ ký quản lý (3 loại)                                   |
+| `department_permissions` | Phân quyền department                                     |
+| `column_aliases`         | Mapping tên cột Excel                                     |
 
 ## 📥 Excel Import System
 
 **Luồng xử lý:**
+
 ```
 Excel -> Column Detection -> Auto-Mapping -> Validation -> Database
 ```
 
 **Tính năng:**
+
 - Flexible column mapping với alias
 - Dual file import (2 files cùng lúc)
 - T13 auto-detection từ salary_month pattern
@@ -53,10 +55,12 @@ Excel -> Column Detection -> Auto-Mapping -> Validation -> Database
 ## ✍️ Signature System
 
 **Employee Flow:**
+
 1. Login -> Xem lương -> Click "Ký Nhận"
 2. Gọi `auto_sign_salary()` -> Update `payrolls` + Insert `signature_logs`
 
 **Management Flow (3-tier):**
+
 - `giam_doc`, `ke_toan`, `nguoi_lap_bieu` - mỗi role ký 1 lần/tháng
 - Lưu vào `management_signatures`
 

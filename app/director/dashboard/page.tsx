@@ -224,7 +224,11 @@ export default function DirectorDashboard() {
                 date.setMonth(date.getMonth() - i);
                 const value = date.toISOString().slice(0, 7);
                 return (
-                  <SelectItem key={value} value={value} className="min-h-[44px] sm:min-h-0">
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    className="min-h-[44px] sm:min-h-0"
+                  >
                     {date.toLocaleDateString("vi-VN", {
                       year: "numeric",
                       month: "long",
@@ -292,7 +296,9 @@ export default function DirectorDashboard() {
               <div className="text-2xl font-bold">
                 {monthStatus.summary.completed_signatures}/3
               </div>
-              <p className="text-xs text-green-100 mt-1">Management signatures</p>
+              <p className="text-xs text-green-100 mt-1">
+                Management signatures
+              </p>
             </CardContent>
           </Card>
 
@@ -319,22 +325,22 @@ export default function DirectorDashboard() {
 
       <Tabs defaultValue="signature" className="space-y-4 sm:space-y-6">
         <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-3 sm:bg-muted sm:p-1">
-          <TabsTrigger 
-            value="signature" 
+          <TabsTrigger
+            value="signature"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <PenTool className="mr-2 h-4 w-4" />
             Ký Xác Nhận
           </TabsTrigger>
-          <TabsTrigger 
-            value="progress" 
+          <TabsTrigger
+            value="progress"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <TrendingUp className="mr-2 h-4 w-4" />
             Tiến Độ
           </TabsTrigger>
-          <TabsTrigger 
-            value="history" 
+          <TabsTrigger
+            value="history"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <FileSpreadsheet className="mr-2 h-4 w-4" />
@@ -455,7 +461,9 @@ export default function DirectorDashboard() {
                           ? "✅"
                           : "⏳"}
                       </div>
-                      <p className="text-sm text-green-800 mt-2">Người Lập Biểu</p>
+                      <p className="text-sm text-green-800 mt-2">
+                        Người Lập Biểu
+                      </p>
                     </div>
                   </div>
                 </div>

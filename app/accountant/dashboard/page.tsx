@@ -224,7 +224,11 @@ export default function AccountantDashboard() {
                 date.setMonth(date.getMonth() - i);
                 const value = date.toISOString().slice(0, 7);
                 return (
-                  <SelectItem key={value} value={value} className="min-h-[44px] sm:min-h-0">
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    className="min-h-[44px] sm:min-h-0"
+                  >
                     {date.toLocaleDateString("vi-VN", {
                       year: "numeric",
                       month: "long",
@@ -321,22 +325,22 @@ export default function AccountantDashboard() {
 
       <Tabs defaultValue="financial" className="space-y-4 sm:space-y-6">
         <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-3 sm:bg-muted sm:p-1">
-          <TabsTrigger 
-            value="financial" 
+          <TabsTrigger
+            value="financial"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <DollarSign className="mr-2 h-4 w-4" />
             Xác Nhận TC
           </TabsTrigger>
-          <TabsTrigger 
-            value="verification" 
+          <TabsTrigger
+            value="verification"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <Calculator className="mr-2 h-4 w-4" />
             Kiểm Tra
           </TabsTrigger>
-          <TabsTrigger 
-            value="history" 
+          <TabsTrigger
+            value="history"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <FileText className="mr-2 h-4 w-4" />

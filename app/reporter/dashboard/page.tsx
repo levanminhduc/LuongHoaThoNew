@@ -237,7 +237,11 @@ export default function ReporterDashboard() {
                 date.setMonth(date.getMonth() - i);
                 const value = date.toISOString().slice(0, 7);
                 return (
-                  <SelectItem key={value} value={value} className="min-h-[44px] sm:min-h-0">
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    className="min-h-[44px] sm:min-h-0"
+                  >
                     {date.toLocaleDateString("vi-VN", {
                       year: "numeric",
                       month: "long",
@@ -340,22 +344,22 @@ export default function ReporterDashboard() {
 
       <Tabs defaultValue="reports" className="space-y-4 sm:space-y-6">
         <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-3 sm:bg-muted sm:p-1">
-          <TabsTrigger 
-            value="reports" 
+          <TabsTrigger
+            value="reports"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <FileText className="mr-2 h-4 w-4" />
             Xác Nhận BC
           </TabsTrigger>
-          <TabsTrigger 
-            value="statistics" 
+          <TabsTrigger
+            value="statistics"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <BarChart3 className="mr-2 h-4 w-4" />
             Thống Kê
           </TabsTrigger>
-          <TabsTrigger 
-            value="history" 
+          <TabsTrigger
+            value="history"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <FileSpreadsheet className="mr-2 h-4 w-4" />

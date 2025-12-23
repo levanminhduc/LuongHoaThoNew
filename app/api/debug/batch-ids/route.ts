@@ -30,7 +30,11 @@ export async function GET(request: NextRequest) {
             source_file?: string | null;
           }
         >,
-        record: { import_batch_id: string; created_at?: string | null; source_file?: string | null },
+        record: {
+          import_batch_id: string;
+          created_at?: string | null;
+          source_file?: string | null;
+        },
       ) => {
         const batchId = record.import_batch_id;
         if (!acc[batchId]) {

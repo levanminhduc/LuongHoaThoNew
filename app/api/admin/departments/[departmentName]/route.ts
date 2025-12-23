@@ -27,9 +27,13 @@ export async function GET(
     // Only management roles can access this endpoint
     // Includes: giam_doc, ke_toan, nguoi_lap_bieu, truong_phong, to_truong
     if (
-      !["giam_doc", "ke_toan", "nguoi_lap_bieu", "truong_phong", "to_truong"].includes(
-        auth.user.role,
-      )
+      ![
+        "giam_doc",
+        "ke_toan",
+        "nguoi_lap_bieu",
+        "truong_phong",
+        "to_truong",
+      ].includes(auth.user.role)
     ) {
       return NextResponse.json(
         { error: "Không có quyền truy cập chức năng này" },
@@ -44,8 +48,12 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const month =
       searchParams.get("month") || new Date().toISOString().slice(0, 7);
-    const payrollType = searchParams.get("payroll_type") as 'monthly' | 't13' | null;
-    const year = searchParams.get("year") || new Date().getFullYear().toString();
+    const payrollType = searchParams.get("payroll_type") as
+      | "monthly"
+      | "t13"
+      | null;
+    const year =
+      searchParams.get("year") || new Date().getFullYear().toString();
 
     // Check if user has permission to access this department
     // For to_truong: use auth.user.department
@@ -59,7 +67,7 @@ export async function GET(
       const allowedDepartments = auth.user.allowed_departments || [];
       hasAccess = allowedDepartments.includes(departmentName);
     }
-    
+
     if (!hasAccess) {
       return NextResponse.json(
         {
@@ -96,13 +104,13 @@ export async function GET(
     // Get payroll data for the department in the specified month
     // Query payroll data với employees join
     // Sử dụng order by created_at thay vì employees(full_name) vì Supabase không hỗ trợ ordering by nested relationship fields
-    
+
     // Determine salary_month based on payroll type
     // T13: salary_month = 'YYYY-13' (e.g., '2025-13')
     // Monthly: salary_month = 'YYYY-MM' (e.g., '2025-01')
     const salaryMonthFilter = payrollType === "t13" ? `${year}-13` : month;
-    
-    let payrollQuery = supabase
+
+    const payrollQuery = supabase
       .from("payrolls")
       .select(
         `
@@ -190,7 +198,10 @@ export async function GET(
 
     // Note: We no longer filter by payroll_type since T13 is identified by salary_month = 'YYYY-13'
 
-    const { data: payrolls, error: payrollsError } = await payrollQuery.order("created_at", { ascending: false });
+    const { data: payrolls, error: payrollsError } = await payrollQuery.order(
+      "created_at",
+      { ascending: false },
+    );
 
     if (payrollsError) {
       console.error("Payrolls query error:", payrollsError);
@@ -246,7 +257,8 @@ export async function GET(
         .not("salary_month", "like", "%-13"); // Exclude T13 records
     }
 
-    const { data: historicalPayrolls, error: historicalError } = await historicalQuery.order("salary_month", { ascending: true });
+    const { data: historicalPayrolls, error: historicalError } =
+      await historicalQuery.order("salary_month", { ascending: true });
 
     if (historicalError) {
       console.error("Historical payrolls query error:", historicalError);
@@ -257,15 +269,12 @@ export async function GET(
     const payrollCount = payrolls?.length || 0;
     const signedCount = payrolls?.filter((p) => p.is_signed).length || 0;
     const totalSalary =
-      payrolls?.reduce(
-        (sum, p) => {
-          if (payrollType === "t13") {
-            return sum + (p.tong_luong_13 || 0);
-          }
-          return sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0);
-        },
-        0,
-      ) || 0;
+      payrolls?.reduce((sum, p) => {
+        if (payrollType === "t13") {
+          return sum + (p.tong_luong_13 || 0);
+        }
+        return sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0);
+      }, 0) || 0;
     const averageSalary =
       payrollCount > 0 ? Math.round(totalSalary / payrollCount) : 0;
     const signedPercentage =

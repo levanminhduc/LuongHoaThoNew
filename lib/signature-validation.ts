@@ -1,5 +1,5 @@
 import { z } from "zod";
- 
+
 export const SignatureTypeSchema = z.enum([
   "giam_doc",
   "ke_toan",
