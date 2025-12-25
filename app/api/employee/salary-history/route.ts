@@ -5,6 +5,7 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
+import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
 
       let payrollQuery = supabase
         .from("payrolls")
-        .select("*")
+        .select(getPayrollSelect(is_t13))
         .eq("employee_id", employee_id.trim())
         .eq("salary_month", salary_month.trim());
 
@@ -106,8 +107,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { data: payroll, error: payrollError } =
+      const { data: payrollData, error: payrollError } =
         await payrollQuery.single();
+
+      const payroll = payrollData as PayrollRecord | null;
 
       if (payrollError || !payroll) {
         const errorMsg = is_t13

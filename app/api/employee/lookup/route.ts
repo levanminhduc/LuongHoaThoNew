@@ -5,6 +5,7 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
+import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
 
 function validateMonthlyFormat(salaryMonth: string): boolean {
   const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     let query = supabase
       .from("payrolls")
-      .select("*")
+      .select(getPayrollSelect(is_t13))
       .eq("employee_id", employee_id.trim());
 
     if (is_t13) {
@@ -69,10 +70,12 @@ export async function POST(request: NextRequest) {
       query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
     }
 
-    const { data: payroll, error: payrollError } = await query
+    const { data: payrollData, error: payrollError } = await query
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
+
+    const payroll = payrollData as PayrollRecord | null;
 
     if (payrollError || !payroll) {
       console.error("Payroll query error:", {
