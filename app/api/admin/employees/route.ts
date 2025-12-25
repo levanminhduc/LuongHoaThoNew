@@ -4,6 +4,68 @@ import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 
+/**
+ * @swagger
+ * /admin/employees:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     summary: Lấy danh sách nhân viên
+ *     description: Lấy danh sách nhân viên với phân trang và bộ lọc
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo mã NV, tên, SĐT
+ *       - in: query
+ *         name: department
+ *         schema:
+ *           type: string
+ *         description: Lọc theo phòng ban
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *         description: Lọc theo chức vụ
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Số trang
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Số bản ghi mỗi trang
+ *     responses:
+ *       200:
+ *         description: Danh sách nhân viên
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 employees:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Employee'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Pagination'
+ *                 departments:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
 export async function GET(request: NextRequest) {
   try {
     const admin = verifyEmployeeManagementAccess(request);
@@ -87,6 +149,82 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * @swagger
+ * /admin/employees:
+ *   post:
+ *     tags:
+ *       - Admin
+ *     summary: Tạo nhân viên mới
+ *     description: Tạo nhân viên mới trong hệ thống
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - employee_id
+ *               - full_name
+ *               - cccd
+ *               - chuc_vu
+ *             properties:
+ *               employee_id:
+ *                 type: string
+ *                 description: Mã nhân viên
+ *               full_name:
+ *                 type: string
+ *                 description: Họ tên đầy đủ
+ *               cccd:
+ *                 type: string
+ *                 pattern: '^\d{12}$'
+ *                 description: Số CCCD 12 chữ số
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Mật khẩu (nếu không có sẽ dùng CCCD)
+ *               chuc_vu:
+ *                 type: string
+ *                 enum: [admin, giam_doc, ke_toan, nguoi_lap_bieu, truong_phong, to_truong, nhan_vien, van_phong]
+ *               department:
+ *                 type: string
+ *               phone_number:
+ *                 type: string
+ *               is_active:
+ *                 type: boolean
+ *                 default: true
+ *     responses:
+ *       200:
+ *         description: Tạo nhân viên thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 employee:
+ *                   $ref: '#/components/schemas/Employee'
+ *                 message:
+ *                   type: string
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       409:
+ *         description: Mã nhân viên đã tồn tại
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
 export async function POST(request: NextRequest) {
   try {
     const admin = verifyEmployeeManagementAccess(request);

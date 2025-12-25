@@ -17,6 +17,55 @@ function validateT13Format(salaryMonth: string): boolean {
   return t13Pattern.test(salaryMonth);
 }
 
+/**
+ * @swagger
+ * /employee/lookup:
+ *   post:
+ *     tags:
+ *       - Employee
+ *     summary: Tra cứu thông tin lương
+ *     description: Nhân viên tra cứu thông tin lương bằng mã NV và mật khẩu/CCCD
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - employee_id
+ *               - cccd
+ *             properties:
+ *               employee_id:
+ *                 type: string
+ *                 description: Mã nhân viên
+ *               cccd:
+ *                 type: string
+ *                 description: Mật khẩu hoặc số CCCD
+ *               is_t13:
+ *                 type: boolean
+ *                 default: false
+ *                 description: Tra cứu lương tháng 13
+ *     responses:
+ *       200:
+ *         description: Thông tin lương
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 payroll:
+ *                   $ref: '#/components/schemas/Payroll'
+ *       400:
+ *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
 export async function POST(request: NextRequest) {
   try {
     const { employee_id, cccd, is_t13 } = await request.json();
