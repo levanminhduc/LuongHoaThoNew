@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { EmployeeSearchForm } from "./components/employee-search-form";
 import { CCCDUpdateForm } from "./components/cccd-update-form";
+import { ConfirmAlertDialog } from "@/components/ui/alert-dialogs";
+import { showSuccessToast, showErrorToast } from "@/lib/toast-utils";
 
 interface Employee {
   employee_id: string;
@@ -46,6 +48,8 @@ export function UpdateCCCDManagement() {
   );
   const [updateResult, setUpdateResult] = useState<UpdateResult | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingCCCD, setPendingCCCD] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -60,11 +64,17 @@ export function UpdateCCCDManagement() {
     setUpdateResult(null);
   };
 
-  const handleCCCDUpdate = async (newCCCD: string) => {
-    if (!selectedEmployee) return;
+  const handleCCCDUpdate = (newCCCD: string) => {
+    setPendingCCCD(newCCCD);
+    setShowConfirmDialog(true);
+  };
+
+  const executeCCCDUpdate = async () => {
+    if (!selectedEmployee || !pendingCCCD) return;
 
     setIsUpdating(true);
     setUpdateResult(null);
+    setShowConfirmDialog(false);
 
     try {
       const token = localStorage.getItem("admin_token");
@@ -76,13 +86,14 @@ export function UpdateCCCDManagement() {
         },
         body: JSON.stringify({
           employee_id: selectedEmployee.employee_id,
-          new_cccd: newCCCD,
+          new_cccd: pendingCCCD,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
+        showSuccessToast("Cập nhật CCCD thành công!");
         setUpdateResult({
           success: true,
           message: data.message,
@@ -91,15 +102,19 @@ export function UpdateCCCDManagement() {
         setTimeout(() => {
           setSelectedEmployee(null);
           setUpdateResult(null);
+          setPendingCCCD("");
         }, 3000);
       } else {
+        const errorMessage = data.error || "Có lỗi xảy ra khi cập nhật CCCD";
+        showErrorToast(errorMessage);
         setUpdateResult({
           success: false,
-          message: data.error || "Có lỗi xảy ra khi cập nhật CCCD",
+          message: errorMessage,
         });
       }
     } catch (error) {
       console.error("Error updating CCCD:", error);
+      showErrorToast("Lỗi kết nối. Vui lòng thử lại.");
       setUpdateResult({
         success: false,
         message: "Lỗi kết nối. Vui lòng thử lại.",
@@ -255,6 +270,17 @@ export function UpdateCCCDManagement() {
           </div>
         )}
       </div>
+
+      <ConfirmAlertDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        onConfirm={executeCCCDUpdate}
+        title="Xác nhận cập nhật CCCD"
+        description={`Bạn có chắc chắn muốn cập nhật số CCCD cho nhân viên ${selectedEmployee?.full_name} không?`}
+        confirmLabel="Đồng ý"
+        cancelLabel="Hủy"
+        variant="warning"
+      />
     </div>
   );
 }

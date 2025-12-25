@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { type JWTPayload } from "@/lib/auth";
+import type { JWTPayload } from "@/lib/auth";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       .from("employees")
       .update({
         cccd_hash: newCccdHash,
-        updated_at: new Date().toISOString(),
+        updated_at: getVietnamTimestamp(),
       })
       .eq("employee_id", employee_id.trim());
 
@@ -95,6 +96,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Đã cập nhật CCCD thành công cho nhân viên ${employee.full_name} (${employee.employee_id})`,
+      toast: {
+        title: "Cập nhật CCCD thành công",
+        description: `Số CCCD của nhân viên ${employee.full_name} (${employee.employee_id}) đã được cập nhật`,
+        type: "success",
+      },
       employee: {
         employee_id: employee.employee_id,
         full_name: employee.full_name,
