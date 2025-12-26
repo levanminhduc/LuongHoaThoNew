@@ -36,15 +36,11 @@ import {
   FileSpreadsheet,
   Settings,
   Eye,
-  CheckCircle,
   AlertTriangle,
-  Info,
-  Calendar,
   Database,
 } from "lucide-react";
 import { useMappingConfig } from "@/lib/hooks/use-mapping-config";
 import { useHeaderMapping as useHeaderMappingUtils } from "@/lib/hooks/use-header-mapping";
-import type { MappingConfiguration } from "@/lib/column-alias-config";
 
 interface ExportConfigurationDialogProps {
   open: boolean;
@@ -77,11 +73,10 @@ export function ExportConfigurationDialog({
   const [customFilename, setCustomFilename] = useState("");
   const [selectedFields, setSelectedFields] =
     useState<string[]>(availableFields);
-  const [showPreview, setShowPreview] = useState(false);
 
   // Hooks
-  const { configurations, defaultConfig, isLoading } = useMappingConfig();
-  const { mapHeaders, generatePreview } = useHeaderMappingUtils();
+  const { configurations, defaultConfig } = useMappingConfig();
+  const { generatePreview } = useHeaderMappingUtils();
 
   // Auto-select default config
   useEffect(() => {

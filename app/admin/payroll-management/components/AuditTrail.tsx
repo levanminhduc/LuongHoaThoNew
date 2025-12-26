@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2,
@@ -70,7 +69,7 @@ export function AuditTrail({ payrollId }: AuditTrailProps) {
       } else {
         setError(data.error || "Lỗi khi tải lịch sử thay đổi");
       }
-    } catch (error) {
+    } catch {
       setError("Có lỗi xảy ra khi tải lịch sử thay đổi");
     } finally {
       setLoading(false);

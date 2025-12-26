@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
     const newPasswordHash = await bcrypt.hash(new_password.trim(), saltRounds);
 
     // Use the stored function for atomic update
-    const { data: updateResult, error: updateError } = await supabase.rpc(
+    const { error: updateError } = await supabase.rpc(
       "update_employee_password",
       {
         p_employee_id: employee.employee_id,

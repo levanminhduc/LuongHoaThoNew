@@ -23,6 +23,8 @@ function createSimpleFavicon() {
   return canvas.toDataURL("image/png");
 }
 
+void createSimpleFavicon;
+
 // Sử dụng:
 // 1. Mở browser console
 // 2. Paste code này

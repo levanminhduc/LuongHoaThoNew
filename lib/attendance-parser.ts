@@ -119,12 +119,12 @@ function parseMonthValue(
   if (!value) return null;
   const strValue = value.trim();
 
-  let match = strValue.match(/^(\d{1,2})[-\/](\d{4})$/);
+  let match = strValue.match(/^(\d{1,2})[-/](\d{4})$/);
   if (match) {
     return { year: parseInt(match[2]), month: parseInt(match[1]) };
   }
 
-  match = strValue.match(/^(\d{4})[-\/](\d{1,2})$/);
+  match = strValue.match(/^(\d{4})[-/](\d{1,2})$/);
   if (match) {
     return { year: parseInt(match[1]), month: parseInt(match[2]) };
   }

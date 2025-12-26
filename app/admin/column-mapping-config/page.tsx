@@ -30,7 +30,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -45,7 +44,6 @@ import {
   Trash2,
   Settings,
   Database,
-  FileText,
   CheckCircle,
   AlertTriangle,
   RefreshCw,
@@ -302,17 +300,6 @@ export default function ColumnMappingConfigPage() {
     selectedField && selectedField !== "all"
       ? aliases.filter((alias) => alias.database_field === selectedField)
       : aliases;
-
-  const groupedAliases = filteredAliases.reduce(
-    (acc, alias) => {
-      if (!acc[alias.database_field]) {
-        acc[alias.database_field] = [];
-      }
-      acc[alias.database_field].push(alias);
-      return acc;
-    },
-    {} as { [key: string]: ColumnAlias[] },
-  );
 
   return (
     <div className="space-y-4 sm:space-y-6">

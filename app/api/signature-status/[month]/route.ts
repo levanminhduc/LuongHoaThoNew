@@ -93,7 +93,6 @@ export async function GET(
     }
 
     let managementSignatures: Record<string, unknown> = {};
-    const payrollType = isT13 ? "t13" : "monthly";
     try {
       let sigQuery = supabase
         .from("management_signatures")
@@ -122,7 +121,7 @@ export async function GET(
           };
         });
       }
-    } catch (error) {
+    } catch {
       console.log("Management signatures table not available yet");
       managementSignatures = {
         giam_doc: null,

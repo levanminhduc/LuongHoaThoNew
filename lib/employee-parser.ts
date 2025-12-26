@@ -23,10 +23,7 @@ export interface ImportResult {
   data: EmployeeData[];
 }
 
-export function parseEmployeeExcelFile(
-  buffer: Buffer,
-  filename: string,
-): ImportResult {
+export function parseEmployeeExcelFile(buffer: Buffer): ImportResult {
   try {
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];

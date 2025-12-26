@@ -27,7 +27,6 @@ import {
   Settings,
   FileSpreadsheet,
   Database,
-  Save,
   Download,
 } from "lucide-react";
 import { ColumnMappingDialog } from "./column-mapping-dialog";
@@ -39,18 +38,8 @@ import {
   parseAdvancedExcelFiles,
   detectColumns,
   autoMapColumns,
-  autoMapColumnsWithAliases,
 } from "@/lib/advanced-excel-parser";
-import {
-  type ColumnAlias,
-  type EnhancedColumnMapping,
-  type ImportMappingResult,
-  type MappingConfiguration,
-} from "@/lib/column-alias-config";
-import {
-  EnhancedImportValidator,
-  type ValidationResult,
-} from "@/lib/enhanced-import-validation";
+import { type MappingConfiguration } from "@/lib/column-alias-config";
 import {
   useMappingConfig,
   useAutoLoadConfigurations,
@@ -73,15 +62,9 @@ export function AdvancedSalaryImport({
   const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([]);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [message, setMessage] = useState("");
-  const [aliases, setAliases] = useState<ColumnAlias[]>([]);
-  const [validationResult, setValidationResult] =
-    useState<ValidationResult | null>(null);
-  const [enhancedMappingResult, setEnhancedMappingResult] =
-    useState<ImportMappingResult | null>(null);
 
   // New mapping configuration state
   const [selectedConfigId, setSelectedConfigId] = useState<number | null>(null);
-  const [showSaveConfigDialog, setShowSaveConfigDialog] = useState(false);
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [previewMapping, setPreviewMapping] = useState<ColumnMapping | null>(
     null,
@@ -93,13 +76,10 @@ export function AdvancedSalaryImport({
   const {
     configurations,
     defaultConfig,
-    isLoading: configLoading,
-    error: configError,
     saveConfiguration,
     applyConfiguration,
     hasConfigurations,
     hasDefaultConfig,
-    configById,
   } = useMappingConfig();
 
   const { currentConfig, applyDefaultConfig, hasCurrentConfig } =

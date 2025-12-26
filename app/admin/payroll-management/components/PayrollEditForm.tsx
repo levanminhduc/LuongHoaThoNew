@@ -17,9 +17,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Loader2,
   Save,
@@ -286,7 +284,7 @@ export function PayrollEditForm({
 
       {/* Form Fields by Groups */}
       <div className="space-y-4">
-        {PAYROLL_FIELD_GROUPS.map((group, groupIndex) => (
+        {PAYROLL_FIELD_GROUPS.map((group) => (
           <Card key={group.title}>
             <Collapsible
               open={openSections[group.title]}

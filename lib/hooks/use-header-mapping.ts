@@ -78,7 +78,7 @@ export interface UseHeaderMappingReturn {
  * Main hook for header mapping operations
  */
 export const useHeaderMapping = (): UseHeaderMappingReturn => {
-  const { configurations, isLoading, error, configById } = useMappingConfig();
+  const { isLoading, error, configById } = useMappingConfig();
 
   // Map fields to headers
   const mapHeaders = useCallback(

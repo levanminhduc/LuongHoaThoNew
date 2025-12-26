@@ -5,23 +5,14 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -36,25 +27,18 @@ import {
   Save,
   Download,
   Upload,
-  Settings,
   Eye,
   Edit,
   Trash2,
   Star,
-  Copy,
   AlertTriangle,
-  CheckCircle,
-  Info,
 } from "lucide-react";
 import {
   useMappingConfig,
   useConfigValidation,
   useConfigExportImport,
 } from "@/lib/hooks/use-mapping-config";
-import type {
-  MappingConfiguration,
-  FieldMapping,
-} from "@/lib/column-alias-config";
+import type { MappingConfiguration } from "@/lib/column-alias-config";
 import type { ColumnMapping } from "@/lib/advanced-excel-parser";
 
 interface MappingConfigOverrideDialogProps {
@@ -70,7 +54,6 @@ export function MappingConfigOverrideDialog({
   open,
   onOpenChange,
   currentMapping,
-  detectedColumns = [],
   onApplyConfig,
   onSaveAsConfig,
 }: MappingConfigOverrideDialogProps) {
@@ -91,17 +74,12 @@ export function MappingConfigOverrideDialog({
   // Hooks
   const {
     configurations,
-    defaultConfig,
-    isLoading,
-    error,
-    saveConfiguration,
     updateConfiguration,
     deleteConfiguration,
     setDefaultConfiguration,
-    configById,
   } = useMappingConfig();
 
-  const { validateConfiguration, previewConfiguration } = useConfigValidation();
+  const { previewConfiguration } = useConfigValidation();
   const { exportConfiguration, importConfiguration } = useConfigExportImport();
 
   // Reset state when dialog opens/closes

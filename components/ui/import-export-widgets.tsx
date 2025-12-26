@@ -9,7 +9,6 @@ import {
   Clock,
   FileSpreadsheet,
   Upload,
-  Download,
 } from "lucide-react";
 
 interface ImportProgressProps {

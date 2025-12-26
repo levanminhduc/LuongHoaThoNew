@@ -13,24 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Calculator,
-  Clock,
-  DollarSign,
-  Gift,
-  Shield,
-  Calendar,
-  TrendingUp,
-  Minus,
-  Banknote,
-  X,
-} from "lucide-react";
-import {
-  formatSalaryMonth,
-  formatCurrency,
-  formatNumber,
-} from "@/lib/utils/date-formatter";
+import { Gift, Calendar, X } from "lucide-react";
+import { formatSalaryMonth, formatCurrency } from "@/lib/utils/date-formatter";
 
 // Interface này giữ nguyên hoặc anh có thể sửa đổi tùy ý cho T13 mà không sợ ảnh hưởng cái kia
 interface PayrollResult {
@@ -135,11 +119,6 @@ export function PayrollDetailModalT13({
   const formatCurrencyLocal = (amount: number | undefined) => {
     if (amount === undefined || amount === null) return "0 ₫";
     return formatCurrency(amount);
-  };
-
-  const formatNumberLocal = (value: number | undefined) => {
-    if (value === undefined || value === null) return "0";
-    return formatNumber(value);
   };
 
   const DetailRow = ({

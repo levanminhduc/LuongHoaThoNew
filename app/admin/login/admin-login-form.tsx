@@ -1,8 +1,7 @@
 "use client";
 
-import type React from "react";
-
 import { useState, Suspense, useRef, useLayoutEffect, useEffect } from "react";
+import type { FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -116,7 +115,7 @@ function LoginFormContent() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -242,8 +241,7 @@ function LoginFormContent() {
                 Ghi nhớ thông tin đăng nhập
               </label>
             </div>
-            {/* Tạm ẩn nút xóa - có thể bật lại sau */}
-            {false && hasSavedCredentials && (
+            {hasSavedCredentials && (
               <Button
                 type="button"
                 variant="ghost"

@@ -43,14 +43,12 @@ export async function POST(request: NextRequest) {
     let decoded: JWTPayload;
     try {
       decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const body: Omit<ImportHistoryRecord, "id" | "created_at"> =
       await request.json();
-
-    const supabase = createServiceClient();
 
     // For now, we'll store in a mock way since we don't have import_history table
     // In a real implementation, you would create this table in Supabase
@@ -104,7 +102,7 @@ export async function GET(request: NextRequest) {
 
     try {
       jwt.verify(token, JWT_SECRET);
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
@@ -249,7 +247,7 @@ export async function DELETE(request: NextRequest) {
 
     try {
       jwt.verify(token, JWT_SECRET);
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 

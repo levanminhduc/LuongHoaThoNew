@@ -1,7 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = createServiceClient();
 

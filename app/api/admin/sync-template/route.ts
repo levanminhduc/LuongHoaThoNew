@@ -154,8 +154,7 @@ export async function GET(request: NextRequest) {
         ]);
       });
     } else if (employees && employees.length > 0) {
-      // Generate sample data if no payrolls exist
-      employees.forEach((employee, index) => {
+      employees.forEach((employee) => {
         const currentMonth = new Date().toISOString().substr(0, 7);
         templateData.push([
           employee.employee_id,

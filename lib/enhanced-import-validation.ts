@@ -5,7 +5,6 @@
 
 import {
   type EnhancedColumnMapping,
-  type MappingConflict,
   type ColumnAlias,
   CONFIDENCE_LEVELS,
 } from "./column-alias-config";

@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // Parse Excel file
     const buffer = Buffer.from(await file.arrayBuffer());
-    const parseResult = parseEmployeeExcelFile(buffer, file.name);
+    const parseResult = parseEmployeeExcelFile(buffer);
 
     if (!parseResult.success && parseResult.data.length === 0) {
       return NextResponse.json(
@@ -118,8 +118,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Insert employee with exact database schema mapping
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("employees")
           .insert({
             employee_id: employee.employee_id,

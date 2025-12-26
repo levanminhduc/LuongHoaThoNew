@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   User,
-  Shield,
   Building2,
   Users,
   Crown,

@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
       } else {
         setupResults.tableCreated = true;
       }
-    } catch (error) {
+    } catch {
       try {
-        const { data: testInsert, error: testError } = await supabase
+        const { error: testError } = await supabase
           .from("management_signatures")
           .select("id")
           .limit(1);
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
             "Table does not exist - please run migration script",
           );
         }
-      } catch (e) {
+      } catch {
         setupResults.errors.push("Table verification failed");
       }
     }

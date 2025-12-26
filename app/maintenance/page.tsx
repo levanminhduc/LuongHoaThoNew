@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { MAINTENANCE_MESSAGE } from "@/lib/maintenance";
-import { Cog, RefreshCw, Server, AlertCircle } from "lucide-react";
+import { Cog, RefreshCw, Server } from "lucide-react";
 
 const HEADING_TEXT = "Tra Cứu và Ký Xác Nhận Lương";
 

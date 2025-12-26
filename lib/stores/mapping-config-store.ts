@@ -7,10 +7,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import type {
-  MappingConfiguration,
-  FieldMapping,
-} from "@/lib/column-alias-config";
+import type { MappingConfiguration } from "@/lib/column-alias-config";
 import {
   cacheUtils,
   CacheKeys,
@@ -527,14 +524,9 @@ export const useMappingConfigStore = create<MappingConfigStore>()(
       },
 
       setDefaultConfiguration: async (id) => {
-        try {
-          await get().updateConfiguration(id, { is_default: true });
+        await get().updateConfiguration(id, { is_default: true });
 
-          // Trigger sync event for default change
-          syncManager.triggerDefaultChanged(id);
-        } catch (error) {
-          throw error;
-        }
+        syncManager.triggerDefaultChanged(id);
       },
 
       // ===== CURRENT CONFIG MANAGEMENT =====

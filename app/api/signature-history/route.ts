@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       } else {
         signatures = signatureData || [];
       }
-    } catch (error) {
+    } catch {
       console.log(
         "Management signatures table not available - returning mock data",
       );

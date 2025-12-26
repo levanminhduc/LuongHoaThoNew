@@ -36,10 +36,8 @@ import {
   FileCheck,
   Eye,
   TrendingUp,
-  Calendar,
   Download,
   Loader2,
-  Gift,
 } from "lucide-react";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";

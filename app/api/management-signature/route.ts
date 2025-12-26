@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-    } catch (error) {
+    } catch {
       console.log(
         "Management signatures table not available - will create mock signature",
       );
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
         updated_status: updatedStatus,
         timestamp: vietnamTime,
       });
-    } catch (error) {
+    } catch {
       console.log(
         "Management signatures table not available - returning mock response",
       );

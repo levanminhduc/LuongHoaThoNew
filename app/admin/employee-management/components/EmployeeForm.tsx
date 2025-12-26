@@ -62,7 +62,7 @@ export default function EmployeeForm({
   const [departments, setDepartments] = useState<string[]>([]);
   const [departmentSearch, setDepartmentSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout>(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filteredRoleOptions = roleOptions.filter(

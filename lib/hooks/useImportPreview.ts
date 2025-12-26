@@ -33,7 +33,7 @@ export function useImportPreview(): UseImportPreviewReturn {
       } else {
         setError(result.error || "Lỗi khi tải dữ liệu preview");
       }
-    } catch (err) {
+    } catch {
       setError("Lỗi kết nối");
     } finally {
       setLoading(false);

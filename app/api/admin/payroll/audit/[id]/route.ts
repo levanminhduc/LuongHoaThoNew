@@ -72,7 +72,7 @@ export async function GET(
 
     // First, check if audit table exists and is accessible
     try {
-      const { data: tableCheck, error: tableError } = await supabase
+      const { error: tableError } = await supabase
         .from("payroll_audit_logs")
         .select("id")
         .limit(1);

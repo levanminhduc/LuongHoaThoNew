@@ -19,7 +19,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Loader2,
@@ -199,7 +198,7 @@ export function SalaryHistoryModal({
       } else {
         setError(data.error || "Không thể tải danh sách tháng lương");
       }
-    } catch (error) {
+    } catch {
       setError("Lỗi kết nối mạng. Vui lòng thử lại.");
     } finally {
       setLoadingMonths(false);
@@ -233,7 +232,7 @@ export function SalaryHistoryModal({
       } else {
         setError(data.error || "Không thể tải thông tin lương");
       }
-    } catch (error) {
+    } catch {
       setError("Lỗi kết nối mạng. Vui lòng thử lại.");
     } finally {
       setLoadingPayroll(false);

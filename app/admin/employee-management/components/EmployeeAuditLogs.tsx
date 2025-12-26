@@ -131,7 +131,7 @@ export default function EmployeeAuditLogs({
         let errorData: { error?: string } = {};
         try {
           errorData = JSON.parse(errorText);
-        } catch (e) {
+        } catch {
           errorData = { error: errorText };
         }
         throw new Error(

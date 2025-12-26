@@ -206,7 +206,7 @@ export default function EmployeeManagementModal({
         throw new Error(error.error || "Failed to delete employee");
       }
 
-      const result = await response.json();
+      await response.json();
       const employee = employees.find((e) => e.employee_id === employeeId);
       showDeleteSuccessToast(employee?.full_name || employeeId, "nhân viên");
       fetchEmployees();

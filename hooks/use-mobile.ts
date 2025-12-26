@@ -80,7 +80,10 @@ export function useIsMobileDevice() {
 
   useEffect(() => {
     const userAgent =
-      navigator.userAgent || navigator.vendor || (window as any).opera;
+      navigator.userAgent ||
+      navigator.vendor ||
+      (window as Window & { opera?: string }).opera ||
+      "";
 
     // Check for mobile devices in user agent
     const mobileRegex =

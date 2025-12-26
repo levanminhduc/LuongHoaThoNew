@@ -165,7 +165,7 @@ export default function AccountantDashboard() {
       } else {
         setMessage(data.error || "Có lỗi xảy ra khi ký");
       }
-    } catch (error) {
+    } catch {
       setMessage("Lỗi kết nối khi ký xác nhận");
     } finally {
       setIsSigning(false);

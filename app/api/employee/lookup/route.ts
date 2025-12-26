@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    const payrollType = is_t13 ? "t13" : "monthly";
 
     const { data: employee, error: employeeError } = await supabase
       .from("employees")

@@ -18,13 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -207,7 +201,7 @@ export default function EmployeeManagementPage() {
         throw new Error("Failed to delete employee");
       }
 
-      const result = await response.json();
+      await response.json();
       const employee = employees.find((e) => e.employee_id === employeeId);
       showDeleteSuccessToast(employee?.full_name || employeeId, "nhân viên");
       fetchEmployees();

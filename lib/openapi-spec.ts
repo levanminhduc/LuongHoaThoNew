@@ -372,7 +372,7 @@ export function getOpenAPISpec(): object {
 
   cachedSpec = swaggerJsdoc(options);
   cacheTime = now;
-  return cachedSpec;
+  return cachedSpec as object;
 }
 
 export function clearSpecCache(): void {

@@ -427,7 +427,7 @@ export async function GET(request: NextRequest) {
             signatureLogsMap.set(log.employee_id, log as SignatureLog);
           });
         }
-      } catch (error) {
+      } catch {
         console.log("Could not fetch signature_logs - using fallback");
       }
     }
@@ -486,7 +486,7 @@ export async function GET(request: NextRequest) {
             ] = sig;
           });
         }
-      } catch (error) {
+      } catch {
         console.log(
           "Management signatures table not available - using fallback",
         );

@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
 
     for (const table of tables) {
       try {
-        const { data, error, count } = await supabase
+        const { error, count } = await supabase
           .from(table)
           .select("*", { count: "exact", head: true })
           .limit(1);

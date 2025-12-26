@@ -166,7 +166,7 @@ export async function checkSignatureEligibility(
           existing_signature: existingSignature,
         };
       }
-    } catch (error) {
+    } catch {
       console.log(
         "Management signatures table not available - proceeding with eligibility check",
       );
@@ -212,7 +212,7 @@ export async function getManagementSignatureStatus(
           ] = sig;
         });
       }
-    } catch (error) {
+    } catch {
       console.log(
         "Management signatures table not available - using null values",
       );

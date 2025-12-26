@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       const hashedPassword = await bcrypt.hash(cred.password, 10);
 
       // Update employee with hashed password
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("employees")
         .update({ cccd_hash: hashedPassword })
         .eq("employee_id", cred.employee_id)

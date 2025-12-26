@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     const insertResults = [];
     for (const emp of sampleEmployees) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("employees")
         .upsert(emp, { onConflict: "employee_id" })
         .select();

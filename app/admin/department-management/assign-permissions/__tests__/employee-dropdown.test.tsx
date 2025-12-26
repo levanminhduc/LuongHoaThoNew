@@ -1,8 +1,3 @@
-/**
- * Test file for Employee Dropdown in Department Permission Assignment
- * Tests the new format: "Tên + Chức vụ + Mã số + Department"
- */
-
 import { render, screen } from "@testing-library/react";
 import {
   Select,

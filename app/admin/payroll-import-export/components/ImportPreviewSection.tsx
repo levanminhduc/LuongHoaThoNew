@@ -11,7 +11,6 @@ import type { ImportPreviewSectionProps } from "@/lib/types/payroll-preview";
 
 export function ImportPreviewSection({
   importBatchId,
-  totalRecords,
   successCount,
 }: ImportPreviewSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);

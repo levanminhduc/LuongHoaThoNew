@@ -2,16 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import {
   Settings,
   Shield,
@@ -79,7 +76,7 @@ export default function PayrollManagementPage() {
         setError(data.error || "Lỗi khi tải dữ liệu lương");
         setPayrollData(null);
       }
-    } catch (error) {
+    } catch {
       setError("Có lỗi xảy ra khi tải dữ liệu lương");
       setPayrollData(null);
     } finally {
@@ -124,7 +121,7 @@ export default function PayrollManagementPage() {
       } else {
         setError(data.error || "Lỗi khi cập nhật dữ liệu lương");
       }
-    } catch (error) {
+    } catch {
       setError("Có lỗi xảy ra khi cập nhật dữ liệu lương");
     } finally {
       setSaving(false);

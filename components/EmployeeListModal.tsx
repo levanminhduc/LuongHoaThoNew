@@ -22,7 +22,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Users,
   Search,
-  Filter,
   ChevronLeft,
   ChevronRight,
   Building2,

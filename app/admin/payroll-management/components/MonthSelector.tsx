@@ -68,7 +68,7 @@ export function MonthSelector({
         const errorData = await response.json();
         setError(errorData.error || "Lỗi khi tải danh sách tháng");
       }
-    } catch (error) {
+    } catch {
       setError("Có lỗi xảy ra khi tải danh sách tháng");
     } finally {
       setLoading(false);
@@ -85,8 +85,8 @@ export function MonthSelector({
       }
 
       return `Tháng ${monthNumber} - ${year}`;
-    } catch (error) {
-      return month; // Return original if parsing fails
+    } catch {
+      return month;
     }
   };
 

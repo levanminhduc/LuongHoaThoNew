@@ -1,6 +1,5 @@
 // Security middleware for rate limiting, CSRF protection, and input validation
 import { type NextRequest, NextResponse } from "next/server";
-import { headers } from "next/headers";
 
 // Rate limiting store (in production, use Redis or database)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();

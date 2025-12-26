@@ -184,7 +184,11 @@ export default function ApiDocsPage() {
         filter={true}
         showExtensions={true}
         showCommonExtensions={true}
-        requestInterceptor={(req) => {
+        requestInterceptor={(req: {
+          url: string;
+          method: string;
+          headers: Record<string, string>;
+        }) => {
           const token = document.cookie
             .split("; ")
             .find((row) => row.startsWith("auth_token="));

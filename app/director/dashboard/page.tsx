@@ -130,8 +130,7 @@ export default function DirectorDashboard() {
         localStorage.removeItem("admin_token");
         router.push("/admin/login");
       }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+    } catch {
       setMessage("Lỗi khi tải dữ liệu dashboard");
     } finally {
       setLoading(false);
@@ -165,7 +164,7 @@ export default function DirectorDashboard() {
       } else {
         setMessage(data.error || "Có lỗi xảy ra khi ký");
       }
-    } catch (error) {
+    } catch {
       setMessage("Lỗi kết nối khi ký xác nhận");
     } finally {
       setIsSigning(false);

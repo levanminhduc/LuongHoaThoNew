@@ -89,7 +89,7 @@ export function EmployeeImportSection() {
       } else {
         setImportMessage("Lỗi khi tải file template");
       }
-    } catch (error) {
+    } catch {
       setImportMessage("Có lỗi xảy ra khi tải file template");
     } finally {
       setDownloadingTemplate(false);

@@ -1,12 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import {
-  verifyToken,
-  getDepartmentFilter,
-  getEmployeeFilter,
-  getAuditInfo,
-  type AuthContext,
-} from "@/lib/auth-middleware";
+import { verifyToken } from "@/lib/auth-middleware";
 
 // Get client IP address
 function getClientIP(request: NextRequest): string {

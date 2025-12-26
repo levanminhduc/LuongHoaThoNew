@@ -216,7 +216,6 @@ export default function DepartmentDetailModalRefactored({
     try {
       // Create a cache key that includes payrollType and year for T13
       const cacheKeyMonth = payrollType === "t13" ? `${t13Year}-13` : month;
-      const cacheKey = `${departmentName}_${cacheKeyMonth}_${payrollType}`;
 
       if (!forceRefresh) {
         // We need to update cache utility to support custom keys or just append to month
@@ -227,7 +226,7 @@ export default function DepartmentDetailModalRefactored({
           cacheKeyMonth,
         );
         if (cachedData) {
-          setDepartmentData(cachedData);
+          setDepartmentData(cachedData as DepartmentDetail);
           setLoading(false);
           return;
         }

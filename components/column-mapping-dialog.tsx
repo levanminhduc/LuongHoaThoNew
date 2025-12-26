@@ -14,7 +14,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,7 +21,6 @@ import {
   Check,
   AlertTriangle,
   RefreshCw,
-  Save,
   Zap,
   Target,
   Plus,
@@ -48,8 +46,6 @@ import {
   type ColumnAlias,
   type ImportMappingResult,
   type MappingConfiguration,
-  CONFIDENCE_LEVELS,
-  categorizeMappingConfidence,
 } from "@/lib/column-alias-config";
 
 interface ColumnMappingDialogProps {
@@ -227,12 +223,6 @@ export function ColumnMappingDialog({
     if (score >= 80) return "bg-green-100 text-green-800 border-green-200";
     if (score >= 50) return "bg-yellow-100 text-yellow-800 border-yellow-200";
     return "bg-red-100 text-red-800 border-red-200";
-  };
-
-  const getConfidenceIcon = (score: number) => {
-    if (score >= 80) return <Check className="h-3 w-3" />;
-    if (score >= 50) return <AlertTriangle className="h-3 w-3" />;
-    return <X className="h-3 w-3" />;
   };
 
   const getMappingTypeIcon = (type: string) => {

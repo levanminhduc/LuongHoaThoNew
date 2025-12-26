@@ -3,11 +3,8 @@ import {
   type ColumnAlias,
   type EnhancedColumnMapping,
   type ImportMappingResult,
-  type MappingConflict,
   type MappingSuggestion,
   type MappingConfiguration,
-  calculateConfidenceScore,
-  categorizeMappingConfidence,
   validateMappingConfiguration,
   CONFIDENCE_LEVELS,
 } from "./column-alias-config";

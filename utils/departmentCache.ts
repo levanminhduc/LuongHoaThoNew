@@ -2,7 +2,7 @@
 // Provides caching functionality for department API calls with 12-hour expiration
 
 interface CacheData {
-  data: any;
+  data: unknown;
   timestamp: number;
   expiresAt: number;
 }
@@ -31,7 +31,7 @@ class DepartmentCache {
   static setCacheData(
     departmentName: string,
     month: string,
-    data: any,
+    data: unknown,
     options: DepartmentCacheOptions = {},
   ): void {
     try {
@@ -63,7 +63,7 @@ class DepartmentCache {
   /**
    * Get data from cache if valid
    */
-  static getCacheData(departmentName: string, month: string): any | null {
+  static getCacheData(departmentName: string, month: string): unknown | null {
     try {
       const cacheKey = this.generateCacheKey(departmentName, month);
       const cachedItem = localStorage.getItem(cacheKey);

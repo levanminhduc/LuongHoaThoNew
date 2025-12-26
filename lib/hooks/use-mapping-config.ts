@@ -8,10 +8,7 @@ import {
   useMappingConfigStore,
   type ConfigNotification,
 } from "@/lib/stores/mapping-config-store";
-import type {
-  MappingConfiguration,
-  FieldMapping,
-} from "@/lib/column-alias-config";
+import type { MappingConfiguration } from "@/lib/column-alias-config";
 
 // ===== MAIN HOOK =====
 

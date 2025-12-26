@@ -25,10 +25,7 @@ import {
 } from "@/components/ui/select";
 import {
   GitMerge,
-  AlertTriangle,
   CheckCircle,
-  ArrowRight,
-  Settings,
   Zap,
   Target,
 } from "lucide-react";

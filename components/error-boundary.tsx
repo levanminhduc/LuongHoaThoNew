@@ -61,11 +61,11 @@ class ErrorBoundary extends Component<Props, State> {
         // Store in sessionStorage for debugging
         try {
           sessionStorage.setItem("last_error", JSON.stringify(errorData));
-        } catch (e) {
-          // Ignore storage errors
+        } catch (_storageError) {
+          void _storageError;
         }
-      } catch (e) {
-        // Ignore logging errors
+      } catch (_loggingError) {
+        void _loggingError;
       }
     }
   }

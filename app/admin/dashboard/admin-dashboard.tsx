@@ -31,7 +31,6 @@ import {
   DollarSign,
   TrendingUp,
   Settings,
-  Shield,
   ArrowUpDown,
   UserCheck,
   Edit,
@@ -181,7 +180,7 @@ export function AdminDashboard() {
       } else {
         setMessage("Lỗi khi tải template đồng bộ");
       }
-    } catch (error) {
+    } catch {
       setMessage("Có lỗi xảy ra khi tải template đồng bộ");
     } finally {
       setDownloadingSyncTemplate(false);

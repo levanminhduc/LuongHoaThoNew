@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -27,9 +26,7 @@ import {
   AlertTriangle,
   XCircle,
   Clock,
-  FileSpreadsheet,
   BarChart3,
-  Download,
   Trash2,
   RefreshCw,
 } from "lucide-react";
@@ -87,7 +84,7 @@ export function ImportHistoryViewer({
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [dateFromFilter, setDateFromFilter] = useState<string>("");
   const [dateToFilter, setDateToFilter] = useState<string>("");
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
 
   const fetchHistory = async () => {
     setLoading(true);

@@ -10,10 +10,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Users } from "lucide-react";
 import {
-  showSuccessToast,
   showErrorToast,
   showBulkSignatureSuccessToast,
   showNetworkErrorToast,
@@ -87,7 +85,7 @@ export function BulkSignatureDialog({
       } else {
         showErrorToast(data.error || "Lỗi khi lấy thống kê");
       }
-    } catch (err) {
+    } catch {
       showNetworkErrorToast();
     } finally {
       setLoadingStats(false);
@@ -130,7 +128,7 @@ export function BulkSignatureDialog({
         setError(data.error || "Có lỗi xảy ra");
         showErrorToast(data.error || "Có lỗi xảy ra");
       }
-    } catch (err) {
+    } catch {
       setError("Lỗi kết nối server");
       showNetworkErrorToast();
     } finally {

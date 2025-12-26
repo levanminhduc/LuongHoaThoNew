@@ -3,10 +3,7 @@
  * Implements multi-layer caching with invalidation logic and optimistic updates
  */
 
-import type {
-  MappingConfiguration,
-  FieldMapping,
-} from "@/lib/column-alias-config";
+import type { MappingConfiguration } from "@/lib/column-alias-config";
 
 // ===== CACHE INTERFACES =====
 

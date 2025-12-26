@@ -59,7 +59,7 @@ async function createAdminUser() {
     const password_hash = await bcrypt.hash(adminCredentials.password, 10);
 
     // Check if admin_users table exists
-    const { data: tables, error: tableError } = await supabase
+    const { error: tableError } = await supabase
       .from("admin_users")
       .select("id")
       .limit(1);
@@ -105,7 +105,7 @@ async function createAdminUser() {
     }
 
     // Insert new admin user
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("admin_users")
       .insert({
         username: adminCredentials.username,

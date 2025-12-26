@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -15,12 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  formatHighPrecisionNumber,
   parseHighPrecisionNumber,
-  formatCoefficient,
-  formatTimeValue,
   smartFormatNumber,
-  validateDecimal15_10,
   FIELD_PRECISION_CONFIG,
 } from "@/lib/utils/high-precision-formatting";
 import { Calculator, CheckCircle, AlertTriangle, XCircle } from "lucide-react";

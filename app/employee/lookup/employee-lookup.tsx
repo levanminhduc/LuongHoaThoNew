@@ -1,8 +1,7 @@
 "use client";
 
-import type React from "react";
-
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
+import type { FormEvent, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -95,19 +94,17 @@ interface PayrollResult {
   cccd: string;
   position: string;
   salary_month: string;
-  salary_month_display?: string; // Optional formatted display
+  salary_month_display?: string;
   total_income: number;
   deductions: number;
   net_salary: number;
   source_file: string;
 
-  // Hệ số và thông số cơ bản
   he_so_lam_viec?: number;
   he_so_phu_cap_ket_qua?: number;
   he_so_luong_co_ban?: number;
   luong_toi_thieu_cty?: number;
 
-  // Thời gian làm việc
   ngay_cong_trong_gio?: number;
   gio_cong_tang_ca?: number;
   gio_an_ca?: number;
@@ -115,7 +112,6 @@ interface PayrollResult {
   tong_he_so_quy_doi?: number;
   ngay_cong_chu_nhat?: number;
 
-  // Lương sản phẩm và đơn giá
   tong_luong_san_pham_cong_doan?: number;
   don_gia_tien_luong_tren_gio?: number;
   tien_luong_san_pham_trong_gio?: number;
@@ -124,7 +120,6 @@ interface PayrollResult {
   tien_tang_ca_vuot?: number;
   tien_luong_chu_nhat?: number;
 
-  // Thưởng và phụ cấp
   tien_khen_thuong_chuyen_can?: number;
   luong_hoc_viec_pc_luong?: number;
   tong_cong_tien_luong_san_pham?: number;
@@ -132,40 +127,33 @@ interface PayrollResult {
   bo_sung_luong?: number;
   luong_cnkcp_vuot?: number;
 
-  // Bảo hiểm và phúc lợi
   bhxh_21_5_percent?: number;
   pc_cdcs_pccc_atvsv?: number;
   luong_phu_nu_hanh_kinh?: number;
   tien_con_bu_thai_7_thang?: number;
   ho_tro_gui_con_nha_tre?: number;
 
-  // Phép và lễ
   ngay_cong_phep_le?: number;
   tien_phep_le?: number;
 
-  // Tổng lương và phụ cấp khác
   tong_cong_tien_luong?: number;
   tien_boc_vac?: number;
   ho_tro_xang_xe?: number;
 
-  // Thuế và khấu trừ
   thue_tncn_nam_2024?: number;
   tam_ung?: number;
   thue_tncn?: number;
   bhxh_bhtn_bhyt_total?: number;
   truy_thu_the_bhyt?: number;
 
-  // Lương thực nhận
   tien_luong_thuc_nhan_cuoi_ky?: number;
 
-  // T13 fields
   chi_dot_1_13?: number;
   chi_dot_2_13?: number;
   tong_luong_13?: number;
   so_thang_chia_13?: number;
   tong_sp_12_thang?: number;
 
-  // Chi tiết 12 tháng cho Tháng 13
   t13_thang_01?: number;
   t13_thang_02?: number;
   t13_thang_03?: number;
@@ -179,10 +167,9 @@ interface PayrollResult {
   t13_thang_11?: number;
   t13_thang_12?: number;
 
-  // Thông tin ký nhận
   is_signed?: boolean;
   signed_at?: string;
-  signed_at_display?: string; // Formatted display timestamp
+  signed_at_display?: string;
   signed_by_name?: string;
 }
 
@@ -205,7 +192,6 @@ export function EmployeeLookup() {
   const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
   const salaryInfoRef = useRef<HTMLDivElement>(null);
 
-  // T13 State
   const [t13Result, setT13Result] = useState<PayrollResult | null>(null);
   const [showT13Modal, setShowT13Modal] = useState(false);
   const [showT13DetailModal, setShowT13DetailModal] = useState(false);
@@ -236,7 +222,7 @@ export function EmployeeLookup() {
     setError("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -292,7 +278,6 @@ export function EmployeeLookup() {
     setError("");
 
     try {
-      // Tạo timestamp theo timezone Việt Nam để tránh timezone issues trên Vercel
       const vietnamTime = getVietnamTimestamp();
 
       const response = await fetch("/api/employee/sign-salary", {
@@ -304,7 +289,7 @@ export function EmployeeLookup() {
           employee_id: employeeId.trim(),
           cccd: cccd.trim(),
           salary_month: result.salary_month,
-          client_timestamp: vietnamTime, // Gửi thời gian Việt Nam
+          client_timestamp: vietnamTime,
         }),
       });
 
@@ -312,20 +297,17 @@ export function EmployeeLookup() {
 
       if (response.ok) {
         setSignSuccess(true);
-        // Cập nhật result với thông tin ký
         setResult({
           ...result,
           is_signed: true,
           signed_at: data.data.signed_at,
-          signed_at_display: data.data.signed_at_display, // Use formatted display from API
-          signed_by_name: data.data.employee_name || data.data.signed_by, // ✅ Fix: Support both field names
+          signed_at_display: data.data.signed_at_display,
+          signed_by_name: data.data.employee_name || data.data.signed_by,
         });
-        setTimeout(() => setSignSuccess(false), 5000); // Ẩn thông báo sau 5s
+        setTimeout(() => setSignSuccess(false), 5000);
       } else {
-        // ✅ FIX: Hiển thị chính xác error message từ API
         console.error("Sign salary API error:", response.status, data);
 
-        // Handle specific error cases
         if (data.error && data.error.includes("đã ký nhận lương")) {
           setError(
             "Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.",
@@ -344,8 +326,8 @@ export function EmployeeLookup() {
           );
         }
       }
-    } catch (error) {
-      console.error("Network error:", error);
+    } catch (_error) {
+      console.error("Network error:", _error);
       setError(
         "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.",
       );
@@ -404,9 +386,6 @@ export function EmployeeLookup() {
     if (!t13Result || !employeeId || !cccd) return;
 
     setT13SigningLoading(true);
-    // Note: We don't clear global error here to avoid messing up main UI,
-    // but we could use a local error state for the modal if needed.
-    // For now we'll rely on alerts inside the modal or global error if critical.
 
     try {
       const vietnamTime = getVietnamTimestamp();
@@ -441,8 +420,8 @@ export function EmployeeLookup() {
         console.error("Sign T13 error:", response.status, data);
         alert(data.error || "Không thể ký nhận lương. Vui lòng thử lại.");
       }
-    } catch (error) {
-      console.error("Network error:", error);
+    } catch (_error) {
+      console.error("Network error:", _error);
       alert("Lỗi kết nối mạng. Vui lòng thử lại.");
     } finally {
       setT13SigningLoading(false);
@@ -462,11 +441,8 @@ export function EmployeeLookup() {
     cursorPositionRef.current = null;
   }, [employeeId]);
 
-  // Using utility functions from date-formatter
-
   return (
     <div className="space-y-6">
-      {/* Search Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -506,7 +482,7 @@ export function EmployeeLookup() {
                   id="employee_id"
                   type="text"
                   value={employeeId}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     const input = e.target;
                     const newValue = input.value.toUpperCase();
                     cursorPositionRef.current = input.selectionStart;
@@ -565,8 +541,7 @@ export function EmployeeLookup() {
                   Ghi nhớ thông tin đăng nhập
                 </label>
               </div>
-              {/* Tạm ẩn nút xóa - có thể bật lại sau */}
-              {false && hasSavedCredentials && (
+              {hasSavedCredentials && (
                 <Button
                   type="button"
                   variant="ghost"

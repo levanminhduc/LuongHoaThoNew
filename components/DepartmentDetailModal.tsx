@@ -38,7 +38,6 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -51,7 +50,6 @@ import {
   FileCheck,
   Search,
   Download,
-  Eye,
   Building2,
   Calendar,
   BarChart3,
@@ -680,7 +678,7 @@ export default function DepartmentDetailModal({
                         <CardContent>
                           <div className="space-y-3">
                             {departmentData.salaryDistribution.map(
-                              (range, index) => (
+                              (range) => (
                                 <div
                                   key={range.range}
                                   className="flex justify-between items-center"

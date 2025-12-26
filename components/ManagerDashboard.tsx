@@ -193,7 +193,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
           }
         }
       }
-    } catch (error) {
+    } catch {
       console.log("Could not detect latest month, using default");
     }
   };

@@ -51,10 +51,7 @@ import { getPreviousMonth } from "@/utils/dateUtils";
 import { DepartmentDetailModalRefactored } from "./department";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
 import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
-import {
-  transformPayrollRecordToResult,
-  type PayrollResult,
-} from "@/lib/utils/payroll-transformer";
+import { type PayrollResult } from "@/lib/utils/payroll-transformer";
 
 // Helper function to format month label
 const formatMonthLabel = (value: string) => {

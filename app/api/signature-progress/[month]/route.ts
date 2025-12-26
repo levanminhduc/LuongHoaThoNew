@@ -109,7 +109,7 @@ export async function GET(
           completion_percentage: mgmtCompletionPercentage,
         };
       }
-    } catch (error) {
+    } catch {
       console.log("Management signatures table not available yet");
     }
 
@@ -151,7 +151,7 @@ export async function GET(
           })),
         );
       }
-    } catch (error) {
+    } catch {
       console.log(
         "Management signatures table not available for recent activity",
       );

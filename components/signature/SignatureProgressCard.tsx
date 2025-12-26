@@ -9,8 +9,6 @@ import {
   Users,
   CheckCircle,
   Clock,
-  TrendingUp,
-  AlertCircle,
   RefreshCw,
   Eye,
   EyeOff,
