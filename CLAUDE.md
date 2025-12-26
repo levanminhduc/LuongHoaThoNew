@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Node Version
 
-- **Node.js**: v18+
+- **Node.js**: v22.17.0+ (yêu cầu >= 20.9.0)
 - **Package Manager**: npm (primary), pnpm/bun (optional)
 
 ### Commands Chính
@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev                    # Start dev server on localhost:3000
 
 # Build & Production
-npm run build                  # Build Next.js production
+npm run build                  # Build Next.js production (Turbopack enabled)
 npm start                      # Start production server
 
 # Code Quality (QUAN TRỌNG - chạy sau mỗi lần code)
@@ -41,12 +41,13 @@ node scripts/run-bulk-signature-migrations.js
 
 ### Tech Stack
 
-- **Frontend**: Next.js 15 App Router, React 19, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui components
+- **Frontend**: Next.js 16.1.1 App Router, React 19.2.3, TypeScript 5
+- **Styling**: Tailwind CSS 3.4.17, shadcn/ui components
 - **Backend**: Next.js API Routes
 - **Database**: Supabase PostgreSQL với Row Level Security (RLS)
 - **Authentication**: JWT-based với bcrypt hashing
 - **File Processing**: xlsx, xlsx-js-style cho Excel import/export
+- **Bundler**: Turbopack (default trong Next.js 16)
 
 ### Cấu Trúc Dự Án
 
@@ -496,8 +497,9 @@ NODE_ENV=production
 
 - **next.config.mjs**:
   - `output: 'standalone'` for Docker deployment
-  - `eslint.ignoreDuringBuilds: true`
+  - `turbopack: {}` - Turbopack enabled by default
   - `typescript.ignoreBuildErrors: true`
+- **ESLint**: Sử dụng ESLint 9 Flat Config (`eslint.config.mjs`)
 - **Docker support**: `Dockerfile` và `compose.yml` available
 
 ### Database Migrations
