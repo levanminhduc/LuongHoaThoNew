@@ -17,9 +17,7 @@ const nextConfig = {
       exclude: ['error', 'warn'],
     } : false,
   },
-  experimental: {
-    reactCompiler: false,
-  },
+  reactCompiler: false,
 }
 
 export default nextConfig

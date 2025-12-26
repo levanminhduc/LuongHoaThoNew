@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Development
-npm run dev                    # Start dev server on localhost:3000
+npm run dev                    # Start dev server with Turbopack on localhost:3000
 
 # Build & Production
 npm run build                  # Build Next.js production (Turbopack enabled)
@@ -25,7 +25,8 @@ npm start                      # Start production server
 
 # Code Quality (QUAN TRỌNG - chạy sau mỗi lần code)
 npm run format                 # Format code với Prettier
-npm run lint                   # Check ESLint errors
+npm run lint                   # Check ESLint errors (ESLint 9 Flat Config)
+npm run lint:fix               # Auto-fix ESLint errors
 npm run typecheck              # Check TypeScript errors
 
 # Workflow đầy đủ sau khi viết code:
