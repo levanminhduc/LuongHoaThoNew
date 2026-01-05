@@ -1,14 +1,16 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:20.18.1-alpine AS base
+ARG NODE_VERSION=20.18.1
+
+FROM node:${NODE_VERSION}-alpine AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN \
-  if [ -f package-lock.json ]; then npm ci; \
+RUN --mount=type=cache,target=/root/.npm \
+  if [ -f package-lock.json ]; then npm ci --legacy-peer-deps; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
@@ -24,7 +26,8 @@ ENV SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key
 ENV JWT_SECRET=placeholder-jwt-secret-at-least-32-chars
 ENV SKIP_ENV_VALIDATION=true
 
-RUN npm run build
+RUN --mount=type=cache,target=/root/.npm \
+  npm run build
 
 FROM base AS runner
 WORKDIR /app
@@ -53,6 +56,6 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
+  CMD node -e "require('http').get('http://localhost:3000/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
