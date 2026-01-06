@@ -8,9 +8,7 @@ import {
   type ApiResponse,
 } from "@/lib/column-alias-config";
 import { type JWTPayload } from "@/lib/auth";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+import { JWT_SECRET } from "@/lib/config/jwt";
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {

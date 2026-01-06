@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
-import {
-  ApiErrorHandler,
-  type ApiError,
-} from "@/lib/api-error-handler";
+import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { PayrollValidator } from "@/lib/payroll-validation";
+import { JWT_SECRET } from "@/lib/config/jwt";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface ColumnMapping {
   excel_column_name: string;
@@ -87,7 +86,6 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.split(" ")[1];
-    const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
     try {
       jwt.verify(token, JWT_SECRET);
@@ -497,11 +495,9 @@ async function processFileForTransaction(
           })),
         );
 
-        // Only add record if validation passed (no errors, warnings are OK)
         if (validationResult.isValid) {
-          // Add metadata
-          mappedData.created_at = new Date().toISOString();
-          mappedData.updated_at = new Date().toISOString();
+          mappedData.created_at = getVietnamTimestamp();
+          mappedData.updated_at = getVietnamTimestamp();
 
           records.push(mappedData);
         }
@@ -531,4 +527,3 @@ async function processFileForTransaction(
     autoFixes,
   };
 }
-

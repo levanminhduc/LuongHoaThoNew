@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 // Rate limiting map (in production, use Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -248,7 +249,7 @@ export async function POST(request: NextRequest) {
       updateData.must_change_password = false;
     }
     if (employee.password_changed_at !== undefined) {
-      updateData.password_changed_at = new Date().toISOString();
+      updateData.password_changed_at = getVietnamTimestamp();
     }
     if (employee.failed_login_attempts !== undefined) {
       updateData.failed_login_attempts = 0;

@@ -4,6 +4,7 @@ import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
 import { cascadeUpdateEmployeeId } from "@/lib/cascade-update-employee";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 export async function PUT(
   request: NextRequest,
@@ -134,7 +135,7 @@ export async function PUT(
         department: department || null,
         phone_number: phone_number || null,
         is_active: is_active !== undefined ? is_active : true,
-        updated_at: new Date().toISOString(),
+        updated_at: getVietnamTimestamp(),
       };
 
       if (cccd) {
@@ -143,7 +144,7 @@ export async function PUT(
 
       if (password) {
         updateData.password_hash = await bcrypt.hash(password, 10);
-        updateData.last_password_change_at = new Date().toISOString();
+        updateData.last_password_change_at = getVietnamTimestamp();
       }
 
       // Update additional fields (employee_id already updated by cascade)
@@ -216,7 +217,7 @@ export async function PUT(
       department: department || null,
       phone_number: phone_number || null,
       is_active: is_active !== undefined ? is_active : true,
-      updated_at: new Date().toISOString(),
+      updated_at: getVietnamTimestamp(),
     };
 
     if (cccd) {
@@ -225,7 +226,7 @@ export async function PUT(
 
     if (password) {
       updateData.password_hash = await bcrypt.hash(password, 10);
-      updateData.last_password_change_at = new Date().toISOString();
+      updateData.last_password_change_at = getVietnamTimestamp();
     }
 
     const { data: updatedEmployee, error } = await supabase
@@ -401,7 +402,7 @@ export async function DELETE(
     if (payrollCheck && payrollCheck.length > 0) {
       const { error: updateError } = await supabase
         .from("employees")
-        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .update({ is_active: false, updated_at: getVietnamTimestamp() })
         .eq("employee_id", id);
 
       if (updateError) {

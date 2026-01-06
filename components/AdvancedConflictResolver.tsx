@@ -23,12 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  GitMerge,
-  CheckCircle,
-  Zap,
-  Target,
-} from "lucide-react";
+import { GitMerge, CheckCircle, Zap, Target } from "lucide-react";
 
 interface ConflictRecord {
   id: string;

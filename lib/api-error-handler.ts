@@ -1,7 +1,4 @@
-/**
- * Standardized API Error Handler for Dual File Upload System
- * Provides consistent error response format across all endpoints
- */
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 export interface ApiError {
   code: string;
@@ -55,7 +52,7 @@ export class ApiErrorHandler {
       employee_id,
       salary_month,
       file_type,
-      timestamp: new Date().toISOString(),
+      timestamp: getVietnamTimestamp(),
     };
   }
 

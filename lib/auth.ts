@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { createServiceClient } from "@/utils/supabase/server";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 // Enhanced JWT payload interface
 export interface JWTPayload {
@@ -88,7 +89,7 @@ export async function verifyAdminCredentials(
 
     await supabase
       .from("admin_users")
-      .update({ last_login: new Date().toISOString() })
+      .update({ last_login: getVietnamTimestamp() })
       .eq("id", admin.id);
 
     return admin as AdminUser;
@@ -132,49 +133,6 @@ export async function authenticateUser(
       };
     }
 
-    // Test accounts (excluding admin)
-    const testAccounts = {
-      TP001: {
-        password: "truongphong123",
-        role: "truong_phong",
-        department: "Hoàn Thành",
-        name: "Nguyễn Văn A",
-        allowed_departments: ["Hoàn Thành", "KCS"],
-      },
-      TT001: {
-        password: "totruong123",
-        role: "to_truong",
-        department: "Hoàn Thành",
-        name: "Trần Thị B",
-      },
-      NV001: {
-        password: "nhanvien123",
-        role: "nhan_vien",
-        department: "Hoàn Thành",
-        name: "Lê Văn C",
-      },
-    };
-
-    if (testAccounts[username as keyof typeof testAccounts]) {
-      const testAccount = testAccounts[username as keyof typeof testAccounts];
-      if (password === testAccount.password) {
-        return {
-          success: true,
-          user: {
-            employee_id: username,
-            username: testAccount.name,
-            role: testAccount.role,
-            department: testAccount.department,
-            allowed_departments:
-              (testAccount as { allowed_departments?: string[] })
-                .allowed_departments || [],
-            permissions: getPermissionsByRole(testAccount.role),
-          },
-        };
-      }
-    }
-
-    // PRIORITY 3: Check employee login from database
     const { data: employee, error } = await supabase
       .from("employees")
       .select(

@@ -43,7 +43,11 @@ import {
   BookOpen,
   Filter,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showInfoToast,
+} from "@/lib/toast-utils";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface ImportError {
@@ -259,7 +263,6 @@ export default function ImportErrorModal({
   skippedCount = 0,
   originalHeaders = [],
 }: ImportErrorModalProps) {
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -302,8 +305,7 @@ export default function ImportErrorModal({
 
   const handleCopyError = (message: string) => {
     navigator.clipboard.writeText(message);
-    toast({
-      title: "Đã copy",
+    showInfoToast("Đã copy", {
       description: "Nội dung lỗi đã được copy vào clipboard",
       duration: 2000,
     });
@@ -314,10 +316,8 @@ export default function ImportErrorModal({
     try {
       const token = localStorage.getItem("admin_token");
       if (!token) {
-        toast({
-          title: "Lỗi",
+        showErrorToast("Lỗi", {
           description: "Không có quyền truy cập",
-          variant: "destructive",
         });
         return;
       }
@@ -369,17 +369,14 @@ export default function ImportErrorModal({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({
-        title: "Thành công",
+      showSuccessToast("Thành công", {
         description: "Đã tải xuống báo cáo lỗi Excel",
         duration: 3000,
       });
     } catch (error) {
       console.error("Export error:", error);
-      toast({
-        title: "Lỗi",
+      showErrorToast("Lỗi", {
         description: "Không thể export báo cáo lỗi",
-        variant: "destructive",
       });
     } finally {
       setIsExporting(false);

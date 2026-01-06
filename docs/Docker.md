@@ -29,13 +29,13 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `Dockerfile` | Multi-stage build cho Next.js standalone |
-| `compose.yml` | Development config |
+| File                      | Purpose                                  |
+| ------------------------- | ---------------------------------------- |
+| `Dockerfile`              | Multi-stage build cho Next.js standalone |
+| `compose.yml`             | Development config                       |
 | `docker-compose.prod.yml` | Production config với security hardening |
-| `.dockerignore` | Exclude node_modules, .git, etc. |
-| `docker-entrypoint.sh` | Runtime environment injection |
+| `.dockerignore`           | Exclude node_modules, .git, etc.         |
+| `docker-entrypoint.sh`    | Runtime environment injection            |
 
 ## Environment Variables
 
@@ -120,6 +120,7 @@ Dockerfile đã include flag này.
 ### Container Unhealthy
 
 1. Kiểm tra logs:
+
    ```bash
    docker compose logs app
    ```

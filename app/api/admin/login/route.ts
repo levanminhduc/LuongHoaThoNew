@@ -1,9 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authenticateUser, type JWTPayload } from "@/lib/auth";
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+import { JWT_SECRET } from "@/lib/config/jwt";
 
 /**
  * @swagger
@@ -85,7 +83,7 @@ export async function POST(request: NextRequest) {
     });
 
     response.cookies.set("auth_token", token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24,

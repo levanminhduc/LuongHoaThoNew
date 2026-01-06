@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import {
   isAllowedSignatureRole,
   canRoleSignType,
@@ -145,7 +146,7 @@ export function createAuditLogEntry(
     ip_address: clientIP,
     user_agent: userAgent,
     endpoint,
-    timestamp: new Date().toISOString(),
+    timestamp: getVietnamTimestamp(),
     success: details.success ?? true,
     error_message: details.error_message,
     ...details,

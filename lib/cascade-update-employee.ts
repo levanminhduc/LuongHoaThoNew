@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/utils/supabase/server";
 import { auditService } from "./audit-service";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface CascadeUpdateResult {
   success: boolean;
@@ -186,7 +187,7 @@ export async function cascadeUpdateEmployeeId(
         .from("employees")
         .update({
           employee_id: newEmployeeId,
-          updated_at: new Date().toISOString(),
+          updated_at: getVietnamTimestamp(),
         })
         .eq("employee_id", oldEmployeeId);
 
@@ -207,7 +208,7 @@ export async function cascadeUpdateEmployeeId(
           .from("payrolls")
           .update({
             employee_id: newEmployeeId,
-            updated_at: new Date().toISOString(),
+            updated_at: getVietnamTimestamp(),
           })
           .eq("employee_id", oldEmployeeId);
 
@@ -416,7 +417,7 @@ export async function cascadeUpdateEmployeeId(
           .from("payrolls")
           .update({
             signed_by_admin_id: newEmployeeId,
-            updated_at: new Date().toISOString(),
+            updated_at: getVietnamTimestamp(),
           })
           .eq("signed_by_admin_id", oldEmployeeId);
 

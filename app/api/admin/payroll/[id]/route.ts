@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 // Get client IP address
 function getClientIP(request: NextRequest): string {
@@ -239,8 +240,7 @@ export async function PUT(
       );
     }
 
-    // Add updated_at timestamp
-    validatedUpdates.updated_at = new Date().toISOString();
+    validatedUpdates.updated_at = getVietnamTimestamp();
 
     // Update payroll record
     const { data: updatedData, error: updateError } = await supabase

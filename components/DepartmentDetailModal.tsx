@@ -677,29 +677,27 @@ export default function DepartmentDetailModal({
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-3">
-                            {departmentData.salaryDistribution.map(
-                              (range) => (
-                                <div
-                                  key={range.range}
-                                  className="flex justify-between items-center"
-                                >
-                                  <span className="text-sm">{range.range}</span>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-20 bg-gray-200 rounded-full h-2">
-                                      <div
-                                        className="bg-blue-600 h-2 rounded-full"
-                                        style={{
-                                          width: `${(range.count / departmentData.stats.payrollCount) * 100}%`,
-                                        }}
-                                      />
-                                    </div>
-                                    <span className="text-sm font-medium w-8">
-                                      {range.count}
-                                    </span>
+                            {departmentData.salaryDistribution.map((range) => (
+                              <div
+                                key={range.range}
+                                className="flex justify-between items-center"
+                              >
+                                <span className="text-sm">{range.range}</span>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-20 bg-gray-200 rounded-full h-2">
+                                    <div
+                                      className="bg-blue-600 h-2 rounded-full"
+                                      style={{
+                                        width: `${(range.count / departmentData.stats.payrollCount) * 100}%`,
+                                      }}
+                                    />
                                   </div>
+                                  <span className="text-sm font-medium w-8">
+                                    {range.count}
+                                  </span>
                                 </div>
-                              ),
-                            )}
+                              </div>
+                            ))}
                           </div>
                         </CardContent>
                       </Card>

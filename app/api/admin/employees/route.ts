@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 /**
  * @swagger
@@ -323,7 +324,7 @@ export async function POST(request: NextRequest) {
         full_name,
         cccd_hash,
         password_hash,
-        last_password_change_at: new Date().toISOString(),
+        last_password_change_at: getVietnamTimestamp(),
         chuc_vu,
         department: department || null,
         phone_number: phone_number || null,

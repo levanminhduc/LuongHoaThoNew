@@ -135,6 +135,18 @@ export function HoverDropdownMenu({
             disabled={disabled}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onKeyDown={(e) => {
+              if (disabled) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setIsOpen((prev) => !prev);
+              } else if (e.key === "Escape" && isOpen) {
+                e.preventDefault();
+                setIsOpen(false);
+              }
+            }}
+            aria-expanded={isOpen}
+            aria-haspopup="menu"
             className={`
               flex items-center gap-2 px-4 py-2 h-10
               transition-all duration-200 ease-in-out

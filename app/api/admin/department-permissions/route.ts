@@ -1,7 +1,7 @@
-// API endpoints for managing department permissions for truong_phong
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
           .update({
             is_active: true,
             granted_by: auth.user.employee_id,
-            granted_at: new Date().toISOString(),
+            granted_at: getVietnamTimestamp(),
             notes,
           })
           .eq("id", existingPermission.id)

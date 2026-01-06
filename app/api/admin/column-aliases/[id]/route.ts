@@ -3,9 +3,8 @@ import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { type ColumnAlias, type ApiResponse } from "@/lib/column-alias-config";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+import { JWT_SECRET } from "@/lib/config/jwt";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -153,10 +152,9 @@ export async function PUT(
       );
     }
 
-    // Update alias
     const updateData: Partial<ColumnAlias> = {
       alias_name: alias_name.trim(),
-      updated_at: new Date().toISOString(),
+      updated_at: getVietnamTimestamp(),
     };
 
     if (confidence_score !== undefined) {

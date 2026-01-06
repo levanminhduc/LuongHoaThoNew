@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 // Rate limiting map (in production, use Redis/KV store)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -75,7 +76,7 @@ async function logSecurityEvent(
       ip_hash: ipHash,
       user_agent: userAgent,
       details: details || {},
-      occurred_at: new Date().toISOString(),
+      occurred_at: getVietnamTimestamp(),
     });
   } catch (error) {
     console.error("Failed to log security event:", error);

@@ -2,9 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import type { JWTPayload } from "@/lib/auth";
 import { getOpenAPISpec } from "@/lib/openapi-spec";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+import { JWT_SECRET } from "@/lib/config/jwt";
 
 const ALLOWED_ROLES = ["admin", "giam_doc", "ke_toan", "nguoi_lap_bieu"];
 

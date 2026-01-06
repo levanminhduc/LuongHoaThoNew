@@ -1,9 +1,5 @@
-/**
- * Custom Hooks for Mapping Configuration Management
- * Provides convenient hooks for common mapping config operations
- */
-
 import { useEffect, useCallback, useMemo } from "react";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import {
   useMappingConfigStore,
   type ConfigNotification,
@@ -500,7 +496,7 @@ export const useConfigExportImport = () => {
         config_name: config.config_name,
         description: config.description,
         field_mappings: config.field_mappings,
-        exported_at: new Date().toISOString(),
+        exported_at: getVietnamTimestamp(),
         exported_from: "MAY HÒA THỌ ĐIỆN BÀN",
       };
 

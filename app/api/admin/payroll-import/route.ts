@@ -12,9 +12,7 @@ import {
   validateSalaryMonth,
   validateEmployeeExists,
 } from "@/lib/import-error-collector";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+import { JWT_SECRET } from "@/lib/config/jwt";
 
 // Type definitions for mapping
 interface ColumnAlias {

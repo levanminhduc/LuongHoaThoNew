@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
+import { JWT_SECRET } from "@/lib/config/jwt";
 
 interface ImportHistoryRecord {
   id?: string;
@@ -38,7 +39,6 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.split(" ")[1];
-    const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
     let decoded: JWTPayload;
     try {
@@ -98,7 +98,6 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.split(" ")[1];
-    const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
     try {
       jwt.verify(token, JWT_SECRET);
@@ -243,7 +242,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     const token = authHeader.split(" ")[1];
-    const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
     try {
       jwt.verify(token, JWT_SECRET);

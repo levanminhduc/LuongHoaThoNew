@@ -2,9 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+import { JWT_SECRET } from "@/lib/config/jwt";
 
 interface EmployeeInfo {
   full_name: string | null;

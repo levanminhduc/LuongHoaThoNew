@@ -2,9 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
+import { JWT_SECRET } from "@/lib/config/jwt";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -46,13 +45,12 @@ export async function POST(request: NextRequest) {
     // Generate batch ID for tracking
     const batchId = `BATCH_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Prepare data for database insertion
     const dbRecords = payrollData.map((record) => ({
       ...record,
       import_batch_id: batchId,
       import_status: "imported",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: getVietnamTimestamp(),
+      updated_at: getVietnamTimestamp(),
     }));
 
     // Insert records in batches to avoid timeout
@@ -96,7 +94,7 @@ export async function POST(request: NextRequest) {
         column_mappings: columnMappings,
         summary: summary,
         errors: errors,
-        created_at: new Date().toISOString(),
+        created_at: getVietnamTimestamp(),
       });
     } catch (logError) {
       console.error("Failed to log import activity:", logError);

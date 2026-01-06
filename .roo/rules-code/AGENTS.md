@@ -7,6 +7,18 @@
 - Tất cả API routes phải verify JWT token qua `lib/auth-middleware.ts`
 - Excel import dùng `lib/advanced-excel-parser.ts` với confidence scoring (HIGH ≥80, MEDIUM 50-79, LOW <50)
 
+## Environment Config (Fail-Fast)
+
+- Import `JWT_SECRET` từ `lib/config/jwt.ts`, KHÔNG dùng `process.env.JWT_SECRET`
+- Dùng `env` object từ `lib/config/env.ts` - app crash ngay khi thiếu env vars
+- JWT_SECRET phải ≥32 characters
+
+## Input Validation
+
+- Import schemas từ `lib/validations/index.ts`
+- Dùng `parseSchemaOrThrow(schema, data)` cho API routes - auto-throw 400 error
+- Dùng `zodErrorToApiErrors()` để format Zod errors
+
 ## Database Constraints
 
 - `payrolls`: UNIQUE(`employee_id`, `salary_month`) - chỉ 1 record/employee/month
@@ -17,7 +29,7 @@
 
 3 strategies khi duplicate: `skip` (giữ cũ), `overwrite` (xóa cũ), `merge` (merge non-empty fields)
 
-## Validation
+## Payroll Validation
 
 - Required fields: `employee_id`, `salary_month`
 - Work hours: 0-744 hours/month
