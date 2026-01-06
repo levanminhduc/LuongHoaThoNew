@@ -15,6 +15,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   parseHighPrecisionNumber,
   smartFormatNumber,
   FIELD_PRECISION_CONFIG,
@@ -206,18 +213,21 @@ export default function HighPrecisionDemo() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="field-select">Field Type</Label>
-                  <select
-                    id="field-select"
+                  <Select
                     value={selectedField}
-                    onChange={(e) => setSelectedField(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
+                    onValueChange={setSelectedField}
                   >
-                    {Object.keys(FIELD_PRECISION_CONFIG).map((field) => (
-                      <option key={field} value={field}>
-                        {field} ({FIELD_PRECISION_CONFIG[field].fieldType})
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select field" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(FIELD_PRECISION_CONFIG).map((field) => (
+                        <SelectItem key={field} value={field}>
+                          {field} ({FIELD_PRECISION_CONFIG[field].fieldType})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -289,7 +299,7 @@ export default function HighPrecisionDemo() {
                           </div>
                         </div>
                       </Card>
-                    ),
+                    )
                   )}
                 </div>
               </div>

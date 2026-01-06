@@ -4,13 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Settings,
-  Shield,
-  Loader2,
-  CheckCircle,
-  AlertTriangle,
-} from "lucide-react";
+import { Settings, Shield, CheckCircle, AlertTriangle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { EmployeeSearch } from "./components/EmployeeSearch";
 import { PayrollEditForm } from "./components/PayrollEditForm";
 import { AuditTrail } from "./components/AuditTrail";
@@ -173,7 +168,9 @@ export default function PayrollManagementPage() {
       {loading && (
         <Card className="mb-8">
           <CardContent className="p-8 text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <div className="flex justify-center py-4">
+              <Spinner size="lg" />
+            </div>
             <p className="text-gray-600">Đang tải dữ liệu lương...</p>
           </CardContent>
         </Card>

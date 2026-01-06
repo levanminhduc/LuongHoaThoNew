@@ -14,6 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -441,22 +449,22 @@ function PermissionsContent() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-3">Nhân Viên</th>
-                  <th className="text-left p-3">Department</th>
-                  <th className="text-left p-3">Trạng Thái</th>
-                  <th className="text-left p-3">Cấp Bởi</th>
-                  <th className="text-left p-3">Ngày Cấp</th>
-                  <th className="text-left p-3">Ghi Chú</th>
-                  <th className="text-center p-3">Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nhân Viên</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Trạng Thái</TableHead>
+                  <TableHead>Cấp Bởi</TableHead>
+                  <TableHead>Ngày Cấp</TableHead>
+                  <TableHead>Ghi Chú</TableHead>
+                  <TableHead className="text-center">Thao Tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredPermissions.map((permission) => (
-                  <tr key={permission.id} className="border-b hover:bg-gray-50">
-                    <td className="p-3">
+                  <TableRow key={permission.id}>
+                    <TableCell>
                       <div>
                         <p className="font-medium">
                           {permission.employees?.full_name || "N/A"}
@@ -468,11 +476,11 @@ function PermissionsContent() {
                           {permission.employees?.chuc_vu || "N/A"}
                         </Badge>
                       </div>
-                    </td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="secondary">{permission.department}</Badge>
-                    </td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>
                       <Badge
                         variant={
                           permission.is_active ? "default" : "destructive"
@@ -480,27 +488,27 @@ function PermissionsContent() {
                       >
                         {permission.is_active ? "Hoạt động" : "Đã thu hồi"}
                       </Badge>
-                    </td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>
                       <div>
                         <p className="text-sm">
                           {permission.granted_by_employee?.full_name ||
                             permission.granted_by}
                         </p>
                       </div>
-                    </td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
                         {formatDate(permission.granted_at)}
                       </div>
-                    </td>
-                    <td className="p-3">
+                    </TableCell>
+                    <TableCell>
                       <p className="text-xs text-muted-foreground max-w-32 truncate">
                         {permission.notes || "-"}
                       </p>
-                    </td>
-                    <td className="p-3 text-center">
+                    </TableCell>
+                    <TableCell className="text-center">
                       {permission.is_active && (
                         <Button
                           variant="outline"
@@ -519,11 +527,11 @@ function PermissionsContent() {
                           )}
                         </Button>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
 
             {filteredPermissions.length === 0 && (
               <div className="text-center py-12">

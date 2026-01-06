@@ -49,6 +49,7 @@ import {
 import EmployeeFormExample from "@/components/examples/employee-form-example";
 import EmployeeAuditLogs from "./components/EmployeeAuditLogs";
 import SecurityNotice from "./components/SecurityNotice";
+import { Spinner } from "@/components/ui/spinner";
 
 interface Employee {
   employee_id: string;
@@ -372,7 +373,7 @@ export default function EmployeeManagementPage() {
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <Spinner size="lg" />
             </div>
           ) : (
             <>
@@ -486,7 +487,7 @@ export default function EmployeeManagementPage() {
                             }}
                           >
                             {deletingId === employee.employee_id ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                              <Spinner size="sm" variant="destructive" />
                             ) : (
                               <Trash2 className="w-4 h-4 text-red-600" />
                             )}
@@ -618,7 +619,7 @@ export default function EmployeeManagementPage() {
                                 }}
                               >
                                 {deletingId === employee.employee_id ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                  <Spinner size="sm" variant="destructive" />
                                 ) : (
                                   <Trash2 className="w-4 h-4 text-red-600" />
                                 )}

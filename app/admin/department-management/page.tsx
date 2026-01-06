@@ -23,6 +23,7 @@ import {
   UserCheck,
   AlertCircle,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 interface Department {
   name: string;
@@ -149,7 +150,7 @@ export default function DepartmentManagementPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <Spinner size="xl" />
       </div>
     );
   }

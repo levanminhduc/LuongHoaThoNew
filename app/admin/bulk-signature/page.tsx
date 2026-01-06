@@ -3,6 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BulkSignatureSection } from "@/components/admin/BulkSignatureSection";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function BulkSignaturePage() {
   const router = useRouter();
@@ -45,20 +52,23 @@ export default function BulkSignaturePage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-          Ký Hàng Loạt Chữ Ký Nhân Viên
-        </h1>
-        <p className="text-sm text-gray-600">
-          MAY HÒA THỌ ĐIỆN BÀN - Ký hàng loạt cho nhân viên chưa ký
-        </p>
-      </div>
-
-      <BulkSignatureSection
-        onSuccess={() => {
-          router.refresh();
-        }}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl sm:text-2xl">
+            Ký Hàng Loạt Chữ Ký Nhân Viên
+          </CardTitle>
+          <CardDescription>
+            MAY HÒA THỌ ĐIỆN BÀN - Ký hàng loạt cho nhân viên chưa ký
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BulkSignatureSection
+            onSuccess={() => {
+              router.refresh();
+            }}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

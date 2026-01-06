@@ -37,6 +37,7 @@ import {
   Calendar,
   Database,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 interface ValidationStats {
   totalEmployees: number;
@@ -202,7 +203,7 @@ export default function DataValidationPage() {
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex items-center space-x-2">
-            <RefreshCw className="h-6 w-6 animate-spin" />
+            <Spinner size="lg" />
             <span>Đang tải dữ liệu...</span>
           </div>
         </div>
