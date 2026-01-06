@@ -3,6 +3,49 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Empty } from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  H1,
+  H2,
+  H3,
+  H4,
+  P,
+  Lead,
+  Large,
+  Small,
+  Muted,
+  InlineCode,
+  Blockquote,
+} from "@/components/ui/typography";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  inputGroupInputClassName,
+} from "@/components/ui/input-group";
+import {
+  NativeSelect,
+  NativeSelectGroup,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import {
+  Field,
+  FieldControl,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import {
+  Item,
+  ItemAction,
+  ItemContent,
+  ItemDescription,
+  ItemIcon,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Kbd } from "@/components/ui/kbd";
 import {
   TableSkeleton,
   DashboardCardsSkeleton,
@@ -29,7 +72,16 @@ import {
   showSignatureSuccessToast,
 } from "@/lib/toast-utils";
 import { useAsyncAction, useMutation } from "@/lib/hooks/use-async-action";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Inbox,
+  Search,
+  AlertCircle,
+  Settings,
+  User,
+  Bell,
+  FileText,
+} from "lucide-react";
 
 export default function UXExamplesPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -270,6 +322,260 @@ export default function UXExamplesPage() {
           ]}
           onRemove={() => alert("Remove file")}
         />
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Empty State</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-md border">
+            <Empty
+              icon={<Inbox />}
+              title="Chưa có dữ liệu"
+              description="Thêm dữ liệu để bắt đầu theo dõi quy trình."
+              action={<Button>Thêm mới</Button>}
+            />
+          </div>
+          <div className="rounded-md border">
+            <Empty
+              size="sm"
+              icon={<Search />}
+              title="Không tìm thấy"
+              description="Thử lại với từ khóa khác hoặc xóa bộ lọc."
+              action={
+                <Button variant="outline" size="sm">
+                  Đặt lại
+                </Button>
+              }
+            />
+          </div>
+          <div className="rounded-md border md:col-span-2">
+            <Empty
+              size="lg"
+              icon={<AlertCircle />}
+              title="Chưa có báo cáo"
+              description="Tạo báo cáo mới để theo dõi tiến độ dự án của bạn."
+              action={<Button variant="secondary">Tạo báo cáo</Button>}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Spinner</h3>
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Spinner size="xs" />
+            <span className="text-sm">XS</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Spinner size="sm" />
+            <span className="text-sm">SM</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Spinner />
+            <span className="text-sm">Default</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Spinner size="lg" />
+            <span className="text-sm">LG</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Spinner size="xl" variant="muted" />
+            <span className="text-sm">XL Muted</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Spinner variant="destructive" />
+            <span className="text-sm">Destructive</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Typography</h3>
+        <div className="space-y-4">
+          <H1>Heading 1</H1>
+          <H2>Heading 2</H2>
+          <H3>Heading 3</H3>
+          <H4>Heading 4</H4>
+          <Lead>Lead text để nhấn mạnh thông điệp chính.</Lead>
+          <P>
+            Đoạn văn mô tả với <InlineCode>InlineCode</InlineCode> để minh họa
+            đoạn mã ngắn.
+          </P>
+          <Large>Large text để làm nổi bật thông tin.</Large>
+          <Small>Small text cho ghi chú ngắn.</Small>
+          <Muted>Muted text cho thông tin phụ.</Muted>
+          <Blockquote>
+            Blockquote dùng cho nội dung trích dẫn hoặc thông điệp nhấn mạnh.
+          </Blockquote>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Button Group</h3>
+        <div className="flex flex-wrap items-start gap-6">
+          <ButtonGroup>
+            <Button variant="outline">Tuần</Button>
+            <Button variant="outline">Tháng</Button>
+            <Button variant="outline">Năm</Button>
+          </ButtonGroup>
+          <ButtonGroup spacing="separated">
+            <Button>Primary</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="outline">Outline</Button>
+          </ButtonGroup>
+          <ButtonGroup orientation="vertical" spacing="attached">
+            <Button variant="outline">Danh sách</Button>
+            <Button variant="outline">Bảng</Button>
+            <Button variant="outline">Biểu đồ</Button>
+          </ButtonGroup>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Input Group</h3>
+        <div className="space-y-4 max-w-xl">
+          <InputGroup>
+            <InputGroupAddon>https://</InputGroupAddon>
+            <input
+              className={inputGroupInputClassName}
+              placeholder="example.com"
+            />
+          </InputGroup>
+          <InputGroup size="sm">
+            <InputGroupAddon position="left" size="sm">
+              @
+            </InputGroupAddon>
+            <input
+              className={inputGroupInputClassName}
+              placeholder="username"
+            />
+            <InputGroupAddon position="right" size="sm">
+              .com
+            </InputGroupAddon>
+          </InputGroup>
+          <InputGroup size="lg">
+            <InputGroupAddon position="left" size="lg">
+              +84
+            </InputGroupAddon>
+            <input
+              className={inputGroupInputClassName}
+              placeholder="Số điện thoại"
+            />
+          </InputGroup>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Native Select</h3>
+        <div className="space-y-3 max-w-sm">
+          <NativeSelect defaultValue="monthly">
+            <NativeSelectOption value="monthly">Theo tháng</NativeSelectOption>
+            <NativeSelectOption value="quarterly">Theo quý</NativeSelectOption>
+            <NativeSelectOption value="yearly">Theo năm</NativeSelectOption>
+          </NativeSelect>
+          <NativeSelect size="sm" defaultValue="active">
+            <NativeSelectOption value="active">
+              Đang hoạt động
+            </NativeSelectOption>
+            <NativeSelectOption value="paused">Tạm dừng</NativeSelectOption>
+            <NativeSelectOption value="archived">Lưu trữ</NativeSelectOption>
+          </NativeSelect>
+          <NativeSelect variant="ghost" defaultValue="team-a">
+            <NativeSelectGroup label="Tổ sản xuất">
+              <NativeSelectOption value="team-a">Tổ A</NativeSelectOption>
+              <NativeSelectOption value="team-b">Tổ B</NativeSelectOption>
+            </NativeSelectGroup>
+            <NativeSelectGroup label="Văn phòng">
+              <NativeSelectOption value="office">Văn phòng</NativeSelectOption>
+            </NativeSelectGroup>
+          </NativeSelect>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Field</h3>
+        <div className="space-y-4 max-w-md">
+          <Field>
+            <FieldLabel required>Họ và tên</FieldLabel>
+            <FieldControl>
+              <Input placeholder="Nguyễn Văn A" />
+            </FieldControl>
+            <FieldDescription>Nhập đầy đủ họ và tên.</FieldDescription>
+          </Field>
+          <Field error>
+            <FieldLabel>Số điện thoại</FieldLabel>
+            <FieldControl>
+              <Input placeholder="090xxxxxxx" />
+            </FieldControl>
+            <FieldError>Số điện thoại không hợp lệ.</FieldError>
+          </Field>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Item</h3>
+        <div className="space-y-2 max-w-lg">
+          <Item interactive variant="outline">
+            <ItemIcon>
+              <User />
+            </ItemIcon>
+            <ItemContent>
+              <ItemTitle>Nguyễn Văn A</ItemTitle>
+              <ItemDescription>Ký tháng 01/2024</ItemDescription>
+            </ItemContent>
+            <ItemAction>
+              <Button variant="outline" size="sm">
+                Xem
+              </Button>
+            </ItemAction>
+          </Item>
+          <Item variant="filled">
+            <ItemIcon>
+              <FileText />
+            </ItemIcon>
+            <ItemContent>
+              <ItemTitle>Bảng lương tháng 02</ItemTitle>
+              <ItemDescription>Đã chốt, chờ ký</ItemDescription>
+            </ItemContent>
+            <ItemAction>
+              <Button size="sm">Mở</Button>
+            </ItemAction>
+          </Item>
+          <Item interactive variant="ghost">
+            <ItemIcon>
+              <Bell />
+            </ItemIcon>
+            <ItemContent>
+              <ItemTitle>Thông báo mới</ItemTitle>
+              <ItemDescription>Có 3 thông báo chưa đọc</ItemDescription>
+            </ItemContent>
+            <ItemAction>
+              <Button variant="ghost" size="sm">
+                Tắt
+              </Button>
+            </ItemAction>
+          </Item>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-semibold mb-3">Kbd</h3>
+        <div className="flex flex-wrap items-center gap-3">
+          <Kbd>Esc</Kbd>
+          <Kbd keys={["Ctrl", "K"]} />
+          <Kbd variant="outline" size="lg">
+            Enter
+          </Kbd>
+          <Kbd variant="ghost" size="sm">
+            Cmd
+          </Kbd>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Settings className="size-4" />
+            Mở nhanh
+            <Kbd keys={["Ctrl", ","]} />
+          </div>
+        </div>
       </div>
 
       <DeleteAlertDialog
