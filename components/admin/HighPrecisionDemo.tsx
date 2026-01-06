@@ -299,7 +299,7 @@ export default function HighPrecisionDemo() {
                           </div>
                         </div>
                       </Card>
-                    )
+                    ),
                   )}
                 </div>
               </div>

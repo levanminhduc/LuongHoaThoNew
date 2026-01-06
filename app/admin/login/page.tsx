@@ -15,9 +15,7 @@ export default function AdminLoginPage() {
           <CardTitle className="text-3xl font-bold">
             TRA CỨU VÀ XÁC NHẬN LƯƠNG
           </CardTitle>
-          <CardDescription>
-            CÔNG TY MAY HÒA THỌ ĐIỆN BÀN
-          </CardDescription>
+          <CardDescription>CÔNG TY MAY HÒA THỌ ĐIỆN BÀN</CardDescription>
         </CardHeader>
         <CardContent>
           <AdminLoginForm />

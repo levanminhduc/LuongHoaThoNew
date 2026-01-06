@@ -21,6 +21,9 @@ const nextConfig = {
         : false,
   },
   reactCompiler: false,
+  experimental: {
+    viewTransitions: true,
+  },
 };
 
 export default nextConfig;

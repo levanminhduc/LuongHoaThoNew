@@ -35,6 +35,8 @@ const pathTitleMap: Record<string, string> = {
   "/admin/payroll-import-export": "Import/Export Lương",
   "/admin/data-validation": "Kiểm Tra Dữ Liệu",
   "/admin/bulk-signature": "Ký Hàng Loạt",
+  "/admin/attendance-import": "Import Chấm Công",
+  "/admin/attendance-list": "Danh Sách Chấm Công",
   "/admin/dashboard/update-cccd": "Quản Lý CCCD",
   "/admin/column-mapping-config": "Column Mapping",
   "/admin/department-management": "Phân Quyền",

@@ -16,6 +16,8 @@ import {
   LogOut,
   ChevronDown,
   Building2,
+  Clock,
+  CalendarDays,
 } from "lucide-react";
 import {
   Sidebar,
@@ -78,6 +80,16 @@ const dataManagementItems: NavItem[] = [
     icon: UserCheck,
     href: "/admin/bulk-signature",
   },
+  {
+    title: "Import Chấm Công",
+    icon: Clock,
+    href: "/admin/attendance-import",
+  },
+  {
+    title: "Danh Sách Chấm Công",
+    icon: CalendarDays,
+    href: "/admin/attendance-list",
+  },
 ];
 
 const adminToolsItems: NavItem[] = [
@@ -102,15 +114,26 @@ interface NavMenuItemProps {
   item: NavItem;
   isActive: boolean;
   onNavigate: () => void;
+  onHover: (href: string) => void;
 }
 
-function NavMenuItem({ item, isActive, onNavigate }: NavMenuItemProps) {
+function NavMenuItem({
+  item,
+  isActive,
+  onNavigate,
+  onHover,
+}: NavMenuItemProps) {
   const Icon = item.icon;
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-        <Link href={item.href} prefetch={true} onClick={onNavigate}>
+        <Link
+          href={item.href}
+          prefetch={false}
+          onClick={onNavigate}
+          onMouseEnter={() => onHover(item.href)}
+        >
           <Icon className="h-4 w-4" />
           <span>{item.title}</span>
         </Link>
@@ -137,6 +160,13 @@ export function AdminSidebar() {
       setTimeout(() => setOpenMobile(false), 100);
     }
   }, [isMobile, setOpenMobile]);
+
+  const handleHoverPrefetch = useCallback(
+    (href: string) => {
+      router.prefetch(href);
+    },
+    [router],
+  );
 
   const mainItems = useMemo(() => mainNavItems, []);
   const dataItems = useMemo(() => dataManagementItems, []);
@@ -170,6 +200,7 @@ export function AdminSidebar() {
                   item={item}
                   isActive={isActive(item.href)}
                   onNavigate={handleNavigate}
+                  onHover={handleHoverPrefetch}
                 />
               ))}
             </SidebarMenu>
@@ -188,6 +219,7 @@ export function AdminSidebar() {
                   item={item}
                   isActive={isActive(item.href)}
                   onNavigate={handleNavigate}
+                  onHover={handleHoverPrefetch}
                 />
               ))}
             </SidebarMenu>
@@ -212,6 +244,7 @@ export function AdminSidebar() {
                       item={item}
                       isActive={isActive(item.href)}
                       onNavigate={handleNavigate}
+                      onHover={handleHoverPrefetch}
                     />
                   ))}
                 </SidebarMenu>
