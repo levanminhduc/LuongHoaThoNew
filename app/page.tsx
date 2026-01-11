@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AnimatedGradientButton } from "@/components/ui/animated-gradient-button";
+import { Button } from "@/components/ui/button";
 import { Users, Shield } from "lucide-react";
 
 export default function HomePage() {
@@ -44,9 +44,9 @@ export default function HomePage() {
                   </div>
                 </div>
                 <Link href="/admin/login">
-                  <AnimatedGradientButton variant="blue" className="w-full">
+                  <Button variant="gradientBlue" className="w-full p-4">
                     Đăng Nhập
-                  </AnimatedGradientButton>
+                  </Button>
                 </Link>
               </div>
             </CardContent>
@@ -70,9 +70,9 @@ export default function HomePage() {
                   <p>Nhập mã nhân viên và số CCCD để xem thông tin lương</p>
                 </div>
                 <Link href="/employee/lookup">
-                  <AnimatedGradientButton variant="green" className="w-full">
+                  <Button variant="gradientGreen" className="w-full p-4">
                     Tra Cứu Lương
-                  </AnimatedGradientButton>
+                  </Button>
                 </Link>
               </div>
             </CardContent>

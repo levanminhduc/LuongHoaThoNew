@@ -1,4 +1,4 @@
-import { FormLayoutSkeleton } from "@/components/ui/skeleton-patterns";
+import { FormLayoutSkeleton } from "@/components/patterns/skeleton-patterns";
 
 export default function Loading() {
   return <FormLayoutSkeleton />;

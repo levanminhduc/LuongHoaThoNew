@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ManagerDashboard from "@/components/ManagerDashboard";
-import { PageLoading } from "@/components/ui/skeleton-patterns";
+import { PageLoading } from "@/components/patterns/skeleton-patterns";
 
 interface User {
   employee_id: string;

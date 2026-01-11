@@ -55,7 +55,7 @@ import ImportErrorModal from "@/components/payroll-import/ImportErrorModal";
 import {
   ImportProgress,
   ImportResultSummary,
-} from "@/components/ui/import-export-widgets";
+} from "@/components/admin/import-export-widgets";
 import * as XLSX from "xlsx";
 
 type ImportStatus =

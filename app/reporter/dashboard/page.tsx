@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 import DashboardCache from "@/utils/dashboardCache";
-import { PageLoading } from "@/components/ui/skeleton-patterns";
+import { PageLoading } from "@/components/patterns/skeleton-patterns";
 
 export default function ReporterDashboard() {
   const [loading, setLoading] = useState(true);

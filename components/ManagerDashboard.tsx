@@ -47,7 +47,7 @@ import {
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
 import DashboardCache from "@/utils/dashboardCache";
-import { PageLoading } from "@/components/ui/skeleton-patterns";
+import { PageLoading } from "@/components/patterns/skeleton-patterns";
 
 const formatMonthLabel = (value: string) => {
   const [year, month] = value.split("-");

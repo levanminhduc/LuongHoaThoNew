@@ -51,17 +51,22 @@ import {
   DashboardCardsSkeleton,
   FormSkeleton,
   EmployeeListSkeleton,
-} from "@/components/ui/skeleton-patterns";
+} from "@/components/patterns/skeleton-patterns";
 import {
-  DeleteAlertDialog,
-  LogoutAlertDialog,
-  ConfirmAlertDialog,
-} from "@/components/ui/alert-dialogs";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ImportProgress,
   ImportResultSummary,
   FilePreview,
-} from "@/components/ui/import-export-widgets";
+} from "@/components/admin/import-export-widgets";
 import {
   showSuccessToast,
   showErrorToast,
@@ -81,6 +86,10 @@ import {
   User,
   Bell,
   FileText,
+  Trash2,
+  LogOut,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 
 export default function UXExamplesPage() {
@@ -578,36 +587,99 @@ export default function UXExamplesPage() {
         </div>
       </div>
 
-      <DeleteAlertDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={() => {
-          deleteMutation.mutate(undefined);
-        }}
-        itemName="Nhân viên NV001"
-        loading={deleteMutation.isLoading}
-      />
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-red-100">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa &quot;Nhân viên NV001&quot;? Hành động
+              này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isLoading}>
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                deleteMutation.mutate(undefined);
+              }}
+              disabled={deleteMutation.isLoading}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {deleteMutation.isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang xóa...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <LogoutAlertDialog
-        open={showLogoutDialog}
-        onOpenChange={setShowLogoutDialog}
-        onConfirm={handleLogout}
-        userName="admin"
-      />
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-yellow-100">
+                <LogOut className="h-5 w-5 text-yellow-600" />
+              </div>
+              <AlertDialogTitle>Xác nhận đăng xuất</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản &quot;admin&quot;?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Đăng xuất
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <ConfirmAlertDialog
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        onConfirm={() => {
-          showSuccessToast("Đã xác nhận!");
-          setShowConfirmDialog(false);
-        }}
-        title="Xác nhận hành động"
-        description="Bạn có chắc chắn muốn thực hiện hành động này không?"
-        confirmLabel="Xác nhận"
-        cancelLabel="Hủy"
-        variant="warning"
-      />
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-full bg-yellow-100">
+                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              </div>
+              <AlertDialogTitle>Xác nhận hành động</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn thực hiện hành động này không?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                showSuccessToast("Đã xác nhận!");
+                setShowConfirmDialog(false);
+              }}
+              className="bg-yellow-600 hover:bg-yellow-700"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Xác nhận
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

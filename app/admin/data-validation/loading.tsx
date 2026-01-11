@@ -1,4 +1,4 @@
-import { StatsWithTableSkeleton } from "@/components/ui/skeleton-patterns";
+import { StatsWithTableSkeleton } from "@/components/patterns/skeleton-patterns";
 
 export default function Loading() {
   return <StatsWithTableSkeleton />;

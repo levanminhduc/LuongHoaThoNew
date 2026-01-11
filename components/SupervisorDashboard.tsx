@@ -48,7 +48,7 @@ import {
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
 import DashboardCache from "@/utils/dashboardCache";
-import { PageLoading } from "@/components/ui/skeleton-patterns";
+import { PageLoading } from "@/components/patterns/skeleton-patterns";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("vi-VN", {
