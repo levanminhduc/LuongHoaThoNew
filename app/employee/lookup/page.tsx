@@ -11,9 +11,6 @@ export default function EmployeeLookupPage() {
           <h2 className="text-lg sm:text-xl font-bold text-blue-900 mt-2">
             CÔNG TY MAY HÒA THỌ ĐIỆN BÀN
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">
-            {`Nhập "Mã số nhân viên" và "Mật khẩu hoặc CCCD" để xem thông tin lương`}
-          </p>
         </div>
         <EmployeeLookup />
       </div>

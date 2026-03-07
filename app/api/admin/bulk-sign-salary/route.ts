@@ -142,7 +142,6 @@ export async function POST(request: NextRequest) {
             p_admin_id: auth.user.employee_id,
             p_admin_name: auth.user.username,
             p_bulk_batch_id: bulkBatchId,
-            p_payroll_type: payrollType,
           },
         );
 
