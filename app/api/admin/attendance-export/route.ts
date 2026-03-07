@@ -344,23 +344,27 @@ export async function POST(request: NextRequest) {
         const sheetData = [headerRow, ...dataRows];
         const dailySheet = XLSX.utils.aoa_to_sheet(sheetData);
 
-        const colWidths: { wch: number }[] = [
-          { wch: 4 },
-          { wch: 10 },
-          { wch: 20 },
-        ];
-        for (let d = 1; d <= daysInMonth; d++) {
-          colWidths.push({ wch: 6 }, { wch: 6 });
+        // Auto-fit column widths based on actual content
+        const MIN_COL_WIDTH = 4;
+        const MAX_COL_WIDTH = 30;
+        const PADDING = 2;
+        const colMaxLens: number[] = [];
+
+        for (let r = 0; r < sheetData.length; r++) {
+          const row = sheetData[r];
+          for (let c = 0; c < row.length; c++) {
+            const cellVal = row[c];
+            const len =
+              cellVal == null ? 0 : String(cellVal).length;
+            if (colMaxLens[c] === undefined || len > colMaxLens[c]) {
+              colMaxLens[c] = len;
+            }
+          }
         }
-        colWidths.push(
-          { wch: 10 },
-          { wch: 10 },
-          { wch: 10 },
-          { wch: 10 },
-          { wch: 8 },
-          { wch: 20 },
-          { wch: 12 },
-        );
+
+        const colWidths = colMaxLens.map((len) => ({
+          wch: Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, len + PADDING)),
+        }));
         dailySheet["!cols"] = colWidths;
 
         const merges: XLSX.Range[] = [];

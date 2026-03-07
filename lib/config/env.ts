@@ -30,7 +30,22 @@ function validateEnv() {
   return parsed.data;
 }
 
-export const env = validateEnv();
+// Lazy validation - chỉ validate khi runtime, không throw lúc build
+let _env: z.infer<typeof envSchema> | null = null;
+
+export function getEnv() {
+  if (!_env) {
+    _env = validateEnv();
+  }
+  return _env;
+}
+
+// Giữ backward compat - nhưng chỉ dùng trong runtime context
+export const env = new Proxy({} as z.infer<typeof envSchema>, {
+  get(_, prop: string) {
+    return getEnv()[prop as keyof z.infer<typeof envSchema>];
+  },
+});
 
 export type Env = z.infer<typeof envSchema>;
 
