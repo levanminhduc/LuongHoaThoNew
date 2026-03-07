@@ -40,7 +40,13 @@ import {
   Lock,
   Trash2,
   X,
+  Info,
 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const STORAGE_KEY = "salary_lookup_credentials";
 
@@ -449,28 +455,44 @@ export function EmployeeLookup() {
             <Search className="w-5 h-5" />
             Thông Tin Tra Cứu
           </CardTitle>
-          <CardDescription>
-            {`Lưu ý*: Ở ô Nhập `}
-            <strong>{`"Mã Nhân Viên"`}</strong> <br />
-            {`- Đối với
-            nhân viên `}
-            <strong>CHÍNH THỨC</strong>
-            {` bạn cần nhập `}
-            <strong>DB0 + mã nhân viên</strong>
-            {` của mình. `}
-            <br />
-            {`- Ví dụ: Nếu mã nhân viên của bạn là 1234, bạn cần nhập DB01234 vào
-            ô "Mã Nhân Viên". `}
-            <br />
-            {`- Đối với nhân viên `}
-            <strong>THỬ VIỆC</strong>
-            {` bạn cần nhập `}
-            <strong>DBT0 + mã nhân viên</strong>
-            {` của mình. `}
-            <br />
-            {`- Ví dụ: Nếu mã
-            nhân viên của bạn là 1234, bạn cần nhập DBT01234 vào ô "Mã Nhân
-            Viên".`}
+          <CardDescription className="flex items-center gap-1.5">
+            Nhấn vào để xem hướng dẫn →
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transition-colors animate-pulse"
+                  aria-label="Hướng dẫn nhập mã nhân viên"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-80 text-sm">
+                <p className="font-semibold text-amber-700 mb-2">
+                  Hướng dẫn nhập Mã Nhân Viên
+                </p>
+                <div className="space-y-2 text-muted-foreground">
+                  <div>
+                    <p>
+                      NV <strong>chính thức</strong>: nhập{" "}
+                      <strong>DB0</strong> + mã NV
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      VD: Mã 1234 → DB01234
+                    </p>
+                  </div>
+                  <div>
+                    <p>
+                      NV <strong>thử việc</strong>: nhập{" "}
+                      <strong>DBT0</strong> + mã NV
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      VD: Mã 1234 → DBT01234
+                    </p>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -562,44 +584,23 @@ export function EmployeeLookup() {
             )}
 
             <div className="space-y-3">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  type="submit"
-                  disabled={loading || t13Loading}
-                  className="flex-1"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang tra cứu...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      TRA CỨU LƯƠNG
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  disabled={loading || t13Loading}
-                  className="flex-1 bg-amber-600 hover:bg-amber-700"
-                  onClick={handleT13Submit}
-                >
-                  {t13Loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      TRA CỨU LƯƠNG THÁNG 13
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang tra cứu...
+                  </>
+                ) : (
+                  <>
+                    <Search className="mr-2 h-4 w-4" />
+                    TRA CỨU LƯƠNG
+                  </>
+                )}
+              </Button>
 
               <Button variant="outline" asChild className="w-full">
                 <Link href="/">Quay Lại</Link>
