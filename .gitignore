@@ -5,9 +5,14 @@
 
 # skill claude
 .roo/
+.kilocode/
+.claude/
 # next.js
 /.next/
 /out/
+nul
+.agents/
+.claude-archived/
 
 # production
 /build

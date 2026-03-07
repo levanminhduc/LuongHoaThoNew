@@ -1,0 +1,10 @@
+{
+  "context_servers": {
+    "augment-mcp": {
+      "command": {
+        "path": "npx",
+        "args": ["-y", "@anthropic/augment-context-engine-mcp"]
+      }
+    }
+  }
+}
