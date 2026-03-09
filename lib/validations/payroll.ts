@@ -50,7 +50,7 @@ export const ImportHistoryCreateSchema = z.object({
     .min(1, { message: "Tên file không được để trống" })
     .max(255, { message: "Tên file không được quá 255 ký tự" }),
   file_type: z.enum(["file1", "file2"], {
-    errorMap: () => ({ message: "Loại file phải là file1 hoặc file2" }),
+    message: "Loại file phải là file1 hoặc file2",
   }),
   salary_month: SalaryMonthSchema,
   total_records: z.coerce.number().int().min(0),

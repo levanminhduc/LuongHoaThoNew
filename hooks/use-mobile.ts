@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 
+const MOBILE_BREAKPOINT = 768;
+
 /**
  * Custom hook to detect mobile devices and screen sizes
  * Returns true if the screen width is below the mobile breakpoint (768px)
@@ -11,7 +13,7 @@ export function useMobile() {
 
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
 
     // Check on mount
@@ -27,6 +29,14 @@ export function useMobile() {
   }, []);
 
   return isMobile;
+}
+
+/**
+ * Shadcn-compatible hook (alias of useMobile)
+ * Returns true if the screen width is below the mobile breakpoint (768px)
+ */
+export function useIsMobile() {
+  return useMobile();
 }
 
 /**
@@ -47,8 +57,8 @@ export function useScreenSize() {
       const width = window.innerWidth;
 
       setScreenSize({
-        isMobile: width < 768,
-        isTablet: width >= 768 && width < 1024,
+        isMobile: width < MOBILE_BREAKPOINT,
+        isTablet: width >= MOBILE_BREAKPOINT && width < 1024,
         isDesktop: width >= 1024,
         isLarge: width >= 1280,
         isXLarge: width >= 1536,

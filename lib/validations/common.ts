@@ -20,21 +20,15 @@ export const SIGNATURE_TYPES = [
 export const IMPORT_STRATEGIES = ["skip", "overwrite", "merge"] as const;
 
 export const RoleSchema = z.enum(ROLES, {
-  errorMap: () => ({
-    message: "Vai trò không hợp lệ",
-  }),
+  message: "Vai trò không hợp lệ",
 });
 
 export const SignatureTypeSchema = z.enum(SIGNATURE_TYPES, {
-  errorMap: () => ({
-    message: "Loại chữ ký không hợp lệ",
-  }),
+  message: "Loại chữ ký không hợp lệ",
 });
 
 export const ImportStrategySchema = z.enum(IMPORT_STRATEGIES, {
-  errorMap: () => ({
-    message: "Chiến lược import không hợp lệ (skip, overwrite, merge)",
-  }),
+  message: "Chiến lược import không hợp lệ (skip, overwrite, merge)",
 });
 
 export const EmployeeIdSchema = z

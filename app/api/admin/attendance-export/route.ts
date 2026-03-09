@@ -103,6 +103,12 @@ export async function POST(request: NextRequest) {
       }
     };
 
+    const getSignatureStatus = (
+      signatureLog: SignatureLog | undefined,
+    ): string => {
+      return signatureLog ? "Đã Ký" : "Chưa Ký";
+    };
+
     const salaryMonth = `${period_year}-${String(period_month).padStart(2, "0")}`;
     const signatureLogsMap = new Map<string, SignatureLog>();
 
@@ -155,7 +161,7 @@ export async function POST(request: NextRequest) {
         m.total_ot_hours,
         m.sick_days,
         m.source_file || "",
-        signatureLog?.signed_by_name || "Chưa Ký",
+        getSignatureStatus(signatureLog),
         formatSignedAtDate(signatureLog?.signed_at || null),
       ];
     });
@@ -433,7 +439,7 @@ export async function POST(request: NextRequest) {
             m.total_meal_ot_hours,
             m.total_ot_hours,
             m.sick_days,
-            signatureLog?.signed_by_name || "Chưa Ký",
+            getSignatureStatus(signatureLog),
             formatSignedAtDate(signatureLog?.signed_at || null),
           );
           row2.push("", "", "", "", "", "", "");

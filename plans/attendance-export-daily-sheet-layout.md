@@ -15,10 +15,16 @@
    - `Tổng Giờ Ăn TC`
    - `Tổng Giờ Tăng Ca`
    - `Nghỉ Ốm`
-3. Keep the existing auto-fit logic for the sheet, then override only the 6 summary columns above with:
+3. Keep the existing auto-fit logic for the sheet, then override only the 5 summary columns above with:
    - `newWidth = max(8, min(9, currentWidth / 2))`
 4. Leave `Ký Tên` and `Ngày Ký` unchanged.
 5. Preserve existing merges, grouping rows, data mapping, and department row styling.
+
+## Follow-up
+
+- Export signature display now uses status text only:
+  - signed employee: `Đã Ký`
+  - unsigned employee: `Chưa Ký`
 
 ## Implementation Notes
 
