@@ -53,6 +53,7 @@ export default function AttendanceImportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -160,6 +161,46 @@ export default function AttendanceImportPage() {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    setDownloadingTemplate(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("admin_token");
+      if (!token) {
+        router.push("/admin/login");
+        return;
+      }
+
+      const response = await fetch("/api/admin/download-attendance-template", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Không thể tải file mẫu");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "template-import-cham-cong.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch {
+      setError("Có lỗi xảy ra khi tải file mẫu");
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-4">
@@ -180,7 +221,31 @@ export default function AttendanceImportPage() {
             Chọn file Excel (.xlsx, .xls) chứa dữ liệu chấm công để import
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Tải file mẫu đúng định dạng để tránh lỗi header và cấu trúc dữ
+              liệu.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDownloadTemplate}
+              disabled={downloadingTemplate || loading}
+            >
+              {downloadingTemplate ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang tải mẫu...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Tải File Mẫu
+                </>
+              )}
+            </Button>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="file">Chọn file</Label>

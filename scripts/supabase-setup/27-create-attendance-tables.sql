@@ -127,4 +127,3 @@ UNION ALL
 SELECT 
   'attendance_monthly' as table_name,
   (SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'attendance_monthly') as column_count;
-

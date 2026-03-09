@@ -89,46 +89,17 @@ export async function POST(request: NextRequest) {
 
     for (const record of validRecords) {
       try {
-        for (const daily of record.dailyRecords) {
-          if (
-            daily.workingUnits === 0 &&
-            daily.overtimeUnits === 0 &&
-            !daily.checkIn &&
-            !daily.checkOut
-          ) {
-            continue;
-          }
+        const dailyRecords = record.dailyRecords.filter(
+          (daily) =>
+            !(
+              daily.workingUnits === 0 &&
+              daily.overtimeUnits === 0 &&
+              !daily.checkIn &&
+              !daily.checkOut
+            ),
+        );
 
-          const workDate = `${record.periodYear}-${String(record.periodMonth).padStart(2, "0")}-${String(daily.day).padStart(2, "0")}`;
-
-          const { error: dailyError } = await supabase
-            .from("attendance_daily")
-            .upsert(
-              {
-                employee_id: record.employeeId,
-                work_date: workDate,
-                period_year: record.periodYear,
-                period_month: record.periodMonth,
-                check_in_time: daily.checkIn,
-                check_out_time: daily.checkOut,
-                working_units: daily.workingUnits,
-                overtime_units: daily.overtimeUnits,
-                source_file: file.name,
-                import_batch_id: importBatchId,
-              },
-              { onConflict: "employee_id,work_date" },
-            );
-
-          if (dailyError) {
-            errors.push({
-              row: 0,
-              employeeId: record.employeeId,
-              message: `Daily error: ${dailyError.message}`,
-            });
-          } else {
-            insertedDaily++;
-          }
-        }
+        insertedDaily += dailyRecords.length;
 
         const { error: monthlyError } = await supabase
           .from("attendance_monthly")
@@ -142,6 +113,7 @@ export async function POST(request: NextRequest) {
               total_meal_ot_hours: record.summary.totalMealOtHours,
               total_ot_hours: record.summary.totalOtHours,
               sick_days: record.summary.sickDays,
+              daily_records_json: dailyRecords,
               source_file: file.name,
               import_batch_id: importBatchId,
             },
