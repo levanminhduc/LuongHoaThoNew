@@ -128,6 +128,8 @@ interface PayrollResult {
 
   tien_khen_thuong_chuyen_can?: number;
   luong_hoc_viec_pc_luong?: number;
+  pc_luong?: number;
+  pc_luong_cho_viec?: number;
   tong_cong_tien_luong_san_pham?: number;
   ho_tro_thoi_tiet_nong?: number;
   bo_sung_luong?: number;
@@ -750,6 +752,19 @@ export function EmployeeLookup() {
                   </CardContent>
                 </Card>
 
+                <Card className="bg-pink-50 border-pink-200">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-pink-600">
+                        PC Lương
+                      </p>
+                      <p className="text-lg md:text-2xl font-bold text-pink-700">
+                        {formatCurrency((result.tien_tang_ca_vuot || 0) + (result.luong_cnkcp_vuot || 0))}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <Card className="bg-orange-50 border-orange-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
@@ -791,6 +806,7 @@ export function EmployeeLookup() {
                   </CardContent>
                 </Card>
 
+                {/* 
                 <Card className="bg-cyan-50 border-cyan-200">
                   <CardContent className="pt-6">
                     <div className="text-center">
@@ -816,6 +832,7 @@ export function EmployeeLookup() {
                     </div>
                   </CardContent>
                 </Card>
+                */}
               </div>
             </div>
 

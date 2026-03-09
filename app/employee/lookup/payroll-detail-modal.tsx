@@ -72,6 +72,7 @@ interface PayrollResult {
   tong_cong_tien_luong_san_pham?: number;
   ho_tro_thoi_tiet_nong?: number;
   bo_sung_luong?: number;
+  pc_luong?: number;
   pc_luong_cho_viec?: number;
   luong_cnkcp_vuot?: number;
 
@@ -293,6 +294,7 @@ export function PayrollDetailModal({
                 value={payrollData.tien_luong_30p_an_ca}
                 isCurrency
               />
+              {/* 
               <DetailRow
                 label="Tiền Tăng Ca Vượt"
                 value={payrollData.tien_tang_ca_vuot}
@@ -303,6 +305,7 @@ export function PayrollDetailModal({
                 value={payrollData.luong_cnkcp_vuot}
                 isCurrency
               />
+              */}
             </CardContent>
           </Card>
 
@@ -318,6 +321,11 @@ export function PayrollDetailModal({
               <DetailRow
                 label="Tiền Khen Thưởng Chuyên Cần"
                 value={payrollData.tien_khen_thuong_chuyen_can}
+                isCurrency
+              />
+              <DetailRow
+                label="PC Lương"
+                value={(payrollData.tien_tang_ca_vuot || 0) + (payrollData.luong_cnkcp_vuot || 0)}
                 isCurrency
               />
               <DetailRow

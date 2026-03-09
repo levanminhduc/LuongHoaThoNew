@@ -594,6 +594,7 @@ export function SalaryHistoryModal({
                           value={payrollData.tien_luong_30p_an_ca}
                           isCurrency
                         />
+                        {/*
                         <DetailRow
                           label="Tiền Tăng Ca Vượt"
                           value={payrollData.tien_tang_ca_vuot}
@@ -604,6 +605,7 @@ export function SalaryHistoryModal({
                           value={payrollData.luong_cnkcp_vuot}
                           isCurrency
                         />
+                        */}
                       </CardContent>
                     </Card>
 
@@ -620,6 +622,11 @@ export function SalaryHistoryModal({
                         <DetailRow
                           label="Tiền Khen Thưởng Chuyên Cần"
                           value={payrollData.tien_khen_thuong_chuyen_can}
+                          isCurrency
+                        />
+                        <DetailRow
+                          label="PC Lương"
+                          value={(payrollData.tien_tang_ca_vuot || 0) + (payrollData.luong_cnkcp_vuot || 0)}
                           isCurrency
                         />
                         <DetailRow

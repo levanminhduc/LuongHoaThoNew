@@ -13,7 +13,7 @@
 nul
 .agents/
 .claude-archived/
-/docs
+docs/
 
 # production
 /build
