@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,9 +11,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
-import { Eye, EyeOff, Search } from "lucide-react";
+import { Eye, EyeOff, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface Employee {
   employee_id: string;
@@ -52,7 +66,7 @@ export default function EmployeeForm({
     cccd: "",
     password: "",
     chuc_vu: employee?.chuc_vu || "",
-    department: employee?.department ? employee.department : "none_selected",
+    department: employee?.department ? employee.department : "",
     phone_number: employee?.phone_number || "",
     is_active: employee?.is_active ?? true,
   });
@@ -60,10 +74,7 @@ export default function EmployeeForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [departments, setDepartments] = useState<string[]>([]);
-  const [departmentSearch, setDepartmentSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const searchTimeoutRef = useRef<NodeJS.Timeout>(undefined);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [openDepartment, setOpenDepartment] = useState(false);
 
   const filteredRoleOptions = roleOptions.filter(
     (role) => !restrictedRoles.includes(role.value),
@@ -92,104 +103,6 @@ export default function EmployeeForm({
     fetchDepartments();
   }, []);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Debounced search để optimize performance
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearch(departmentSearch);
-
-      // Ensure focus is maintained after debounced update
-      requestAnimationFrame(() => {
-        if (
-          searchInputRef.current &&
-          document.activeElement !== searchInputRef.current
-        ) {
-          const wasActive = document.activeElement === searchInputRef.current;
-          if (wasActive || departmentSearch) {
-            searchInputRef.current.focus();
-          }
-        }
-      });
-    }, 150); // 150ms debounce delay
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [departmentSearch]);
-
-  // Optimized filtering với useMemo và debounced search
-  const filteredDepartments = useMemo(() => {
-    if (!debouncedSearch.trim()) return departments;
-
-    const searchTerm = debouncedSearch.toLowerCase().trim();
-    return departments.filter((dept) => {
-      const deptLower = dept.toLowerCase();
-      return deptLower.includes(searchTerm);
-    });
-  }, [departments, debouncedSearch]);
-
-  // Memoized search handler với focus preservation
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      const cursorPosition = e.target.selectionStart;
-
-      setDepartmentSearch(value);
-
-      // Preserve focus và cursor position after state update
-      requestAnimationFrame(() => {
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-          if (cursorPosition !== null) {
-            searchInputRef.current.setSelectionRange(
-              cursorPosition,
-              cursorPosition,
-            );
-          }
-        }
-      });
-    },
-    [],
-  );
-
-  // Memoized clear search handler
-  const handleClearSearch = useCallback(() => {
-    setDepartmentSearch("");
-    setDebouncedSearch("");
-    // Maintain focus after clearing
-    requestAnimationFrame(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    });
-  }, []);
-
-  // Auto-focus search input when Select opens
-  const handleSelectOpenChange = useCallback((open: boolean) => {
-    if (open) {
-      // Focus search input when dropdown opens
-      requestAnimationFrame(() => {
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-        }
-      });
-    }
-  }, []);
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -197,7 +110,6 @@ export default function EmployeeForm({
       newErrors.employee_id = "Mã nhân viên là bắt buộc";
     }
 
-    // Validate employee_id format (alphanumeric, no spaces)
     if (formData.employee_id && !/^[A-Za-z0-9]+$/.test(formData.employee_id)) {
       newErrors.employee_id =
         "Mã nhân viên chỉ được chứa chữ và số, không có khoảng trắng";
@@ -207,7 +119,6 @@ export default function EmployeeForm({
       newErrors.full_name = "Họ và tên là bắt buộc";
     }
 
-    // CCCD validation (only for new employee creation)
     if (!employee && !formData.cccd.trim()) {
       newErrors.cccd = "CCCD là bắt buộc khi tạo mới";
     }
@@ -216,7 +127,6 @@ export default function EmployeeForm({
       newErrors.cccd = "CCCD phải có đúng 12 chữ số";
     }
 
-    // Password validation (optional for updates, required for new if no CCCD)
     if (formData.password && formData.password.length < 6) {
       newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
@@ -257,11 +167,9 @@ export default function EmployeeForm({
         ...formData,
         cccd: formData.cccd || undefined,
         password: formData.password || undefined,
-        department:
-          formData.department === "none_selected" ? null : formData.department,
+        department: formData.department || null,
       };
 
-      // Remove empty fields for updates
       if (employee) {
         if (!formData.cccd) {
           delete submitData.cccd;
@@ -304,57 +212,74 @@ export default function EmployeeForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6 py-4 px-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        {/* Row 1: Basic Info */}
         <div className="space-y-2">
-          <Label htmlFor="employee_id">Mã Nhân Viên *</Label>
+          <Label htmlFor="employee_id" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+            Mã Nhân Viên *
+          </Label>
           <Input
             id="employee_id"
             value={formData.employee_id}
             onChange={(e) => handleInputChange("employee_id", e.target.value)}
             disabled={loading}
             placeholder="Nhập mã nhân viên"
-            className={errors.employee_id ? "border-red-500" : ""}
+            className={cn(
+              "h-10 w-full",
+              errors.employee_id ? "border-red-500" : ""
+            )}
           />
-          {errors.employee_id && (
-            <p className="text-sm text-red-500">{errors.employee_id}</p>
-          )}
-          {employee && (
-            <div className="text-xs space-y-1">
-              <p className="text-blue-600">
-                ℹ️ Thay đổi mã nhân viên sẽ tự động cập nhật tất cả dữ liệu liên
-                quan
-              </p>
-              <p className="text-amber-600">
-                ⚠️ Bao gồm: dữ liệu lương, chữ ký, quyền truy cập, và audit logs
-              </p>
-              <p className="text-green-600">
-                ✅ Hệ thống sử dụng database transaction để đảm bảo data
-                integrity
-              </p>
-            </div>
-          )}
+          <div className="min-h-[1.25rem]">
+            {errors.employee_id && (
+              <p className="text-xs text-red-500 font-medium">{errors.employee_id}</p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="full_name">Họ và Tên *</Label>
+          <Label htmlFor="full_name" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+            Họ và Tên *
+          </Label>
           <Input
             id="full_name"
             value={formData.full_name}
             onChange={(e) => handleInputChange("full_name", e.target.value)}
             disabled={loading}
             placeholder="Nhập họ và tên"
-            className={errors.full_name ? "border-red-500" : ""}
+            className={cn(
+              "h-10 w-full",
+              errors.full_name ? "border-red-500" : ""
+            )}
           />
-          {errors.full_name && (
-            <p className="text-sm text-red-500">{errors.full_name}</p>
-          )}
+          <div className="min-h-[1.25rem]">
+            {errors.full_name && (
+              <p className="text-xs text-red-500 font-medium">{errors.full_name}</p>
+            )}
+          </div>
         </div>
 
-        {/* CCCD field - only show for new employee creation */}
+        {/* Full-width Warning for existing employees */}
+        {employee && (
+          <div className="md:col-span-2 bg-blue-50/50 p-4 rounded-lg border border-blue-100/50">
+            <div className="flex items-center gap-2 text-blue-700 font-semibold text-xs uppercase tracking-wider mb-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px]">ℹ️</span>
+              Lưu ý khi thay đổi mã nhân viên
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-[11px] leading-relaxed">
+              <p className="text-blue-600/80">• Tự động cập nhật lương, chữ ký và phân quyền.</p>
+              <p className="text-amber-600/80">• ⚠️ Ảnh hưởng đến lịch sử audit logs cũ.</p>
+              <p className="text-green-600/80 md:col-span-2">• ✅ Đảm bảo tính nhất quán qua transactions.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Row 2: Auth Info */}
         {!employee && (
           <div className="space-y-2">
-            <Label htmlFor="cccd">CCCD *</Label>
+            <Label htmlFor="cccd" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+              CCCD *
+            </Label>
             <Input
               id="cccd"
               type="text"
@@ -362,22 +287,22 @@ export default function EmployeeForm({
               onChange={(e) => handleInputChange("cccd", e.target.value)}
               disabled={loading}
               placeholder="Nhập số CCCD (12 chữ số)"
-              className={errors.cccd ? "border-red-500" : ""}
+              className={cn("h-10 w-full", errors.cccd ? "border-red-500" : "")}
               maxLength={12}
             />
-            {errors.cccd && (
-              <p className="text-sm text-red-500">{errors.cccd}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              CCCD sẽ được sử dụng để xác thực và khôi phục mật khẩu
-            </p>
+            <div className="min-h-[1.25rem]">
+              {errors.cccd ? (
+                <p className="text-xs text-red-500 font-medium">{errors.cccd}</p>
+              ) : (
+                <p className="text-[10px] text-muted-foreground italic">* Dùng để xác thực</p>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Password field - show for both create and update */}
         <div className="space-y-2">
-          <Label htmlFor="password">
-            Mật Khẩu {employee ? "(để trống nếu không đổi)" : "(tùy chọn)"}
+          <Label htmlFor="password" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+            Mật Khẩu {employee ? "(đổi mới)" : "(tùy chọn)"}
           </Label>
           <div className="relative">
             <Input
@@ -386,44 +311,44 @@ export default function EmployeeForm({
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
               disabled={loading}
-              placeholder={
-                employee ? "Nhập mật khẩu mới" : "Nhập mật khẩu tùy chỉnh"
-              }
-              className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+              placeholder={employee ? "Mật khẩu mới" : "CCCD làm mặc định"}
+              className={cn("h-10 w-full pr-10", errors.password ? "border-red-500" : "")}
             />
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              className="absolute right-0 top-0 h-10 px-3 hover:bg-transparent"
               onClick={() => setShowPassword(!showPassword)}
               disabled={loading}
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4 text-gray-400" />
+                <EyeOff className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <Eye className="h-4 w-4 text-gray-400" />
+                <Eye className="h-4 w-4 text-muted-foreground" />
               )}
             </Button>
           </div>
-          {errors.password && (
-            <p className="text-sm text-red-500">{errors.password}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {employee
-              ? "Để trống nếu không muốn thay đổi mật khẩu hiện tại"
-              : "Nếu để trống, CCCD sẽ được sử dụng làm mật khẩu mặc định"}
-          </p>
+          <div className="min-h-[1.25rem]">
+            {errors.password ? (
+              <p className="text-xs text-red-500 font-medium">{errors.password}</p>
+            ) : employee ? (
+              <p className="text-[10px] text-muted-foreground italic">* Để trống nếu không đổi</p>
+            ) : null}
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="chuc_vu">Chức Vụ *</Label>
+        {/* Row 3: Role and Department */}
+        <div className="space-y-2 flex flex-col items-stretch">
+          <Label htmlFor="chuc_vu" className="text-sm font-semibold text-foreground/90 mb-1.5 block leading-none">
+            Chức Vụ *
+          </Label>
           <Select
             value={formData.chuc_vu}
             onValueChange={(value) => handleInputChange("chuc_vu", value)}
             disabled={loading}
           >
-            <SelectTrigger className={errors.chuc_vu ? "border-red-500" : ""}>
+            <SelectTrigger className={cn("flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50", errors.chuc_vu ? "border-red-500" : "")}>
               <SelectValue placeholder="Chọn chức vụ" />
             </SelectTrigger>
             <SelectContent>
@@ -434,106 +359,129 @@ export default function EmployeeForm({
               ))}
             </SelectContent>
           </Select>
-          {errors.chuc_vu && (
-            <p className="text-sm text-red-500">{errors.chuc_vu}</p>
-          )}
+          <div className="min-h-[1.25rem]">
+            {errors.chuc_vu && (
+              <p className="text-xs text-red-500 font-medium">{errors.chuc_vu}</p>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="department">Phòng Ban</Label>
-          <Select
-            value={formData.department}
-            onValueChange={(value) => {
-              handleInputChange("department", value);
-              handleClearSearch(); // Clear search after selection
-            }}
-            onOpenChange={handleSelectOpenChange}
-            disabled={loading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn phòng ban" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              <div className="sticky top-0 z-10 bg-background border-b px-3 pb-2">
-                <div className="flex items-center">
-                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Tìm phòng ban..."
-                    value={departmentSearch}
-                    onChange={handleSearchChange}
-                    className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                    autoComplete="off"
-                    spellCheck={false}
-                    onBlur={(e) => {
-                      // Prevent blur if clicking within SelectContent
-                      const relatedTarget = e.relatedTarget as HTMLElement;
-                      if (
-                        relatedTarget &&
-                        relatedTarget.closest('[role="option"]')
-                      ) {
-                        e.preventDefault();
-                        searchInputRef.current?.focus();
-                      }
-                    }}
-                  />
-                </div>
-                {departmentSearch && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {filteredDepartments.length} kết quả
-                  </div>
-                )}
-              </div>
-              <div className="overflow-auto">
-                <SelectItem value="none_selected">Không chọn</SelectItem>
-                {filteredDepartments.map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
-                  </SelectItem>
-                ))}
-                {filteredDepartments.length === 0 && debouncedSearch && (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    {`Không tìm thấy "${debouncedSearch}"`}
-                  </div>
-                )}
-              </div>
-            </SelectContent>
-          </Select>
-          {departments.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              Đang tải danh sách phòng ban...
-            </p>
-          )}
+        <div className="space-y-2 flex flex-col items-stretch">
+          <Label htmlFor="department" className="text-sm font-semibold text-foreground/90 mb-1.5 block leading-none">
+            Phòng Ban
+          </Label>
+          <Popover open={openDepartment} onOpenChange={setOpenDepartment}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openDepartment}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm font-normal text-foreground/80 hover:text-foreground hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={loading}
+              >
+                <span className="truncate">
+                  {formData.department ? formData.department : "Chọn phòng ban"}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Tìm phòng ban..." />
+                <CommandList>
+                  <CommandEmpty>Không tìm thấy phòng ban nào.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="none_selected"
+                      onSelect={() => {
+                        handleInputChange("department", "");
+                        setOpenDepartment(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          formData.department === ""
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                      Không chọn
+                    </CommandItem>
+                    {departments.map((dept) => (
+                      <CommandItem
+                        key={dept}
+                        value={dept}
+                        onSelect={(currentValue) => {
+                          handleInputChange(
+                            "department",
+                            currentValue === formData.department
+                              ? ""
+                              : currentValue,
+                          );
+                          setOpenDepartment(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            formData.department === dept
+                              ? "opacity-100"
+                              : "opacity-0",
+                          )}
+                        />
+                        {dept}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <div className="min-h-[1.25rem]" />
         </div>
 
+        {/* Row 4: Phone and Status */}
         <div className="space-y-2">
-          <Label htmlFor="phone_number">Số Điện Thoại</Label>
+          <Label htmlFor="phone_number" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+            Số Điện Thoại
+          </Label>
           <Input
             id="phone_number"
             value={formData.phone_number}
             onChange={(e) => handleInputChange("phone_number", e.target.value)}
             disabled={loading}
             placeholder="Nhập số điện thoại"
-            className={errors.phone_number ? "border-red-500" : ""}
+            className={cn("h-10 w-full", errors.phone_number ? "border-red-500" : "")}
           />
-          {errors.phone_number && (
-            <p className="text-sm text-red-500">{errors.phone_number}</p>
-          )}
+          <div className="min-h-[1.25rem]">
+            {errors.phone_number && (
+              <p className="text-xs text-red-500 font-medium">{errors.phone_number}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+            Trạng Thái
+          </Label>
+          <div className="flex items-center space-x-3 bg-muted/30 h-10 px-3 rounded-md border border-input/50 transition-all w-full">
+            <Switch
+              id="is_active"
+              checked={formData.is_active}
+              onCheckedChange={(checked) => handleInputChange("is_active", checked)}
+              disabled={loading}
+            />
+            <Label htmlFor="is_active" className="cursor-pointer font-medium text-xs text-foreground/70">
+              Đang hoạt động
+            </Label>
+          </div>
+          <div className="min-h-[1.25rem]" />
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="is_active"
-          checked={formData.is_active}
-          onCheckedChange={(checked) => handleInputChange("is_active", checked)}
-          disabled={loading}
-        />
-        <Label htmlFor="is_active">Trạng thái hoạt động</Label>
-      </div>
-
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="submit" disabled={loading}>
+      <div className="flex justify-end space-x-3 pt-6 border-t mt-4">
+        <Button type="submit" disabled={loading} className="min-w-[120px] shadow-sm">
           {loading ? "Đang xử lý..." : employee ? "Cập nhật" : "Tạo mới"}
         </Button>
       </div>

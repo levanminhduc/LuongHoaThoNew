@@ -46,7 +46,7 @@ import {
   showDeleteSuccessToast,
   showUpdateSuccessToast,
 } from "@/lib/toast-utils";
-import EmployeeFormExample from "@/components/examples/employee-form-example";
+import EmployeeForm from "./components/EmployeeForm";
 import EmployeeAuditLogs from "./components/EmployeeAuditLogs";
 import SecurityNotice from "./components/SecurityNotice";
 import { Spinner } from "@/components/ui/spinner";
@@ -256,8 +256,8 @@ export default function EmployeeManagementPage() {
                 Nhập thông tin nhân viên mới vào hệ thống
               </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-[65vh] pr-4">
-              <EmployeeFormExample onSuccess={handleEmployeeCreated} />
+            <ScrollArea className="max-h-[65vh] p-1 pr-4">
+              <EmployeeForm onSuccess={handleEmployeeCreated} />
             </ScrollArea>
           </DialogContent>
         </Dialog>
@@ -438,9 +438,9 @@ export default function EmployeeManagementPage() {
                                   {employee.full_name}
                                 </DialogDescription>
                               </DialogHeader>
-                              <ScrollArea className="max-h-[65vh] pr-4">
+                              <ScrollArea className="max-h-[65vh] p-1 pr-4">
                                 {editingEmployee && (
-                                  <EmployeeFormExample
+                                  <EmployeeForm
                                     employee={editingEmployee}
                                     onSuccess={handleEmployeeUpdated}
                                   />
@@ -571,9 +571,9 @@ export default function EmployeeManagementPage() {
                                       {employee.full_name}
                                     </DialogDescription>
                                   </DialogHeader>
-                                  <ScrollArea className="max-h-[65vh] pr-4">
+                                  <ScrollArea className="max-h-[65vh] p-1 pr-4">
                                     {editingEmployee && (
-                                      <EmployeeFormExample
+                                      <EmployeeForm
                                         employee={editingEmployee}
                                         onSuccess={handleEmployeeUpdated}
                                       />

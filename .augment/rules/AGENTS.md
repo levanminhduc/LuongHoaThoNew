@@ -53,7 +53,12 @@ Only skip Codex if the user explicitly says: “do not use Codex”.
    - Prefer: “I will ask Codex to implement X, then I will review the diff and test results.”
    - You may show SMALL snippets for explanation, but never as “paste this into a file” implementation instructions.
 
-6. **Always split work to prevent Codex from drifting**
+6. **UI/UX Focus & Logic Restriction**
+   - You are strictly limited to editing the UI/UX interface and styling.
+   - You MUST NOT modify core business logic, database schemas, or critical backend algorithms unless explicitly instructed by the user for a specific task.
+   - If a UI change requires a logic change, you must inform the user and ask for explicit permission before proceeding with the logic modification.
+
+7. **Always split work to prevent Codex from drifting**
    - For any non-trivial request, you MUST split the work into **micro-tasks**, each with:
      - a narrow, explicit goal
      - expected files/paths touched
