@@ -345,17 +345,16 @@ export async function POST(request: NextRequest) {
         const dailySheet = XLSX.utils.aoa_to_sheet(sheetData);
 
         // Auto-fit column widths based on actual content
-        const MIN_COL_WIDTH = 4;
+        const MIN_COL_WIDTH = 2;
         const MAX_COL_WIDTH = 30;
-        const PADDING = 2;
+        const PADDING = 0;
         const colMaxLens: number[] = [];
 
         for (let r = 0; r < sheetData.length; r++) {
           const row = sheetData[r];
           for (let c = 0; c < row.length; c++) {
             const cellVal = row[c];
-            const len =
-              cellVal == null ? 0 : String(cellVal).length;
+            const len = cellVal == null ? 0 : String(cellVal).length;
             if (colMaxLens[c] === undefined || len > colMaxLens[c]) {
               colMaxLens[c] = len;
             }
