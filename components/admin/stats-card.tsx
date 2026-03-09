@@ -1,6 +1,7 @@
 "use client";
 
-import { LucideIcon } from "lucide-react";
+import { memo } from "react";
+import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -41,7 +42,7 @@ const subtleTextMap: Record<GradientVariant, string> = {
   rose: "text-rose-100",
 };
 
-export function StatsCard({
+export const StatsCard = memo(function StatsCard({
   title,
   value,
   subtitle,
@@ -106,6 +107,11 @@ export function StatsCard({
           )}
           {trend && (
             <div className="flex items-center gap-1">
+              {trend.isPositive ? (
+                <TrendingUp className="h-3 w-3 text-green-200" />
+              ) : (
+                <TrendingDown className="h-3 w-3 text-red-200" />
+              )}
               <span
                 className={cn(
                   "text-xs font-medium",
@@ -124,14 +130,14 @@ export function StatsCard({
       </CardContent>
     </Card>
   );
-}
+});
 
 interface StatsGridProps {
   children: React.ReactNode;
   className?: string;
 }
 
-export function StatsGrid({ children, className }: StatsGridProps) {
+export const StatsGrid = memo(function StatsGrid({ children, className }: StatsGridProps) {
   return (
     <div
       className={cn(
@@ -142,4 +148,4 @@ export function StatsGrid({ children, className }: StatsGridProps) {
       {children}
     </div>
   );
-}
+});

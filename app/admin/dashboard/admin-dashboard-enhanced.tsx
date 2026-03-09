@@ -35,12 +35,15 @@ import {
   Filter,
   LayoutDashboard,
   ArrowUpDown,
+  RefreshCw,
 } from "lucide-react";
 import { EmployeeImportSection } from "@/components/employee-import-section";
 import { MonthSelector } from "../payroll-management/components/MonthSelector";
 import {
-  StatsCard,
-  StatsGrid,
+  KPISection,
+  QuickActionsSection,
+  AlertsWidget,
+  ChartsSection,
   DataTableToolbar,
   PayrollListItem,
 } from "@/components/admin";
@@ -77,7 +80,7 @@ const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString("vi-VN");
 };
 
-// Memoized components for performance optimization
+// Memoized table content component
 const PayrollTableContent = memo(function PayrollTableContent({
   filteredPayrolls,
   selectedMonth,
@@ -169,48 +172,7 @@ const PayrollTableContent = memo(function PayrollTableContent({
   );
 });
 
-const StatsCardsSection = memo(function StatsCardsSection({
-  stats,
-}: {
-  stats: DashboardStats;
-}) {
-  return (
-    <StatsGrid className="mb-6">
-      <StatsCard
-        title="Tổng Bản Ghi"
-        value={stats.totalRecords.toLocaleString()}
-        subtitle={`Tháng: ${stats.currentMonth}`}
-        badge={`Batch: ${stats.lastImportBatch || "N/A"}`}
-        icon={FileSpreadsheet}
-        variant="blue"
-      />
-      <StatsCard
-        title="Số Nhân Viên"
-        value={stats.totalEmployees.toLocaleString()}
-        subtitle="Nhân viên có lương"
-        icon={Users}
-        variant="green"
-      />
-      <StatsCard
-        title="Tổng Lương"
-        value={formatCurrency(stats.totalSalary)}
-        subtitle="Thực nhận"
-        icon={DollarSign}
-        variant="purple"
-      />
-      <StatsCard
-        title="Tỷ Lệ Ký"
-        value={`${stats.signatureRate.toFixed(1)}%`}
-        subtitle="Đã ký nhận"
-        progress={stats.signatureRate}
-        icon={TrendingUp}
-        variant="orange"
-      />
-    </StatsGrid>
-  );
-});
-
-export function AdminDashboardV2() {
+export function AdminDashboardEnhanced() {
   const [loading, setLoading] = useState(true);
   const [payrolls, setPayrolls] = useState<PayrollRecord[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -224,6 +186,7 @@ export function AdminDashboardV2() {
   const [message, setMessage] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -263,7 +226,7 @@ export function AdminDashboardV2() {
     fetchDashboardData();
   }, [router]);
 
-  // Memoize filtered payrolls to prevent unnecessary re-renders
+  // Memoize filtered payrolls
   const filteredPayrolls = useMemo(() => {
     let filtered = payrolls;
     if (selectedMonth) {
@@ -289,6 +252,7 @@ export function AdminDashboardV2() {
         const data = await response.json();
         setPayrolls(data.payrolls || []);
         setStats(data.stats || {});
+        setMessage("");
       } else if (response.status === 401) {
         localStorage.removeItem("admin_token");
         router.push("/admin/login");
@@ -299,6 +263,12 @@ export function AdminDashboardV2() {
       setLoading(false);
     }
   }, [router]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchDashboardData();
+    setIsRefreshing(false);
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (
@@ -318,8 +288,46 @@ export function AdminDashboardV2() {
         </Alert>
       )}
 
-      <StatsCardsSection stats={stats} />
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between mb-6 gap-2">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Tổng quan các chỉ số quản lý lương
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Cập Nhật</span>
+        </Button>
+      </div>
 
+      {/* KPI Cards Section */}
+      <KPISection
+        totalRecords={stats.totalRecords}
+        totalEmployees={stats.totalEmployees}
+        totalSalary={stats.totalSalary}
+        signatureRate={stats.signatureRate}
+        currentMonth={stats.currentMonth}
+        lastImportBatch={stats.lastImportBatch}
+      />
+
+      {/* Alerts Widget */}
+      <AlertsWidget />
+
+      {/* Charts Section */}
+      <ChartsSection showCharts={true} />
+
+      {/* Quick Actions Section */}
+      <QuickActionsSection />
+
+      {/* Detailed Data Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <Card>
           <CardContent className="pt-6">
@@ -368,8 +376,8 @@ export function AdminDashboardV2() {
             searchPlaceholder="Tìm mã NV..."
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
-            onRefresh={fetchDashboardData}
-            isLoading={loading}
+            onRefresh={handleRefresh}
+            isLoading={isRefreshing}
             actions={
               <Button
                 variant="outline"
@@ -404,9 +412,9 @@ export function AdminDashboardV2() {
                   </p>
                 </div>
               ) : (
-                <PayrollTableContent 
-                  filteredPayrolls={filteredPayrolls} 
-                  selectedMonth={selectedMonth} 
+                <PayrollTableContent
+                  filteredPayrolls={filteredPayrolls}
+                  selectedMonth={selectedMonth}
                 />
               )}
             </CardContent>

@@ -6,3 +6,4 @@ export { DataTableToolbar } from "./data-table-toolbar";
 export { PayrollListItem, PayrollList } from "./payroll-list-item";
 export { NavigationProgress } from "./navigation-progress";
 export { AdminPrefetch } from "./admin-prefetch";
+export { KPISection, QuickActionsSection, AlertsWidget, ChartsSection, RecentActivityWidget } from "./dashboard-sections";
