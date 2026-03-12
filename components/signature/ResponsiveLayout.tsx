@@ -107,21 +107,22 @@ export default function ResponsiveLayout({
   const NavigationContent = () => (
     <nav className="space-y-1">
       {navItems.map((item, index) => (
-        <button
+        <Button
           key={index}
+          variant="ghost"
           onClick={() => {
             (item as { onClick?: () => void }).onClick?.();
             setIsMobileMenuOpen(false);
           }}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`w-full justify-start flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors h-auto ${
             item.active
-              ? "bg-blue-100 text-blue-700"
+              ? "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800"
               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
           {item.icon}
           {item.label}
-        </button>
+        </Button>
       ))}
     </nav>
   );
@@ -266,18 +267,19 @@ export default function ResponsiveLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex space-x-8 py-3">
               {navItems.map((item, index) => (
-                <button
+                <Button
                   key={index}
+                  variant="ghost"
                   onClick={(item as { onClick?: () => void }).onClick}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors h-auto ${
                     item.active
-                      ? "bg-blue-100 text-blue-700"
+                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
                   {item.icon}
                   {item.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

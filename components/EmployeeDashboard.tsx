@@ -19,6 +19,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   LineChart,
   Line,
   XAxis,
@@ -497,55 +505,69 @@ export default function EmployeeDashboard({
 
                 {/* Desktop View: Table Layout */}
                 <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-3">Tháng</th>
-                        <th className="text-right p-3">Lương Gốc</th>
-                        <th className="text-right p-3">Thuế TNCN</th>
-                        <th className="text-right p-3">BHXH/BHYT</th>
-                        <th className="text-right p-3">Thực Nhận</th>
-                        <th className="text-center p-3">Trạng Thái</th>
-                        <th className="text-center p-3">Ngày Ký</th>
-                        <th className="text-center p-3">Tải Phiếu</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table className="w-full text-sm">
+                    <TableHeader>
+                      <TableRow className="border-b">
+                        <TableHead className="text-left p-3">Tháng</TableHead>
+                        <TableHead className="text-right p-3">
+                          Lương Gốc
+                        </TableHead>
+                        <TableHead className="text-right p-3">
+                          Thuế TNCN
+                        </TableHead>
+                        <TableHead className="text-right p-3">
+                          BHXH/BHYT
+                        </TableHead>
+                        <TableHead className="text-right p-3">
+                          Thực Nhận
+                        </TableHead>
+                        <TableHead className="text-center p-3">
+                          Trạng Thái
+                        </TableHead>
+                        <TableHead className="text-center p-3">
+                          Ngày Ký
+                        </TableHead>
+                        <TableHead className="text-center p-3">
+                          Tải Phiếu
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {payrollData.map((payroll) => (
-                        <tr
+                        <TableRow
                           key={payroll.id}
                           className="border-b hover:bg-gray-50"
                         >
-                          <td className="p-3 font-medium">
+                          <TableCell className="p-3 font-medium">
                             {payroll.salary_month}
-                          </td>
-                          <td className="p-3 text-right">
+                          </TableCell>
+                          <TableCell className="p-3 text-right">
                             {formatCurrency(payroll.tong_cong_tien_luong || 0)}
-                          </td>
-                          <td className="p-3 text-right">
+                          </TableCell>
+                          <TableCell className="p-3 text-right">
                             {formatCurrency(payroll.thue_tncn || 0)}
-                          </td>
-                          <td className="p-3 text-right">
+                          </TableCell>
+                          <TableCell className="p-3 text-right">
                             {formatCurrency(payroll.bhxh_bhtn_bhyt_total || 0)}
-                          </td>
-                          <td className="p-3 text-right font-semibold">
+                          </TableCell>
+                          <TableCell className="p-3 text-right font-semibold">
                             {formatCurrency(
                               payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
                             )}
-                          </td>
-                          <td className="p-3 text-center">
+                          </TableCell>
+                          <TableCell className="p-3 text-center">
                             <Badge variant={getStatusColor(payroll.is_signed)}>
                               {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                             </Badge>
-                          </td>
-                          <td className="p-3 text-center text-xs text-muted-foreground">
+                          </TableCell>
+                          <TableCell className="p-3 text-center text-xs text-muted-foreground">
                             {payroll.signed_at
                               ? new Date(payroll.signed_at).toLocaleDateString(
                                   "vi-VN",
                                 )
                               : "-"}
-                          </td>
-                          <td className="p-3 text-center">
+                          </TableCell>
+                          <TableCell className="p-3 text-center">
                             <Button
                               variant="outline"
                               size="sm"
@@ -559,11 +581,11 @@ export default function EmployeeDashboard({
                             >
                               <Download className="h-4 w-4" />
                             </Button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>

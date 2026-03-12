@@ -20,6 +20,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   UserX,
   Search,
   ChevronLeft,
@@ -404,57 +412,65 @@ export default function UnsignedEmployeesModal({
           {!loading && !error && employees.length > 0 && (
             <div className="space-y-4">
               <div className="overflow-x-auto max-h-96">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="text-left p-3 font-medium">Mã NV</th>
-                      <th className="text-left p-3 font-medium">Họ Tên</th>
-                      <th className="text-left p-3 font-medium">Phòng Ban</th>
-                      <th className="text-left p-3 font-medium">Chức Vụ</th>
-                      <th className="text-right p-3 font-medium">
+                <Table className="w-full text-sm">
+                  <TableHeader className="bg-gray-50 sticky top-0">
+                    <TableRow>
+                      <TableHead className="text-left p-3 font-medium">
+                        Mã NV
+                      </TableHead>
+                      <TableHead className="text-left p-3 font-medium">
+                        Họ Tên
+                      </TableHead>
+                      <TableHead className="text-left p-3 font-medium">
+                        Phòng Ban
+                      </TableHead>
+                      <TableHead className="text-left p-3 font-medium">
+                        Chức Vụ
+                      </TableHead>
+                      <TableHead className="text-right p-3 font-medium">
                         Lương Thực Nhận
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {employees.map((employee) => (
-                      <tr
+                      <TableRow
                         key={employee.employee_id}
                         className="border-b hover:bg-gray-50"
                       >
-                        <td className="p-3">
+                        <TableCell className="p-3">
                           <Badge variant="outline">
                             {employee.employee_id}
                           </Badge>
-                        </td>
-                        <td className="p-3">
+                        </TableCell>
+                        <TableCell className="p-3">
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-gray-400" />
                             <span className="font-medium">
                               {employee.full_name}
                             </span>
                           </div>
-                        </td>
-                        <td className="p-3">
+                        </TableCell>
+                        <TableCell className="p-3">
                           <div className="flex items-center gap-2">
                             <Building2 className="w-4 h-4 text-gray-400" />
                             <span>{employee.department}</span>
                           </div>
-                        </td>
-                        <td className="p-3">
+                        </TableCell>
+                        <TableCell className="p-3">
                           <Badge className={getChucVuColor(employee.chuc_vu)}>
                             {getChucVuLabel(employee.chuc_vu)}
                           </Badge>
-                        </td>
-                        <td className="p-3 text-right">
+                        </TableCell>
+                        <TableCell className="p-3 text-right">
                           <span className="font-semibold">
                             {formatSalary(employee.salary_amount || 0)}
                           </span>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
 
               {totalPages > 1 && (

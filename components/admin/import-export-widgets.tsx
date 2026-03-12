@@ -3,6 +3,14 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   CheckCircle,
   XCircle,
   AlertTriangle,
@@ -332,28 +340,28 @@ export function FilePreview({
               Xem trước (5 dòng đầu):
             </p>
             <div className="border rounded-lg overflow-auto max-h-[200px]">
-              <table className="w-full text-sm">
-                <thead className="bg-muted">
-                  <tr>
+              <Table className="w-full text-sm">
+                <TableHeader className="bg-muted">
+                  <TableRow>
                     {Object.keys(previewData[0]).map((key) => (
-                      <th key={key} className="px-3 py-2 text-left font-medium">
+                      <TableHead key={key} className="px-3 py-2 text-left font-medium">
                         {key}
-                      </th>
+                      </TableHead>
                     ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y">
                   {previewData.slice(0, 5).map((row, idx) => (
-                    <tr key={idx} className="hover:bg-muted/50">
+                    <TableRow key={idx} className="hover:bg-muted/50">
                       {Object.values(row).map((value, colIdx) => (
-                        <td key={colIdx} className="px-3 py-2">
+                        <TableCell key={colIdx} className="px-3 py-2">
                           {String(value)}
-                        </td>
+                        </TableCell>
                       ))}
-                    </tr>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         )}

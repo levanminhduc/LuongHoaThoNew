@@ -19,6 +19,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   BarChart,
   Bar,
   XAxis,
@@ -924,60 +932,60 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
 
                 {/* Desktop Table Layout - Show on lg screens and up */}
                 <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2 sm:p-3 min-w-[100px]">
+                  <Table className="w-full text-sm">
+                    <TableHeader>
+                      <TableRow className="border-b">
+                        <TableHead className="text-left p-2 sm:p-3 min-w-[100px]">
                           Mã NV
-                        </th>
-                        <th className="text-left p-2 sm:p-3 min-w-[150px]">
+                        </TableHead>
+                        <TableHead className="text-left p-2 sm:p-3 min-w-[150px]">
                           Họ Tên
-                        </th>
-                        <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                        </TableHead>
+                        <TableHead className="text-right p-2 sm:p-3 min-w-[120px]">
                           Khen Thưởng
-                        </th>
-                        <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                        </TableHead>
+                        <TableHead className="text-center p-2 sm:p-3 min-w-[80px]">
                           Hệ Số LV
-                        </th>
-                        <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                        </TableHead>
+                        <TableHead className="text-right p-2 sm:p-3 min-w-[140px]">
                           Lương Thực Nhận
-                        </th>
-                        <th className="text-center p-2 sm:p-3 min-w-[100px]">
+                        </TableHead>
+                        <TableHead className="text-center p-2 sm:p-3 min-w-[100px]">
                           Trạng Thái
-                        </th>
-                        <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                        </TableHead>
+                        <TableHead className="text-center p-2 sm:p-3 min-w-[80px]">
                           Thao Tác
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {payrollData.map((payroll) => (
-                        <tr
+                        <TableRow
                           key={payroll.id}
                           className="border-b hover:bg-gray-50"
                         >
-                          <td className="p-2 sm:p-3 font-mono text-xs sm:text-sm">
+                          <TableCell className="p-2 sm:p-3 font-mono text-xs sm:text-sm">
                             {payroll.employee_id}
-                          </td>
-                          <td className="p-2 sm:p-3">
+                          </TableCell>
+                          <TableCell className="p-2 sm:p-3">
                             {payroll.employees?.full_name}
-                          </td>
-                          <td className="p-2 sm:p-3 text-right font-medium">
+                          </TableCell>
+                          <TableCell className="p-2 sm:p-3 text-right font-medium">
                             {(
                               payroll.tien_khen_thuong_chuyen_can || 0
                             ).toLocaleString()}{" "}
                             VND
-                          </td>
-                          <td className="p-2 sm:p-3 text-center font-medium">
+                          </TableCell>
+                          <TableCell className="p-2 sm:p-3 text-center font-medium">
                             {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                          </td>
-                          <td className="p-2 sm:p-3 text-right font-semibold">
+                          </TableCell>
+                          <TableCell className="p-2 sm:p-3 text-right font-semibold">
                             {(
                               payroll.tien_luong_thuc_nhan_cuoi_ky || 0
                             ).toLocaleString()}{" "}
                             VND
-                          </td>
-                          <td className="p-2 sm:p-3 text-center">
+                          </TableCell>
+                          <TableCell className="p-2 sm:p-3 text-center">
                             <Badge
                               variant={
                                 payroll.is_signed ? "default" : "secondary"
@@ -985,8 +993,8 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                             >
                               {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                             </Badge>
-                          </td>
-                          <td className="p-2 sm:p-3 text-center">
+                          </TableCell>
+                          <TableCell className="p-2 sm:p-3 text-center">
                             <Button
                               variant="outline"
                               size="sm"
@@ -997,11 +1005,11 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>

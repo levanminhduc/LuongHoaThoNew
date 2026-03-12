@@ -39,6 +39,14 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getPreviousMonth } from "@/utils/dateUtils";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
 import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
@@ -918,77 +926,76 @@ export default function SupervisorDashboard({
               </div>
 
               <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-center p-2 sm:p-3 w-16">STT</th>
-                      <th className="text-left p-2 sm:p-3 min-w-[100px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-center w-16">STT</TableHead>
+                      <TableHead className="text-left min-w-[100px]">
                         Mã NV
-                      </th>
-                      <th className="text-left p-2 sm:p-3 min-w-[150px]">
+                      </TableHead>
+                      <TableHead className="text-left min-w-[150px]">
                         Họ Tên
-                      </th>
-                      <th className="text-left p-2 sm:p-3 min-w-[120px]">
+                      </TableHead>
+                      <TableHead className="text-left min-w-[120px]">
                         Chức Vụ
-                      </th>
+                      </TableHead>
                       {selectedMonth.endsWith("-13") ? (
                         <>
-                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                          <TableHead className="text-center min-w-[80px]">
                             Số Tháng
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                          </TableHead>
+                          <TableHead className="text-right min-w-[140px]">
                             Tổng SP 12 Tháng
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                          </TableHead>
+                          <TableHead className="text-right min-w-[120px]">
                             Chi Đợt 1
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                          </TableHead>
+                          <TableHead className="text-right min-w-[120px]">
                             Chi Đợt 2
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                          </TableHead>
+                          <TableHead className="text-right min-w-[140px]">
                             Tổng Lương T13
-                          </th>
+                          </TableHead>
                         </>
                       ) : (
                         <>
-                          <th className="text-center p-2 sm:p-3 min-w-[90px]">
+                          <TableHead className="text-center min-w-[90px]">
                             Ngày Công
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[120px]">
+                          </TableHead>
+                          <TableHead className="text-right min-w-[120px]">
                             Thưởng Chuyên Cần
-                          </th>
-                          <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                          </TableHead>
+                          <TableHead className="text-center min-w-[80px]">
                             Hệ Số LV
-                          </th>
-                          <th className="text-right p-2 sm:p-3 min-w-[140px]">
+                          </TableHead>
+                          <TableHead className="text-right min-w-[140px]">
                             Lương Thực Nhận
-                          </th>
+                          </TableHead>
                         </>
                       )}
-                      <th className="text-center p-2 sm:p-3 min-w-[100px]">
+                      <TableHead className="text-center min-w-[100px]">
                         Trạng Thái
-                      </th>
-                      <th className="text-center p-2 sm:p-3 min-w-[80px]">
+                      </TableHead>
+                      <TableHead className="text-center min-w-[80px]">
                         Thao Tác
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {payrollData.map((payroll, index) => (
-                      <tr
+                      <TableRow
                         key={payroll.id}
-                        className="border-b hover:bg-gray-50"
                       >
-                        <td className="p-2 sm:p-3 text-center font-medium text-gray-500">
+                        <TableCell className="text-center font-medium text-gray-500">
                           {index + 1}
-                        </td>
-                        <td className="p-2 sm:p-3 font-medium font-mono text-xs sm:text-sm">
+                        </TableCell>
+                        <TableCell className="font-medium font-mono text-xs sm:text-sm">
                           {payroll.employee_id}
-                        </td>
-                        <td className="p-2 sm:p-3">
+                        </TableCell>
+                        <TableCell>
                           {payroll.employees?.full_name}
-                        </td>
-                        <td className="p-2 sm:p-3">
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant={getChucVuBadge(
                               payroll.employees?.chuc_vu || "nhan_vien",
@@ -1002,51 +1009,51 @@ export default function SupervisorDashboard({
                                   ? "Trưởng phòng"
                                   : payroll.employees?.chuc_vu}
                           </Badge>
-                        </td>
+                        </TableCell>
                         {selectedMonth.endsWith("-13") ? (
                           <>
-                            <td className="p-2 sm:p-3 text-center font-medium">
+                            <TableCell className="text-center font-medium">
                               {payroll.so_thang_chia_13 || 0}
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-medium">
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
                               {formatCurrency(payroll.tong_sp_12_thang || 0)}
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-medium">
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
                               {formatCurrency(payroll.chi_dot_1_13 || 0)}
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-medium">
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
                               {formatCurrency(payroll.chi_dot_2_13 || 0)}
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-semibold">
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
                               {formatCurrency(payroll.tong_luong_13 || 0)}
-                            </td>
+                            </TableCell>
                           </>
                         ) : (
                           <>
-                            <td className="p-2 sm:p-3 text-center font-medium">
+                            <TableCell className="text-center font-medium">
                               {payroll.ngay_cong_trong_gio || 0} ngày
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-medium">
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
                               {formatCurrency(
                                 payroll.tien_khen_thuong_chuyen_can || 0,
                               )}
-                            </td>
-                            <td className="p-2 sm:p-3 text-center font-medium">
+                            </TableCell>
+                            <TableCell className="text-center font-medium">
                               {(payroll.he_so_lam_viec || 0).toFixed(2)}
-                            </td>
-                            <td className="p-2 sm:p-3 text-right font-semibold">
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
                               {formatCurrency(
                                 payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
                               )}
-                            </td>
+                            </TableCell>
                           </>
                         )}
-                        <td className="p-2 sm:p-3 text-center">
+                        <TableCell className="text-center">
                           <Badge variant={getStatusColor(payroll.is_signed)}>
                             {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                           </Badge>
-                        </td>
-                        <td className="p-2 sm:p-3 text-center">
+                        </TableCell>
+                        <TableCell className="text-center">
                           <Button
                             variant="outline"
                             size="sm"
@@ -1057,11 +1064,11 @@ export default function SupervisorDashboard({
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
