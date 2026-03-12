@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { formatAttendanceSigningDate } from "@/lib/utils/signing-date-generator";
 import XLSX from "xlsx-js-style";
 
 interface ExportRequestBody {
@@ -89,20 +90,6 @@ export async function POST(request: NextRequest) {
       signed_at: string;
     }
 
-    const formatSignedAtDate = (signedAt: string | null): string => {
-      if (!signedAt) return "";
-      try {
-        const date = new Date(signedAt);
-        if (isNaN(date.getTime())) return "";
-        const day = String(date.getDate()).padStart(2, "0");
-        const monthNum = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}/${monthNum}/${year}`;
-      } catch {
-        return "";
-      }
-    };
-
     const getSignatureStatus = (
       signatureLog: SignatureLog | undefined,
     ): string => {
@@ -162,7 +149,11 @@ export async function POST(request: NextRequest) {
         m.sick_days,
         m.source_file || "",
         getSignatureStatus(signatureLog),
-        formatSignedAtDate(signatureLog?.signed_at || null),
+        formatAttendanceSigningDate(
+          m.employee_id,
+          salaryMonth,
+          signatureLog?.signed_at || null,
+        ),
       ];
     });
 
@@ -341,11 +332,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const headerRow: (string | number)[] = [
-        "STT",
-        "Mã NV",
-        "Tên Nhân Viên",
-      ];
+      const headerRow: (string | number)[] = ["STT", "Mã NV", "Tên Nhân Viên"];
 
       for (let d = 1; d <= daysInMonth; d++) {
         headerRow.push(d, "");
@@ -403,9 +390,9 @@ export async function POST(request: NextRequest) {
         return a.localeCompare(b, "vi", { sensitivity: "base" });
       };
 
-      const sortedDepartments = Array.from(employeesByDepartment.entries()).sort(
-        ([deptA], [deptB]) => naturalSortDepartments(deptA, deptB),
-      );
+      const sortedDepartments = Array.from(
+        employeesByDepartment.entries(),
+      ).sort(([deptA], [deptB]) => naturalSortDepartments(deptA, deptB));
 
       for (const [dept, empList] of sortedDepartments) {
         departmentRowIndices.push(dataRows.length + 1);
@@ -438,13 +425,17 @@ export async function POST(request: NextRequest) {
 
           const signatureLog = signatureLogsMap.get(m.employee_id);
           row1.push(
-            m.total_days,
-            m.total_hours,
-            m.total_meal_ot_hours,
-            m.total_ot_hours,
-            m.sick_days,
+            String(m.total_days ?? ""),
+            String(m.total_hours ?? ""),
+            String(m.total_meal_ot_hours ?? ""),
+            String(m.total_ot_hours ?? ""),
+            String(m.sick_days ?? ""),
             getSignatureStatus(signatureLog),
-            formatSignedAtDate(signatureLog?.signed_at || null),
+            formatAttendanceSigningDate(
+              m.employee_id,
+              salaryMonth,
+              signatureLog?.signed_at || null,
+            ),
           );
           row2.push("", "", "", "", "", "", "");
 
@@ -477,6 +468,7 @@ export async function POST(request: NextRequest) {
         wch: Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, len + PADDING)),
       }));
       dailySheet["!cols"] = colWidths;
+      colWidths[0] = { wch: 4 };
 
       const merges: XLSX.Range[] = [];
       for (let d = 1; d <= daysInMonth; d++) {
@@ -495,28 +487,38 @@ export async function POST(request: NextRequest) {
         summaryStartCol + 2,
         summaryStartCol + 3,
         summaryStartCol + 4,
+        summaryStartCol + 5,
+        summaryStartCol + 6,
       ];
 
       for (const col of wrappedSummaryCols) {
-        const currentWidth = dailySheet["!cols"]?.[col]?.wch;
-        if (typeof currentWidth === "number") {
-          dailySheet["!cols"]![col].wch = Math.max(
-            8,
-            Math.min(9, currentWidth / 2),
-          );
+        dailySheet["!cols"]![col] = { wch: 5.5 };
+      }
+
+      // Determine which days have data across all employees
+      const daysWithData = new Set<number>();
+      for (const empDailyMap of Array.from(dailyByEmployee.values())) {
+        for (const [day] of Array.from(empDailyMap)) {
+          daysWithData.add(day);
         }
       }
 
-      // Reduce day column widths by 5%
+      // Adjust day column widths: 70% for days with data, minimum for empty days
       const dayColStart = 3;
       const dayColEnd = summaryStartCol - 1;
-      for (let c = dayColStart; c <= dayColEnd; c++) {
-        const colDef = dailySheet["!cols"]?.[c];
-        if (colDef && typeof colDef.wch === "number") {
-          colDef.wch = Math.max(
-            MIN_COL_WIDTH,
-            Math.round(colDef.wch * 0.95),
-          );
+      const EMPTY_DAY_COL_WIDTH = 1; // Minimal width for empty day columns
+      for (let d = 1; d <= daysInMonth; d++) {
+        const col1 = 3 + (d - 1) * 2;
+        const col2 = col1 + 1;
+        const hasData = daysWithData.has(d);
+
+        for (const c of [col1, col2]) {
+          const colDef = dailySheet["!cols"]?.[c];
+          if (colDef && typeof colDef.wch === "number") {
+            colDef.wch = hasData
+              ? Math.max(MIN_COL_WIDTH, Math.round(colDef.wch * 0.7))
+              : EMPTY_DAY_COL_WIDTH;
+          }
         }
       }
 
@@ -624,6 +626,15 @@ export async function POST(request: NextRequest) {
         empRowTrack++;
       }
 
+      const cellStyleWrap = {
+        border: baseBorder,
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+          wrapText: true,
+        },
+      };
+
       for (let r = 0; r < totalRows; r++) {
         const isDeptRow = departmentRowIndices.includes(r);
         const isRow1 = row1Set.has(r);
@@ -638,6 +649,8 @@ export async function POST(request: NextRequest) {
           let style = cellStyle;
           if (isDeptRow) {
             style = deptRowStyle;
+          } else if (c === 1 || c === 2 || c === summaryStartCol + 6) {
+            style = cellStyleWrap;
           } else if (c >= dayColStart && c <= dayColEnd) {
             if (isRow1) style = cellStyleRow1Day;
             else if (isRow2) style = cellStyleRow2Day;
