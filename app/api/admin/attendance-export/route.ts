@@ -429,7 +429,11 @@ export async function POST(request: NextRequest) {
           for (let d = 1; d <= daysInMonth; d++) {
             const dayData = dailyMap.get(d);
             row1.push(dayData?.checkIn || "", dayData?.checkOut || "");
-            row2.push(dayData?.working ?? "", dayData?.ot ?? "");
+            // Store as text strings to prevent Excel rounding in narrow columns
+            row2.push(
+              dayData ? String(dayData.working) : "",
+              dayData ? String(dayData.ot) : "",
+            );
           }
 
           const signatureLog = signatureLogsMap.get(m.employee_id);
@@ -503,6 +507,19 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Reduce day column widths by 5%
+      const dayColStart = 3;
+      const dayColEnd = summaryStartCol - 1;
+      for (let c = dayColStart; c <= dayColEnd; c++) {
+        const colDef = dailySheet["!cols"]?.[c];
+        if (colDef && typeof colDef.wch === "number") {
+          colDef.wch = Math.max(
+            MIN_COL_WIDTH,
+            Math.round(colDef.wch * 0.95),
+          );
+        }
+      }
+
       for (const deptRowIdx of departmentRowIndices) {
         merges.push({
           s: { r: deptRowIdx, c: 0 },
@@ -541,13 +558,32 @@ export async function POST(request: NextRequest) {
       dailySheet["!merges"] = merges;
 
       const totalRows = sheetData.length;
+      const baseBorder = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      };
       const cellStyle = {
-        border: {
-          top: { style: "thin" },
-          bottom: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
+        border: baseBorder,
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
         },
+      };
+      // Row1 (check-in/check-out times) in day columns: font size 7
+      const cellStyleRow1Day = {
+        border: baseBorder,
+        font: { sz: 7 },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+        },
+      };
+      // Row2 (working/OT units) in day columns: font size 14
+      const cellStyleRow2Day = {
+        border: baseBorder,
+        font: { sz: 14 },
         alignment: {
           horizontal: "center",
           vertical: "center",
@@ -571,21 +607,43 @@ export async function POST(request: NextRequest) {
           horizontal: "left",
           vertical: "center",
         },
-        border: {
-          top: { style: "thin" },
-          bottom: { style: "thin" },
-        },
+        border: baseBorder,
       };
+
+      // Track row1 (times) and row2 (numbers) for employee data rows
+      const row1Set = new Set<number>();
+      const row2Set = new Set<number>();
+      let empRowTrack = 0;
+      for (let r = 1; r < sheetData.length; r++) {
+        if (departmentRowIndices.includes(r)) continue;
+        if (empRowTrack % 2 === 0) {
+          row1Set.add(r);
+        } else {
+          row2Set.add(r);
+        }
+        empRowTrack++;
+      }
 
       for (let r = 0; r < totalRows; r++) {
         const isDeptRow = departmentRowIndices.includes(r);
+        const isRow1 = row1Set.has(r);
+        const isRow2 = row2Set.has(r);
 
         for (let c = 0; c < totalCols; c++) {
           const cellRef = XLSX.utils.encode_cell({ r, c });
           if (!dailySheet[cellRef]) {
             dailySheet[cellRef] = { v: "", t: "s" };
           }
-          dailySheet[cellRef].s = isDeptRow ? deptRowStyle : cellStyle;
+
+          let style = cellStyle;
+          if (isDeptRow) {
+            style = deptRowStyle;
+          } else if (c >= dayColStart && c <= dayColEnd) {
+            if (isRow1) style = cellStyleRow1Day;
+            else if (isRow2) style = cellStyleRow2Day;
+          }
+
+          dailySheet[cellRef].s = style;
         }
       }
 
