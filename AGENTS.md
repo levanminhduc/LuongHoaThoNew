@@ -40,3 +40,14 @@ npm test -- --testPathPattern="filename"
 `admin`, `giam_doc`, `ke_toan`, `nguoi_lap_bieu`, `truong_phong`, `to_truong`, `van_phong`, `nhan_vien`
 
 Department access: `giam_doc/ke_toan/nguoi_lap_bieu/truong_phong` → `allowed_departments[]`, `to_truong` → `department`, `nhan_vien` → chỉ `employee_id` của mình
+
+**`van_phong`** bypass department filter — access ALL departments trong [`lib/auth-middleware.ts`](lib/auth-middleware.ts:33)
+
+## Auth & API Routes
+
+- **API route mới**: Dùng `verifyToken()` hoặc `authorizeRoles()` từ [`lib/auth-middleware.ts`](lib/auth-middleware.ts:1), KHÔNG copy-paste inline `verifyAdminToken()`
+- **Bcrypt salt rounds = 12** luôn luôn, KHÔNG dùng 10
+- **Cookie token name**: `auth_token`
+- **Middleware chỉ check token existence**, JWT verify xảy ra trong từng API route
+- **Payroll queries**: Dùng `getPayrollSelect(isT13)` từ [`lib/payroll-select.ts`](lib/payroll-select.ts:1)
+- **Error handling**: Import/payroll dùng `ApiErrorHandler` từ [`lib/api-error-handler.ts`](lib/api-error-handler.ts:1), validation dùng `parseSchemaOrThrow()`

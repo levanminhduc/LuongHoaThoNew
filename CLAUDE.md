@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+When asked about the codebase, project structure, or to find code, always use the augment-context-engine MCP tool (codebase-retrieval) in the root workspace first before reading individual files.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ---
