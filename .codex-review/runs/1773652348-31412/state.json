@@ -1,0 +1,13 @@
+{
+  "watchdog_pid": 25064,
+  "run_id": "1773652348-31412",
+  "state_dir": "D:\\HoaThoDienBan\\LuongHoaThoNew\\.codex-review\\runs\\1773652348-31412",
+  "working_dir": "D:\\HoaThoDienBan\\LuongHoaThoNew",
+  "effort": "high",
+  "timeout": 3600,
+  "started_at": 1773652348,
+  "thread_id": "",
+  "last_line_count": 0,
+  "stall_count": 11,
+  "last_poll_at": 1773652732
+}

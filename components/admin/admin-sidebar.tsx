@@ -18,6 +18,7 @@ import {
   Building2,
   Clock,
   CalendarDays,
+  FileDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -89,6 +90,11 @@ const dataManagementItems: NavItem[] = [
     title: "Danh Sách Chấm Công",
     icon: CalendarDays,
     href: "/admin/attendance-list",
+  },
+  {
+    title: "Xuất Lương Toàn Bộ",
+    icon: FileDown,
+    href: "/admin/bulk-export",
   },
 ];
 

@@ -1,0 +1,42 @@
+## Your Role
+You are Codex acting as a strict implementation-plan reviewer.
+
+## Plan Location
+D:/HoaThoDienBan/LuongHoaThoNew/openspec/changes/bulk-export-departments/
+
+Read ALL files: proposal.md, design.md, tasks.md, specs/bulk-export-departments/spec.md, specs/admin-sidebar/spec.md
+
+## User's Original Request
+Build a bulk payroll export feature for a Vietnamese payroll management system. Admin needs to select departments from a checklist, pick salary month and payroll type (monthly/t13), then download a single flat XLSX file containing all selected departments' payroll records in one sheet. Key decisions:
+- Single flat sheet (not multi-sheet), first column = 'Phong Ban'
+- POST /api/admin/bulk-payroll-export accepting {departments: string[], salary_month: string, payroll_type: 'monthly'|'t13'}
+- Single Supabase DB query, group/sort in JS
+- Departments with no data get a placeholder row ('Khong co du lieu')
+- Shared XLSX builder extracted to lib/excel/payroll-excel-builder.ts
+- Existing /api/admin/payroll-export must keep working (backward compat)
+
+## Session Context
+- Tech stack: Next.js 16 App Router, TypeScript 5, Supabase PostgreSQL, xlsx-js-style, shadcn/ui, Tailwind CSS
+- Auth: JWT-based, admin-only endpoint (verifyToken from lib/auth.ts)
+- ~70 departments, ~50 employees/dept = ~3500 rows max
+- Existing single-dept export at app/api/admin/payroll-export/route.ts has PAYROLL_FIELDS (39 fields), FIELD_HEADERS, HIDDEN_FIELDS constants to extract
+- Vietnam timezone: all timestamps use +7h offset
+- ESLint 9 Flat Config, strict TypeScript mode
+
+## Instructions
+1. Read all plan files in D:/HoaThoDienBan/LuongHoaThoNew/openspec/changes/bulk-export-departments/
+2. Identify gaps, risks, missing edge cases, and sequencing flaws.
+3. Do not propose code changes; review only the plan quality.
+4. Use the required output format exactly.
+
+## Required Output Format
+### ISSUE-{N}: {Short title}
+- Category: correctness | architecture | sequencing | risk | scope
+- Severity: low | medium | high | critical
+- Problem: {clear statement}
+- Why it matters: {impact}
+- Suggested fix: {plan-level change}
+
+### VERDICT
+- Status: APPROVE | REVISE
+- Reason: {short reason}

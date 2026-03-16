@@ -2,102 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import XLSX from "xlsx-js-style";
-
-// All 39 payroll fields from database
-const PAYROLL_FIELDS = [
-  "employee_id",
-  "salary_month",
-  "he_so_lam_viec",
-  "he_so_phu_cap_ket_qua",
-  "he_so_luong_co_ban",
-  "luong_toi_thieu_cty",
-  "ngay_cong_trong_gio",
-  "gio_cong_tang_ca",
-  "gio_an_ca",
-  "tong_gio_lam_viec",
-  "tong_he_so_quy_doi",
-  "ngay_cong_chu_nhat",
-  "tong_luong_san_pham_cong_doan",
-  "don_gia_tien_luong_tren_gio",
-  "tien_luong_san_pham_trong_gio",
-  "tien_luong_tang_ca",
-  "tien_luong_30p_an_ca",
-  "tien_khen_thuong_chuyen_can",
-  "luong_hoc_viec_pc_luong",
-  "tong_cong_tien_luong_san_pham",
-  "ho_tro_thoi_tiet_nong",
-  "bo_sung_luong",
-  "pc_luong_cho_viec",
-  "tien_luong_chu_nhat",
-  "luong_cnkcp_vuot",
-  "tien_tang_ca_vuot",
-  "bhxh_21_5_percent",
-  "pc_cdcs_pccc_atvsv",
-  "luong_phu_nu_hanh_kinh",
-  "tien_con_bu_thai_7_thang",
-  "ho_tro_gui_con_nha_tre",
-  "ngay_cong_phep_le",
-  "tien_phep_le",
-  "tong_cong_tien_luong",
-  "tien_boc_vac",
-  "ho_tro_xang_xe",
-  "thue_tncn_nam_2024",
-  "tam_ung",
-  "thue_tncn",
-  "bhxh_bhtn_bhyt_total",
-  "truy_thu_the_bhyt",
-  "tien_luong_thuc_nhan_cuoi_ky",
-];
-
-// Field headers in Vietnamese
-const FIELD_HEADERS: Record<string, string> = {
-  employee_id: "Mã Nhân Viên",
-  salary_month: "Họ Và Tên",
-  he_so_lam_viec: "Hệ Số Làm Việc",
-  he_so_phu_cap_ket_qua: "Hệ Số Phụ Cấp Kết Quả",
-  he_so_luong_co_ban: "Hệ Số Lương Cơ Bản",
-  luong_toi_thieu_cty: "Lương Tối Thiểu Công Ty",
-  ngay_cong_trong_gio: "Ngày Công Trong Giờ",
-  gio_cong_tang_ca: "Giờ Công Tăng Ca",
-  gio_an_ca: "Giờ Ăn Ca",
-  tong_gio_lam_viec: "Tổng Giờ Làm Việc",
-  tong_he_so_quy_doi: "Tổng Hệ Số Quy Đổi",
-  ngay_cong_chu_nhat: "Ngày Công Chủ Nhật",
-  tong_luong_san_pham_cong_doan: "Tổng Lương Sản Phẩm Công Đoàn",
-  don_gia_tien_luong_tren_gio: "Đơn Giá Tiền Lương Trên Giờ",
-  tien_luong_san_pham_trong_gio: "Tiền Lương Sản Phẩm Trong Giờ",
-  tien_luong_tang_ca: "Tiền Lương Tăng Ca",
-  tien_luong_30p_an_ca: "Tiền Lương 30p Ăn Ca",
-  tien_khen_thuong_chuyen_can: "Tiền Khen Thưởng Chuyên Cần",
-  luong_hoc_viec_pc_luong: "Lương Học Việc PC Lương",
-  tong_cong_tien_luong_san_pham: "Tổng Cộng Tiền Lương Sản Phẩm",
-  ho_tro_thoi_tiet_nong: "Hỗ Trợ Thời Tiết Nóng",
-  bo_sung_luong: "Bổ Sung Lương",
-  pc_luong_cho_viec: "PC Lương Cho Việc",
-  tien_luong_chu_nhat: "Tiền Lương Chủ Nhật",
-  luong_cnkcp_vuot: "Lương CNKCP Vượt",
-  tien_tang_ca_vuot: "Tiền Tăng Ca Vượt",
-  bhxh_21_5_percent: "BHXH 21.5%",
-  pc_cdcs_pccc_atvsv: "PC CDCS PCCC ATVSV",
-  luong_phu_nu_hanh_kinh: "Lương Phụ Nữ Hành Kinh",
-  tien_con_bu_thai_7_thang: "Tiền Con Bú Thai 7 Tháng",
-  ho_tro_gui_con_nha_tre: "Hỗ Trợ Gửi Con Nhà Trẻ",
-  ngay_cong_phep_le: "Ngày Công Phép Lễ",
-  tien_phep_le: "Tiền Phép Lễ",
-  tong_cong_tien_luong: "Tổng Cộng Tiền Lương",
-  tien_boc_vac: "Tiền Bốc Vác",
-  ho_tro_xang_xe: "Hỗ Trợ Xăng Xe",
-  thue_tncn_nam_2024: "Thuế TNCN Năm 2024",
-  tam_ung: "Tạm Ứng",
-  thue_tncn: "Thuế TNCN",
-  bhxh_bhtn_bhyt_total: "BHXH BHTN BHYT Total",
-  truy_thu_the_bhyt: "Truy Thu Thẻ BHYT",
-  tien_luong_thuc_nhan_cuoi_ky: "Tiền Lương Thực Nhận Cuối Kỳ",
-};
+import {
+  FIELD_HEADERS,
+  VISIBLE_FIELDS,
+  CELL_STYLES,
+  getColumnWidths,
+  formatSignedAtDate,
+  applyWorksheetStyles,
+} from "@/lib/excel/payroll-excel-builder";
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
     const auth = verifyToken(request);
     if (!auth) {
       return NextResponse.json(
@@ -216,8 +131,6 @@ export async function GET(request: NextRequest) {
             process.env.NODE_ENV === "development"
               ? {
                   error,
-                  debugData,
-                  employeesDebug,
                   queryParams: { month, department },
                 }
               : undefined,
@@ -347,19 +260,7 @@ export async function GET(request: NextRequest) {
     // Create workbook
     const workbook = XLSX.utils.book_new();
 
-    const HIDDEN_FIELDS = new Set([
-      "ngay_cong_chu_nhat",
-      "pc_luong_cho_viec",
-      "tien_luong_chu_nhat",
-      "luong_cnkcp_vuot",
-      "tien_tang_ca_vuot",
-      "ho_tro_xang_xe",
-      "tam_ung",
-    ]);
-
-    const visibleFields = PAYROLL_FIELDS.filter(
-      (field) => !HIDDEN_FIELDS.has(field),
-    );
+    const visibleFields = VISIBLE_FIELDS;
 
     // Prepare headers (visible fields + Ký Tên + Ngày Ký columns)
     const headers = [
@@ -391,20 +292,6 @@ export async function GET(request: NextRequest) {
       signed_by_name?: string;
     }
 
-    const formatSignedAtDate = (signedAt: string | null): string => {
-      if (!signedAt) return "";
-      try {
-        const date = new Date(signedAt);
-        if (isNaN(date.getTime())) return "";
-        const day = String(date.getDate()).padStart(2, "0");
-        const monthNum = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}/${monthNum}/${year}`;
-      } catch {
-        return "";
-      }
-    };
-
     const signatureLogsMap = new Map<string, SignatureLog>();
     if (month) {
       try {
@@ -418,7 +305,8 @@ export async function GET(request: NextRequest) {
             signatureLogsMap.set(log.employee_id, log as SignatureLog);
           });
         }
-      } catch {
+      } catch (_e) {
+        console.error("Failed to load signature logs:", _e);
       }
     }
 
@@ -433,8 +321,16 @@ export async function GET(request: NextRequest) {
               .toLowerCase()
               .replace(/(^|\s)\S/g, (c: string) => c.toUpperCase()),
           );
+        } else if (field === "employee_id") {
+          row.push(record[field] ?? "");
         } else {
-          row.push(record[field] || "");
+          const rawVal = record[field];
+          if (rawVal == null || rawVal === "") {
+            row.push("");
+          } else {
+            const num = Number(rawVal);
+            row.push(isNaN(num) ? "" : num);
+          }
         }
       });
 
@@ -478,7 +374,8 @@ export async function GET(request: NextRequest) {
             ] = sig;
           });
         }
-      } catch {
+      } catch (_e) {
+        console.error("Failed to load management signatures:", _e);
       }
     }
 
@@ -533,8 +430,9 @@ export async function GET(request: NextRequest) {
       let hasValue = false;
       dataRows.forEach((row) => {
         const val = row[idx + 1];
-        if (typeof val === "number") {
-          sum += val;
+        const numVal = typeof val === "number" ? val : parseFloat(String(val));
+        if (!isNaN(numVal)) {
+          sum += numVal;
           hasValue = true;
         }
       });
@@ -587,116 +485,15 @@ export async function GET(request: NextRequest) {
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
-    const borderStyle = {
-      top: { style: "thin", color: { rgb: "000000" } },
-      bottom: { style: "thin", color: { rgb: "000000" } },
-      left: { style: "thin", color: { rgb: "000000" } },
-      right: { style: "thin", color: { rgb: "000000" } },
-    };
-
-    const headerStyle = {
-      font: {
-        bold: true,
-        color: { rgb: "000000" },
-        sz: 11,
-        name: "Times New Roman",
-      },
-      alignment: {
-        horizontal: "center",
-        vertical: "center",
-        wrapText: true,
-      },
-      border: borderStyle,
-    };
-
-    const dataCellStyle = {
-      font: {
-        sz: 12,
-        name: "Times New Roman",
-      },
-      alignment: {
-        horizontal: "left",
-        vertical: "center",
-        wrapText: false,
-      },
-      border: borderStyle,
-    };
-
-    const numberCellStyle = {
-      font: {
-        sz: 12,
-        name: "Times New Roman",
-      },
-      alignment: {
-        horizontal: "right",
-        vertical: "center",
-      },
-      border: borderStyle,
-      numFmt: "#,##0",
-    };
-
-    const heSoCellStyle = {
-      font: {
-        sz: 12,
-        name: "Times New Roman",
-      },
-      alignment: {
-        horizontal: "right",
-        vertical: "center",
-      },
-      border: borderStyle,
-      numFmt: "#,##0.00",
-    };
-
-    const ngayGioCellStyle = {
-      font: {
-        sz: 12,
-        name: "Times New Roman",
-      },
-      alignment: {
-        horizontal: "right",
-        vertical: "center",
-      },
-      border: borderStyle,
-      numFmt: "#,##0.0",
-    };
-
-    const narrowFieldNames = [
-      "he_so_lam_viec",
-      "he_so_phu_cap_ket_qua",
-      "he_so_luong_co_ban",
-      "tong_he_so_quy_doi",
-      "ngay_cong_trong_gio",
-      "gio_cong_tang_ca",
-      "gio_an_ca",
-      "tong_gio_lam_viec",
-      "tien_con_bu_thai_7_thang",
-      "ngay_cong_phep_le",
-    ];
-    const narrowHeaders = new Set(
-      narrowFieldNames.map((f) => FIELD_HEADERS[f] || f),
-    );
+    const headerRowIndex = 5;
     const nameColIndex = headers.indexOf("Họ Và Tên");
     const maxNameLength = dataRows.reduce((max, row) => {
       const name = String(row[nameColIndex] || "");
       return Math.max(max, name.length);
     }, 10);
 
-    const employeeIdColIndex = headers.indexOf(
-      FIELD_HEADERS["employee_id"] || "employee_id",
-    );
+    worksheet["!cols"] = getColumnWidths(headers, nameColIndex, maxNameLength);
 
-    const columnWidths = headers.map((header, idx) => {
-      if (header === "STT") return { wch: 5 };
-      if (header === "Ký Tên") return { wch: 8 };
-      if (idx === employeeIdColIndex) return { wch: 10 };
-      if (idx === nameColIndex) return { wch: Math.ceil(maxNameLength * 1.2) };
-      if (narrowHeaders.has(header)) return { wch: 7 };
-      return { wch: 12 };
-    });
-    worksheet["!cols"] = columnWidths;
-
-    const headerRowIndex = 5;
     const rowHeights = [];
     for (let i = 0; i < headerRowIndex; i++) {
       rowHeights.push({ hpt: 20 });
@@ -710,170 +507,12 @@ export async function GET(request: NextRequest) {
     }
     worksheet["!rows"] = rowHeights;
 
-    const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "");
-    const numericFields = [
-      "he_so_lam_viec",
-      "he_so_phu_cap_ket_qua",
-      "he_so_luong_co_ban",
-      "luong_toi_thieu_cty",
-      "ngay_cong_trong_gio",
-      "gio_cong_tang_ca",
-      "gio_an_ca",
-      "tong_gio_lam_viec",
-      "tong_he_so_quy_doi",
-      "ngay_cong_chu_nhat",
-      "tong_luong_san_pham_cong_doan",
-      "don_gia_tien_luong_tren_gio",
-      "tien_luong_san_pham_trong_gio",
-      "tien_luong_tang_ca",
-      "tien_luong_30p_an_ca",
-      "tien_khen_thuong_chuyen_can",
-      "luong_hoc_viec_pc_luong",
-      "tong_cong_tien_luong_san_pham",
-      "ho_tro_thoi_tiet_nong",
-      "bo_sung_luong",
-      "pc_luong_cho_viec",
-      "tien_luong_chu_nhat",
-      "luong_cnkcp_vuot",
-      "tien_tang_ca_vuot",
-      "bhxh_21_5_percent",
-      "pc_cdcs_pccc_atvsv",
-      "luong_phu_nu_hanh_kinh",
-      "tien_con_bu_thai_7_thang",
-      "ho_tro_gui_con_nha_tre",
-      "ngay_cong_phep_le",
-      "tien_phep_le",
-      "tong_cong_tien_luong",
-      "tien_boc_vac",
-      "ho_tro_xang_xe",
-      "thue_tncn_nam_2024",
-      "tam_ung",
-      "thue_tncn",
-      "bhxh_bhtn_bhyt_total",
-      "truy_thu_the_bhyt",
-      "tien_luong_thuc_nhan_cuoi_ky",
-    ];
-
-    const numericFieldHeaders = numericFields.map(
-      (field) => FIELD_HEADERS[field] || field,
-    );
-
-    const heSoFields = [
-      "he_so_lam_viec",
-      "he_so_phu_cap_ket_qua",
-      "he_so_luong_co_ban",
-      "tong_he_so_quy_doi",
-    ];
-    const heSoFieldHeaders = heSoFields.map(
-      (field) => FIELD_HEADERS[field] || field,
-    );
-
-    const ngayGioFields = [
-      "ngay_cong_trong_gio",
-      "gio_cong_tang_ca",
-      "gio_an_ca",
-      "tong_gio_lam_viec",
-      "tien_con_bu_thai_7_thang",
-      "ngay_cong_phep_le",
-    ];
-    const ngayGioFieldHeaders = ngayGioFields.map(
-      (field) => FIELD_HEADERS[field] || field,
-    );
-
-    const titleStyle = {
-      font: {
-        sz: 14,
-        name: "Arial",
-      },
-      alignment: {
-        horizontal: "left",
-        vertical: "center",
-      },
-    };
-
-    for (let row = range.s.r; row <= range.e.r; row++) {
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-
-        if (row < headerRowIndex) {
-          if (
-            worksheet[cellRef] &&
-            worksheet[cellRef].v !== "" &&
-            worksheet[cellRef].v !== null &&
-            worksheet[cellRef].v !== undefined
-          ) {
-            worksheet[cellRef].s = titleStyle;
-          } else {
-            delete worksheet[cellRef];
-          }
-        } else if (row === headerRowIndex) {
-          if (!worksheet[cellRef]) {
-            worksheet[cellRef] = { t: "s", v: "" };
-          }
-          worksheet[cellRef].s = headerStyle;
-        } else if (
-          row > headerRowIndex &&
-          row < headerRowIndex + 1 + allRows.length
-        ) {
-          if (!worksheet[cellRef]) {
-            worksheet[cellRef] = { t: "s", v: "" };
-          }
-          const headerText = headers[col];
-          const isNumericColumn = numericFieldHeaders.includes(headerText);
-          const isHeSoColumn = heSoFieldHeaders.includes(headerText);
-          const isNgayGioColumn = ngayGioFieldHeaders.includes(headerText);
-          const isTotalRow =
-            row === headerRowIndex + allRows.length;
-
-          const totalFill = {
-            patternType: "solid",
-            fgColor: { rgb: "FFE699" },
-          };
-
-          if (isNumericColumn && typeof worksheet[cellRef].v === "number") {
-            let style;
-            if (isHeSoColumn) {
-              style = { ...heSoCellStyle };
-            } else if (isNgayGioColumn) {
-              style = { ...ngayGioCellStyle };
-            } else {
-              style = { ...numberCellStyle };
-            }
-            if (isTotalRow) {
-              style.font = { ...style.font, bold: true };
-              style.fill = totalFill;
-            }
-            worksheet[cellRef].s = style;
-          } else {
-            if (isTotalRow) {
-              worksheet[cellRef].s = {
-                ...dataCellStyle,
-                font: { ...dataCellStyle.font, bold: true },
-                fill: totalFill,
-              };
-            } else {
-              worksheet[cellRef].s = dataCellStyle;
-            }
-          }
-        } else {
-          if (
-            worksheet[cellRef] &&
-            !worksheet[cellRef].s &&
-            (worksheet[cellRef].v === "" ||
-              worksheet[cellRef].v === null ||
-              worksheet[cellRef].v === undefined)
-          ) {
-            delete worksheet[cellRef];
-          }
-        }
-      }
-    }
+    applyWorksheetStyles(worksheet, headers, headerRowIndex, allRows.length);
 
     // Apply styling to signature section
     const signatureHeaderRowIndex = signatureStartRow + 1;
     const signatureDataRowIndex = signatureStartRow + 6;
 
-    // Style signature headers (bold, centered, bottom border)
     const signatureHeaderCells = [
       XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: leftCol }),
       XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: centerCol }),
@@ -882,13 +521,9 @@ export async function GET(request: NextRequest) {
 
     signatureHeaderCells.forEach((cellRef) => {
       if (!worksheet[cellRef]) worksheet[cellRef] = { t: "s", v: "" };
-      worksheet[cellRef].s = {
-        font: { bold: true },
-        alignment: { horizontal: "center", vertical: "center" },
-      };
+      worksheet[cellRef].s = CELL_STYLES.signatureHeader;
     });
 
-    // Style signature data (italic, centered)
     const signatureDataCells = [
       XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: leftCol }),
       XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: centerCol }),
@@ -897,27 +532,7 @@ export async function GET(request: NextRequest) {
 
     signatureDataCells.forEach((cellRef) => {
       if (!worksheet[cellRef]) worksheet[cellRef] = { t: "s", v: "" };
-      worksheet[cellRef].s = {
-        font: { italic: true },
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
-      };
-    });
-
-    // Apply styling to title cells
-    const titleCells = [
-      XLSX.utils.encode_cell({ r: 2, c: 0 }), // A3: Company name
-      XLSX.utils.encode_cell({ r: 3, c: 0 }), // A4: Company branch
-      XLSX.utils.encode_cell({ r: 2, c: 15 }), // P3: Report title
-      XLSX.utils.encode_cell({ r: 3, c: 15 }), // P4: Month/Year
-      XLSX.utils.encode_cell({ r: 4, c: 15 }), // P5: Department
-    ];
-
-    titleCells.forEach((cellRef) => {
-      if (!worksheet[cellRef]) worksheet[cellRef] = { t: "s", v: "" };
-      worksheet[cellRef].s = {
-        font: { bold: true, sz: 14 },
-        alignment: { horizontal: "left", vertical: "center" },
-      };
+      worksheet[cellRef].s = CELL_STYLES.signatureData;
     });
 
     // Add worksheet to workbook
