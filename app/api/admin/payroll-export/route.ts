@@ -370,10 +370,24 @@ export async function GET(request: NextRequest) {
     // Create workbook
     const workbook = XLSX.utils.book_new();
 
-    // Prepare headers (all 39 fields + Ký Tên + Ngày Ký columns)
+    const HIDDEN_FIELDS = new Set([
+      "ngay_cong_chu_nhat",
+      "pc_luong_cho_viec",
+      "tien_luong_chu_nhat",
+      "luong_cnkcp_vuot",
+      "tien_tang_ca_vuot",
+      "ho_tro_xang_xe",
+      "tam_ung",
+    ]);
+
+    const visibleFields = PAYROLL_FIELDS.filter(
+      (field) => !HIDDEN_FIELDS.has(field),
+    );
+
+    // Prepare headers (visible fields + Ký Tên + Ngày Ký columns)
     const headers = [
       "STT",
-      ...PAYROLL_FIELDS.map((field) => FIELD_HEADERS[field] || field),
+      ...visibleFields.map((field) => FIELD_HEADERS[field] || field),
       "Ký Tên",
       "Ngày Ký",
     ];
@@ -435,9 +449,14 @@ export async function GET(request: NextRequest) {
     const dataRows = payrollData.map((record: PayrollRecord, index: number) => {
       const row: unknown[] = [index + 1];
 
-      PAYROLL_FIELDS.forEach((field) => {
+      visibleFields.forEach((field) => {
         if (field === "salary_month") {
-          row.push(record.employees?.full_name || "");
+          const name = record.employees?.full_name || "";
+          row.push(
+            name
+              .toLowerCase()
+              .replace(/(^|\s)\S/g, (c: string) => c.toUpperCase()),
+          );
         } else {
           row.push(record[field] || "");
         }
@@ -446,14 +465,11 @@ export async function GET(request: NextRequest) {
       const employeeId = record.employee_id as string;
       const signatureLog = signatureLogsMap.get(employeeId);
 
-      if (signatureLog) {
-        row.push(signatureLog.signed_by_name || "");
-        row.push(formatSignedAtDate(signatureLog.signed_at));
-      } else if (record.is_signed) {
-        row.push(record.employees?.full_name || "N/A");
-        row.push("");
+      if (signatureLog || record.is_signed) {
+        row.push("Đã ký");
+        row.push(signatureLog ? formatSignedAtDate(signatureLog.signed_at) : "");
       } else {
-        row.push("Chưa Ký");
+        row.push("");
         row.push("");
       }
 
@@ -526,7 +542,7 @@ export async function GET(request: NextRequest) {
 
     // Row 5: Department info in P5 (index 15)
     const row5 = new Array(totalColumns).fill("");
-    row5[15] = department ? `PHÒNG BAN: ${department}` : "PHÒNG BAN: TẤT CẢ";
+    row5[15] = "";
     titleRows.push(row5);
 
     // Create worksheet data with title rows, headers, and data
@@ -536,7 +552,33 @@ export async function GET(request: NextRequest) {
       "and data rows:",
       dataRows.length,
     );
-    const worksheetData = [...titleRows, headers, ...dataRows];
+    const nameColIdx = visibleFields.indexOf("salary_month");
+    const totalRow: unknown[] = new Array(headers.length).fill("");
+    totalRow[0] = "";
+    if (nameColIdx >= 0) {
+      totalRow[nameColIdx + 1] = department || "TẤT CẢ";
+    }
+
+    const textFields = new Set(["employee_id", "salary_month"]);
+    visibleFields.forEach((field, idx) => {
+      if (textFields.has(field)) return;
+      let sum = 0;
+      let hasValue = false;
+      dataRows.forEach((row) => {
+        const val = row[idx + 1];
+        if (typeof val === "number") {
+          sum += val;
+          hasValue = true;
+        }
+      });
+      if (hasValue) {
+        totalRow[idx + 1] = sum;
+      }
+    });
+
+    const allRows = [...dataRows, totalRow];
+
+    const worksheetData = [...titleRows, headers, ...allRows];
 
     // Calculate signature column positions based on total columns
     const leftCol = 0; // Column A (Giám Đốc)
@@ -588,15 +630,11 @@ export async function GET(request: NextRequest) {
     };
 
     const headerStyle = {
-      fill: {
-        patternType: "solid",
-        fgColor: { rgb: "4472C4" },
-      },
       font: {
         bold: true,
-        color: { rgb: "CCECFF" },
-        sz: 10,
-        name: "Arial",
+        color: { rgb: "000000" },
+        sz: 11,
+        name: "Times New Roman",
       },
       alignment: {
         horizontal: "center",
@@ -608,8 +646,8 @@ export async function GET(request: NextRequest) {
 
     const dataCellStyle = {
       font: {
-        sz: 10,
-        name: "Arial",
+        sz: 12,
+        name: "Times New Roman",
       },
       alignment: {
         horizontal: "left",
@@ -621,8 +659,8 @@ export async function GET(request: NextRequest) {
 
     const numberCellStyle = {
       font: {
-        sz: 10,
-        name: "Arial",
+        sz: 12,
+        name: "Times New Roman",
       },
       alignment: {
         horizontal: "right",
@@ -632,7 +670,65 @@ export async function GET(request: NextRequest) {
       numFmt: "#,##0",
     };
 
-    const columnWidths = headers.map(() => ({ wch: 12 }));
+    const heSoCellStyle = {
+      font: {
+        sz: 12,
+        name: "Times New Roman",
+      },
+      alignment: {
+        horizontal: "right",
+        vertical: "center",
+      },
+      border: borderStyle,
+      numFmt: "#,##0.00",
+    };
+
+    const ngayGioCellStyle = {
+      font: {
+        sz: 12,
+        name: "Times New Roman",
+      },
+      alignment: {
+        horizontal: "right",
+        vertical: "center",
+      },
+      border: borderStyle,
+      numFmt: "#,##0.0",
+    };
+
+    const narrowFieldNames = [
+      "he_so_lam_viec",
+      "he_so_phu_cap_ket_qua",
+      "he_so_luong_co_ban",
+      "tong_he_so_quy_doi",
+      "ngay_cong_trong_gio",
+      "gio_cong_tang_ca",
+      "gio_an_ca",
+      "tong_gio_lam_viec",
+      "tien_con_bu_thai_7_thang",
+      "ngay_cong_phep_le",
+    ];
+    const narrowHeaders = new Set(
+      narrowFieldNames.map((f) => FIELD_HEADERS[f] || f),
+    );
+    const nameColIndex = headers.indexOf("Họ Và Tên");
+    const maxNameLength = dataRows.reduce((max, row) => {
+      const name = String(row[nameColIndex] || "");
+      return Math.max(max, name.length);
+    }, 10);
+
+    const employeeIdColIndex = headers.indexOf(
+      FIELD_HEADERS["employee_id"] || "employee_id",
+    );
+
+    const columnWidths = headers.map((header, idx) => {
+      if (header === "STT") return { wch: 5 };
+      if (header === "Ký Tên") return { wch: 8 };
+      if (idx === employeeIdColIndex) return { wch: 10 };
+      if (idx === nameColIndex) return { wch: Math.ceil(maxNameLength * 1.2) };
+      if (narrowHeaders.has(header)) return { wch: 7 };
+      return { wch: 12 };
+    });
     worksheet["!cols"] = columnWidths;
 
     const headerRowIndex = 5;
@@ -640,9 +736,9 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < headerRowIndex; i++) {
       rowHeights.push({ hpt: 20 });
     }
-    rowHeights.push({ hpt: 65 });
-    for (let i = 0; i < dataRows.length; i++) {
-      rowHeights.push({ hpt: 25 });
+    rowHeights.push({ hpt: 80 });
+    for (let i = 0; i < allRows.length; i++) {
+      rowHeights.push({ hpt: 35 });
     }
     for (let i = 0; i < 8; i++) {
       rowHeights.push({ hpt: 20 });
@@ -697,6 +793,28 @@ export async function GET(request: NextRequest) {
       (field) => FIELD_HEADERS[field] || field,
     );
 
+    const heSoFields = [
+      "he_so_lam_viec",
+      "he_so_phu_cap_ket_qua",
+      "he_so_luong_co_ban",
+      "tong_he_so_quy_doi",
+    ];
+    const heSoFieldHeaders = heSoFields.map(
+      (field) => FIELD_HEADERS[field] || field,
+    );
+
+    const ngayGioFields = [
+      "ngay_cong_trong_gio",
+      "gio_cong_tang_ca",
+      "gio_an_ca",
+      "tong_gio_lam_viec",
+      "tien_con_bu_thai_7_thang",
+      "ngay_cong_phep_le",
+    ];
+    const ngayGioFieldHeaders = ngayGioFields.map(
+      (field) => FIELD_HEADERS[field] || field,
+    );
+
     const titleStyle = {
       font: {
         sz: 14,
@@ -730,28 +848,57 @@ export async function GET(request: NextRequest) {
           worksheet[cellRef].s = headerStyle;
         } else if (
           row > headerRowIndex &&
-          row < headerRowIndex + 1 + dataRows.length
+          row < headerRowIndex + 1 + allRows.length
         ) {
           if (!worksheet[cellRef]) {
             worksheet[cellRef] = { t: "s", v: "" };
           }
           const headerText = headers[col];
           const isNumericColumn = numericFieldHeaders.includes(headerText);
+          const isHeSoColumn = heSoFieldHeaders.includes(headerText);
+          const isNgayGioColumn = ngayGioFieldHeaders.includes(headerText);
+          const isTotalRow =
+            row === headerRowIndex + allRows.length;
+
+          const totalFill = {
+            patternType: "solid",
+            fgColor: { rgb: "FFE699" },
+          };
 
           if (isNumericColumn && typeof worksheet[cellRef].v === "number") {
-            worksheet[cellRef].s = numberCellStyle;
+            let style;
+            if (isHeSoColumn) {
+              style = { ...heSoCellStyle };
+            } else if (isNgayGioColumn) {
+              style = { ...ngayGioCellStyle };
+            } else {
+              style = { ...numberCellStyle };
+            }
+            if (isTotalRow) {
+              style.font = { ...style.font, bold: true };
+              style.fill = totalFill;
+            }
+            worksheet[cellRef].s = style;
           } else {
-            worksheet[cellRef].s = dataCellStyle;
+            if (isTotalRow) {
+              worksheet[cellRef].s = {
+                ...dataCellStyle,
+                font: { ...dataCellStyle.font, bold: true },
+                fill: totalFill,
+              };
+            } else {
+              worksheet[cellRef].s = dataCellStyle;
+            }
           }
         } else {
-          if (worksheet[cellRef] && !worksheet[cellRef].s) {
-            worksheet[cellRef].s = {
-              border: borderStyle,
-              alignment: {
-                horizontal: "center",
-                vertical: "center",
-              },
-            };
+          if (
+            worksheet[cellRef] &&
+            !worksheet[cellRef].s &&
+            (worksheet[cellRef].v === "" ||
+              worksheet[cellRef].v === null ||
+              worksheet[cellRef].v === undefined)
+          ) {
+            delete worksheet[cellRef];
           }
         }
       }
@@ -773,7 +920,6 @@ export async function GET(request: NextRequest) {
       worksheet[cellRef].s = {
         font: { bold: true },
         alignment: { horizontal: "center", vertical: "center" },
-        border: { bottom: { style: "thin", color: { rgb: "000000" } } },
       };
     });
 
