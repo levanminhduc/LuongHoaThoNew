@@ -551,11 +551,13 @@ export function SalaryHistoryModal({
                           value={payrollData.tong_he_so_quy_doi}
                           isNumber
                         />
+                        {/*
                         <DetailRow
                           label="Ngày Công Chủ Nhật"
                           value={payrollData.ngay_cong_chu_nhat}
                           isNumber
                         />
+                        */}
                       </CardContent>
                     </Card>
 
