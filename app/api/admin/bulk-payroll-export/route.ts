@@ -8,6 +8,7 @@ import {
   CELL_STYLES,
   getColumnWidths,
   formatSignedAtDate,
+  formatSignedAtDateTime,
   applyWorksheetStyles,
   getSignatureColumns,
   getSignatureMergeRanges,
@@ -34,6 +35,7 @@ interface SignatureLog {
 
 interface ManagementSig {
   signed_by_name?: string;
+  signed_at?: string;
 }
 
 const TITLE_ROW_COUNT = 5;
@@ -43,8 +45,8 @@ const SIG_EMPTY_LINES = 4; // signature space rows
 const BLOCK_SEPARATOR = 3; // empty rows between departments
 
 function blockRowCount(dataRowCount: number): number {
-  // title(5) + header(1) + dataRows + total(1) + sigGap(2) + sigHeader(1) + sigEmpty(4) + sigData(1)
-  return TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE + 1 + SIG_EMPTY_LINES + 1;
+  // title(5) + header(1) + dataRows + total(1) + sigGap(2) + sigHeader(1) + sigEmpty(4) + sigDate(1) + sigData(1)
+  return TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE + 1 + SIG_EMPTY_LINES + 1 + 1;
 }
 
 function buildDeptBlock(
@@ -164,6 +166,18 @@ function buildDeptBlock(
   rows.push(sigHeaderRow);
 
   for (let i = 0; i < SIG_EMPTY_LINES; i++) rows.push(new Array(totalColumns).fill(""));
+
+  const sigDateRow = new Array(totalColumns).fill("");
+  sigDateRow[sigCols.left] = managementSigs.giam_doc?.signed_at
+    ? formatSignedAtDateTime(managementSigs.giam_doc.signed_at)
+    : "";
+  sigDateRow[sigCols.center] = managementSigs.ke_toan?.signed_at
+    ? formatSignedAtDateTime(managementSigs.ke_toan.signed_at)
+    : "";
+  sigDateRow[sigCols.right] = managementSigs.nguoi_lap_bieu?.signed_at
+    ? formatSignedAtDateTime(managementSigs.nguoi_lap_bieu.signed_at)
+    : "";
+  rows.push(sigDateRow);
 
   const sigDataRow = new Array(totalColumns).fill("");
   sigDataRow[sigCols.left] = managementSigs.giam_doc?.signed_by_name ?? "Chưa ký";
@@ -290,7 +304,7 @@ export async function POST(request: NextRequest) {
     // Assemble full worksheet data by stacking blocks
     const allSheetRows: unknown[][] = [];
     const rowHeights: { hpt: number }[] = [];
-    const sigStyleTargets: Array<{ headerRow: number; dataRow: number }> = [];
+    const sigStyleTargets: Array<{ headerRow: number; dateRow: number; dataRow: number }> = [];
     const pageBreaks: number[] = [];
 
     for (let deptIdx = 0; deptIdx < sortedDepts.length; deptIdx++) {
@@ -329,12 +343,14 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < SIG_GAP_BEFORE; i++) rowHeights.push({ hpt: 20 });
       rowHeights.push({ hpt: 35 });
       for (let i = 0; i < SIG_EMPTY_LINES; i++) rowHeights.push({ hpt: 20 });
+      rowHeights.push({ hpt: 20 });
       rowHeights.push({ hpt: 35 });
 
       const sigHeaderAbsRow = blockStartRow + TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE;
       sigStyleTargets.push({
         headerRow: sigHeaderAbsRow,
-        dataRow: sigHeaderAbsRow + SIG_EMPTY_LINES + 1,
+        dateRow: sigHeaderAbsRow + SIG_EMPTY_LINES + 1,
+        dataRow: sigHeaderAbsRow + SIG_EMPTY_LINES + 2,
       });
 
       // Separator rows
@@ -365,21 +381,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Apply signature styles
-    for (const { headerRow, dataRow } of sigStyleTargets) {
+    for (const { headerRow, dateRow, dataRow } of sigStyleTargets) {
       for (const col of [bulkSigCols.left, bulkSigCols.center, bulkSigCols.right]) {
         const hRef = XLSX.utils.encode_cell({ r: headerRow, c: col });
+        const dtRef = XLSX.utils.encode_cell({ r: dateRow, c: col });
         const dRef = XLSX.utils.encode_cell({ r: dataRow, c: col });
         if (!worksheet[hRef]) worksheet[hRef] = { t: "s", v: "" };
+        if (!worksheet[dtRef]) worksheet[dtRef] = { t: "s", v: "" };
         if (!worksheet[dRef]) worksheet[dRef] = { t: "s", v: "" };
         worksheet[hRef].s = CELL_STYLES.signatureHeader;
+        worksheet[dtRef].s = CELL_STYLES.signatureDate;
         worksheet[dRef].s = CELL_STYLES.signatureData;
       }
     }
 
     // Signature merge ranges
     const allMerges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
-    for (const { headerRow, dataRow } of sigStyleTargets) {
-      allMerges.push(...getSignatureMergeRanges(headerRow, dataRow, totalColumns));
+    for (const { headerRow, dateRow, dataRow } of sigStyleTargets) {
+      allMerges.push(...getSignatureMergeRanges([headerRow, dateRow, dataRow], totalColumns));
     }
     if (allMerges.length > 0) {
       worksheet["!merges"] = allMerges;

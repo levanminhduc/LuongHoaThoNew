@@ -154,6 +154,10 @@ export const CELL_STYLES = {
     font: { bold: true, sz: 14, name: "Times New Roman" },
     alignment: { horizontal: "center", vertical: "center", wrapText: true },
   },
+  signatureDate: {
+    font: { italic: true, sz: 11, name: "Times New Roman" },
+    alignment: { horizontal: "center", vertical: "center" },
+  },
 };
 
 const HESO_FIELDS = new Set([
@@ -242,6 +246,22 @@ export function formatSignedAtDate(signedAt: string | null): string {
   }
 }
 
+export function formatSignedAtDateTime(signedAt: string | null): string {
+  if (!signedAt) return "";
+  try {
+    const date = new Date(signedAt);
+    if (isNaN(date.getTime())) return "";
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${hours}:${minutes} - ${day}/${month}/${year}`;
+  } catch {
+    return "";
+  }
+}
+
 export function getSignatureColumns(totalColumns: number) {
   const span = 6;
   const center = Math.floor(totalColumns / 2);
@@ -253,14 +273,13 @@ export function getSignatureColumns(totalColumns: number) {
 }
 
 export function getSignatureMergeRanges(
-  sigHeaderRow: number,
-  sigDataRow: number,
+  sigRows: number[],
   totalColumns: number,
 ) {
   const span = 6;
   const cols = getSignatureColumns(totalColumns);
   const merges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
-  for (const row of [sigHeaderRow, sigDataRow]) {
+  for (const row of sigRows) {
     merges.push(
       { s: { r: row, c: cols.left }, e: { r: row, c: cols.left + span - 1 } },
       { s: { r: row, c: cols.center }, e: { r: row, c: cols.center + span - 1 } },

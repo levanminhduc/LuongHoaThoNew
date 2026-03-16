@@ -8,6 +8,7 @@ import {
   CELL_STYLES,
   getColumnWidths,
   formatSignedAtDate,
+  formatSignedAtDateTime,
   applyWorksheetStyles,
   getSignatureColumns,
   getSignatureMergeRanges,
@@ -292,6 +293,7 @@ export async function GET(request: NextRequest) {
       full_name?: string;
       signature_image_url?: string;
       signed_by_name?: string;
+      signed_at?: string;
     }
 
     const signatureLogsMap = new Map<string, SignatureLog>();
@@ -470,6 +472,19 @@ export async function GET(request: NextRequest) {
     worksheetData.push([]);
     worksheetData.push([]);
 
+    // Signature date row
+    const signatureDateRow = new Array(totalColumns).fill("");
+    signatureDateRow[sigCols.left] = managementSignatures.giam_doc?.signed_at
+      ? formatSignedAtDateTime(managementSignatures.giam_doc.signed_at)
+      : "";
+    signatureDateRow[sigCols.center] = managementSignatures.ke_toan?.signed_at
+      ? formatSignedAtDateTime(managementSignatures.ke_toan.signed_at)
+      : "";
+    signatureDateRow[sigCols.right] = managementSignatures.nguoi_lap_bieu?.signed_at
+      ? formatSignedAtDateTime(managementSignatures.nguoi_lap_bieu.signed_at)
+      : "";
+    worksheetData.push(signatureDateRow);
+
     // Signature data row
     const signatureDataRow = new Array(totalColumns).fill("");
     signatureDataRow[sigCols.left] = managementSignatures.giam_doc
@@ -505,6 +520,7 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < 2; i++) rowHeights.push({ hpt: 20 });
     rowHeights.push({ hpt: 35 });
     for (let i = 0; i < 4; i++) rowHeights.push({ hpt: 20 });
+    rowHeights.push({ hpt: 20 });
     rowHeights.push({ hpt: 35 });
     worksheet["!rows"] = rowHeights;
 
@@ -512,7 +528,8 @@ export async function GET(request: NextRequest) {
 
     // Apply styling to signature section
     const signatureHeaderRowIndex = signatureStartRow;
-    const signatureDataRowIndex = signatureStartRow + 5;
+    const signatureDateRowIndex = signatureStartRow + 5;
+    const signatureDataRowIndex = signatureStartRow + 6;
 
     const signatureHeaderCells = [
       XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: sigCols.left }),
@@ -536,7 +553,21 @@ export async function GET(request: NextRequest) {
       worksheet[cellRef].s = CELL_STYLES.signatureData;
     });
 
-    worksheet["!merges"] = getSignatureMergeRanges(signatureHeaderRowIndex, signatureDataRowIndex, totalColumns);
+    const signatureDateCells = [
+      XLSX.utils.encode_cell({ r: signatureDateRowIndex, c: sigCols.left }),
+      XLSX.utils.encode_cell({ r: signatureDateRowIndex, c: sigCols.center }),
+      XLSX.utils.encode_cell({ r: signatureDateRowIndex, c: sigCols.right }),
+    ];
+
+    signatureDateCells.forEach((cellRef) => {
+      if (!worksheet[cellRef]) worksheet[cellRef] = { t: "s", v: "" };
+      worksheet[cellRef].s = CELL_STYLES.signatureDate;
+    });
+
+    worksheet["!merges"] = getSignatureMergeRanges(
+      [signatureHeaderRowIndex, signatureDateRowIndex, signatureDataRowIndex],
+      totalColumns,
+    );
 
     // Add worksheet to workbook
     const departmentName = department || "TatCa";
