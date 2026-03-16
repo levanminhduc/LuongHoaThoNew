@@ -520,9 +520,17 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < 2; i++) rowHeights.push({ hpt: 20 });
     rowHeights.push({ hpt: 35 });
     for (let i = 0; i < 4; i++) rowHeights.push({ hpt: 20 });
-    rowHeights.push({ hpt: 20 });
+    rowHeights.push({ hpt: 35 });
     rowHeights.push({ hpt: 35 });
     worksheet["!rows"] = rowHeights;
+    worksheet["!pageSetup"] = {
+      orientation: "landscape",
+      fitToWidth: 1,
+      fitToHeight: 0,
+    };
+    worksheet["!sheetPr"] = {
+      pageSetUpPr: { fitToPage: true },
+    };
 
     applyWorksheetStyles(worksheet, headers, headerRowIndex, allRows.length);
 

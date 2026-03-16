@@ -343,7 +343,7 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < SIG_GAP_BEFORE; i++) rowHeights.push({ hpt: 20 });
       rowHeights.push({ hpt: 35 });
       for (let i = 0; i < SIG_EMPTY_LINES; i++) rowHeights.push({ hpt: 20 });
-      rowHeights.push({ hpt: 20 });
+      rowHeights.push({ hpt: 35 });
       rowHeights.push({ hpt: 35 });
 
       const sigHeaderAbsRow = blockStartRow + TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE;
@@ -366,6 +366,14 @@ export async function POST(request: NextRequest) {
     const worksheet = XLSX.utils.aoa_to_sheet(allSheetRows);
     worksheet["!cols"] = getColumnWidths(headers, nameColIndex, maxNameLength);
     worksheet["!rows"] = rowHeights;
+    worksheet["!pageSetup"] = {
+      orientation: "landscape",
+      fitToWidth: 1,
+      fitToHeight: 0,
+    };
+    worksheet["!sheetPr"] = {
+      pageSetUpPr: { fitToPage: true },
+    };
 
     // Apply per-block styles
     let currentRow = 0;

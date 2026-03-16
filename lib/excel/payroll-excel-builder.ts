@@ -156,7 +156,7 @@ export const CELL_STYLES = {
   },
   signatureDate: {
     font: { italic: true, sz: 11, name: "Times New Roman" },
-    alignment: { horizontal: "center", vertical: "center" },
+    alignment: { horizontal: "center", vertical: "center", wrapText: true },
   },
 };
 
@@ -256,7 +256,7 @@ export function formatSignedAtDateTime(signedAt: string | null): string {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
-    return `${hours}:${minutes} - ${day}/${month}/${year}`;
+    return `Đã Ký\n${hours}:${minutes} - ${day}/${month}/${year}`;
   } catch {
     return "";
   }
