@@ -147,11 +147,11 @@ export const CELL_STYLES = {
     alignment: { horizontal: "left", vertical: "center" },
   },
   signatureHeader: {
-    font: { bold: true },
+    font: { bold: true, sz: 14, name: "Times New Roman" },
     alignment: { horizontal: "center", vertical: "center" },
   },
   signatureData: {
-    font: { italic: true },
+    font: { bold: true, sz: 14, name: "Times New Roman" },
     alignment: { horizontal: "center", vertical: "center", wrapText: true },
   },
 };
@@ -240,6 +240,34 @@ export function formatSignedAtDate(signedAt: string | null): string {
   } catch {
     return "";
   }
+}
+
+export function getSignatureColumns(totalColumns: number) {
+  const span = 6;
+  const center = Math.floor(totalColumns / 2);
+  return {
+    left: 0,
+    center: center - Math.floor(span / 2),
+    right: totalColumns - span,
+  };
+}
+
+export function getSignatureMergeRanges(
+  sigHeaderRow: number,
+  sigDataRow: number,
+  totalColumns: number,
+) {
+  const span = 6;
+  const cols = getSignatureColumns(totalColumns);
+  const merges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
+  for (const row of [sigHeaderRow, sigDataRow]) {
+    merges.push(
+      { s: { r: row, c: cols.left }, e: { r: row, c: cols.left + span - 1 } },
+      { s: { r: row, c: cols.center }, e: { r: row, c: cols.center + span - 1 } },
+      { s: { r: row, c: cols.right }, e: { r: row, c: cols.right + span - 1 } },
+    );
+  }
+  return merges;
 }
 
 export function applyWorksheetStyles(

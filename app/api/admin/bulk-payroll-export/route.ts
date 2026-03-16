@@ -9,6 +9,8 @@ import {
   getColumnWidths,
   formatSignedAtDate,
   applyWorksheetStyles,
+  getSignatureColumns,
+  getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
 
 interface BulkExportRequestBody {
@@ -84,7 +86,7 @@ function buildDeptBlock(
   rows.push(row4);
 
   const row5 = new Array(totalColumns).fill("");
-  row5[15] = dept;
+  row5[15] = "";
   rows.push(row5);
 
   // Header row
@@ -153,22 +155,20 @@ function buildDeptBlock(
   rows.push(new Array(totalColumns).fill(""));
   rows.push(new Array(totalColumns).fill(""));
 
-  const leftCol = 0;
-  const centerCol = Math.floor(totalColumns / 2);
-  const rightCol = totalColumns - 1;
+  const sigCols = getSignatureColumns(totalColumns);
 
   const sigHeaderRow = new Array(totalColumns).fill("");
-  sigHeaderRow[leftCol] = "Giám Đốc";
-  sigHeaderRow[centerCol] = "Kế Toán";
-  sigHeaderRow[rightCol] = "Người Lập Biểu";
+  sigHeaderRow[sigCols.left] = "Giám Đốc";
+  sigHeaderRow[sigCols.center] = "Kế Toán";
+  sigHeaderRow[sigCols.right] = "Người Lập Biểu";
   rows.push(sigHeaderRow);
 
   for (let i = 0; i < SIG_EMPTY_LINES; i++) rows.push(new Array(totalColumns).fill(""));
 
   const sigDataRow = new Array(totalColumns).fill("");
-  sigDataRow[leftCol] = managementSigs.giam_doc?.signed_by_name ?? "Chưa ký";
-  sigDataRow[centerCol] = managementSigs.ke_toan?.signed_by_name ?? "Chưa ký";
-  sigDataRow[rightCol] = managementSigs.nguoi_lap_bieu?.signed_by_name ?? "Chưa ký";
+  sigDataRow[sigCols.left] = managementSigs.giam_doc?.signed_by_name ?? "Chưa ký";
+  sigDataRow[sigCols.center] = managementSigs.ke_toan?.signed_by_name ?? "Chưa ký";
+  sigDataRow[sigCols.right] = managementSigs.nguoi_lap_bieu?.signed_by_name ?? "Chưa ký";
   rows.push(sigDataRow);
 
   return rows;
@@ -278,9 +278,7 @@ export async function POST(request: NextRequest) {
       "Ngày Ký",
     ];
     const totalColumns = headers.length;
-    const leftCol = 0;
-    const centerCol = Math.floor(totalColumns / 2);
-    const rightCol = totalColumns - 1;
+    const bulkSigCols = getSignatureColumns(totalColumns);
 
     // Compute max name length for column widths
     const maxNameLength = (payrollResult.data ?? []).reduce((max, r) => {
@@ -328,7 +326,10 @@ export async function POST(request: NextRequest) {
       rowHeights.push({ hpt: 80 }); // header
       for (let i = 0; i < dataRowCount; i++) rowHeights.push({ hpt: 35 }); // data
       rowHeights.push({ hpt: 35 }); // total
-      for (let i = 0; i < SIG_GAP_BEFORE + 1 + SIG_EMPTY_LINES + 1; i++) rowHeights.push({ hpt: 20 });
+      for (let i = 0; i < SIG_GAP_BEFORE; i++) rowHeights.push({ hpt: 20 });
+      rowHeights.push({ hpt: 35 });
+      for (let i = 0; i < SIG_EMPTY_LINES; i++) rowHeights.push({ hpt: 20 });
+      rowHeights.push({ hpt: 35 });
 
       const sigHeaderAbsRow = blockStartRow + TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE;
       sigStyleTargets.push({
@@ -365,7 +366,7 @@ export async function POST(request: NextRequest) {
 
     // Apply signature styles
     for (const { headerRow, dataRow } of sigStyleTargets) {
-      for (const col of [leftCol, centerCol, rightCol]) {
+      for (const col of [bulkSigCols.left, bulkSigCols.center, bulkSigCols.right]) {
         const hRef = XLSX.utils.encode_cell({ r: headerRow, c: col });
         const dRef = XLSX.utils.encode_cell({ r: dataRow, c: col });
         if (!worksheet[hRef]) worksheet[hRef] = { t: "s", v: "" };
@@ -373,6 +374,15 @@ export async function POST(request: NextRequest) {
         worksheet[hRef].s = CELL_STYLES.signatureHeader;
         worksheet[dRef].s = CELL_STYLES.signatureData;
       }
+    }
+
+    // Signature merge ranges
+    const allMerges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
+    for (const { headerRow, dataRow } of sigStyleTargets) {
+      allMerges.push(...getSignatureMergeRanges(headerRow, dataRow, totalColumns));
+    }
+    if (allMerges.length > 0) {
+      worksheet["!merges"] = allMerges;
     }
 
     // Page breaks

@@ -9,6 +9,8 @@ import {
   getColumnWidths,
   formatSignedAtDate,
   applyWorksheetStyles,
+  getSignatureColumns,
+  getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
 
 export async function GET(request: NextRequest) {
@@ -445,10 +447,8 @@ export async function GET(request: NextRequest) {
 
     const worksheetData = [...titleRows, headers, ...allRows];
 
-    // Calculate signature column positions based on total columns
-    const leftCol = 0; // Column A (Giám Đốc)
-    const centerCol = Math.floor(totalColumns / 2); // Center column (Kế Toán)
-    const rightCol = totalColumns - 1; // Last column (Người Lập Biểu)
+    // Calculate signature column positions (must match merge start positions)
+    const sigCols = getSignatureColumns(totalColumns);
 
     // Add signature section
     const signatureStartRow = worksheetData.length + 2;
@@ -459,9 +459,9 @@ export async function GET(request: NextRequest) {
 
     // Signature headers row
     const signatureHeaderRow = new Array(totalColumns).fill("");
-    signatureHeaderRow[leftCol] = "Giám Đốc";
-    signatureHeaderRow[centerCol] = "Kế Toán";
-    signatureHeaderRow[rightCol] = "Người Lập Biểu";
+    signatureHeaderRow[sigCols.left] = "Giám Đốc";
+    signatureHeaderRow[sigCols.center] = "Kế Toán";
+    signatureHeaderRow[sigCols.right] = "Người Lập Biểu";
     worksheetData.push(signatureHeaderRow);
 
     // Add 4 empty rows for manual signature space
@@ -472,13 +472,13 @@ export async function GET(request: NextRequest) {
 
     // Signature data row
     const signatureDataRow = new Array(totalColumns).fill("");
-    signatureDataRow[leftCol] = managementSignatures.giam_doc
+    signatureDataRow[sigCols.left] = managementSignatures.giam_doc
       ? managementSignatures.giam_doc.signed_by_name
       : "Chưa ký";
-    signatureDataRow[centerCol] = managementSignatures.ke_toan
+    signatureDataRow[sigCols.center] = managementSignatures.ke_toan
       ? managementSignatures.ke_toan.signed_by_name
       : "Chưa ký";
-    signatureDataRow[rightCol] = managementSignatures.nguoi_lap_bieu
+    signatureDataRow[sigCols.right] = managementSignatures.nguoi_lap_bieu
       ? managementSignatures.nguoi_lap_bieu.signed_by_name
       : "Chưa ký";
     worksheetData.push(signatureDataRow);
@@ -502,21 +502,22 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < allRows.length; i++) {
       rowHeights.push({ hpt: 35 });
     }
-    for (let i = 0; i < 8; i++) {
-      rowHeights.push({ hpt: 20 });
-    }
+    for (let i = 0; i < 2; i++) rowHeights.push({ hpt: 20 });
+    rowHeights.push({ hpt: 35 });
+    for (let i = 0; i < 4; i++) rowHeights.push({ hpt: 20 });
+    rowHeights.push({ hpt: 35 });
     worksheet["!rows"] = rowHeights;
 
     applyWorksheetStyles(worksheet, headers, headerRowIndex, allRows.length);
 
     // Apply styling to signature section
-    const signatureHeaderRowIndex = signatureStartRow + 1;
-    const signatureDataRowIndex = signatureStartRow + 6;
+    const signatureHeaderRowIndex = signatureStartRow;
+    const signatureDataRowIndex = signatureStartRow + 5;
 
     const signatureHeaderCells = [
-      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: leftCol }),
-      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: centerCol }),
-      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: rightCol }),
+      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: sigCols.left }),
+      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: sigCols.center }),
+      XLSX.utils.encode_cell({ r: signatureHeaderRowIndex, c: sigCols.right }),
     ];
 
     signatureHeaderCells.forEach((cellRef) => {
@@ -525,15 +526,17 @@ export async function GET(request: NextRequest) {
     });
 
     const signatureDataCells = [
-      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: leftCol }),
-      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: centerCol }),
-      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: rightCol }),
+      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: sigCols.left }),
+      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: sigCols.center }),
+      XLSX.utils.encode_cell({ r: signatureDataRowIndex, c: sigCols.right }),
     ];
 
     signatureDataCells.forEach((cellRef) => {
       if (!worksheet[cellRef]) worksheet[cellRef] = { t: "s", v: "" };
       worksheet[cellRef].s = CELL_STYLES.signatureData;
     });
+
+    worksheet["!merges"] = getSignatureMergeRanges(signatureHeaderRowIndex, signatureDataRowIndex, totalColumns);
 
     // Add worksheet to workbook
     const departmentName = department || "TatCa";
