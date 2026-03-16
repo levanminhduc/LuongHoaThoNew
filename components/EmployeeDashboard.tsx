@@ -562,9 +562,13 @@ export default function EmployeeDashboard({
                           </TableCell>
                           <TableCell className="p-3 text-center text-xs text-muted-foreground">
                             {payroll.signed_at
-                              ? new Date(payroll.signed_at).toLocaleDateString(
-                                  "vi-VN",
-                                )
+                              ? (() => {
+                                  const c = payroll.signed_at.replace("T", " ").replace(/\.\d+.*$/, "");
+                                  const [dp] = c.split(" ");
+                                  if (!dp) return payroll.signed_at;
+                                  const [y, m, d] = dp.split("-");
+                                  return `${d}/${m}/${y}`;
+                                })()
                               : "-"}
                           </TableCell>
                           <TableCell className="p-3 text-center">

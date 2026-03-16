@@ -28,6 +28,15 @@ interface ManagementSignatureDateFormProps {
   onRefresh: () => void;
 }
 
+function formatVietnamTimestamp(isoString: string): string {
+  const cleaned = isoString.replace("T", " ").replace(/\.\d+.*$/, "");
+  const [datePart, timePart] = cleaned.split(" ");
+  if (!datePart) return isoString;
+  const [y, m, d] = datePart.split("-");
+  const time = timePart ? timePart.substring(0, 5) : "";
+  return `${d}/${m}/${y}${time ? ` ${time}` : ""}`;
+}
+
 const SIGNATURE_TYPE_LABELS: Record<string, string> = {
   giam_doc: "Giám Đốc",
   ke_toan: "Kế Toán",
@@ -129,7 +138,7 @@ export function ManagementSignatureDateForm({
                     {isSigned && sig && (
                       <p className="text-xs text-gray-500 truncate">
                         {sig.signed_by_name} -{" "}
-                        {new Date(sig.signed_at).toLocaleString("vi-VN")}
+                        {formatVietnamTimestamp(sig.signed_at)}
                       </p>
                     )}
                   </div>

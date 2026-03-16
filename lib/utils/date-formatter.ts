@@ -99,22 +99,12 @@ export function formatSignatureTime(dateString: string): string {
   if (!dateString) return "";
 
   try {
-    // ✅ FINAL FIX: Database lưu Vietnam time (UTC+7), hiển thị trực tiếp
-    // Không cần timezone conversion, chỉ format string
-    const date = new Date(dateString);
-
-    // HIỂN THỊ THEO GIỜ VIỆT NAM NHƯ DB ĐÃ LƯU: KHÔNG ÉP TIMEZONE TRÁNH DOUBLE CONVERSION
-    return date
-      .toLocaleString("vi-VN", {
-        // Không set timeZone ở đây vì DB đã lưu Vietnam time (UTC+7)
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-      .replace(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2})/, "$4:$5 $1/$2/$3");
+    const cleaned = dateString.replace("T", " ").replace(/\.\d+.*$/, "");
+    const [datePart, timePart] = cleaned.split(" ");
+    if (!datePart) return dateString;
+    const [y, m, d] = datePart.split("-");
+    const time = timePart ? timePart.substring(0, 5) : "";
+    return time ? `${time} ${d}/${m}/${y}` : `${d}/${m}/${y}`;
   } catch (error) {
     console.error("Error formatting signature time:", error);
     return dateString;

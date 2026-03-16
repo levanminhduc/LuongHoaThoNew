@@ -1,0 +1,30 @@
+You are a CRITICAL code reviewer. Review these OpenSpec artifacts for the optimize-signature-date change. READ ONLY — do NOT modify or delete any files.
+
+**Files to review:**
+1. openspec/changes/optimize-signature-date/proposal.md
+2. openspec/changes/optimize-signature-date/design.md
+3. openspec/changes/optimize-signature-date/specs/batch-signature-date-update/spec.md
+4. openspec/changes/optimize-signature-date/specs/sse-progress-streaming/spec.md
+5. openspec/changes/optimize-signature-date/tasks.md
+
+**Cross-reference with actual source code:**
+6. app/api/admin/update-signature-date/route.ts
+7. components/admin/employee-signature-date-form.tsx
+8. scripts/supabase-setup/26-bulk-signature-complete-setup.sql (existing RPC pattern)
+
+**Review criteria:**
+- COMPLETENESS: Are all scenarios from current code covered in specs?
+- CORRECTNESS: Do specs match actual codebase behavior?
+- EDGE CASES: Missing error paths, boundary conditions, data integrity?
+- GAPS: Any divergence between spec and source code?
+- FEASIBILITY: Are the proposed changes technically sound?
+
+**Output format:**
+For each issue found, output:
+ISSUE-N: [CRITICAL|IMPORTANT|MINOR] Title
+Description of the issue and recommendation.
+
+End with:
+VERDICT: [APPROVE|REQUEST_CHANGES]
+
+IMPORTANT: This is READ-ONLY review. Do NOT create, modify, or delete any files.
