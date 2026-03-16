@@ -195,29 +195,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Debug: Check if we have any data first
-    const { data: debugData, error: debugError } = await supabase
-      .from("payrolls")
-      .select("id, employee_id, salary_month")
-      .limit(5);
-
-    console.log("Debug - Payrolls table sample:", debugData);
-    console.log("Debug - Payrolls error:", debugError);
-
-    const { data: employeesDebug, error: employeesError } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department")
-      .limit(5);
-
-    console.log("Debug - Employees table sample:", employeesDebug);
-    console.log("Debug - Employees error:", employeesError);
-
     const queryResult = await query;
     let payrollData = queryResult.data;
     const error = queryResult.error;
-
-    console.log("Query result - records count:", payrollData?.length || 0);
-    console.log("Query params:", { month, department, role: auth.user.role });
 
     if (error) {
       console.error("Error fetching payroll data:", error);
@@ -248,8 +228,6 @@ export async function GET(request: NextRequest) {
 
     if (!payrollData || payrollData.length === 0) {
       // Try fallback query without join
-      console.log("Trying fallback query without join...");
-
       let fallbackQuery = supabase
         .from("payrolls")
         .select("*")
@@ -261,7 +239,6 @@ export async function GET(request: NextRequest) {
       }
 
       // Skip role-based filtering in fallback for now
-      console.log("Fallback query - skipping role-based filtering");
 
       const { data: fallbackData, error: fallbackError } = await fallbackQuery;
 
@@ -442,7 +419,6 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch {
-        console.log("Could not fetch signature_logs - using fallback");
       }
     }
 
@@ -503,9 +479,6 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch {
-        console.log(
-          "Management signatures table not available - using fallback",
-        );
       }
     }
 
@@ -546,12 +519,6 @@ export async function GET(request: NextRequest) {
     titleRows.push(row5);
 
     // Create worksheet data with title rows, headers, and data
-    console.log(
-      "Creating worksheet with headers:",
-      headers.length,
-      "and data rows:",
-      dataRows.length,
-    );
     const nameColIdx = visibleFields.indexOf("salary_month");
     const totalRow: unknown[] = new Array(headers.length).fill("");
     totalRow[0] = "";
@@ -618,9 +585,7 @@ export async function GET(request: NextRequest) {
       : "Chưa ký";
     worksheetData.push(signatureDataRow);
 
-    console.log("Worksheet data prepared, creating sheet...");
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    console.log("Worksheet created successfully");
 
     const borderStyle = {
       top: { style: "thin", color: { rgb: "000000" } },
@@ -972,7 +937,6 @@ export async function GET(request: NextRequest) {
       sheetName = `${shortDeptName}_${monthName}`;
     }
 
-    console.log("Sheet name:", sheetName, "Length:", sheetName.length);
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
     // Generate Excel buffer
@@ -991,9 +955,7 @@ export async function GET(request: NextRequest) {
 
     const typePrefix = isT13 ? "Luong13" : "Luong";
     const filename = `${typePrefix}_${safeDepartmentName}_${monthName}_${timestamp}.xlsx`;
-    console.log("Safe filename:", filename);
 
-    // Return Excel file
     return new NextResponse(excelBuffer, {
       status: 200,
       headers: {

@@ -67,6 +67,39 @@ export async function GET(
     const signedCount = signedResult.count || 0;
     const unsignedCount = unsignedResult.count || 0;
 
+    let signedEmployees: Array<{
+      employee_id: string;
+      full_name: string;
+      department: string;
+    }> = [];
+
+    if (searchParams.get("include_signed_employees") === "true") {
+      let signedQuery = supabase
+        .from("payrolls")
+        .select("employee_id")
+        .eq("salary_month", month)
+        .eq("is_signed", true);
+      if (isT13) {
+        signedQuery = signedQuery.eq("payroll_type", "t13");
+      } else {
+        signedQuery = signedQuery.or(
+          "payroll_type.eq.monthly,payroll_type.is.null",
+        );
+      }
+      const { data: signedPayrolls } = await signedQuery.order("employee_id");
+      const ids = signedPayrolls?.map((p) => p.employee_id) || [];
+
+      if (ids.length > 0) {
+        const { data: empData } = await supabase
+          .from("employees")
+          .select("employee_id, full_name, department")
+          .in("employee_id", ids)
+          .eq("is_active", true)
+          .order("employee_id");
+        signedEmployees = empData || [];
+      }
+    }
+
     return NextResponse.json({
       success: true,
       month,
@@ -77,6 +110,7 @@ export async function GET(
       completion_percentage: totalCount
         ? Math.round((signedCount / totalCount) * 100)
         : 0,
+      ...(signedEmployees.length > 0 && { signed_employees: signedEmployees }),
     });
   } catch (error) {
     console.error("Get signature stats error:", error);

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BulkSignatureSection } from "@/components/admin/BulkSignatureSection";
+import { UpdateSignatureDateDialog } from "@/components/admin/UpdateSignatureDateDialog";
 import {
   Card,
   CardContent,
@@ -62,11 +63,18 @@ export default function BulkSignaturePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <BulkSignatureSection
-            onSuccess={() => {
-              router.refresh();
-            }}
-          />
+          <div className="flex items-end gap-4 flex-wrap">
+            <BulkSignatureSection
+              onSuccess={() => {
+                router.refresh();
+              }}
+            />
+            <UpdateSignatureDateDialog
+              onSuccess={() => {
+                router.refresh();
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
