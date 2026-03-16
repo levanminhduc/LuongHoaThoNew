@@ -1,31 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { z } from "zod";
 
-function generateRandomTimestamp(
-  baseDate: string,
-  randomRangeDays: number,
-): string {
-  const base = new Date(baseDate + "T00:00:00");
-  const offsetDays =
-    randomRangeDays > 0
-      ? Math.floor(Math.random() * (randomRangeDays + 1))
-      : 0;
-  const randomHour = Math.floor(Math.random() * 24);
-  const randomMinute = Math.floor(Math.random() * 60);
+const BATCH_SIZE = 200;
 
-  base.setDate(base.getDate() + offsetDays);
-  base.setHours(randomHour, randomMinute, 0, 0);
-
-  const year = base.getFullYear();
-  const month = String(base.getMonth() + 1).padStart(2, "0");
-  const day = String(base.getDate()).padStart(2, "0");
-  const hour = String(base.getHours()).padStart(2, "0");
-  const minute = String(base.getMinutes()).padStart(2, "0");
-
-  return `${year}-${month}-${day} ${hour}:${minute}:00`;
-}
+const UpdateSignatureDateSchema = z.object({
+  salary_month: z.string().trim().min(1),
+  base_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày cơ sở không hợp lệ (YYYY-MM-DD)"),
+  random_range_days: z.number().int().min(0).max(30).default(0),
+  scope: z.enum(["all", "selected"]),
+  employee_ids: z.array(z.string()).optional(),
+  is_t13: z.boolean().default(false),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,17 +27,27 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parseResult = UpdateSignatureDateSchema.safeParse(body);
+    if (!parseResult.success) {
+      const firstError = parseResult.error.issues[0];
+      return NextResponse.json(
+        { error: firstError?.message || "Dữ liệu không hợp lệ" },
+        { status: 400 },
+      );
+    }
     const {
       salary_month,
       base_date,
-      random_range_days = 0,
+      random_range_days,
       scope,
       employee_ids,
-      is_t13 = false,
-    } = body;
+      is_t13,
+    } = parseResult.data;
 
-    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    if (!salary_month || !monthPattern.test(salary_month)) {
+    const monthPattern = is_t13
+      ? /^\d{4}-(13|T13)$/i
+      : /^\d{4}-(0[1-9]|1[0-2])$/;
+    if (!monthPattern.test(salary_month)) {
       return NextResponse.json(
         {
           error: is_t13
@@ -59,21 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!base_date || !/^\d{4}-\d{2}-\d{2}$/.test(base_date)) {
-      return NextResponse.json(
-        { error: "Ngày cơ sở không hợp lệ (YYYY-MM-DD)" },
-        { status: 400 },
-      );
-    }
-
-    if (!scope || !["all", "selected"].includes(scope)) {
-      return NextResponse.json(
-        { error: "Phạm vi không hợp lệ (all/selected)" },
-        { status: 400 },
-      );
-    }
-
-    if (scope === "selected" && (!employee_ids || !employee_ids.length)) {
+    if (scope === "selected" && (!employee_ids || employee_ids.length === 0)) {
       return NextResponse.json(
         { error: "Chưa chọn nhân viên nào" },
         { status: 400 },
@@ -81,10 +66,9 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
-
     let payrollQuery = supabase
       .from("payrolls")
-      .select("id, employee_id")
+      .select("employee_id")
       .eq("salary_month", salary_month)
       .eq("is_signed", true);
 
@@ -96,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (scope === "selected") {
+    if (scope === "selected" && employee_ids) {
       payrollQuery = payrollQuery.in("employee_id", employee_ids);
     }
 
@@ -105,7 +89,10 @@ export async function POST(request: NextRequest) {
 
     if (fetchError) {
       return NextResponse.json(
-        { error: "Lỗi khi lấy danh sách bảng lương", details: fetchError.message },
+        {
+          error: "Lỗi khi lấy danh sách bảng lương",
+          details: fetchError.message,
+        },
         { status: 500 },
       );
     }
@@ -117,55 +104,119 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const vietnamNow = getVietnamTimestamp();
-    let updatedCount = 0;
-    const errors: Array<{ employee_id: string; error: string }> = [];
-
-    for (const payroll of signedPayrolls) {
-      const randomSignedAt = generateRandomTimestamp(
-        base_date,
-        random_range_days,
-      );
-
-      const { error: payrollUpdateError } = await supabase
-        .from("payrolls")
-        .update({
-          signed_at: randomSignedAt,
-          updated_at: vietnamNow,
-        })
-        .eq("id", payroll.id);
-
-      if (payrollUpdateError) {
-        errors.push({
-          employee_id: payroll.employee_id,
-          error: `payrolls: ${payrollUpdateError.message}`,
-        });
-        continue;
-      }
-
-      const { error: logUpdateError } = await supabase
-        .from("signature_logs")
-        .update({ signed_at: randomSignedAt })
-        .eq("employee_id", payroll.employee_id)
-        .eq("salary_month", salary_month);
-
-      if (logUpdateError) {
-        errors.push({
-          employee_id: payroll.employee_id,
-          error: `signature_logs: ${logUpdateError.message}`,
-        });
-        continue;
-      }
-
-      updatedCount++;
+    const allEmployeeIds = signedPayrolls.map((p) => p.employee_id);
+    const batches: string[][] = [];
+    for (let i = 0; i < allEmployeeIds.length; i += BATCH_SIZE) {
+      batches.push(allEmployeeIds.slice(i, i + BATCH_SIZE));
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `Đã cập nhật ngày ký cho ${updatedCount}/${signedPayrolls.length} nhân viên`,
-      updated_count: updatedCount,
-      total: signedPayrolls.length,
-      errors: errors.length > 0 ? errors : undefined,
+    const startTime = Date.now();
+    const encoder = new TextEncoder();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (data: Record<string, unknown>) => {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
+          );
+        };
+
+        send({
+          type: "start",
+          total: allEmployeeIds.length,
+          batches: batches.length,
+        });
+
+        let totalSuccess = 0;
+        let totalFailed = 0;
+        let totalProcessed = 0;
+        const allErrors: Array<{ employee_id: string; error: string }> = [];
+
+        for (let i = 0; i < batches.length; i++) {
+          if (request.signal.aborted) {
+            break;
+          }
+
+          const batch = batches[i];
+          try {
+            const { data: rpcResult, error: rpcError } = await supabase.rpc(
+              "bulk_update_signature_dates",
+              {
+                p_employee_ids: batch,
+                p_salary_month: salary_month,
+                p_base_date: base_date,
+                p_random_range_days: random_range_days,
+                p_is_t13: is_t13,
+              },
+            );
+
+            if (rpcError) {
+              send({
+                type: "error",
+                batch: i + 1,
+                message: `RPC failed: ${rpcError.message}`,
+              });
+              totalFailed += batch.length;
+              totalProcessed += batch.length;
+              continue;
+            }
+
+            const result = rpcResult as {
+              success_count: number;
+              error_count: number;
+              errors: Array<{ employee_id: string; error: string }>;
+            };
+            totalSuccess += result.success_count;
+            totalFailed += result.error_count;
+            totalProcessed += batch.length;
+
+            if (result.errors && result.errors.length > 0) {
+              allErrors.push(...result.errors);
+            }
+
+            send({
+              type: "batch_complete",
+              batch: i + 1,
+              processed: totalProcessed,
+              success: totalSuccess,
+              failed: totalFailed,
+              elapsed_ms: Date.now() - startTime,
+            });
+          } catch (err) {
+            send({
+              type: "error",
+              batch: i + 1,
+              message: `RPC failed: ${err instanceof Error ? err.message : String(err)}`,
+            });
+            totalFailed += batch.length;
+            totalProcessed += batch.length;
+          }
+        }
+
+        if (!request.signal.aborted) {
+          send({
+            type: "complete",
+            total: allEmployeeIds.length,
+            success: totalSuccess,
+            failed: totalFailed,
+            duration_seconds: Number(
+              ((Date.now() - startTime) / 1000).toFixed(2),
+            ),
+            errors: allErrors.slice(0, 10),
+          });
+        }
+
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
     });
   } catch (error) {
     return NextResponse.json(
@@ -222,7 +273,7 @@ export async function GET(request: NextRequest) {
 
       const ids = (signedPayrolls || []).map((p) => p.employee_id);
 
-      let signedEmployees: Array<{
+      const signedEmployees: Array<{
         employee_id: string;
         full_name: string;
         department: string;

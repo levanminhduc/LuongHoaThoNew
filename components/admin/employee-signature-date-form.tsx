@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,14 @@ interface EmployeeSignatureDateFormProps {
   onSuccess?: () => void;
 }
 
+interface CompletionResult {
+  total: number;
+  success: number;
+  failed: number;
+  duration_seconds: number;
+  errors: Array<{ employee_id: string; error: string }>;
+}
+
 export function EmployeeSignatureDateForm({
   effectiveMonth,
   isT13,
@@ -42,9 +50,19 @@ export function EmployeeSignatureDateForm({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [progress, setProgress] = useState({
+    current: 0,
+    total: 0,
+    success: 0,
+    failed: 0,
+  });
+  const [streamStartTime, setStreamStartTime] = useState(0);
+  const [completionResult, setCompletionResult] =
+    useState<CompletionResult | null>(null);
+
+  const handleSubmit = useCallback(async () => {
     if (!fromDate) {
       setError("Vui lòng chọn ngày bắt đầu");
       return;
@@ -65,19 +83,16 @@ export function EmployeeSignatureDateForm({
       (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24),
     );
 
-    let baseDate: string;
-    let rangeDays: number;
-    if (diffDays === 0) {
-      baseDate = fromDate;
-      rangeDays = 0;
-    } else {
-      baseDate = fromDate;
-      rangeDays = diffDays;
-    }
+    const baseDate = fromDate;
+    const rangeDays = diffDays;
 
     setLoading(true);
     setError(null);
-    setResult(null);
+    setCompletionResult(null);
+    setIsStreaming(false);
+    setProgress({ current: 0, total: 0, success: 0, failed: 0 });
+    setStreamStartTime(0);
+
     try {
       const res = await fetch("/api/admin/update-signature-date", {
         method: "POST",
@@ -91,22 +106,96 @@ export function EmployeeSignatureDateForm({
           is_t13: isT13,
         }),
       });
-      const data = await res.json();
-      if (res.ok) {
-        setResult(data.message);
-        showSuccessToast(data.message);
-        onSuccess?.();
+
+      const contentType = res.headers.get("content-type") ?? "";
+
+      if (contentType.includes("text/event-stream")) {
+        setLoading(false);
+
+        const reader = res.body!.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              const dataMatch = line.match(/^data: (.+)$/m);
+              if (!dataMatch) continue;
+              try {
+                const event = JSON.parse(dataMatch[1]);
+
+                if (event.type === "start") {
+                  setIsStreaming(true);
+                  setStreamStartTime(Date.now());
+                  setProgress((prev) => ({
+                    ...prev,
+                    total: event.total ?? 0,
+                  }));
+                } else if (event.type === "batch_complete") {
+                  setProgress((prev) => ({
+                    ...prev,
+                    current: event.processed ?? 0,
+                    success: event.success ?? 0,
+                    failed: event.failed ?? 0,
+                  }));
+                } else if (event.type === "complete") {
+                  const result: CompletionResult = {
+                    total: event.total ?? 0,
+                    success: event.success ?? 0,
+                    failed: event.failed ?? 0,
+                    duration_seconds: event.duration_seconds ?? 0,
+                    errors: event.errors ?? [],
+                  };
+                  setIsStreaming(false);
+                  setCompletionResult(result);
+                  showSuccessToast(
+                    `Đã cập nhật ${result.success}/${result.total} nhân viên`,
+                  );
+                  onSuccess?.();
+                }
+              } catch {
+                // ignore parse errors
+              }
+            }
+          }
+        } catch {
+          setIsStreaming(false);
+          setError("Kết nối bị gián đoạn");
+          showNetworkErrorToast();
+        }
       } else {
-        setError(data.error || "Có lỗi xảy ra");
-        showErrorToast(data.error || "Có lỗi xảy ra");
+        const data = await res.json();
+        if (res.ok) {
+          showSuccessToast(data.message);
+          onSuccess?.();
+        } else {
+          setError(data.error || "Có lỗi xảy ra");
+          showErrorToast(data.error || "Có lỗi xảy ra");
+        }
+        setLoading(false);
       }
     } catch {
       setError("Lỗi kết nối server");
       showNetworkErrorToast();
-    } finally {
       setLoading(false);
     }
-  };
+  }, [
+    fromDate,
+    toDate,
+    scope,
+    selectedIds,
+    authHeader,
+    effectiveMonth,
+    isT13,
+    onSuccess,
+  ]);
 
   const toggleEmployee = (id: string) => {
     setSelectedIds((prev) =>
@@ -211,23 +300,91 @@ export function EmployeeSignatureDateForm({
         </div>
       )}
 
+      {isStreaming && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>
+              {progress.current} / {progress.total} nhân viên
+            </span>
+            <span>
+              {progress.total > 0
+                ? Math.round((progress.current / progress.total) * 100)
+                : 0}
+              %
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+              style={{
+                width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%`,
+              }}
+            />
+          </div>
+          <div className="flex gap-4 text-xs">
+            <span className="text-green-600">✓ {progress.success}</span>
+            {progress.failed > 0 && (
+              <span className="text-red-600">✗ {progress.failed}</span>
+            )}
+            {streamStartTime > 0 &&
+              progress.current > 0 &&
+              progress.total > progress.current && (
+                <span className="text-muted-foreground">
+                  ~
+                  {Math.round(
+                    (((Date.now() - streamStartTime) / progress.current) *
+                      (progress.total - progress.current)) /
+                      1000,
+                  )}
+                  s còn lại
+                </span>
+              )}
+          </div>
+        </div>
+      )}
+
+      {!isStreaming && completionResult && (
+        <div className="space-y-2">
+          <Alert className="bg-green-50 border-green-200 py-2">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-sm text-green-800">
+              Đã cập nhật {completionResult.success}/{completionResult.total}{" "}
+              nhân viên ({completionResult.duration_seconds}s)
+            </AlertDescription>
+          </Alert>
+          {completionResult.failed > 0 && (
+            <Alert className="bg-orange-50 border-orange-200 py-2">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-sm text-orange-800">
+                {completionResult.failed} nhân viên thất bại
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
+
       {error && (
         <Alert variant="destructive" className="py-2">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="text-sm">{error}</AlertDescription>
-        </Alert>
-      )}
-      {result && (
-        <Alert className="bg-green-50 border-green-200 py-2">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-sm text-green-800">
-            {result}
+          <AlertDescription className="text-sm flex items-center justify-between">
+            <span>{error}</span>
+            {error === "Kết nối bị gián đoạn" && (
+              <Button variant="outline" size="sm" onClick={handleSubmit}>
+                Thử lại
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}
 
-      <Button onClick={handleSubmit} disabled={loading} size="sm">
-        {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+      <Button
+        onClick={handleSubmit}
+        disabled={loading || isStreaming}
+        size="sm"
+      >
+        {(loading || isStreaming) && (
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        )}
         Cập Nhật Ngày Ký NV
       </Button>
     </div>
