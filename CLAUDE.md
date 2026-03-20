@@ -44,7 +44,7 @@ node scripts/run-bulk-signature-migrations.js
 
 ### Tech Stack
 
-- **Frontend**: Next.js 16.1.1 App Router, React 19.2.3, TypeScript 5
+- **Frontend**: Next.js 16.2.0 App Router, React 19.2.4, TypeScript 5
 - **Styling**: Tailwind CSS 3.4.17, shadcn/ui components
 - **Backend**: Next.js API Routes
 - **Database**: Supabase PostgreSQL với Row Level Security (RLS)

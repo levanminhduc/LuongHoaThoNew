@@ -22,7 +22,7 @@ const nextConfig = {
   },
   reactCompiler: false,
   experimental: {
-    viewTransitions: true,
+    viewTransition: true,
   },
 };
 

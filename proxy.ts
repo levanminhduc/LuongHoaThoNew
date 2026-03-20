@@ -27,7 +27,7 @@ function isMaintenanceAllowed(pathname: string): boolean {
   return MAINTENANCE_ALLOWED_PATHS.some((path) => pathname.startsWith(path));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (MAINTENANCE_MODE) {
