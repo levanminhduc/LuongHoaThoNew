@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { DEFAULT_FIELD_HEADERS } from "@/lib/utils/header-mapping";
@@ -126,6 +127,8 @@ export async function POST(request: NextRequest) {
   const batchId = `IMPORT_${Date.now()}`;
 
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const admin = verifyAdminToken(request);
     if (!admin) {

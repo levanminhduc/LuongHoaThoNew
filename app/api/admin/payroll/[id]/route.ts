@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 // Get client IP address
@@ -110,6 +111,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Enhanced role-based authentication
     const auth = verifyToken(request);
     if (!auth) {

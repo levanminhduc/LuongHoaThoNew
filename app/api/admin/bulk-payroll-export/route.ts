@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 import XLSX from "xlsx-js-style";
 import {
   FIELD_HEADERS,
@@ -190,6 +191,8 @@ function buildDeptBlock(
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const auth = verifyToken(request);
     if (!auth || auth.user.role !== "admin") {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 });

@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(

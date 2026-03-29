@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { type ColumnAlias, type ApiResponse } from "@/lib/column-alias-config";
@@ -79,6 +80,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const adminUser = verifyAdminToken(request);
     if (!adminUser) {
       return NextResponse.json(
@@ -202,6 +205,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const adminUser = verifyAdminToken(request);
     if (!adminUser) {
       return NextResponse.json(

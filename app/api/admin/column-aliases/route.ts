@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import {
@@ -129,6 +130,8 @@ export async function GET(request: NextRequest) {
 // POST: Create new column alias
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const adminUser = verifyAdminToken(request);
     if (!adminUser) {
       return NextResponse.json(
@@ -236,6 +239,8 @@ export async function POST(request: NextRequest) {
 // PUT: Bulk create aliases
 export async function PUT(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const adminUser = verifyAdminToken(request);
     if (!adminUser) {
       return NextResponse.json(

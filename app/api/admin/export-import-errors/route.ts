@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { getJwtSecret } from "@/lib/config/jwt";
@@ -47,6 +48,8 @@ interface ErrorExportRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

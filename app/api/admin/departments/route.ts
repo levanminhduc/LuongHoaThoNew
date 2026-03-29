@@ -2,6 +2,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 
 // GET all departments with statistics
 export async function GET(request: NextRequest) {
@@ -297,6 +298,8 @@ export async function GET(request: NextRequest) {
 // POST create new department (admin only)
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Only admin can create departments
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
@@ -355,6 +358,8 @@ export async function POST(request: NextRequest) {
 // GET department permissions summary (admin only)
 export async function PUT(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Only admin can view permission summary
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {

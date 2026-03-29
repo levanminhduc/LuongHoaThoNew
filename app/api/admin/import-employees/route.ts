@@ -4,6 +4,7 @@ import {
   parseEmployeeExcelFile,
   type EmployeeData,
 } from "@/lib/employee-parser";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { type JWTPayload } from "@/lib/auth";
@@ -32,6 +33,8 @@ async function hashCCCD(cccd: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const admin = verifyAdminToken(request);
     if (!admin) {

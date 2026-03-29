@@ -2,6 +2,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 
 interface ValidationStats {
   totalEmployees: number;
@@ -188,6 +189,8 @@ function getCurrentMonth(): string {
 // Clear cache endpoint (for admin use)
 export async function DELETE(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(

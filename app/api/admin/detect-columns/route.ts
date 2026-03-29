@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
@@ -21,6 +22,8 @@ function verifyAdminToken(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const admin = verifyAdminToken(request);
     if (!admin) {
       return NextResponse.json(

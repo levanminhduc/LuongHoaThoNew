@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
@@ -22,6 +23,8 @@ function verifyAdminToken(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const admin = verifyAdminToken(request);
     if (!admin) {
