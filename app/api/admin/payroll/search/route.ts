@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { JWT_SECRET } from "@/lib/config/jwt";
+import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 interface EmployeeInfo {
   full_name: string | null;
@@ -225,7 +226,7 @@ export async function GET(request: NextRequest) {
       )
       .not("employees.is_active", "is", null)
       .eq("employees.is_active", true)
-      .or(`employee_id.ilike.%${query}%`)
+      .or(`employee_id.ilike.%${sanitizePostgrestValue(query)}%`)
       .order("created_at", { ascending: false });
 
     if (payrollType === "t13") {
@@ -264,7 +265,7 @@ export async function GET(request: NextRequest) {
         .select(
           "id, employee_id, salary_month, tien_luong_thuc_nhan_cuoi_ky, source_file, created_at",
         )
-        .ilike("employee_id", `%${query}%`)
+        .ilike("employee_id", `%${sanitizePostgrestValue(query)}%`)
         .limit(20);
 
       if (simpleError) {

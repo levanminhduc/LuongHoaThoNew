@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 export async function GET(request: NextRequest) {
   try {
@@ -86,9 +87,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (search && search.length >= 2) {
-      employeeQuery = employeeQuery.or(
-        `employee_id.ilike.%${search}%,full_name.ilike.%${search}%`,
-      );
+      const safeSearch = sanitizePostgrestValue(search);
+      if (safeSearch) {
+        employeeQuery = employeeQuery.or(
+          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
+        );
+      }
     }
 
     const {

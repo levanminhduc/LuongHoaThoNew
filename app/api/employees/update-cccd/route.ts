@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import type { JWTPayload } from "@/lib/auth";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { JWT_SECRET } from "@/lib/config/jwt";
+import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
     const { data: employees, error } = await supabase
       .from("employees")
       .select("employee_id, full_name, department, chuc_vu, is_active")
-      .or(`employee_id.ilike.%${query}%,full_name.ilike.%${query}%`)
+      .or(`employee_id.ilike.%${sanitizePostgrestValue(query)}%,full_name.ilike.%${sanitizePostgrestValue(query)}%`)
       .eq("is_active", true)
       .order("full_name")
       .limit(20);
