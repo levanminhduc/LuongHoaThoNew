@@ -249,7 +249,10 @@ export function PayrollDetailModal({
               />
               <DetailRow
                 label="PC Lương"
-                value={(payrollData.tien_tang_ca_vuot || 0) + (payrollData.luong_cnkcp_vuot || 0)}
+                value={
+                  (payrollData.tien_tang_ca_vuot || 0) +
+                  (payrollData.luong_cnkcp_vuot || 0)
+                }
                 isCurrency
               />
               <DetailRow

@@ -88,7 +88,9 @@ export function EmployeeLookupResult({
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-blue-600">Hệ Số Làm Việc</p>
+                  <p className="text-sm font-medium text-blue-600">
+                    Hệ Số Làm Việc
+                  </p>
                   <p className="text-lg md:text-2xl font-bold text-blue-700">
                     {formatNumber(result.he_so_lam_viec || 0)}
                   </p>
@@ -99,7 +101,9 @@ export function EmployeeLookupResult({
             <Card className="bg-green-50 border-green-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-green-600">Hệ Số Phụ Cấp KQ</p>
+                  <p className="text-sm font-medium text-green-600">
+                    Hệ Số Phụ Cấp KQ
+                  </p>
                   <p className="text-lg md:text-2xl font-bold text-green-700">
                     {formatNumber(result.he_so_phu_cap_ket_qua || 0)}
                   </p>
@@ -110,7 +114,9 @@ export function EmployeeLookupResult({
             <Card className="bg-purple-50 border-purple-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-purple-600">Tiền Khen Thưởng Chuyên Cần</p>
+                  <p className="text-sm font-medium text-purple-600">
+                    Tiền Khen Thưởng Chuyên Cần
+                  </p>
                   <p className="text-lg md:text-2xl font-bold text-purple-700">
                     {formatCurrency(result.tien_khen_thuong_chuyen_can || 0)}
                   </p>
@@ -123,7 +129,10 @@ export function EmployeeLookupResult({
                 <div className="text-center">
                   <p className="text-sm font-medium text-pink-600">PC Lương</p>
                   <p className="text-lg md:text-2xl font-bold text-pink-700">
-                    {formatCurrency((result.tien_tang_ca_vuot || 0) + (result.luong_cnkcp_vuot || 0))}
+                    {formatCurrency(
+                      (result.tien_tang_ca_vuot || 0) +
+                        (result.luong_cnkcp_vuot || 0),
+                    )}
                   </p>
                 </div>
               </CardContent>
@@ -132,7 +141,9 @@ export function EmployeeLookupResult({
             <Card className="bg-orange-50 border-orange-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-orange-600">Lương Học Việc PC</p>
+                  <p className="text-sm font-medium text-orange-600">
+                    Lương Học Việc PC
+                  </p>
                   <p className="text-lg md:text-2xl font-bold text-orange-700">
                     {formatCurrency(result.luong_hoc_viec_pc_luong || 0)}
                   </p>
@@ -143,7 +154,9 @@ export function EmployeeLookupResult({
             <Card className="bg-red-50 border-red-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-red-600">BHXH BHTN BHYT</p>
+                  <p className="text-sm font-medium text-red-600">
+                    BHXH BHTN BHYT
+                  </p>
                   <p className="text-lg md:text-2xl font-bold text-red-700">
                     {formatCurrency(result.bhxh_bhtn_bhyt_total || 0)}
                   </p>
@@ -154,7 +167,9 @@ export function EmployeeLookupResult({
             <Card className="col-span-2 bg-emerald-50 border-emerald-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-emerald-600">Lương Thực Nhận Cuối Kỳ</p>
+                  <p className="text-sm font-medium text-emerald-600">
+                    Lương Thực Nhận Cuối Kỳ
+                  </p>
                   <p className="text-lg md:text-2xl font-bold text-emerald-700">
                     {formatCurrency(result.tien_luong_thuc_nhan_cuoi_ky || 0)}
                   </p>
@@ -187,7 +202,9 @@ export function EmployeeLookupResult({
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-6 h-6 text-green-600" />
                   <div>
-                    <p className="font-medium text-green-800">Đã ký nhận lương</p>
+                    <p className="font-medium text-green-800">
+                      Đã ký nhận lương
+                    </p>
                     <p className="text-sm text-green-600">
                       Người ký: {result.signed_by_name}
                     </p>
@@ -207,10 +224,12 @@ export function EmployeeLookupResult({
                   <div className="flex items-center gap-3">
                     <Clock className="w-6 h-6 text-amber-600" />
                     <div>
-                      <p className="font-medium text-amber-800">Chưa ký nhận lương</p>
+                      <p className="font-medium text-amber-800">
+                        Chưa ký nhận lương
+                      </p>
                       <p className="text-sm text-amber-600">
-                        Vui lòng ký nhận để xác nhận bạn đã nhận thông tin lương tháng{" "}
-                        {result.salary_month}
+                        Vui lòng ký nhận để xác nhận bạn đã nhận thông tin lương
+                        tháng {result.salary_month}
                       </p>
                     </div>
                   </div>
