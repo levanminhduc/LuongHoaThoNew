@@ -10,6 +10,8 @@ const RATE_LIMITS = {
   api: { requests: 100, windowMs: 60 * 1000 }, // 100 requests per minute
   payroll: { requests: 50, windowMs: 60 * 1000 }, // 50 requests per minute
   admin: { requests: 200, windowMs: 60 * 1000 }, // 200 requests per minute for admin
+  passwordReset: { requests: 5, windowMs: 15 * 60 * 1000 },
+  passwordChange: { requests: 3, windowMs: 60 * 1000 },
 };
 
 // Rate limiting middleware
