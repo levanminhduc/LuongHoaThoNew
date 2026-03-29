@@ -37,7 +37,9 @@ function normalizeDailyRecords(value: unknown): DailyExportRecord[] {
     const rawDay =
       "day" in item ? item.day : "work_day" in item ? item.work_day : undefined;
     const day =
-      typeof rawDay === "number" ? rawDay : Number.parseInt(String(rawDay ?? ""), 10);
+      typeof rawDay === "number"
+        ? rawDay
+        : Number.parseInt(String(rawDay ?? ""), 10);
     if (!Number.isInteger(day) || day < 1 || day > 31) return [];
 
     const rawCheckOut =
@@ -50,7 +52,8 @@ function normalizeDailyRecords(value: unknown): DailyExportRecord[] {
     return [
       {
         day,
-        checkOut: typeof rawCheckOut === "string" ? formatTimeHHmm(rawCheckOut) : "",
+        checkOut:
+          typeof rawCheckOut === "string" ? formatTimeHHmm(rawCheckOut) : "",
       },
     ];
   });
@@ -60,7 +63,8 @@ function naturalSortDepartments(a: string, b: string): number {
   const xtPattern = /^XT(\d+)$/i;
   const matchA = a.match(xtPattern);
   const matchB = b.match(xtPattern);
-  if (matchA && matchB) return parseInt(matchA[1], 10) - parseInt(matchB[1], 10);
+  if (matchA && matchB)
+    return parseInt(matchA[1], 10) - parseInt(matchB[1], 10);
   if (matchA && !matchB) return -1;
   if (!matchA && matchB) return 1;
   return a.localeCompare(b, "vi", { sensitivity: "base" });
@@ -77,7 +81,11 @@ const border = {
 
 const headerStyle = {
   font: { bold: true, sz: 11, name: "Times New Roman" },
-  alignment: { horizontal: "center" as const, vertical: "center" as const, wrapText: true },
+  alignment: {
+    horizontal: "center" as const,
+    vertical: "center" as const,
+    wrapText: true,
+  },
   border,
 };
 
@@ -88,7 +96,12 @@ const dataStyle = {
 };
 
 const deptStyle = {
-  font: { bold: true, sz: 11, name: "Times New Roman", color: { rgb: "1F4E79" } },
+  font: {
+    bold: true,
+    sz: 11,
+    name: "Times New Roman",
+    color: { rgb: "1F4E79" },
+  },
   alignment: { horizontal: "left" as const, vertical: "center" as const },
   border,
 };
@@ -110,11 +123,18 @@ const subtitleStyle = {
 
 const bodyTextStyle = {
   font: { sz: 10, name: "Times New Roman" },
-  alignment: { horizontal: "left" as const, vertical: "center" as const, wrapText: true },
+  alignment: {
+    horizontal: "left" as const,
+    vertical: "center" as const,
+    wrapText: true,
+  },
 };
 
 function buildWorkbook(
-  sortedDepts: [string, { employee_id: string; full_name: string; department: string }[]][],
+  sortedDepts: [
+    string,
+    { employee_id: string; full_name: string; department: string }[],
+  ][],
   checkOutByEmployee: Map<string, Map<number, string>>,
   daysInMonth: number,
   periodYear: number,
@@ -152,15 +172,20 @@ function buildWorkbook(
 
   rows.push(Array(TOTAL_COLS).fill(""));
 
-  const text1 = "Qua sự bàn bạc, thống nhất giữa Lãnh đạo và đại diện người lao động của Công ty, nhằm nâng cao thu nhập cho CBCNV cũng như đảm bảo năng lực sản xuất,";
+  const text1 =
+    "Qua sự bàn bạc, thống nhất giữa Lãnh đạo và đại diện người lao động của Công ty, nhằm nâng cao thu nhập cho CBCNV cũng như đảm bảo năng lực sản xuất,";
   const text2 = "Công ty sẽ tổ chức làm thêm trên cơ sở hoàn toàn tự nguyện.";
-  const text3 = "Nếu CBNV đồng ý làm thêm giờ thì tự nguyện ký vào bảng đăng ký tăng ca tự nguyện sau:";
+  const text3 =
+    "Nếu CBNV đồng ý làm thêm giờ thì tự nguyện ký vào bảng đăng ký tăng ca tự nguyện sau:";
 
   for (const txt of [text1, text2, text3]) {
     const row = Array(TOTAL_COLS).fill("");
     row[4] = txt;
     rows.push(row);
-    merges.push({ s: { r: rows.length - 1, c: 4 }, e: { r: rows.length - 1, c: TOTAL_COLS - 1 } });
+    merges.push({
+      s: { r: rows.length - 1, c: 4 },
+      e: { r: rows.length - 1, c: TOTAL_COLS - 1 },
+    });
   }
 
   rows.push(Array(TOTAL_COLS).fill(""));
@@ -192,7 +217,10 @@ function buildWorkbook(
     const deptRow = Array(TOTAL_COLS).fill("");
     deptRow[4] = `TỔ ${dept}`;
     rows.push(deptRow);
-    merges.push({ s: { r: deptRowIdx, c: 0 }, e: { r: deptRowIdx, c: TOTAL_COLS - 1 } });
+    merges.push({
+      s: { r: deptRowIdx, c: 0 },
+      e: { r: deptRowIdx, c: TOTAL_COLS - 1 },
+    });
 
     for (const emp of empList) {
       const dataRow = Array(TOTAL_COLS).fill("");
@@ -268,13 +296,23 @@ export async function POST(request: NextRequest) {
   try {
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
-      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Không có quyền truy cập" },
+        { status: 401 },
+      );
     }
 
     const body: OvertimeExportBody = await request.json();
     const { period_year, period_month } = body;
 
-    if (!period_year || !period_month || period_month < 1 || period_month > 12 || period_year < 2000 || period_year > 2100) {
+    if (
+      !period_year ||
+      !period_month ||
+      period_month < 1 ||
+      period_month > 12 ||
+      period_year < 2000 ||
+      period_year > 2100
+    ) {
       return NextResponse.json(
         { error: "Thiếu hoặc sai tham số period_year/period_month" },
         { status: 400 },
@@ -291,10 +329,16 @@ export async function POST(request: NextRequest) {
       .eq("period_month", period_month);
 
     if (monthlyError) {
-      return NextResponse.json({ error: "Lỗi truy vấn dữ liệu chấm công" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Lỗi truy vấn dữ liệu chấm công" },
+        { status: 500 },
+      );
     }
     if (!monthlyData || monthlyData.length === 0) {
-      return NextResponse.json({ error: "Không có dữ liệu để xuất" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Không có dữ liệu để xuất" },
+        { status: 404 },
+      );
     }
 
     const employeeIds = monthlyData.map((m) => m.employee_id);
@@ -303,7 +347,9 @@ export async function POST(request: NextRequest) {
       .select("employee_id, full_name, department")
       .in("employee_id", employeeIds);
 
-    const employeeMap = new Map((employees || []).map((e) => [e.employee_id, e]));
+    const employeeMap = new Map(
+      (employees || []).map((e) => [e.employee_id, e]),
+    );
 
     const checkOutByEmployee = new Map<string, Map<number, string>>();
     const fallbackIds: string[] = [];
@@ -336,11 +382,15 @@ export async function POST(request: NextRequest) {
           checkOutByEmployee.set(d.employee_id, new Map());
         }
         const formatted = formatTimeHHmm(d.check_out_time);
-        if (formatted) checkOutByEmployee.get(d.employee_id)!.set(dayNum, formatted);
+        if (formatted)
+          checkOutByEmployee.get(d.employee_id)!.set(dayNum, formatted);
       }
     }
 
-    const byDept = new Map<string, { employee_id: string; full_name: string; department: string }[]>();
+    const byDept = new Map<
+      string,
+      { employee_id: string; full_name: string; department: string }[]
+    >();
     for (const m of monthlyData) {
       const emp = employeeMap.get(m.employee_id);
       const dept = emp?.department || "Không xác định";
@@ -356,7 +406,13 @@ export async function POST(request: NextRequest) {
       naturalSortDepartments(a, b),
     );
 
-    const workbook = buildWorkbook(sortedDepts, checkOutByEmployee, daysInMonth, period_year, period_month);
+    const workbook = buildWorkbook(
+      sortedDepts,
+      checkOutByEmployee,
+      daysInMonth,
+      period_year,
+      period_month,
+    );
 
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
     const mm = String(period_month).padStart(2, "0");
@@ -365,7 +421,8 @@ export async function POST(request: NextRequest) {
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": buffer.length.toString(),
       },
@@ -373,7 +430,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Overtime registration export error:", error);
     return NextResponse.json(
-      { error: "Có lỗi xảy ra khi xuất file", details: error instanceof Error ? error.message : "Unknown" },
+      {
+        error: "Có lỗi xảy ra khi xuất file",
+        details: error instanceof Error ? error.message : "Unknown",
+      },
       { status: 500 },
     );
   }
