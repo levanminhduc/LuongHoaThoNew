@@ -5,16 +5,16 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
+import { verifyEmployeeSession } from "@/lib/employee-session";
 
 export async function POST(request: NextRequest) {
   try {
-    const { employee_id, cccd, salary_month, is_t13 } = await request.json();
+    const body = await request.json();
+    const { salary_month, is_t13 } = body;
 
-    if (!employee_id || !cccd || !salary_month) {
+    if (!salary_month) {
       return NextResponse.json(
-        {
-          error: "Thiếu thông tin bắt buộc (mã nhân viên, CCCD, tháng lương)",
-        },
+        { error: "Thiếu thông tin tháng lương" },
         { status: 400 },
       );
     }
@@ -22,36 +22,54 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";
 
-    // Bước 1: Verify nhân viên và password
-    const { data: employee, error: employeeError } = await supabase
-      .from("employees")
-      .select(
-        "employee_id, full_name, cccd_hash, password_hash, last_password_change_at",
-      )
-      .eq("employee_id", employee_id.trim())
-      .single();
+    let authenticatedEmployeeId: string;
 
-    if (employeeError || !employee) {
-      return NextResponse.json(
-        { error: "Không tìm thấy nhân viên với mã nhân viên đã nhập" },
-        { status: 404 },
-      );
-    }
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const session = verifyEmployeeSession(authHeader.slice(7));
+      if (!session) {
+        return NextResponse.json(
+          { error: "Phien lam viec het han", code: "SESSION_EXPIRED" },
+          { status: 401 },
+        );
+      }
+      authenticatedEmployeeId = session.employee_id;
+    } else {
+      const { employee_id, cccd } = body;
+      if (!employee_id || !cccd) {
+        return NextResponse.json(
+          { error: "Thiếu thông tin bắt buộc (mã nhân viên, CCCD)" },
+          { status: 400 },
+        );
+      }
 
-    // Bước 2: Verify password based on last_password_change_at
-    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
-    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
-    const hasChangedPassword = employee.last_password_change_at !== null;
-    const hashToVerify = hasChangedPassword
-      ? employee.password_hash
-      : employee.cccd_hash;
-    const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify);
-    if (!isValidPassword) {
-      // Custom error message based on whether user has changed password
-      const errorMsg = hasChangedPassword
-        ? "Mật khẩu không đúng"
-        : "Số CCCD không đúng";
-      return NextResponse.json({ error: errorMsg }, { status: 401 });
+      const { data: employee, error: employeeError } = await supabase
+        .from("employees")
+        .select(
+          "employee_id, full_name, cccd_hash, password_hash, last_password_change_at",
+        )
+        .eq("employee_id", employee_id.trim())
+        .single();
+
+      if (employeeError || !employee) {
+        return NextResponse.json(
+          { error: "Không tìm thấy nhân viên với mã nhân viên đã nhập" },
+          { status: 404 },
+        );
+      }
+
+      const hasChangedPassword = employee.last_password_change_at !== null;
+      const hashToVerify = hasChangedPassword
+        ? employee.password_hash
+        : employee.cccd_hash;
+      const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify);
+      if (!isValidPassword) {
+        const errorMsg = hasChangedPassword
+          ? "Mật khẩu không đúng"
+          : "Số CCCD không đúng";
+        return NextResponse.json({ error: errorMsg }, { status: 401 });
+      }
+      authenticatedEmployeeId = employee_id.trim();
     }
 
     // Bước 3: Lấy thông tin client để tracking
@@ -68,7 +86,7 @@ export async function POST(request: NextRequest) {
     const { data: signResult, error: signError } = await supabase.rpc(
       "auto_sign_salary",
       {
-        p_employee_id: employee_id.trim(),
+        p_employee_id: authenticatedEmployeeId,
         p_salary_month: salary_month.trim(),
         p_ip_address: clientIP,
         p_device_info: userAgent,

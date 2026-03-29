@@ -92,6 +92,45 @@ export function getPayrollSelect(isT13: boolean): string {
   return isT13 ? PAYROLL_SELECT_T13 : PAYROLL_SELECT_MONTHLY;
 }
 
+export const PAYROLL_SELECT_SUMMARY = `
+  id,
+  employee_id,
+  salary_month,
+  payroll_type,
+  source_file,
+  is_signed,
+  signed_at,
+  signed_by_name,
+  he_so_lam_viec,
+  he_so_phu_cap_ket_qua,
+  tien_khen_thuong_chuyen_can,
+  tien_tang_ca_vuot,
+  luong_cnkcp_vuot,
+  luong_hoc_viec_pc_luong,
+  bhxh_bhtn_bhyt_total,
+  tien_luong_thuc_nhan_cuoi_ky
+`;
+
+export const PAYROLL_SELECT_SUMMARY_T13 = `
+  id,
+  employee_id,
+  salary_month,
+  payroll_type,
+  source_file,
+  is_signed,
+  signed_at,
+  signed_by_name,
+  chi_dot_1_13,
+  chi_dot_2_13,
+  tong_luong_13,
+  so_thang_chia_13,
+  tong_sp_12_thang
+`;
+
+export function getPayrollSelectSummary(isT13: boolean): string {
+  return isT13 ? PAYROLL_SELECT_SUMMARY_T13 : PAYROLL_SELECT_SUMMARY;
+}
+
 export interface PayrollRecord {
   id: number;
   employee_id: string;

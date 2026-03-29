@@ -6,13 +6,14 @@ import {
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
 import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
+import { verifyEmployeeSession } from "@/lib/employee-session";
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, employee_id, cccd, salary_month, is_t13 } =
-      await request.json();
+    const body = await request.json();
+    const { action, salary_month, is_t13 } = body;
 
-    if (!action || !employee_id || !cccd) {
+    if (!action) {
       return NextResponse.json(
         { error: "Thiếu thông tin bắt buộc" },
         { status: 400 },
@@ -22,31 +23,67 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";
 
+    let authenticatedEmployeeId: string;
+
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const session = verifyEmployeeSession(authHeader.slice(7));
+      if (!session) {
+        return NextResponse.json(
+          { error: "Phien lam viec het han", code: "SESSION_EXPIRED" },
+          { status: 401 },
+        );
+      }
+      authenticatedEmployeeId = session.employee_id;
+    } else {
+      const { employee_id, cccd } = body;
+      if (!employee_id || !cccd) {
+        return NextResponse.json(
+          { error: "Thiếu thông tin bắt buộc" },
+          { status: 400 },
+        );
+      }
+
+      const { data: empData, error: empError } = await supabase
+        .from("employees")
+        .select(
+          "employee_id, full_name, department, chuc_vu, cccd_hash, password_hash, last_password_change_at",
+        )
+        .eq("employee_id", employee_id.trim())
+        .single();
+
+      if (empError || !empData) {
+        return NextResponse.json(
+          { error: "Không tìm thấy nhân viên với mã nhân viên đã nhập" },
+          { status: 404 },
+        );
+      }
+
+      const hasChangedPassword = empData.last_password_change_at !== null;
+      const hashToVerify = hasChangedPassword
+        ? empData.password_hash
+        : empData.cccd_hash;
+      const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify);
+
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { error: "Xác thực không thành công" },
+          { status: 401 },
+        );
+      }
+      authenticatedEmployeeId = employee_id.trim();
+    }
+
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select(
-        "employee_id, full_name, department, chuc_vu, cccd_hash, password_hash, last_password_change_at",
-      )
-      .eq("employee_id", employee_id.trim())
+      .select("employee_id, full_name, department, chuc_vu")
+      .eq("employee_id", authenticatedEmployeeId)
       .single();
 
     if (employeeError || !employee) {
       return NextResponse.json(
-        { error: "Không tìm thấy nhân viên với mã nhân viên đã nhập" },
+        { error: "Không tìm thấy nhân viên" },
         { status: 404 },
-      );
-    }
-
-    const hasChangedPassword = employee.last_password_change_at !== null;
-    const hashToVerify = hasChangedPassword
-      ? employee.password_hash
-      : employee.cccd_hash;
-    const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify);
-
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: "Xác thực không thành công" },
-        { status: 401 },
       );
     }
 
@@ -54,7 +91,7 @@ export async function POST(request: NextRequest) {
       let listQuery = supabase
         .from("payrolls")
         .select("salary_month, payroll_type")
-        .eq("employee_id", employee_id.trim());
+        .eq("employee_id", authenticatedEmployeeId);
 
       if (is_t13) {
         listQuery = listQuery.eq("payroll_type", "t13");
@@ -96,7 +133,7 @@ export async function POST(request: NextRequest) {
       let payrollQuery = supabase
         .from("payrolls")
         .select(getPayrollSelect(is_t13))
-        .eq("employee_id", employee_id.trim())
+        .eq("employee_id", authenticatedEmployeeId)
         .eq("salary_month", salary_month.trim());
 
       if (is_t13) {
@@ -122,7 +159,7 @@ export async function POST(request: NextRequest) {
       const baseResponse = {
         employee_id: employee.employee_id,
         full_name: employee.full_name,
-        cccd: cccd.trim(),
+        cccd: body.cccd ? body.cccd.trim() : "",
         position: employee.chuc_vu,
         department: employee.department,
         salary_month: payroll.salary_month,
