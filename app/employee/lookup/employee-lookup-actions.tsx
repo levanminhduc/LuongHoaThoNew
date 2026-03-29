@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar, FileText, Lock, Loader2 } from "lucide-react";
+import { T13_ENABLED } from "@/lib/feature-flags";
 
 interface EmployeeLookupActionsProps {
   onShowDetail: () => void;
@@ -19,7 +20,9 @@ export function EmployeeLookupActions({
   t13Loading,
 }: EmployeeLookupActionsProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div
+      className={`grid grid-cols-2 ${T13_ENABLED ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-2`}
+    >
       <Button
         variant="outline"
         size="sm"
@@ -40,22 +43,24 @@ export function EmployeeLookupActions({
         <span>Lịch Sử</span>
       </Button>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onShowT13}
-        disabled={t13Loading}
-        className="w-full min-h-[44px] flex items-center justify-center gap-2 text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300"
-      >
-        {t13Loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <>
-            <Calendar className="w-4 h-4 flex-shrink-0" />
-            <span>Lương T13</span>
-          </>
-        )}
-      </Button>
+      {T13_ENABLED && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onShowT13}
+          disabled={t13Loading}
+          className="w-full min-h-[44px] flex items-center justify-center gap-2 text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300"
+        >
+          {t13Loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Calendar className="w-4 h-4 flex-shrink-0" />
+              <span>Lương T13</span>
+            </>
+          )}
+        </Button>
+      )}
 
       <Button
         variant="outline"

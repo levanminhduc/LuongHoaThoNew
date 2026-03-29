@@ -23,6 +23,7 @@ import { Loader2, Search, Eye, EyeOff, Trash2, Info } from "lucide-react";
 import Link from "next/link";
 import { useEmployeeLookup } from "./use-employee-lookup";
 import { EmployeeLookupResult } from "./employee-lookup-result";
+import { T13_ENABLED } from "@/lib/feature-flags";
 
 const PayrollDetailModal = lazy(() =>
   import("./payroll-detail-modal").then((m) => ({
@@ -249,7 +250,7 @@ export function EmployeeLookup() {
           />
         )}
 
-        {state.t13Result && state.showT13DetailModal && (
+        {T13_ENABLED && state.t13Result && state.showT13DetailModal && (
           <PayrollDetailModalT13
             isOpen={state.showT13DetailModal}
             onClose={() =>
@@ -295,20 +296,23 @@ export function EmployeeLookup() {
           />
         )}
 
-        {state.employeeId && state.t13Result && state.showT13HistoryModal && (
-          <SalaryHistoryModal
-            isOpen={state.showT13HistoryModal}
-            onClose={() =>
-              dispatch({ type: "HIDE_MODAL", payload: "showT13HistoryModal" })
-            }
-            employeeId={state.employeeId}
-            cccd={state.cccd}
-            sessionToken={state.sessionToken || undefined}
-            currentMonth={state.t13Result.salary_month}
-            employeeName={state.t13Result.full_name}
-            isT13={true}
-          />
-        )}
+        {T13_ENABLED &&
+          state.employeeId &&
+          state.t13Result &&
+          state.showT13HistoryModal && (
+            <SalaryHistoryModal
+              isOpen={state.showT13HistoryModal}
+              onClose={() =>
+                dispatch({ type: "HIDE_MODAL", payload: "showT13HistoryModal" })
+              }
+              employeeId={state.employeeId}
+              cccd={state.cccd}
+              sessionToken={state.sessionToken || undefined}
+              currentMonth={state.t13Result.salary_month}
+              employeeName={state.t13Result.full_name}
+              isT13={true}
+            />
+          )}
 
         <ForgotPasswordModal
           isOpen={state.showForgotPasswordModal}
