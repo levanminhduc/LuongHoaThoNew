@@ -30,32 +30,21 @@ function verifyAdminToken(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("🔍 Search API called:", {
-      url: request.url,
-      timestamp: new Date().toISOString(),
-    });
-
     // Verify admin authentication
     const admin = verifyAdminToken(request);
     if (!admin) {
-      console.log("❌ Authentication failed");
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
         { status: 401 },
       );
     }
 
-    console.log("✅ Admin authenticated:", admin.username);
-
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
     const salaryMonth = searchParams.get("salary_month");
     const payrollType = searchParams.get("payroll_type") || "monthly";
 
-    console.log("📋 Search params:", { query, salaryMonth, payrollType });
-
     if (!query || query.length < 2) {
-      console.log("❌ Invalid query length");
       return NextResponse.json(
         { error: "Từ khóa tìm kiếm phải có ít nhất 2 ký tự" },
         { status: 400 },
@@ -63,7 +52,6 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    console.log("📡 Supabase client created");
 
     // Test basic database connectivity first
     try {
@@ -72,14 +60,8 @@ export async function GET(request: NextRequest) {
         .select("employee_id")
         .limit(1);
 
-      console.log("🔌 Database connectivity test:", {
-        success: !testError,
-        hasData: !!testData,
-        error: testError,
-      });
-
       if (testError) {
-        console.error("❌ Database connectivity failed:", testError);
+        console.error("Database connectivity failed:", testError?.message);
         return NextResponse.json(
           {
             error: "Không thể kết nối database. Vui lòng kiểm tra cấu hình.",
@@ -88,7 +70,7 @@ export async function GET(request: NextRequest) {
         );
       }
     } catch (connectError) {
-      console.error("❌ Database connection exception:", connectError);
+      console.error("Database connection exception:", connectError instanceof Error ? connectError.message : connectError);
       return NextResponse.json(
         {
           error: "Lỗi kết nối database nghiêm trọng.",
@@ -98,8 +80,6 @@ export async function GET(request: NextRequest) {
     }
 
     // First, check if tables have data using correct Supabase syntax
-    console.log("🔍 Checking table data...");
-
     const { count: payrollCount, error: payrollCountError } = await supabase
       .from("payrolls")
       .select("*", { count: "exact", head: true });
@@ -108,17 +88,8 @@ export async function GET(request: NextRequest) {
       .from("employees")
       .select("*", { count: "exact", head: true });
 
-    console.log("📊 Data check:", {
-      payrollCount: payrollCount || 0,
-      employeeCount: employeeCount || 0,
-      payrollCountError,
-      employeeCountError,
-    });
-
     // If count queries fail, try simple existence check
     if (payrollCountError || employeeCountError) {
-      console.log("⚠️ Count queries failed, trying simple existence check...");
-
       const { data: payrollExists, error: payrollExistsError } = await supabase
         .from("payrolls")
         .select("id")
@@ -127,20 +98,8 @@ export async function GET(request: NextRequest) {
       const { data: employeeExists, error: employeeExistsError } =
         await supabase.from("employees").select("employee_id").limit(1);
 
-      console.log("📊 Existence check:", {
-        payrollExists: !!payrollExists && payrollExists.length > 0,
-        employeeExists: !!employeeExists && employeeExists.length > 0,
-        payrollExistsError,
-        employeeExistsError,
-      });
-
       // If existence check also fails, there's a fundamental access issue
       if (payrollExistsError || employeeExistsError) {
-        console.error("❌ Database access failed:", {
-          payrollError: payrollExistsError,
-          employeeError: employeeExistsError,
-        });
-
         return NextResponse.json(
           {
             error:
@@ -193,7 +152,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log("🔍 Building query...");
     let payrollQuery = supabase
       .from("payrolls")
       .select(
@@ -227,28 +185,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log("📊 Query built, adding filters...");
-
     if (salaryMonth && salaryMonth !== "__EMPTY__") {
-      console.log("📅 Adding month filter:", salaryMonth);
       payrollQuery = payrollQuery.eq("salary_month", salaryMonth);
     }
 
-    console.log("🚀 Executing query...");
     const { data: payrollData, error: payrollError } =
       await payrollQuery.limit(20);
 
-    console.log("📊 Query result:", {
-      hasData: !!payrollData,
-      dataLength: payrollData?.length || 0,
-      hasError: !!payrollError,
-      error: payrollError,
-    });
-
     // If main query fails, try alternative approach
     if (payrollError) {
-      console.log("🔄 Main query failed, trying alternative approach...");
-
       // Try simple query without join first
       const { data: simpleData, error: simpleError } = await supabase
         .from("payrolls")
@@ -259,14 +204,8 @@ export async function GET(request: NextRequest) {
         .limit(20);
 
       if (simpleError) {
-        console.error("❌ Simple query also failed:", simpleError);
+        console.error("Simple query also failed:", simpleError?.message);
       } else {
-        console.log(
-          "✅ Simple query succeeded:",
-          simpleData?.length || 0,
-          "records",
-        );
-
         // If simple query works, the issue is with the join
         if (simpleData && simpleData.length > 0) {
           // Get employee data separately
@@ -284,8 +223,6 @@ export async function GET(request: NextRequest) {
                 (emp) => emp.employee_id === payroll.employee_id,
               ) || null,
           }));
-
-          console.log("✅ Manual join completed");
 
           // Use the manually joined data with type guards
           const results = joinedData
@@ -326,12 +263,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (payrollError) {
-      console.error("Error searching payroll data:", {
-        error: payrollError,
-        query,
-        salaryMonth,
-        timestamp: new Date().toISOString(),
-      });
+      console.error("Payroll search error:", payrollError?.message);
 
       // Provide more specific error messages
       let errorMessage = "Lỗi khi tìm kiếm dữ liệu lương";
@@ -401,11 +333,7 @@ export async function GET(request: NextRequest) {
       total: results.length,
     });
   } catch (error) {
-    console.error("❌ Employee search error:", {
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString(),
-    });
+    console.error("Employee search error:", error instanceof Error ? error.message : error);
 
     return NextResponse.json(
       {
@@ -439,10 +367,7 @@ export async function POST(request: NextRequest) {
       .order("salary_month", { ascending: false });
 
     if (monthsError) {
-      console.error("Error fetching salary months:", {
-        error: monthsError,
-        timestamp: new Date().toISOString(),
-      });
+      console.error("Salary months fetch error:", monthsError?.message);
 
       let errorMessage = "Lỗi khi lấy danh sách tháng lương";
 
