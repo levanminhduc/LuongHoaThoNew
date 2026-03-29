@@ -2,43 +2,11 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-
-// Rate limiting map (in production, use Redis)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+import { rateLimit } from "@/lib/security-middleware";
 
 // Constants
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 3; // 3 attempts per minute
-
-// Rate limiting helper
-function checkRateLimit(identifier: string): {
-  allowed: boolean;
-  message?: string;
-} {
-  const now = Date.now();
-  const limit = rateLimitMap.get(identifier);
-
-  if (!limit || now > limit.resetTime) {
-    rateLimitMap.set(identifier, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
-    return { allowed: true };
-  }
-
-  if (limit.count >= RATE_LIMIT_MAX) {
-    const waitTime = Math.ceil((limit.resetTime - now) / 1000);
-    return {
-      allowed: false,
-      message: `Quá nhiều yêu cầu. Vui lòng thử lại sau ${waitTime} giây.`,
-    };
-  }
-
-  limit.count++;
-  return { allowed: true };
-}
 
 // Security logging helper
 async function logSecurityEvent(
@@ -74,10 +42,8 @@ export async function POST(request: NextRequest) {
       "unknown";
 
     // Check rate limit
-    const rateLimit = checkRateLimit(`change-pwd:${ip}:${employee_id}`);
-    if (!rateLimit.allowed) {
-      return NextResponse.json({ error: rateLimit.message }, { status: 429 });
-    }
+    const rateLimitResult = rateLimit("passwordChange")(request);
+    if (rateLimitResult) return rateLimitResult;
 
     // Validate input
     if (!employee_id || !current_password || !new_password) {
