@@ -3,15 +3,11 @@ import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { rateLimit } from "@/lib/security-middleware";
 
-// Rate limiting map (in production, use Redis/KV store)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-// Constants
+// Constants for account-level lockout (passed to DB RPC)
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX = 5; // 5 attempts per 15 minutes
 
 // Hash IP for privacy (don't store raw IPs)
 function hashIp(ip: string): string {
@@ -30,34 +26,6 @@ function shrinkUA(ua: string | null): string {
     ua.match(/(Chrome|Firefox|Safari|Edge|Opera)\/[\d.]+/)?.[0] || "";
   const os = ua.match(/(Windows|Mac|Linux|Android|iOS)[\s\d.]*/)?.[0] || "";
   return `${browser} ${os}`.trim() || "unknown";
-}
-
-// Rate limiting helper
-function checkRateLimit(identifier: string): {
-  allowed: boolean;
-  message?: string;
-} {
-  const now = Date.now();
-  const limit = rateLimitMap.get(identifier);
-
-  if (!limit || now > limit.resetTime) {
-    rateLimitMap.set(identifier, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
-    return { allowed: true };
-  }
-
-  if (limit.count >= RATE_LIMIT_MAX) {
-    const waitTime = Math.ceil((limit.resetTime - now) / 1000 / 60);
-    return {
-      allowed: false,
-      message: `Quá nhiều yêu cầu. Vui lòng thử lại sau ${waitTime} phút.`,
-    };
-  }
-
-  limit.count++;
-  return { allowed: true };
 }
 
 // Log security event
@@ -134,10 +102,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check rate limit
-    const rateLimit = checkRateLimit(`pw-reset:${ip}:${employee_code}`);
-    if (!rateLimit.allowed) {
-      return NextResponse.json({ error: rateLimit.message }, { status: 429 });
-    }
+    const rateLimitResult = rateLimit("passwordReset")(request);
+    if (rateLimitResult) return rateLimitResult;
 
     const supabase = createServiceClient();
 
