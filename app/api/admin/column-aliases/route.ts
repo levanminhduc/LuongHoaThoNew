@@ -7,7 +7,7 @@ import {
   type AliasSearchParams,
   type ApiResponse,
 } from "@/lib/column-alias-config";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -17,7 +17,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;

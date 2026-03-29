@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 async function verifyAdminToken(token: string): Promise<boolean> {
   try {
-    jwt.verify(token, JWT_SECRET);
+    jwt.verify(token, getJwtSecret());
     return true;
   } catch {
     return false;

@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import type { JWTPayload } from "@/lib/auth";
 import { getOpenAPISpec } from "@/lib/openapi-spec";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 const ALLOWED_ROLES = ["admin", "giam_doc", "ke_toan", "nguoi_lap_bieu"];
 
@@ -19,7 +19,7 @@ function verifyApiDocsAccess(request: NextRequest): JWTPayload | null {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     if (!ALLOWED_ROLES.includes(decoded.role)) {
       return null;
     }

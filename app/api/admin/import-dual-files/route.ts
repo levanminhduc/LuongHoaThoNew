@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
 import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { PayrollValidator } from "@/lib/payroll-validation";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface ColumnMapping {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader.split(" ")[1];
 
     try {
-      jwt.verify(token, JWT_SECRET);
+      jwt.verify(token, getJwtSecret());
     } catch {
       const apiError = ApiErrorHandler.createError(
         ApiErrorHandler.ErrorCodes.INVALID_TOKEN,

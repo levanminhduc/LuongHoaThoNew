@@ -3,7 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 interface ImportHistoryRecord {
   id?: string;
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     let decoded: JWTPayload;
     try {
-      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+      decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     const token = authHeader.split(" ")[1];
 
     try {
-      jwt.verify(token, JWT_SECRET);
+      jwt.verify(token, getJwtSecret());
     } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -244,7 +244,7 @@ export async function DELETE(request: NextRequest) {
     const token = authHeader.split(" ")[1];
 
     try {
-      jwt.verify(token, JWT_SECRET);
+      jwt.verify(token, getJwtSecret());
     } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }

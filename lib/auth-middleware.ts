@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 export interface AuthContext {
   user: JWTPayload;
@@ -19,7 +19,7 @@ export function verifyToken(request: NextRequest): AuthContext | null {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
 
     return {
       user: decoded,

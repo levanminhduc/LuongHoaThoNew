@@ -3,7 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { parseExcelFile, type PayrollData } from "@/lib/excel-parser";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
@@ -14,7 +14,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;

@@ -12,7 +12,7 @@ import {
   validateSalaryMonth,
   validateEmployeeExists,
 } from "@/lib/import-error-collector";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 // Type definitions for mapping
 interface ColumnAlias {
@@ -38,7 +38,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { role?: string };
+    const decoded = jwt.verify(token, getJwtSecret()) as { role?: string };
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;

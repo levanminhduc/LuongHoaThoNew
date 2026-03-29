@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authenticateUser, type JWTPayload } from "@/lib/auth";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 import { rateLimit } from "@/lib/security-middleware";
 
 /**
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       permissions: user.permissions,
     };
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign(tokenPayload, getJwtSecret(), { expiresIn: "24h" });
 
     const response = NextResponse.json({
       success: true,

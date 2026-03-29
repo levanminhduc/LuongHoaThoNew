@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import type { JWTPayload } from "@/lib/auth";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 function verifyAdminToken(request: NextRequest) {
@@ -15,7 +15,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
