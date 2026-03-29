@@ -1,6 +1,12 @@
 "use client";
 
-import { useReducer, useRef, useEffect, useCallback, useLayoutEffect } from "react";
+import {
+  useReducer,
+  useRef,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import type { FormEvent, ChangeEvent } from "react";
 import type { PayrollResult } from "@/lib/types/payroll";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
@@ -49,6 +55,9 @@ interface LookupState {
   signSuccess: boolean;
   t13SigningLoading: boolean;
   t13SignSuccess: boolean;
+  detailData: PayrollResult | null;
+  detailLoading: boolean;
+  t13DetailData: PayrollResult | null;
   showDetailModal: boolean;
   showT13Modal: boolean;
   showT13DetailModal: boolean;
@@ -67,7 +76,10 @@ type LookupAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_T13_LOADING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string }
-  | { type: "LOOKUP_SUCCESS"; payload: { result: PayrollResult; sessionToken: string } }
+  | {
+      type: "LOOKUP_SUCCESS";
+      payload: { result: PayrollResult; sessionToken: string };
+    }
   | { type: "T13_LOOKUP_SUCCESS"; payload: { result: PayrollResult } }
   | { type: "SET_RESULT"; payload: PayrollResult | null }
   | { type: "SIGN_START" }
@@ -76,10 +88,40 @@ type LookupAction =
   | { type: "T13_SIGN_START" }
   | { type: "T13_SIGN_SUCCESS"; payload: Partial<PayrollResult> }
   | { type: "T13_SIGN_END" }
-  | { type: "SHOW_MODAL"; payload: keyof Pick<LookupState, "showDetailModal" | "showT13Modal" | "showT13DetailModal" | "showPasswordModal" | "showHistoryModal" | "showT13HistoryModal" | "showForgotPasswordModal"> }
-  | { type: "HIDE_MODAL"; payload: keyof Pick<LookupState, "showDetailModal" | "showT13Modal" | "showT13DetailModal" | "showPasswordModal" | "showHistoryModal" | "showT13HistoryModal" | "showForgotPasswordModal"> }
+  | {
+      type: "SHOW_MODAL";
+      payload: keyof Pick<
+        LookupState,
+        | "showDetailModal"
+        | "showT13Modal"
+        | "showT13DetailModal"
+        | "showPasswordModal"
+        | "showHistoryModal"
+        | "showT13HistoryModal"
+        | "showForgotPasswordModal"
+      >;
+    }
+  | {
+      type: "HIDE_MODAL";
+      payload: keyof Pick<
+        LookupState,
+        | "showDetailModal"
+        | "showT13Modal"
+        | "showT13DetailModal"
+        | "showPasswordModal"
+        | "showHistoryModal"
+        | "showT13HistoryModal"
+        | "showForgotPasswordModal"
+      >;
+    }
   | { type: "SET_REMEMBER"; payload: boolean }
-  | { type: "RESTORE_CREDENTIALS"; payload: { employeeId: string; password: string } }
+  | { type: "SET_DETAIL_LOADING"; payload: boolean }
+  | { type: "SET_DETAIL_DATA"; payload: PayrollResult | null }
+  | { type: "SET_T13_DETAIL_DATA"; payload: PayrollResult | null }
+  | {
+      type: "RESTORE_CREDENTIALS";
+      payload: { employeeId: string; password: string };
+    }
   | { type: "CLEAR_CREDENTIALS" }
   | { type: "CLEAR_MUST_CHANGE_PASSWORD" };
 
@@ -100,6 +142,9 @@ const initialState: LookupState = {
   showDetailModal: false,
   showT13Modal: false,
   showT13DetailModal: false,
+  detailData: null,
+  detailLoading: false,
+  t13DetailData: null,
   showPasswordModal: false,
   showHistoryModal: false,
   showT13HistoryModal: false,
@@ -158,7 +203,9 @@ function lookupReducer(state: LookupState, action: LookupAction): LookupState {
         ...state,
         t13SigningLoading: false,
         t13SignSuccess: true,
-        t13Result: state.t13Result ? { ...state.t13Result, ...action.payload } : null,
+        t13Result: state.t13Result
+          ? { ...state.t13Result, ...action.payload }
+          : null,
       };
     case "T13_SIGN_END":
       return { ...state, t13SigningLoading: false };
@@ -168,6 +215,12 @@ function lookupReducer(state: LookupState, action: LookupAction): LookupState {
       return { ...state, [action.payload]: false };
     case "SET_REMEMBER":
       return { ...state, rememberPassword: action.payload };
+    case "SET_DETAIL_LOADING":
+      return { ...state, detailLoading: action.payload };
+    case "SET_DETAIL_DATA":
+      return { ...state, detailData: action.payload, detailLoading: false };
+    case "SET_T13_DETAIL_DATA":
+      return { ...state, t13DetailData: action.payload };
     case "RESTORE_CREDENTIALS":
       return {
         ...state,
@@ -209,18 +262,22 @@ export function useEmployeeLookup() {
   }, []);
 
   useLayoutEffect(() => {
-    if (cursorPositionRef.current === null || !employeeIdInputRef.current) return;
+    if (cursorPositionRef.current === null || !employeeIdInputRef.current)
+      return;
     const input = employeeIdInputRef.current;
     const position = cursorPositionRef.current;
     input.setSelectionRange(position, position);
     cursorPositionRef.current = null;
   }, [state.employeeId]);
 
-  const handleEmployeeIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    cursorPositionRef.current = input.selectionStart;
-    dispatch({ type: "SET_EMPLOYEE_ID", payload: input.value.toUpperCase() });
-  }, []);
+  const handleEmployeeIdChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const input = e.target;
+      cursorPositionRef.current = input.selectionStart;
+      dispatch({ type: "SET_EMPLOYEE_ID", payload: input.value.toUpperCase() });
+    },
+    [],
+  );
 
   const handleClearSavedCredentials = useCallback(() => {
     clearCredentials();
@@ -237,58 +294,70 @@ export function useEmployeeLookup() {
     return headers;
   }, [state.sessionToken]);
 
-  const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    dispatch({ type: "SET_LOADING", payload: true });
-    dispatch({ type: "SET_ERROR", payload: "" });
-    dispatch({ type: "SET_RESULT", payload: null });
+  const handleSubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      dispatch({ type: "SET_LOADING", payload: true });
+      dispatch({ type: "SET_ERROR", payload: "" });
+      dispatch({ type: "SET_RESULT", payload: null });
 
-    try {
-      const response = await fetch("/api/employee/lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employee_id: state.employeeId.trim(),
-          cccd: state.cccd.trim(),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        dispatch({
-          type: "LOOKUP_SUCCESS",
-          payload: {
-            result: data.payroll,
-            sessionToken: data.payroll.session_token || "",
-          },
+      try {
+        const response = await fetch("/api/employee/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            employee_id: state.employeeId.trim(),
+            cccd: state.cccd.trim(),
+          }),
         });
 
-        if (state.rememberPassword) {
-          saveCredentials(state.employeeId.trim(), state.cccd.trim());
-        } else {
-          clearCredentials();
-        }
+        const data = await response.json();
 
-        setTimeout(() => {
-          salaryInfoRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
+        if (response.ok) {
+          dispatch({
+            type: "LOOKUP_SUCCESS",
+            payload: {
+              result: data.payroll,
+              sessionToken: data.session_token || "",
+            },
           });
-        }, 100);
-      } else {
-        dispatch({ type: "SET_ERROR", payload: data.error || "Không tìm thấy thông tin lương" });
+
+          if (state.rememberPassword) {
+            saveCredentials(state.employeeId.trim(), state.cccd.trim());
+          } else {
+            clearCredentials();
+          }
+
+          setTimeout(() => {
+            salaryInfoRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }, 100);
+        } else {
+          dispatch({
+            type: "SET_ERROR",
+            payload: data.error || "Không tìm thấy thông tin lương",
+          });
+          dispatch({ type: "SET_LOADING", payload: false });
+        }
+      } catch {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Có lỗi xảy ra khi tra cứu thông tin",
+        });
         dispatch({ type: "SET_LOADING", payload: false });
       }
-    } catch {
-      dispatch({ type: "SET_ERROR", payload: "Có lỗi xảy ra khi tra cứu thông tin" });
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  }, [state.employeeId, state.cccd, state.rememberPassword]);
+    },
+    [state.employeeId, state.cccd, state.rememberPassword],
+  );
 
   const handleT13Submit = useCallback(async () => {
     if (!state.employeeId || !state.cccd) {
-      dispatch({ type: "SET_ERROR", payload: "Vui lòng nhập đầy đủ Mã Nhân Viên và Mật khẩu / CCCD" });
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Vui lòng nhập đầy đủ Mã Nhân Viên và Mật khẩu / CCCD",
+      });
       return;
     }
 
@@ -309,7 +378,10 @@ export function useEmployeeLookup() {
       const data = await response.json();
 
       if (response.ok) {
-        dispatch({ type: "T13_LOOKUP_SUCCESS", payload: { result: data.payroll } });
+        dispatch({
+          type: "T13_LOOKUP_SUCCESS",
+          payload: { result: data.payroll },
+        });
 
         if (state.rememberPassword) {
           saveCredentials(state.employeeId.trim(), state.cccd.trim());
@@ -317,11 +389,17 @@ export function useEmployeeLookup() {
           clearCredentials();
         }
       } else {
-        dispatch({ type: "SET_ERROR", payload: data.error || "Không tìm thấy thông tin lương T13" });
+        dispatch({
+          type: "SET_ERROR",
+          payload: data.error || "Không tìm thấy thông tin lương T13",
+        });
         dispatch({ type: "SET_T13_LOADING", payload: false });
       }
     } catch {
-      dispatch({ type: "SET_ERROR", payload: "Có lỗi xảy ra khi tra cứu thông tin" });
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Có lỗi xảy ra khi tra cứu thông tin",
+      });
       dispatch({ type: "SET_T13_LOADING", payload: false });
     }
   }, [state.employeeId, state.cccd, state.rememberPassword]);
@@ -359,21 +437,46 @@ export function useEmployeeLookup() {
         setTimeout(() => dispatch({ type: "SIGN_END" }), 5000);
       } else {
         if (data.error?.includes("đã ký nhận lương")) {
-          dispatch({ type: "SET_ERROR", payload: "Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái." });
+          dispatch({
+            type: "SET_ERROR",
+            payload:
+              "Bạn đã ký nhận lương tháng này rồi. Vui lòng refresh trang để cập nhật trạng thái.",
+          });
         } else if (data.error?.includes("CCCD không đúng")) {
-          dispatch({ type: "SET_ERROR", payload: "Mật khẩu / CCCD không đúng. Vui lòng kiểm tra lại." });
+          dispatch({
+            type: "SET_ERROR",
+            payload: "Mật khẩu / CCCD không đúng. Vui lòng kiểm tra lại.",
+          });
         } else if (data.error?.includes("không tìm thấy nhân viên")) {
-          dispatch({ type: "SET_ERROR", payload: "Không tìm thấy nhân viên với mã nhân viên đã nhập." });
+          dispatch({
+            type: "SET_ERROR",
+            payload: "Không tìm thấy nhân viên với mã nhân viên đã nhập.",
+          });
         } else {
-          dispatch({ type: "SET_ERROR", payload: data.error || `Không thể ký nhận lương (Mã lỗi: ${response.status})` });
+          dispatch({
+            type: "SET_ERROR",
+            payload:
+              data.error ||
+              `Không thể ký nhận lương (Mã lỗi: ${response.status})`,
+          });
         }
         dispatch({ type: "SIGN_END" });
       }
     } catch {
-      dispatch({ type: "SET_ERROR", payload: "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại." });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.",
+      });
       dispatch({ type: "SIGN_END" });
     }
-  }, [state.result, state.employeeId, state.cccd, state.sessionToken, getAuthHeaders]);
+  }, [
+    state.result,
+    state.employeeId,
+    state.cccd,
+    state.sessionToken,
+    getAuthHeaders,
+  ]);
 
   const handleSignT13 = useCallback(async () => {
     if (!state.t13Result || !state.employeeId || !state.cccd) return;
@@ -408,14 +511,73 @@ export function useEmployeeLookup() {
         });
         setTimeout(() => dispatch({ type: "T13_SIGN_END" }), 5000);
       } else {
-        dispatch({ type: "SET_ERROR", payload: data.error || "Không thể ký nhận lương" });
+        dispatch({
+          type: "SET_ERROR",
+          payload: data.error || "Không thể ký nhận lương",
+        });
         dispatch({ type: "T13_SIGN_END" });
       }
     } catch {
-      dispatch({ type: "SET_ERROR", payload: "Lỗi kết nối mạng. Vui lòng thử lại." });
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Lỗi kết nối mạng. Vui lòng thử lại.",
+      });
       dispatch({ type: "T13_SIGN_END" });
     }
-  }, [state.t13Result, state.employeeId, state.cccd, state.sessionToken, getAuthHeaders]);
+  }, [
+    state.t13Result,
+    state.employeeId,
+    state.cccd,
+    state.sessionToken,
+    getAuthHeaders,
+  ]);
+
+  const handleShowDetail = useCallback(
+    async (isT13 = false) => {
+      if (!state.sessionToken) return;
+
+      dispatch({ type: "SET_DETAIL_LOADING", payload: true });
+
+      try {
+        const params = new URLSearchParams();
+        if (isT13) params.set("is_t13", "true");
+
+        const response = await fetch(
+          `/api/employee/detail?${params.toString()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${state.sessionToken}`,
+            },
+          },
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          if (isT13) {
+            dispatch({ type: "SET_T13_DETAIL_DATA", payload: data.payroll });
+            dispatch({ type: "SHOW_MODAL", payload: "showT13DetailModal" });
+          } else {
+            dispatch({ type: "SET_DETAIL_DATA", payload: data.payroll });
+            dispatch({ type: "SHOW_MODAL", payload: "showDetailModal" });
+          }
+        } else {
+          dispatch({
+            type: "SET_ERROR",
+            payload: data.error || "Không thể tải chi tiết lương",
+          });
+          dispatch({ type: "SET_DETAIL_LOADING", payload: false });
+        }
+      } catch {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Có lỗi xảy ra khi tải chi tiết lương",
+        });
+        dispatch({ type: "SET_DETAIL_LOADING", payload: false });
+      }
+    },
+    [state.sessionToken],
+  );
 
   return {
     state,
@@ -428,6 +590,7 @@ export function useEmployeeLookup() {
       handleT13Submit,
       handleSignSalary,
       handleSignT13,
+      handleShowDetail,
     },
   };
 }

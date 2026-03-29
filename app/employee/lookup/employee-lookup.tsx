@@ -219,9 +219,7 @@ export function EmployeeLookup() {
             signingLoading={state.signingLoading}
             signSuccess={state.signSuccess}
             onSign={handlers.handleSignSalary}
-            onShowDetail={() =>
-              dispatch({ type: "SHOW_MODAL", payload: "showDetailModal" })
-            }
+            onShowDetail={() => handlers.handleShowDetail(false)}
             onShowHistory={() =>
               dispatch({ type: "SHOW_MODAL", payload: "showHistoryModal" })
             }
@@ -247,7 +245,7 @@ export function EmployeeLookup() {
             onClose={() =>
               dispatch({ type: "HIDE_MODAL", payload: "showDetailModal" })
             }
-            payrollData={state.result}
+            payrollData={state.detailData || state.result}
           />
         )}
 
@@ -257,7 +255,7 @@ export function EmployeeLookup() {
             onClose={() =>
               dispatch({ type: "HIDE_MODAL", payload: "showT13DetailModal" })
             }
-            payrollData={state.t13Result}
+            payrollData={state.t13DetailData || state.t13Result}
           />
         )}
 
