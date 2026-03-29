@@ -114,7 +114,7 @@ const bodyTextStyle = {
 };
 
 function buildWorkbook(
-  sortedDepts: [string, { employee_id: string; full_name: string }[]][],
+  sortedDepts: [string, { employee_id: string; full_name: string; department: string }[]][],
   checkOutByEmployee: Map<string, Map<number, string>>,
   daysInMonth: number,
   periodYear: number,
@@ -199,6 +199,7 @@ function buildWorkbook(
       const shortId = emp.employee_id.replace(/^DB0*/, "");
       dataRow[0] = shortId;
       dataRow[2] = emp.employee_id;
+      dataRow[3] = emp.department;
       const nameParts = emp.full_name.split(" ");
       const lastName = nameParts.pop() || "";
       const firstName = nameParts.join(" ");
@@ -339,7 +340,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const byDept = new Map<string, { employee_id: string; full_name: string }[]>();
+    const byDept = new Map<string, { employee_id: string; full_name: string; department: string }[]>();
     for (const m of monthlyData) {
       const emp = employeeMap.get(m.employee_id);
       const dept = emp?.department || "Không xác định";
@@ -347,6 +348,7 @@ export async function POST(request: NextRequest) {
       byDept.get(dept)!.push({
         employee_id: m.employee_id,
         full_name: emp?.full_name || "",
+        department: dept,
       });
     }
 
