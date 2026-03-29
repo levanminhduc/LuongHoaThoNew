@@ -70,7 +70,10 @@ export async function GET(request: NextRequest) {
         );
       }
     } catch (connectError) {
-      console.error("Database connection exception:", connectError instanceof Error ? connectError.message : connectError);
+      console.error(
+        "Database connection exception:",
+        connectError instanceof Error ? connectError.message : connectError,
+      );
       return NextResponse.json(
         {
           error: "Lỗi kết nối database nghiêm trọng.",
@@ -333,7 +336,10 @@ export async function GET(request: NextRequest) {
       total: results.length,
     });
   } catch (error) {
-    console.error("Employee search error:", error instanceof Error ? error.message : error);
+    console.error(
+      "Employee search error:",
+      error instanceof Error ? error.message : error,
+    );
 
     return NextResponse.json(
       {

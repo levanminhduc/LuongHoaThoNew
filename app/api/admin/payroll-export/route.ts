@@ -327,7 +327,9 @@ export async function GET(request: NextRequest) {
 
       if (signatureLog || record.is_signed) {
         row.push("Đã ký");
-        row.push(signatureLog ? formatSignedAtDate(signatureLog.signed_at) : "");
+        row.push(
+          signatureLog ? formatSignedAtDate(signatureLog.signed_at) : "",
+        );
       } else {
         row.push("");
         row.push("");
@@ -464,7 +466,8 @@ export async function GET(request: NextRequest) {
     signatureDateRow[sigCols.center] = managementSignatures.ke_toan?.signed_at
       ? formatSignedAtDateTime(managementSignatures.ke_toan.signed_at)
       : "";
-    signatureDateRow[sigCols.right] = managementSignatures.nguoi_lap_bieu?.signed_at
+    signatureDateRow[sigCols.right] = managementSignatures.nguoi_lap_bieu
+      ?.signed_at
       ? formatSignedAtDateTime(managementSignatures.nguoi_lap_bieu.signed_at)
       : "";
     worksheetData.push(signatureDateRow);

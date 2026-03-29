@@ -47,7 +47,17 @@ const BLOCK_SEPARATOR = 3; // empty rows between departments
 
 function blockRowCount(dataRowCount: number): number {
   // title(5) + header(1) + dataRows + total(1) + sigGap(2) + sigHeader(1) + sigEmpty(4) + sigDate(1) + sigData(1)
-  return TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE + 1 + SIG_EMPTY_LINES + 1 + 1;
+  return (
+    TITLE_ROW_COUNT +
+    1 +
+    dataRowCount +
+    1 +
+    SIG_GAP_BEFORE +
+    1 +
+    SIG_EMPTY_LINES +
+    1 +
+    1
+  );
 }
 
 function buildDeptBlock(
@@ -56,7 +66,11 @@ function buildDeptBlock(
   headers: string[],
   visibleFields: string[],
   signatureLogsMap: Map<string, SignatureLog>,
-  managementSigs: { giam_doc: ManagementSig | null; ke_toan: ManagementSig | null; nguoi_lap_bieu: ManagementSig | null },
+  managementSigs: {
+    giam_doc: ManagementSig | null;
+    ke_toan: ManagementSig | null;
+    nguoi_lap_bieu: ManagementSig | null;
+  },
   isT13: boolean,
   salaryMonth: string,
 ): unknown[][] {
@@ -80,7 +94,9 @@ function buildDeptBlock(
 
   const row3 = new Array(totalColumns).fill("");
   row3[0] = "TỔNG CTY CP DỆT MAY HÒA THỌ";
-  row3[15] = isT13 ? "BẢNG THANH TOÁN LƯƠNG THÁNG 13" : "BẢNG THANH TOÁN TIỀN LƯƠNG";
+  row3[15] = isT13
+    ? "BẢNG THANH TOÁN LƯƠNG THÁNG 13"
+    : "BẢNG THANH TOÁN TIỀN LƯƠNG";
   rows.push(row3);
 
   const row4 = new Array(totalColumns).fill("");
@@ -114,7 +130,9 @@ function buildDeptBlock(
       visibleFields.forEach((field) => {
         if (field === "salary_month") {
           const name = record.employees?.full_name || "";
-          row.push(name.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase()));
+          row.push(
+            name.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase()),
+          );
         } else if (field === "employee_id") {
           row.push(record[field] ?? "");
         } else {
@@ -146,7 +164,10 @@ function buildDeptBlock(
     dataRows.forEach((row) => {
       const val = (row as unknown[])[idx + 1];
       const numVal = typeof val === "number" ? val : parseFloat(String(val));
-      if (!isNaN(numVal)) { sum += numVal; hasValue = true; }
+      if (!isNaN(numVal)) {
+        sum += numVal;
+        hasValue = true;
+      }
     });
     if (hasValue) totalRow[idx + 1] = sum;
   });
@@ -166,7 +187,8 @@ function buildDeptBlock(
   sigHeaderRow[sigCols.right] = "Người Lập Biểu";
   rows.push(sigHeaderRow);
 
-  for (let i = 0; i < SIG_EMPTY_LINES; i++) rows.push(new Array(totalColumns).fill(""));
+  for (let i = 0; i < SIG_EMPTY_LINES; i++)
+    rows.push(new Array(totalColumns).fill(""));
 
   const sigDateRow = new Array(totalColumns).fill("");
   sigDateRow[sigCols.left] = managementSigs.giam_doc?.signed_at
@@ -181,9 +203,12 @@ function buildDeptBlock(
   rows.push(sigDateRow);
 
   const sigDataRow = new Array(totalColumns).fill("");
-  sigDataRow[sigCols.left] = managementSigs.giam_doc?.signed_by_name ?? "Chưa ký";
-  sigDataRow[sigCols.center] = managementSigs.ke_toan?.signed_by_name ?? "Chưa ký";
-  sigDataRow[sigCols.right] = managementSigs.nguoi_lap_bieu?.signed_by_name ?? "Chưa ký";
+  sigDataRow[sigCols.left] =
+    managementSigs.giam_doc?.signed_by_name ?? "Chưa ký";
+  sigDataRow[sigCols.center] =
+    managementSigs.ke_toan?.signed_by_name ?? "Chưa ký";
+  sigDataRow[sigCols.right] =
+    managementSigs.nguoi_lap_bieu?.signed_by_name ?? "Chưa ký";
   rows.push(sigDataRow);
 
   return rows;
@@ -195,26 +220,45 @@ export async function POST(request: NextRequest) {
     if (csrfResult) return csrfResult;
     const auth = verifyToken(request);
     if (!auth || auth.user.role !== "admin") {
-      return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Không có quyền truy cập" },
+        { status: 401 },
+      );
     }
 
     let body: BulkExportRequestBody;
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Request body không hợp lệ" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Request body không hợp lệ" },
+        { status: 400 },
+      );
     }
 
     const { departments, salary_month, payroll_type } = body;
 
-    if (!departments || !Array.isArray(departments) || departments.length === 0) {
-      return NextResponse.json({ error: "Vui lòng chọn ít nhất một phòng ban" }, { status: 400 });
+    if (
+      !departments ||
+      !Array.isArray(departments) ||
+      departments.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "Vui lòng chọn ít nhất một phòng ban" },
+        { status: 400 },
+      );
     }
     if (!salary_month || typeof salary_month !== "string") {
-      return NextResponse.json({ error: "Tháng lương không hợp lệ" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Tháng lương không hợp lệ" },
+        { status: 400 },
+      );
     }
     if (!payroll_type || !["monthly", "t13"].includes(payroll_type)) {
-      return NextResponse.json({ error: "Loại lương không hợp lệ" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Loại lương không hợp lệ" },
+        { status: 400 },
+      );
     }
 
     const supabase = createServiceClient();
@@ -223,14 +267,18 @@ export async function POST(request: NextRequest) {
     // Single DB query for all payrolls
     let payrollQuery = supabase
       .from("payrolls")
-      .select(`*, employees!payrolls_employee_id_fkey!inner(full_name, department)`)
+      .select(
+        `*, employees!payrolls_employee_id_fkey!inner(full_name, department)`,
+      )
       .eq("salary_month", salary_month)
       .order("employee_id");
 
     if (isT13) {
       payrollQuery = payrollQuery.eq("payroll_type", "t13");
     } else {
-      payrollQuery = payrollQuery.or("payroll_type.eq.monthly,payroll_type.is.null");
+      payrollQuery = payrollQuery.or(
+        "payroll_type.eq.monthly,payroll_type.is.null",
+      );
     }
 
     // Fetch payrolls, signature logs, and management signatures in parallel
@@ -249,7 +297,10 @@ export async function POST(request: NextRequest) {
 
     if (payrollResult.error) {
       return NextResponse.json(
-        { error: "Lỗi khi lấy dữ liệu lương", details: payrollResult.error.message },
+        {
+          error: "Lỗi khi lấy dữ liệu lương",
+          details: payrollResult.error.message,
+        },
         { status: 500 },
       );
     }
@@ -261,8 +312,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Build management signatures object
-    const managementSigs: { giam_doc: ManagementSig | null; ke_toan: ManagementSig | null; nguoi_lap_bieu: ManagementSig | null } = {
-      giam_doc: null, ke_toan: null, nguoi_lap_bieu: null,
+    const managementSigs: {
+      giam_doc: ManagementSig | null;
+      ke_toan: ManagementSig | null;
+      nguoi_lap_bieu: ManagementSig | null;
+    } = {
+      giam_doc: null,
+      ke_toan: null,
+      nguoi_lap_bieu: null,
     };
     (mgmtSigResult.data ?? []).forEach((sig) => {
       const key = sig.signature_type as keyof typeof managementSigs;
@@ -271,7 +328,9 @@ export async function POST(request: NextRequest) {
 
     // Group records by department
     const recordsByDept = new Map<string, PayrollRecord[]>();
-    const sortedDepts = [...departments].sort((a, b) => a.localeCompare(b, "vi"));
+    const sortedDepts = [...departments].sort((a, b) =>
+      a.localeCompare(b, "vi"),
+    );
     for (const dept of sortedDepts) recordsByDept.set(dept, []);
 
     for (const record of (payrollResult.data ?? []) as PayrollRecord[]) {
@@ -283,7 +342,9 @@ export async function POST(request: NextRequest) {
 
     // Sort each dept's records by employee_id
     for (const rows of recordsByDept.values()) {
-      rows.sort((a, b) => String(a.employee_id ?? "").localeCompare(String(b.employee_id ?? "")));
+      rows.sort((a, b) =>
+        String(a.employee_id ?? "").localeCompare(String(b.employee_id ?? "")),
+      );
     }
 
     // Build headers (same as single-dept export)
@@ -307,7 +368,11 @@ export async function POST(request: NextRequest) {
     // Assemble full worksheet data by stacking blocks
     const allSheetRows: unknown[][] = [];
     const rowHeights: { hpt: number }[] = [];
-    const sigStyleTargets: Array<{ headerRow: number; dateRow: number; dataRow: number }> = [];
+    const sigStyleTargets: Array<{
+      headerRow: number;
+      dateRow: number;
+      dataRow: number;
+    }> = [];
     const pageBreaks: number[] = [];
 
     for (let deptIdx = 0; deptIdx < sortedDepts.length; deptIdx++) {
@@ -318,8 +383,14 @@ export async function POST(request: NextRequest) {
       if (deptIdx > 0) pageBreaks.push(blockStartRow);
 
       const block = buildDeptBlock(
-        dept, records, headers, visibleFields,
-        signatureLogsMap, managementSigs, isT13, salary_month,
+        dept,
+        records,
+        headers,
+        visibleFields,
+        signatureLogsMap,
+        managementSigs,
+        isT13,
+        salary_month,
       );
 
       // data rows in this block = records.length (min 1 for placeholder) + total row = records.length+1 but actually
@@ -349,7 +420,8 @@ export async function POST(request: NextRequest) {
       rowHeights.push({ hpt: 35 });
       rowHeights.push({ hpt: 35 });
 
-      const sigHeaderAbsRow = blockStartRow + TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE;
+      const sigHeaderAbsRow =
+        blockStartRow + TITLE_ROW_COUNT + 1 + dataRowCount + 1 + SIG_GAP_BEFORE;
       sigStyleTargets.push({
         headerRow: sigHeaderAbsRow,
         dateRow: sigHeaderAbsRow + SIG_EMPTY_LINES + 1,
@@ -385,7 +457,13 @@ export async function POST(request: NextRequest) {
       const records = recordsByDept.get(dept) ?? [];
       const dataRowCount = Math.max(records.length, 1);
 
-      applyWorksheetStyles(worksheet, headers, HEADER_ROW_INDEX, dataRowCount + 1, currentRow);
+      applyWorksheetStyles(
+        worksheet,
+        headers,
+        HEADER_ROW_INDEX,
+        dataRowCount + 1,
+        currentRow,
+      );
 
       currentRow += blockRowCount(dataRowCount);
       if (deptIdx < sortedDepts.length - 1) currentRow += BLOCK_SEPARATOR;
@@ -393,7 +471,11 @@ export async function POST(request: NextRequest) {
 
     // Apply signature styles
     for (const { headerRow, dateRow, dataRow } of sigStyleTargets) {
-      for (const col of [bulkSigCols.left, bulkSigCols.center, bulkSigCols.right]) {
+      for (const col of [
+        bulkSigCols.left,
+        bulkSigCols.center,
+        bulkSigCols.right,
+      ]) {
         const hRef = XLSX.utils.encode_cell({ r: headerRow, c: col });
         const dtRef = XLSX.utils.encode_cell({ r: dateRow, c: col });
         const dRef = XLSX.utils.encode_cell({ r: dataRow, c: col });
@@ -407,9 +489,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Signature merge ranges
-    const allMerges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
+    const allMerges: Array<{
+      s: { r: number; c: number };
+      e: { r: number; c: number };
+    }> = [];
     for (const { headerRow, dateRow, dataRow } of sigStyleTargets) {
-      allMerges.push(...getSignatureMergeRanges([headerRow, dateRow, dataRow], totalColumns));
+      allMerges.push(
+        ...getSignatureMergeRanges([headerRow, dateRow, dataRow], totalColumns),
+      );
     }
     if (allMerges.length > 0) {
       worksheet["!merges"] = allMerges;
@@ -423,7 +510,10 @@ export async function POST(request: NextRequest) {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Bảng Lương");
 
-    const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    const excelBuffer = XLSX.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx",
+    });
     const safeSalaryMonth = salary_month.replace(/[^0-9-]/g, "");
     const filename = isT13
       ? `Luong13_${safeSalaryMonth.split("-")[0]}_ToanBo.xlsx`
@@ -432,7 +522,8 @@ export async function POST(request: NextRequest) {
     return new NextResponse(excelBuffer, {
       status: 200,
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": excelBuffer.length.toString(),
       },
@@ -440,7 +531,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Bulk payroll export error:", error);
     return NextResponse.json(
-      { error: "Có lỗi xảy ra khi xuất dữ liệu lương", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Có lỗi xảy ra khi xuất dữ liệu lương",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 },
     );
   }

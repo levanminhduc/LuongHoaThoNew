@@ -139,7 +139,9 @@ export async function GET(request: NextRequest) {
     const { data: employees, error } = await supabase
       .from("employees")
       .select("employee_id, full_name, department, chuc_vu, is_active")
-      .or(`employee_id.ilike.%${sanitizePostgrestValue(query)}%,full_name.ilike.%${sanitizePostgrestValue(query)}%`)
+      .or(
+        `employee_id.ilike.%${sanitizePostgrestValue(query)}%,full_name.ilike.%${sanitizePostgrestValue(query)}%`,
+      )
       .eq("is_active", true)
       .order("full_name")
       .limit(20);
