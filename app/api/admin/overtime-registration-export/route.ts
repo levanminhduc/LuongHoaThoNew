@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
     const body: OvertimeExportBody = await request.json();
     const { period_year, period_month } = body;
 
-    if (!period_year || !period_month || period_month < 1 || period_month > 12) {
+    if (!period_year || !period_month || period_month < 1 || period_month > 12 || period_year < 2000 || period_year > 2100) {
       return NextResponse.json(
         { error: "Thiếu hoặc sai tham số period_year/period_month" },
         { status: 400 },
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
 
     const { data: monthlyData, error: monthlyError } = await supabase
       .from("attendance_monthly")
-      .select("*")
+      .select("employee_id, daily_records_json")
       .eq("period_year", period_year)
       .eq("period_month", period_month);
 
