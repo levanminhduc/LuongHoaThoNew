@@ -83,8 +83,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(
           {
             error: "Không thể kết nối database. Vui lòng kiểm tra cấu hình.",
-            debug:
-              process.env.NODE_ENV === "development" ? testError : undefined,
           },
           { status: 500 },
         );
@@ -94,8 +92,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Lỗi kết nối database nghiêm trọng.",
-          debug:
-            process.env.NODE_ENV === "development" ? connectError : undefined,
         },
         { status: 500 },
       );
@@ -149,13 +145,6 @@ export async function GET(request: NextRequest) {
           {
             error:
               "Lỗi truy cập database. Vui lòng kiểm tra cấu hình RLS policies.",
-            debug:
-              process.env.NODE_ENV === "development"
-                ? {
-                    payrollError: payrollExistsError,
-                    employeeError: employeeExistsError,
-                  }
-                : undefined,
           },
           { status: 500 },
         );
@@ -363,8 +352,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           error: errorMessage,
-          debug:
-            process.env.NODE_ENV === "development" ? payrollError : undefined,
         },
         { status: 500 },
       );
@@ -423,16 +410,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Có lỗi xảy ra khi tìm kiếm nhân viên",
-        debug:
-          process.env.NODE_ENV === "development"
-            ? {
-                message: error instanceof Error ? error.message : String(error),
-                type:
-                  error instanceof Error
-                    ? error.constructor.name
-                    : typeof error,
-              }
-            : undefined,
       },
       { status: 500 },
     );
@@ -478,8 +455,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: errorMessage,
-          debug:
-            process.env.NODE_ENV === "development" ? monthsError : undefined,
         },
         { status: 500 },
       );

@@ -88,8 +88,6 @@ export async function GET(
             {
               error:
                 "Bảng audit trail chưa được tạo. Vui lòng liên hệ admin để setup.",
-              debug:
-                process.env.NODE_ENV === "development" ? tableError : undefined,
             },
             { status: 500 },
           );
@@ -104,8 +102,6 @@ export async function GET(
             {
               error:
                 "Lỗi quyền truy cập audit trail. Vui lòng kiểm tra RLS policies.",
-              debug:
-                process.env.NODE_ENV === "development" ? tableError : undefined,
             },
             { status: 500 },
           );
@@ -114,8 +110,6 @@ export async function GET(
         return NextResponse.json(
           {
             error: "Lỗi khi truy cập bảng audit trail.",
-            debug:
-              process.env.NODE_ENV === "development" ? tableError : undefined,
           },
           { status: 500 },
         );
@@ -127,8 +121,6 @@ export async function GET(
       return NextResponse.json(
         {
           error: "Không thể truy cập bảng audit trail.",
-          debug:
-            process.env.NODE_ENV === "development" ? accessError : undefined,
         },
         { status: 500 },
       );
@@ -153,8 +145,6 @@ export async function GET(
       return NextResponse.json(
         {
           error: "Lỗi khi lấy lịch sử thay đổi",
-          debug:
-            process.env.NODE_ENV === "development" ? auditError : undefined,
         },
         { status: 500 },
       );

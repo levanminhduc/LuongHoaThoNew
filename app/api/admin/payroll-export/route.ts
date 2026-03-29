@@ -130,13 +130,6 @@ export async function GET(request: NextRequest) {
         {
           error: "Lỗi khi lấy dữ liệu lương",
           details: error.message,
-          debug:
-            process.env.NODE_ENV === "development"
-              ? {
-                  error,
-                  queryParams: { month, department },
-                }
-              : undefined,
         },
         { status: 500 },
       );
@@ -181,15 +174,6 @@ export async function GET(request: NextRequest) {
               uniqueMonths.length > 0
                 ? `Thử xuất dữ liệu cho tháng: ${uniqueMonths.slice(0, 3).join(", ")}`
                 : "Vui lòng import dữ liệu lương trước khi xuất Excel",
-            debug:
-              process.env.NODE_ENV === "development"
-                ? {
-                    fallbackError,
-                    originalError: error,
-                    queryParams: { month, department },
-                    availableMonths: uniqueMonths,
-                  }
-                : undefined,
           },
           { status: 404 },
         );
@@ -632,7 +616,6 @@ export async function GET(request: NextRequest) {
       {
         error: "Có lỗi xảy ra khi xuất dữ liệu lương",
         details: error instanceof Error ? error.message : "Unknown error",
-        debug: process.env.NODE_ENV === "development" ? error : undefined,
       },
       { status: 500 },
     );
