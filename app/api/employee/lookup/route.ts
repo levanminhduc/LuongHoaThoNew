@@ -5,7 +5,11 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
-import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
+import {
+  getPayrollSelectSummary,
+  type PayrollRecord,
+} from "@/lib/payroll-select";
+import { createEmployeeSession } from "@/lib/employee-session";
 
 function validateMonthlyFormat(salaryMonth: string): boolean {
   const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -107,9 +111,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const session_token = createEmployeeSession(employee_id.trim());
+
     let query = supabase
       .from("payrolls")
-      .select(getPayrollSelect(is_t13))
+      .select(getPayrollSelectSummary(is_t13))
       .eq("employee_id", employee_id.trim());
 
     if (is_t13) {
@@ -209,7 +215,7 @@ export async function POST(request: NextRequest) {
         net_salary: payroll.tong_luong_13 || 0,
         tien_luong_thuc_nhan_cuoi_ky: payroll.tong_luong_13 || 0,
       };
-      return NextResponse.json({ success: true, payroll: t13Response });
+      return NextResponse.json({ success: true, payroll: t13Response, session_token });
     }
 
     const monthlyResponse = {
@@ -259,7 +265,7 @@ export async function POST(request: NextRequest) {
       tien_luong_thuc_nhan_cuoi_ky: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
     };
 
-    return NextResponse.json({ success: true, payroll: monthlyResponse });
+    return NextResponse.json({ success: true, payroll: monthlyResponse, session_token });
   } catch (error) {
     console.error("Employee lookup error:", error);
     return NextResponse.json(
