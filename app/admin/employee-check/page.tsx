@@ -167,7 +167,8 @@ export default function EmployeeCheckPage() {
       const checkResults: CheckResult[] = excelIds
         .map((id) => ({ employeeId: id, exists: dbIds.has(id) }))
         .sort((a, b) => {
-          if (a.exists === b.exists) return a.employeeId.localeCompare(b.employeeId);
+          if (a.exists === b.exists)
+            return a.employeeId.localeCompare(b.employeeId);
           return a.exists ? 1 : -1;
         });
 
@@ -189,7 +190,8 @@ export default function EmployeeCheckPage() {
   const totalCount = results?.length ?? 0;
   const foundCount = results?.filter((r) => r.exists).length ?? 0;
   const missingCount = totalCount - foundCount;
-  const missingIds = results?.filter((r) => !r.exists).map((r) => r.employeeId) ?? [];
+  const missingIds =
+    results?.filter((r) => !r.exists).map((r) => r.employeeId) ?? [];
 
   const filteredResults =
     results?.filter((r) => {
@@ -257,9 +259,7 @@ export default function EmployeeCheckPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button onClick={handleCheck} disabled={!file || loading}>
             {loading ? (
