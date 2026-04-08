@@ -64,6 +64,15 @@ export function EmployeeLookupResult({
             <Timer className="w-4 h-4" />
             <span>Chức vụ: {result.position || "Không xác định"}</span>
           </div>
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span>
+              Ngày công trong giờ:{" "}
+              {result.ngay_cong_trong_gio != null
+                ? formatNumber(result.ngay_cong_trong_gio)
+                : "—"}
+            </span>
+          </div>
         </div>
 
         <Separator />

@@ -103,6 +103,7 @@ export const PAYROLL_SELECT_SUMMARY = `
   signed_by_name,
   he_so_lam_viec,
   he_so_phu_cap_ket_qua,
+  ngay_cong_trong_gio,
   tien_khen_thuong_chuyen_can,
   tien_tang_ca_vuot,
   luong_cnkcp_vuot,

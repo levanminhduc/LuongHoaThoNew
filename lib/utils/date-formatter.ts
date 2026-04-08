@@ -132,5 +132,5 @@ export function formatCurrency(amount: number): string {
  */
 export function formatNumber(value: number): string {
   if (value === undefined || value === null) return "0";
-  return value.toFixed(2);
+  return parseFloat(value.toFixed(2)).toString();
 }

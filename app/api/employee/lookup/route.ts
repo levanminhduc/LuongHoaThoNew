@@ -229,6 +229,7 @@ export async function POST(request: NextRequest) {
       net_salary: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
       he_so_lam_viec: payroll.he_so_lam_viec || 0,
       he_so_phu_cap_ket_qua: payroll.he_so_phu_cap_ket_qua || 0,
+      ngay_cong_trong_gio: payroll.ngay_cong_trong_gio ?? null,
       tien_khen_thuong_chuyen_can: payroll.tien_khen_thuong_chuyen_can || 0,
       tien_tang_ca_vuot: payroll.tien_tang_ca_vuot || 0,
       luong_cnkcp_vuot: payroll.luong_cnkcp_vuot || 0,
