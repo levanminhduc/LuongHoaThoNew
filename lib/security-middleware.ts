@@ -6,7 +6,7 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 // Rate limiting configuration
 const RATE_LIMITS = {
-  login: { requests: 5, windowMs: 15 * 60 * 1000 }, // 5 requests per 15 minutes
+  login: { requests: 100, windowMs: 15 * 60 * 1000 }, // 100 requests per 15 minutes (shared IP in company network)
   api: { requests: 100, windowMs: 60 * 1000 }, // 100 requests per minute
   payroll: { requests: 50, windowMs: 60 * 1000 }, // 50 requests per minute
   admin: { requests: 200, windowMs: 60 * 1000 }, // 200 requests per minute for admin
