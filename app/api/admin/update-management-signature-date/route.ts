@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 
 const VALID_SIGNATURE_TYPES = ["giam_doc", "ke_toan", "nguoi_lap_bieu"];
 
@@ -12,6 +13,8 @@ const SIGNATURE_TYPE_LABELS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
@@ -111,7 +114,9 @@ export async function POST(request: NextRequest) {
       if (is_t13) {
         existCheck = existCheck.eq("payroll_type", "t13");
       } else {
-        existCheck = existCheck.or("payroll_type.eq.monthly,payroll_type.is.null");
+        existCheck = existCheck.or(
+          "payroll_type.eq.monthly,payroll_type.is.null",
+        );
       }
 
       const { data: existingSig } = await existCheck.single();

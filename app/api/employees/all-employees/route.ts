@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 // GET all employees for management roles with caching
 export async function GET(request: NextRequest) {
@@ -66,9 +67,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (search && search.length >= 2) {
-      employeeQuery = employeeQuery.or(
-        `employee_id.ilike.%${search}%,full_name.ilike.%${search}%`,
-      );
+      const safeSearch = sanitizePostgrestValue(search);
+      if (safeSearch) {
+        employeeQuery = employeeQuery.or(
+          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
+        );
+      }
     }
 
     if (department && department !== "all") {
@@ -113,9 +117,12 @@ export async function GET(request: NextRequest) {
       .eq("is_active", includeInactive ? undefined : true);
 
     if (search && search.length >= 2) {
-      countQuery = countQuery.or(
-        `employee_id.ilike.%${search}%,full_name.ilike.%${search}%`,
-      );
+      const safeSearch = sanitizePostgrestValue(search);
+      if (safeSearch) {
+        countQuery = countQuery.or(
+          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
+        );
+      }
     }
 
     if (department && department !== "all") {
@@ -176,9 +183,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (search && search.length >= 2) {
-      deptStatsQuery = deptStatsQuery.or(
-        `employee_id.ilike.%${search}%,full_name.ilike.%${search}%`,
-      );
+      const safeSearch = sanitizePostgrestValue(search);
+      if (safeSearch) {
+        deptStatsQuery = deptStatsQuery.or(
+          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
+        );
+      }
     }
 
     if (department && department !== "all") {

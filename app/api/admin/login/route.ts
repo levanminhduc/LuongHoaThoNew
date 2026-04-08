@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authenticateUser, type JWTPayload } from "@/lib/auth";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
+import { rateLimit } from "@/lib/security-middleware";
 
 /**
  * @swagger
@@ -33,6 +34,9 @@ import { JWT_SECRET } from "@/lib/config/jwt";
  */
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResult = rateLimit("login")(request);
+    if (rateLimitResult) return rateLimitResult;
+
     const { username, password } = await request.json();
 
     if (!username || !password) {
@@ -66,7 +70,7 @@ export async function POST(request: NextRequest) {
       permissions: user.permissions,
     };
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "24h" });
+    const token = jwt.sign(tokenPayload, getJwtSecret(), { expiresIn: "24h" });
 
     const response = NextResponse.json({
       success: true,

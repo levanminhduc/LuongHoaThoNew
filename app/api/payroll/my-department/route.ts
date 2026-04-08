@@ -2,6 +2,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 // GET payroll data for to_truong's department
 export async function GET(request: NextRequest) {
@@ -62,9 +63,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query = query.or(
-        `employee_id.ilike.%${search}%,employees.full_name.ilike.%${search}%`,
-      );
+      const safeSearch = sanitizePostgrestValue(search);
+      if (safeSearch) {
+        query = query.or(
+          `employee_id.ilike.%${safeSearch}%,employees.full_name.ilike.%${safeSearch}%`,
+        );
+      }
     }
 
     // Count query with same salary_month filter

@@ -3,7 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
@@ -14,7 +14,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { role?: string };
+    const decoded = jwt.verify(token, getJwtSecret()) as { role?: string };
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;

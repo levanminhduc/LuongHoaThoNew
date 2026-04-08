@@ -160,11 +160,7 @@ export function UpdateSignatureDateDialog({
 
   return (
     <>
-      <Button
-        onClick={() => setOpen(true)}
-        variant="outline"
-        className="gap-2"
-      >
+      <Button onClick={() => setOpen(true)} variant="outline" className="gap-2">
         <CalendarClock className="h-4 w-4" />
         Cập Nhật Ngày Ký
       </Button>

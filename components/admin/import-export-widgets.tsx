@@ -344,7 +344,10 @@ export function FilePreview({
                 <TableHeader className="bg-muted">
                   <TableRow>
                     {Object.keys(previewData[0]).map((key) => (
-                      <TableHead key={key} className="px-3 py-2 text-left font-medium">
+                      <TableHead
+                        key={key}
+                        className="px-3 py-2 text-left font-medium"
+                      >
                         {key}
                       </TableHead>
                     ))}

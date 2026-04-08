@@ -4,13 +4,13 @@ Hệ thống quản lý lương cho công ty May Hòa Thọ Điện Bàn - cho p
 
 ## 🛠️ Tech Stack
 
-| Layer    | Công nghệ                                                 |
-| -------- | --------------------------------------------------------- |
+| Layer    | Công nghệ                                                                  |
+| -------- | -------------------------------------------------------------------------- |
 | Frontend | Next.js 16.1.1, React 19.2.3, TypeScript 5, Tailwind CSS 3.4.17, shadcn/ui |
-| Backend  | Next.js API Routes                                        |
-| Database | Supabase PostgreSQL + RLS                                 |
-| Auth     | JWT + bcrypt                                              |
-| File     | xlsx, xlsx-js-style                                       |
+| Backend  | Next.js API Routes                                                         |
+| Database | Supabase PostgreSQL + RLS                                                  |
+| Auth     | JWT + bcrypt                                                               |
+| File     | xlsx, xlsx-js-style                                                        |
 
 ## 🔑 8 Roles (RBAC)
 

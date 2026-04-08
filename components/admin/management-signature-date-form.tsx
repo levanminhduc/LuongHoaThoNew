@@ -56,34 +56,26 @@ export function ManagementSignatureDateForm({
   const [mgmtDates, setMgmtDates] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const handleAction = async (
-    sigType: string,
-    action: "update" | "create",
-  ) => {
+  const handleAction = async (sigType: string, action: "update" | "create") => {
     const dateVal = mgmtDates[sigType];
     if (!dateVal) {
-      setError(
-        `Vui lòng chọn ngày ký cho ${SIGNATURE_TYPE_LABELS[sigType]}`,
-      );
+      setError(`Vui lòng chọn ngày ký cho ${SIGNATURE_TYPE_LABELS[sigType]}`);
       return;
     }
     setMgmtLoading((prev) => ({ ...prev, [sigType]: true }));
     setError(null);
     try {
-      const res = await fetch(
-        "/api/admin/update-management-signature-date",
-        {
-          method: "POST",
-          headers: authHeader,
-          body: JSON.stringify({
-            salary_month: effectiveMonth,
-            signature_type: sigType,
-            new_signed_at: dateVal,
-            action,
-            is_t13: isT13,
-          }),
-        },
-      );
+      const res = await fetch("/api/admin/update-management-signature-date", {
+        method: "POST",
+        headers: authHeader,
+        body: JSON.stringify({
+          salary_month: effectiveMonth,
+          signature_type: sigType,
+          new_signed_at: dateVal,
+          action,
+          is_t13: isT13,
+        }),
+      });
       const data = await res.json();
       if (res.ok) {
         showSuccessToast(data.message);

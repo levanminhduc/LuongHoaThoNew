@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
+import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 interface ImportHistoryRecord {
   id?: string;
@@ -32,6 +33,8 @@ interface ImportHistoryRecord {
 // POST - Create new import history record
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     let decoded: JWTPayload;
     try {
-      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+      decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -100,7 +103,7 @@ export async function GET(request: NextRequest) {
     const token = authHeader.split(" ")[1];
 
     try {
-      jwt.verify(token, JWT_SECRET);
+      jwt.verify(token, getJwtSecret());
     } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -235,6 +238,8 @@ export async function GET(request: NextRequest) {
 // DELETE - Delete import history record
 export async function DELETE(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -244,7 +249,7 @@ export async function DELETE(request: NextRequest) {
     const token = authHeader.split(" ")[1];
 
     try {
-      jwt.verify(token, JWT_SECRET);
+      jwt.verify(token, getJwtSecret());
     } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }

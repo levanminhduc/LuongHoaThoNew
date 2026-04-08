@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { PayrollValidator } from "@/lib/payroll-validation";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface ColumnMapping {
@@ -71,6 +72,8 @@ interface AutoFixResult {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -88,7 +91,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader.split(" ")[1];
 
     try {
-      jwt.verify(token, JWT_SECRET);
+      jwt.verify(token, getJwtSecret());
     } catch {
       const apiError = ApiErrorHandler.createError(
         ApiErrorHandler.ErrorCodes.INVALID_TOKEN,

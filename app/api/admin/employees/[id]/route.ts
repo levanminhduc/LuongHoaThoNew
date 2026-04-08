@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 import { cascadeUpdateEmployeeId } from "@/lib/cascade-update-employee";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
@@ -11,6 +12,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const admin = verifyEmployeeManagementAccess(request);
     if (!admin) {
       return NextResponse.json(
@@ -358,6 +361,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const admin = verifyEmployeeManagementAccess(request);
     if (!admin) {
       return NextResponse.json(

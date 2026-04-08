@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -12,7 +13,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -21,6 +22,8 @@ function verifyAdminToken(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const admin = verifyAdminToken(request);
     if (!admin) {
       return NextResponse.json(

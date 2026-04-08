@@ -3,13 +3,10 @@ import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+import { rateLimit } from "@/lib/security-middleware";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000;
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
 
 function hashIp(ip: string): string {
   return crypto
@@ -25,33 +22,6 @@ function shrinkUA(ua: string | null): string {
     ua.match(/(Chrome|Firefox|Safari|Edge|Opera)\/[\d.]+/)?.[0] || "";
   const os = ua.match(/(Windows|Mac|Linux|Android|iOS)[\s\d.]*/)?.[0] || "";
   return `${browser} ${os}`.trim() || "unknown";
-}
-
-function checkRateLimit(identifier: string): {
-  allowed: boolean;
-  message?: string;
-} {
-  const now = Date.now();
-  const limit = rateLimitMap.get(identifier);
-
-  if (!limit || now > limit.resetTime) {
-    rateLimitMap.set(identifier, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
-    return { allowed: true };
-  }
-
-  if (limit.count >= RATE_LIMIT_MAX) {
-    const waitTime = Math.ceil((limit.resetTime - now) / 1000 / 60);
-    return {
-      allowed: false,
-      message: `Quá nhiều lần thử. Vui lòng thử lại sau ${waitTime} phút.`,
-    };
-  }
-
-  limit.count++;
-  return { allowed: true };
 }
 
 async function logSecurityEvent(
@@ -131,10 +101,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rateLimit = checkRateLimit(`forgot-pw:${ip}:${employee_code}`);
-    if (!rateLimit.allowed) {
-      return NextResponse.json({ error: rateLimit.message }, { status: 429 });
-    }
+    const rateLimitResult = rateLimit("passwordReset")(request);
+    if (rateLimitResult) return rateLimitResult;
 
     const supabase = createServiceClient();
 

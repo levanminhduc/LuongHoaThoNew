@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 /**
  * @swagger
@@ -95,9 +97,12 @@ export async function GET(request: NextRequest) {
       );
 
     if (search) {
-      query = query.or(
-        `employee_id.ilike.%${search}%,full_name.ilike.%${search}%,phone_number.ilike.%${search}%`,
-      );
+      const safeSearch = sanitizePostgrestValue(search);
+      if (safeSearch) {
+        query = query.or(
+          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%,phone_number.ilike.%${safeSearch}%`,
+        );
+      }
     }
 
     if (department) {
@@ -228,6 +233,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const admin = verifyEmployeeManagementAccess(request);
     if (!admin) {
       return NextResponse.json(

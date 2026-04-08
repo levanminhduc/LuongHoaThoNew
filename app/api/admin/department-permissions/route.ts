@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 // GET all department permissions or permissions for specific employee
@@ -77,6 +78,8 @@ export async function GET(request: NextRequest) {
 // POST create new department permission
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Only admin can grant department permissions
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
@@ -271,6 +274,8 @@ export async function POST(request: NextRequest) {
 // DELETE revoke department permission
 export async function DELETE(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Only admin can revoke department permissions
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {

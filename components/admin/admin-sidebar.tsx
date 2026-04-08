@@ -19,6 +19,7 @@ import {
   Clock,
   CalendarDays,
   FileDown,
+  UserSearch,
 } from "lucide-react";
 import {
   Sidebar,
@@ -95,6 +96,11 @@ const dataManagementItems: NavItem[] = [
     title: "Xuất Lương Toàn Bộ",
     icon: FileDown,
     href: "/admin/bulk-export",
+  },
+  {
+    title: "Kiểm Tra NV",
+    icon: UserSearch,
+    href: "/admin/employee-check",
   },
 ];
 

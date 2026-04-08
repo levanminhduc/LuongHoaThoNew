@@ -4,10 +4,11 @@ import {
   parseEmployeeExcelFile,
   type EmployeeData,
 } from "@/lib/employee-parser";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { type JWTPayload } from "@/lib/auth";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
@@ -18,7 +19,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -32,6 +33,8 @@ async function hashCCCD(cccd: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const admin = verifyAdminToken(request);
     if (!admin) {

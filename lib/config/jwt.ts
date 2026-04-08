@@ -1,2 +1,11 @@
-// Lazy evaluation - chỉ đọc env var khi thực sự cần, không throw lúc build
-export const JWT_SECRET: string = process.env.JWT_SECRET || "";
+let _cached: string | null = null;
+
+export function getJwtSecret(): string {
+  if (_cached) return _cached;
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("FATAL: JWT_SECRET environment variable is not set");
+  }
+  _cached = secret;
+  return secret;
+}

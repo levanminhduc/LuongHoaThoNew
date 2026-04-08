@@ -49,4 +49,4 @@ export const env = new Proxy({} as z.infer<typeof envSchema>, {
 
 export type Env = z.infer<typeof envSchema>;
 
-export { JWT_SECRET } from "./jwt";
+export { getJwtSecret } from "./jwt";

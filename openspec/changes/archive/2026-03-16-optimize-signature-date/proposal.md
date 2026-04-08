@@ -12,6 +12,7 @@ The "Update Employee Signature Date" feature on the admin/bulk-signature page cu
 ## Capabilities
 
 ### New Capabilities
+
 - `batch-signature-date-update`: PostgreSQL RPC function for bulk updating signature dates with random timestamp generation, processing employees in batches with best-effort error handling
 - `sse-progress-streaming`: SSE streaming response from the API route with progress events (start, batch_complete, error, complete) and frontend progress bar consumption
 

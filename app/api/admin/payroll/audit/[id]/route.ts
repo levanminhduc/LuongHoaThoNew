@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
+import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
-import { JWT_SECRET } from "@/lib/config/jwt";
+import { getJwtSecret } from "@/lib/config/jwt";
 
 interface AuditLog {
   id: number;
@@ -37,7 +38,7 @@ function verifyAdminToken(request: NextRequest) {
 
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded.role === "admin" ? decoded : null;
   } catch {
     return null;
@@ -87,8 +88,6 @@ export async function GET(
             {
               error:
                 "Bảng audit trail chưa được tạo. Vui lòng liên hệ admin để setup.",
-              debug:
-                process.env.NODE_ENV === "development" ? tableError : undefined,
             },
             { status: 500 },
           );
@@ -103,8 +102,6 @@ export async function GET(
             {
               error:
                 "Lỗi quyền truy cập audit trail. Vui lòng kiểm tra RLS policies.",
-              debug:
-                process.env.NODE_ENV === "development" ? tableError : undefined,
             },
             { status: 500 },
           );
@@ -113,8 +110,6 @@ export async function GET(
         return NextResponse.json(
           {
             error: "Lỗi khi truy cập bảng audit trail.",
-            debug:
-              process.env.NODE_ENV === "development" ? tableError : undefined,
           },
           { status: 500 },
         );
@@ -126,8 +121,6 @@ export async function GET(
       return NextResponse.json(
         {
           error: "Không thể truy cập bảng audit trail.",
-          debug:
-            process.env.NODE_ENV === "development" ? accessError : undefined,
         },
         { status: 500 },
       );
@@ -152,8 +145,6 @@ export async function GET(
       return NextResponse.json(
         {
           error: "Lỗi khi lấy lịch sử thay đổi",
-          debug:
-            process.env.NODE_ENV === "development" ? auditError : undefined,
         },
         { status: 500 },
       );
@@ -242,6 +233,8 @@ export async function GET(
 // GET audit summary for dashboard
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     // Verify admin authentication
     const admin = verifyAdminToken(request);
     if (!admin) {

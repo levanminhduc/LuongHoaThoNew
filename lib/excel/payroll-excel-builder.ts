@@ -115,7 +115,12 @@ const borderStyle = {
 
 export const CELL_STYLES = {
   header: {
-    font: { bold: true, color: { rgb: "000000" }, sz: 11, name: "Times New Roman" },
+    font: {
+      bold: true,
+      color: { rgb: "000000" },
+      sz: 11,
+      name: "Times New Roman",
+    },
     alignment: { horizontal: "center", vertical: "center", wrapText: true },
     border: borderStyle,
   },
@@ -195,7 +200,11 @@ export function getDataCellStyle(field: string, isTotal: boolean) {
 
   if (!isNumeric) {
     return isTotal
-      ? { ...CELL_STYLES.data, font: { ...CELL_STYLES.data.font, bold: true }, fill: totalFill }
+      ? {
+          ...CELL_STYLES.data,
+          font: { ...CELL_STYLES.data.font, bold: true },
+          fill: totalFill,
+        }
       : CELL_STYLES.data;
   }
 
@@ -215,7 +224,11 @@ export function getDataCellStyle(field: string, isTotal: boolean) {
   return base;
 }
 
-export function getColumnWidths(headers: string[], nameColIndex: number, maxNameLength: number) {
+export function getColumnWidths(
+  headers: string[],
+  nameColIndex: number,
+  maxNameLength: number,
+) {
   const employeeIdHeader = FIELD_HEADERS["employee_id"] || "employee_id";
   const narrowHeaders = new Set(
     Array.from(NARROW_FIELDS).map((f) => FIELD_HEADERS[f] || f),
@@ -278,11 +291,17 @@ export function getSignatureMergeRanges(
 ) {
   const span = 6;
   const cols = getSignatureColumns(totalColumns);
-  const merges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
+  const merges: Array<{
+    s: { r: number; c: number };
+    e: { r: number; c: number };
+  }> = [];
   for (const row of sigRows) {
     merges.push(
       { s: { r: row, c: cols.left }, e: { r: row, c: cols.left + span - 1 } },
-      { s: { r: row, c: cols.center }, e: { r: row, c: cols.center + span - 1 } },
+      {
+        s: { r: row, c: cols.center },
+        e: { r: row, c: cols.center + span - 1 },
+      },
       { s: { r: row, c: cols.right }, e: { r: row, c: cols.right + span - 1 } },
     );
   }
@@ -321,7 +340,10 @@ export function applyWorksheetStyles(
       } else {
         if (!worksheet[cellRef]) worksheet[cellRef] = { t: "s", v: "" };
         const headerText = headers[col];
-        const field = Object.entries(FIELD_HEADERS).find(([, v]) => v === headerText)?.[0] ?? headerText;
+        const field =
+          Object.entries(FIELD_HEADERS).find(
+            ([, v]) => v === headerText,
+          )?.[0] ?? headerText;
         const isTotal = row === absTotalRow;
         worksheet[cellRef].s = getDataCellStyle(field, isTotal);
       }
