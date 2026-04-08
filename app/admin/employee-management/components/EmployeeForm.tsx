@@ -216,7 +216,10 @@ export default function EmployeeForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
         {/* Row 1: Basic Info */}
         <div className="space-y-2">
-          <Label htmlFor="employee_id" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+          <Label
+            htmlFor="employee_id"
+            className="text-sm font-semibold text-foreground/90 mb-1.5 block"
+          >
             Mã Nhân Viên *
           </Label>
           <Input
@@ -227,18 +230,23 @@ export default function EmployeeForm({
             placeholder="Nhập mã nhân viên"
             className={cn(
               "h-10 w-full",
-              errors.employee_id ? "border-red-500" : ""
+              errors.employee_id ? "border-red-500" : "",
             )}
           />
           <div className="min-h-[1.25rem]">
             {errors.employee_id && (
-              <p className="text-xs text-red-500 font-medium">{errors.employee_id}</p>
+              <p className="text-xs text-red-500 font-medium">
+                {errors.employee_id}
+              </p>
             )}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="full_name" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+          <Label
+            htmlFor="full_name"
+            className="text-sm font-semibold text-foreground/90 mb-1.5 block"
+          >
             Họ và Tên *
           </Label>
           <Input
@@ -249,12 +257,14 @@ export default function EmployeeForm({
             placeholder="Nhập họ và tên"
             className={cn(
               "h-10 w-full",
-              errors.full_name ? "border-red-500" : ""
+              errors.full_name ? "border-red-500" : "",
             )}
           />
           <div className="min-h-[1.25rem]">
             {errors.full_name && (
-              <p className="text-xs text-red-500 font-medium">{errors.full_name}</p>
+              <p className="text-xs text-red-500 font-medium">
+                {errors.full_name}
+              </p>
             )}
           </div>
         </div>
@@ -263,13 +273,21 @@ export default function EmployeeForm({
         {employee && (
           <div className="md:col-span-2 bg-blue-50/50 p-4 rounded-lg border border-blue-100/50">
             <div className="flex items-center gap-2 text-blue-700 font-semibold text-xs uppercase tracking-wider mb-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px]">ℹ️</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px]">
+                ℹ️
+              </span>
               Lưu ý khi thay đổi mã nhân viên
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-[11px] leading-relaxed">
-              <p className="text-blue-600/80">• Tự động cập nhật lương, chữ ký và phân quyền.</p>
-              <p className="text-amber-600/80">• ⚠️ Ảnh hưởng đến lịch sử audit logs cũ.</p>
-              <p className="text-green-600/80 md:col-span-2">• ✅ Đảm bảo tính nhất quán qua transactions.</p>
+              <p className="text-blue-600/80">
+                • Tự động cập nhật lương, chữ ký và phân quyền.
+              </p>
+              <p className="text-amber-600/80">
+                • ⚠️ Ảnh hưởng đến lịch sử audit logs cũ.
+              </p>
+              <p className="text-green-600/80 md:col-span-2">
+                • ✅ Đảm bảo tính nhất quán qua transactions.
+              </p>
             </div>
           </div>
         )}
@@ -277,7 +295,10 @@ export default function EmployeeForm({
         {/* Row 2: Auth Info */}
         {!employee && (
           <div className="space-y-2">
-            <Label htmlFor="cccd" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+            <Label
+              htmlFor="cccd"
+              className="text-sm font-semibold text-foreground/90 mb-1.5 block"
+            >
               CCCD *
             </Label>
             <Input
@@ -292,16 +313,23 @@ export default function EmployeeForm({
             />
             <div className="min-h-[1.25rem]">
               {errors.cccd ? (
-                <p className="text-xs text-red-500 font-medium">{errors.cccd}</p>
+                <p className="text-xs text-red-500 font-medium">
+                  {errors.cccd}
+                </p>
               ) : (
-                <p className="text-[10px] text-muted-foreground italic">* Dùng để xác thực</p>
+                <p className="text-[10px] text-muted-foreground italic">
+                  * Dùng để xác thực
+                </p>
               )}
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+          <Label
+            htmlFor="password"
+            className="text-sm font-semibold text-foreground/90 mb-1.5 block"
+          >
             Mật Khẩu {employee ? "(đổi mới)" : "(tùy chọn)"}
           </Label>
           <div className="relative">
@@ -312,7 +340,10 @@ export default function EmployeeForm({
               onChange={(e) => handleInputChange("password", e.target.value)}
               disabled={loading}
               placeholder={employee ? "Mật khẩu mới" : "CCCD làm mặc định"}
-              className={cn("h-10 w-full pr-10", errors.password ? "border-red-500" : "")}
+              className={cn(
+                "h-10 w-full pr-10",
+                errors.password ? "border-red-500" : "",
+              )}
             />
             <Button
               type="button"
@@ -331,16 +362,23 @@ export default function EmployeeForm({
           </div>
           <div className="min-h-[1.25rem]">
             {errors.password ? (
-              <p className="text-xs text-red-500 font-medium">{errors.password}</p>
+              <p className="text-xs text-red-500 font-medium">
+                {errors.password}
+              </p>
             ) : employee ? (
-              <p className="text-[10px] text-muted-foreground italic">* Để trống nếu không đổi</p>
+              <p className="text-[10px] text-muted-foreground italic">
+                * Để trống nếu không đổi
+              </p>
             ) : null}
           </div>
         </div>
 
         {/* Row 3: Role and Department */}
         <div className="space-y-2 flex flex-col items-stretch">
-          <Label htmlFor="chuc_vu" className="text-sm font-semibold text-foreground/90 mb-1.5 block leading-none">
+          <Label
+            htmlFor="chuc_vu"
+            className="text-sm font-semibold text-foreground/90 mb-1.5 block leading-none"
+          >
             Chức Vụ *
           </Label>
           <Select
@@ -348,7 +386,12 @@ export default function EmployeeForm({
             onValueChange={(value) => handleInputChange("chuc_vu", value)}
             disabled={loading}
           >
-            <SelectTrigger className={cn("flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50", errors.chuc_vu ? "border-red-500" : "")}>
+            <SelectTrigger
+              className={cn(
+                "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                errors.chuc_vu ? "border-red-500" : "",
+              )}
+            >
               <SelectValue placeholder="Chọn chức vụ" />
             </SelectTrigger>
             <SelectContent>
@@ -361,13 +404,18 @@ export default function EmployeeForm({
           </Select>
           <div className="min-h-[1.25rem]">
             {errors.chuc_vu && (
-              <p className="text-xs text-red-500 font-medium">{errors.chuc_vu}</p>
+              <p className="text-xs text-red-500 font-medium">
+                {errors.chuc_vu}
+              </p>
             )}
           </div>
         </div>
 
         <div className="space-y-2 flex flex-col items-stretch">
-          <Label htmlFor="department" className="text-sm font-semibold text-foreground/90 mb-1.5 block leading-none">
+          <Label
+            htmlFor="department"
+            className="text-sm font-semibold text-foreground/90 mb-1.5 block leading-none"
+          >
             Phòng Ban
           </Label>
           <Popover open={openDepartment} onOpenChange={setOpenDepartment}>
@@ -443,7 +491,10 @@ export default function EmployeeForm({
 
         {/* Row 4: Phone and Status */}
         <div className="space-y-2">
-          <Label htmlFor="phone_number" className="text-sm font-semibold text-foreground/90 mb-1.5 block">
+          <Label
+            htmlFor="phone_number"
+            className="text-sm font-semibold text-foreground/90 mb-1.5 block"
+          >
             Số Điện Thoại
           </Label>
           <Input
@@ -452,11 +503,16 @@ export default function EmployeeForm({
             onChange={(e) => handleInputChange("phone_number", e.target.value)}
             disabled={loading}
             placeholder="Nhập số điện thoại"
-            className={cn("h-10 w-full", errors.phone_number ? "border-red-500" : "")}
+            className={cn(
+              "h-10 w-full",
+              errors.phone_number ? "border-red-500" : "",
+            )}
           />
           <div className="min-h-[1.25rem]">
             {errors.phone_number && (
-              <p className="text-xs text-red-500 font-medium">{errors.phone_number}</p>
+              <p className="text-xs text-red-500 font-medium">
+                {errors.phone_number}
+              </p>
             )}
           </div>
         </div>
@@ -469,10 +525,15 @@ export default function EmployeeForm({
             <Switch
               id="is_active"
               checked={formData.is_active}
-              onCheckedChange={(checked) => handleInputChange("is_active", checked)}
+              onCheckedChange={(checked) =>
+                handleInputChange("is_active", checked)
+              }
               disabled={loading}
             />
-            <Label htmlFor="is_active" className="cursor-pointer font-medium text-xs text-foreground/70">
+            <Label
+              htmlFor="is_active"
+              className="cursor-pointer font-medium text-xs text-foreground/70"
+            >
               Đang hoạt động
             </Label>
           </div>
@@ -481,7 +542,11 @@ export default function EmployeeForm({
       </div>
 
       <div className="flex justify-end space-x-3 pt-6 border-t mt-4">
-        <Button type="submit" disabled={loading} className="min-w-[120px] shadow-sm">
+        <Button
+          type="submit"
+          disabled={loading}
+          className="min-w-[120px] shadow-sm"
+        >
           {loading ? "Đang xử lý..." : employee ? "Cập nhật" : "Tạo mới"}
         </Button>
       </div>

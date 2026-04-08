@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Rocket, 
-  Bell, 
-  Check, 
-  ChevronRight, 
+import {
+  Rocket,
+  Bell,
+  Check,
+  ChevronRight,
   Loader2,
   Trash2,
   MailOpen,
@@ -20,27 +20,52 @@ import {
   ArrowRight,
   ExternalLink,
   Menu,
-  MoreVertical
+  MoreVertical,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
+} from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Breadcrumb,
@@ -143,9 +168,12 @@ export default function AllUIComponentsPage() {
   return (
     <div className="container mx-auto py-10 space-y-20 max-w-7xl">
       <div className="space-y-4">
-        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">UI Components Master Library</h1>
+        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
+          UI Components Master Library
+        </h1>
         <p className="text-xl text-muted-foreground">
-          Thư viện đầy đủ các thành phần giao diện người dùng được xây dựng trên nền tảng Shadcn UI & Radix UI.
+          Thư viện đầy đủ các thành phần giao diện người dùng được xây dựng trên
+          nền tảng Shadcn UI & Radix UI.
         </p>
       </div>
 
@@ -154,7 +182,7 @@ export default function AllUIComponentsPage() {
       {/* Navigation Section */}
       <section className="space-y-6">
         <h2 className="text-3xl font-bold border-b pb-2">Navigation</h2>
-        
+
         <div className="grid gap-10">
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Breadcrumb</h3>
@@ -200,7 +228,9 @@ export default function AllUIComponentsPage() {
                   <PaginationLink href="#">1</PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationLink href="#" isActive>2</PaginationLink>
+                  <PaginationLink href="#" isActive>
+                    2
+                  </PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
                   <PaginationLink href="#">3</PaginationLink>
@@ -220,12 +250,14 @@ export default function AllUIComponentsPage() {
       {/* Data Entry & Forms */}
       <section className="space-y-6">
         <h2 className="text-3xl font-bold border-b pb-2">Forms & Data Entry</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Calendar & Date Picker</CardTitle>
-              <CardDescription>Lịch chọn ngày và các thành phần liên quan.</CardDescription>
+              <CardDescription>
+                Lịch chọn ngày và các thành phần liên quan.
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col md:flex-row gap-8">
               <Calendar
@@ -244,7 +276,11 @@ export default function AllUIComponentsPage() {
                         className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? date.toLocaleDateString() : <span>Pick a date</span>}
+                        {date ? (
+                          date.toLocaleDateString()
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -273,7 +309,9 @@ export default function AllUIComponentsPage() {
                       <InputOTPSlot index={5} />
                     </InputOTPGroup>
                   </InputOTP>
-                  <p className="text-xs text-muted-foreground">Nhập mã xác thực gửi qua tin nhắn.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nhập mã xác thực gửi qua tin nhắn.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -323,7 +361,7 @@ export default function AllUIComponentsPage() {
       {/* Overlays Section */}
       <section className="space-y-6">
         <h2 className="text-3xl font-bold border-b pb-2">Overlays & Dialogs</h2>
-        
+
         <div className="flex flex-wrap gap-4">
           {/* Dialog */}
           <Dialog>
@@ -334,17 +372,30 @@ export default function AllUIComponentsPage() {
               <DialogHeader>
                 <DialogTitle>Edit Profile</DialogTitle>
                 <DialogDescription>
-                  Make changes to your profile here. Click save when you're done.
+                  Make changes to your profile here. Click save when you're
+                  done.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">Name</Label>
-                  <Input id="name" defaultValue="Pedro Duarte" className="col-span-3" />
+                  <Label htmlFor="name" className="text-right">
+                    Name
+                  </Label>
+                  <Input
+                    id="name"
+                    defaultValue="Pedro Duarte"
+                    className="col-span-3"
+                  />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="username" className="text-right">Username</Label>
-                  <Input id="username" defaultValue="@peduarte" className="col-span-3" />
+                  <Label htmlFor="username" className="text-right">
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    defaultValue="@peduarte"
+                    className="col-span-3"
+                  />
                 </div>
               </div>
               <DialogFooter>
@@ -362,18 +413,32 @@ export default function AllUIComponentsPage() {
               <div className="mx-auto w-full max-w-sm">
                 <DrawerHeader>
                   <DrawerTitle>Move Goal</DrawerTitle>
-                  <DrawerDescription>Set your daily activity goal.</DrawerDescription>
+                  <DrawerDescription>
+                    Set your daily activity goal.
+                  </DrawerDescription>
                 </DrawerHeader>
                 <div className="p-4 pb-0">
                   <div className="flex items-center justify-center space-x-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                    >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <div className="flex-1 text-center">
-                      <div className="text-7xl font-bold tracking-tighter">350</div>
-                      <div className="text-[0.70rem] uppercase text-muted-foreground">Calories/day</div>
+                      <div className="text-7xl font-bold tracking-tighter">
+                        350
+                      </div>
+                      <div className="text-[0.70rem] uppercase text-muted-foreground">
+                        Calories/day
+                      </div>
                     </div>
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                    >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -401,9 +466,15 @@ export default function AllUIComponentsPage() {
                 </SheetDescription>
               </SheetHeader>
               <div className="grid gap-4 py-4">
-                <Button variant="ghost" className="justify-start">Dashboard</Button>
-                <Button variant="ghost" className="justify-start">Settings</Button>
-                <Button variant="ghost" className="justify-start">Profile</Button>
+                <Button variant="ghost" className="justify-start">
+                  Dashboard
+                </Button>
+                <Button variant="ghost" className="justify-start">
+                  Settings
+                </Button>
+                <Button variant="ghost" className="justify-start">
+                  Profile
+                </Button>
               </div>
               <SheetFooter>
                 <SheetClose asChild>
@@ -487,8 +558,10 @@ export default function AllUIComponentsPage() {
 
       {/* Layout & Organization */}
       <section className="space-y-6">
-        <h2 className="text-3xl font-bold border-b pb-2">Layout & Organization</h2>
-        
+        <h2 className="text-3xl font-bold border-b pb-2">
+          Layout & Organization
+        </h2>
+
         <div className="space-y-8">
           <div className="h-[200px] rounded-md border overflow-hidden">
             <ResizablePanelGroup direction="horizontal">
@@ -524,19 +597,25 @@ export default function AllUIComponentsPage() {
                 <TableBody>
                   <TableRow>
                     <TableCell className="font-medium">INV001</TableCell>
-                    <TableCell><Badge>Paid</Badge></TableCell>
+                    <TableCell>
+                      <Badge>Paid</Badge>
+                    </TableCell>
                     <TableCell>Credit Card</TableCell>
                     <TableCell className="text-right">$250.00</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">INV002</TableCell>
-                    <TableCell><Badge variant="secondary">Pending</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">Pending</Badge>
+                    </TableCell>
                     <TableCell>PayPal</TableCell>
                     <TableCell className="text-right">$150.00</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">INV003</TableCell>
-                    <TableCell><Badge variant="outline">Unpaid</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant="outline">Unpaid</Badge>
+                    </TableCell>
                     <TableCell>Bank Transfer</TableCell>
                     <TableCell className="text-right">$350.00</TableCell>
                   </TableRow>
@@ -550,7 +629,7 @@ export default function AllUIComponentsPage() {
       {/* Feedback Section */}
       <section className="space-y-6">
         <h2 className="text-3xl font-bold border-b pb-2">Feedback & Status</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Skeletons</h3>

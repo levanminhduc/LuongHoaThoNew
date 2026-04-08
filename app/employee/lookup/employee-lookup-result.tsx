@@ -84,99 +84,62 @@ export function EmployeeLookupResult({
             Tóm Tắt Lương
           </h3>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-blue-600">
-                    Hệ Số Làm Việc
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold text-blue-700">
-                    {formatNumber(result.he_so_lam_viec || 0)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-green-600">
-                    Hệ Số Phụ Cấp KQ
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold text-green-700">
-                    {formatNumber(result.he_so_phu_cap_ket_qua || 0)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-purple-50 border-purple-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-purple-600">
-                    Tiền Khen Thưởng Chuyên Cần
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold text-purple-700">
-                    {formatCurrency(result.tien_khen_thuong_chuyen_can || 0)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-pink-50 border-pink-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-pink-600">PC Lương</p>
-                  <p className="text-lg md:text-2xl font-bold text-pink-700">
-                    {formatCurrency(
-                      (result.tien_tang_ca_vuot || 0) +
-                        (result.luong_cnkcp_vuot || 0),
-                    )}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-orange-50 border-orange-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-orange-600">
-                    Lương Học Việc PC
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold text-orange-700">
-                    {formatCurrency(result.luong_hoc_viec_pc_luong || 0)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-red-600">
-                    BHXH BHTN BHYT
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold text-red-700">
-                    {formatCurrency(result.bhxh_bhtn_bhyt_total || 0)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="col-span-2 bg-emerald-50 border-emerald-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-emerald-600">
-                    Lương Thực Nhận Cuối Kỳ
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold text-emerald-700">
-                    {formatCurrency(result.tien_luong_thuc_nhan_cuoi_ky || 0)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="divide-y divide-gray-100">
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-700">Hệ Số Làm Việc:</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(result.he_so_lam_viec || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-700">Hệ Số Phụ Cấp KQ:</span>
+              <span className="font-semibold text-gray-900">
+                {formatNumber(result.he_so_phu_cap_ket_qua || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-700">
+                Tiền Khen Thưởng Chuyên Cần:
+              </span>
+              <span className="font-semibold text-gray-900">
+                {formatCurrency(result.tien_khen_thuong_chuyen_can || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-700">PC Lương:</span>
+              <span className="font-semibold text-gray-900">
+                {formatCurrency(
+                  (result.tien_tang_ca_vuot || 0) +
+                    (result.luong_cnkcp_vuot || 0),
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-700">Lương Học Việc PC:</span>
+              <span className="font-semibold text-gray-900">
+                {formatCurrency(result.luong_hoc_viec_pc_luong || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-700">BHXH BHTN BHYT:</span>
+              <span className="font-semibold text-gray-900">
+                {formatCurrency(result.bhxh_bhtn_bhyt_total || 0)}
+              </span>
+            </div>
           </div>
+
+          <Card className="mt-4 bg-emerald-50 border-emerald-200">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm font-medium text-emerald-600">
+                  Lương Thực Nhận Cuối Kỳ
+                </p>
+                <p className="text-lg md:text-2xl font-bold text-emerald-700">
+                  {formatCurrency(result.tien_luong_thuc_nhan_cuoi_ky || 0)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Separator />

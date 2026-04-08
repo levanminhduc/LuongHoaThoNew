@@ -148,8 +148,7 @@ export default function BulkExportPage() {
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(
-          (json as { error?: string }).error ??
-            `Lỗi xuất file (${res.status})`,
+          (json as { error?: string }).error ?? `Lỗi xuất file (${res.status})`,
         );
       }
 
@@ -175,7 +174,8 @@ export default function BulkExportPage() {
     }
   }
 
-  const allSelected = selected.size === departments.length && departments.length > 0;
+  const allSelected =
+    selected.size === departments.length && departments.length > 0;
 
   return (
     <div className="space-y-4 sm:space-y-6">

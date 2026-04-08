@@ -14,6 +14,7 @@ Admin needs to backdate or adjust signature timestamps for employee payroll reco
 ## Capabilities
 
 ### New Capabilities
+
 - `admin-update-employee-signature-date`: Admin can update signed_at for already-signed employee payroll records. Supports bulk (all) or selective (specific employees) mode with optional random date offset ±N days and random time.
 - `admin-manage-management-signature-date`: Admin can update signed_at for existing management signatures or create new ones (sign on behalf) with custom date. Covers all 3 types: giam_doc, ke_toan, nguoi_lap_bieu. Auto-resolves signer from DB by role.
 - `admin-signature-date-dialog`: Admin UI dialog component with two sections — employee signatures (bulk/selective with date picker and random range) and management signatures (view status, update date, or sign on behalf).

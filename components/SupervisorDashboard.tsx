@@ -983,18 +983,14 @@ export default function SupervisorDashboard({
                   </TableHeader>
                   <TableBody>
                     {payrollData.map((payroll, index) => (
-                      <TableRow
-                        key={payroll.id}
-                      >
+                      <TableRow key={payroll.id}>
                         <TableCell className="text-center font-medium text-gray-500">
                           {index + 1}
                         </TableCell>
                         <TableCell className="font-medium font-mono text-xs sm:text-sm">
                           {payroll.employee_id}
                         </TableCell>
-                        <TableCell>
-                          {payroll.employees?.full_name}
-                        </TableCell>
+                        <TableCell>{payroll.employees?.full_name}</TableCell>
                         <TableCell>
                           <Badge
                             variant={getChucVuBadge(

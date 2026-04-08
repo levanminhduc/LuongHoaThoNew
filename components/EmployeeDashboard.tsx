@@ -563,7 +563,9 @@ export default function EmployeeDashboard({
                           <TableCell className="p-3 text-center text-xs text-muted-foreground">
                             {payroll.signed_at
                               ? (() => {
-                                  const c = payroll.signed_at.replace("T", " ").replace(/\.\d+.*$/, "");
+                                  const c = payroll.signed_at
+                                    .replace("T", " ")
+                                    .replace(/\.\d+.*$/, "");
                                   const [dp] = c.split(" ");
                                   if (!dp) return payroll.signed_at;
                                   const [y, m, d] = dp.split("-");

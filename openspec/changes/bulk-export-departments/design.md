@@ -5,6 +5,7 @@ The existing `/api/admin/payroll-export` endpoint exports payroll data for a sin
 ## Goals / Non-Goals
 
 **Goals:**
+
 - New page `/admin/bulk-export` for admins only
 - Department checklist loaded from DB (distinct departments from employees table)
 - Single POST request returns one XLSX file with all selected departments' data in one sheet
@@ -13,6 +14,7 @@ The existing `/api/admin/payroll-export` endpoint exports payroll data for a sin
 - Support both `monthly` and `t13` payroll types
 
 **Non-Goals:**
+
 - Multi-sheet output (one sheet per dept) — use existing single-dept export for that
 - ZIP file output
 - Progress streaming / SSE
