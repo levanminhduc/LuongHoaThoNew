@@ -315,7 +315,7 @@ export const PAYROLL_FIELD_DEFINITIONS: PayrollFieldDefinition[] = [
   // Thuế và khấu trừ
   {
     field: "thue_tncn_nam_2024",
-    label: "Thuế TNCN Năm 2024",
+    label: "Thuế TNCN Năm 2025",
     description: "Thuế thu nhập cá nhân năm 2024",
     data_type: "number",
     is_required: false,

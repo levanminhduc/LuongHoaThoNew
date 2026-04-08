@@ -681,7 +681,7 @@ export function SalaryHistoryModal({
                       </CardHeader>
                       <CardContent className="space-y-1">
                         <DetailRow
-                          label="Thuế TNCN Năm 2024"
+                          label="Thuế TNCN Năm 2025"
                           value={payrollData.thue_tncn_nam_2024}
                           isCurrency
                         />

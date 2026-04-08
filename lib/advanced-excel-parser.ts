@@ -248,7 +248,7 @@ export const PAYROLL_FIELD_CONFIG: PayrollFieldConfig[] = [
   },
   {
     field: "thue_tncn_nam_2024",
-    label: "Thuế TNCN Năm 2024",
+    label: "Thuế TNCN Năm 2025",
     type: "number",
     required: false,
   },

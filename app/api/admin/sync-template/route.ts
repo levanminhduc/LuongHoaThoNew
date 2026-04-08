@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
         "Tổng Cộng Tiền Lương",
         "Tiền Bốc Vác",
         "Hỗ Trợ Xăng Xe",
-        "Thuế TNCN Năm 2024",
+        "Thuế TNCN Năm 2025",
         "Tạm Ứng",
         "Thuế TNCN",
         "BHXH BHTN BHYT Total",

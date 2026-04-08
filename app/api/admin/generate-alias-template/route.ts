@@ -86,7 +86,7 @@ const DEFAULT_FIELD_HEADERS: Record<string, string> = {
   tong_cong_tien_luong: "Tổng Cộng Tiền Lương",
   tien_boc_vac: "Tiền Bốc Vác",
   ho_tro_xang_xe: "Hỗ Trợ Xăng Xe",
-  thue_tncn_nam_2024: "Thuế TNCN Năm 2024",
+  thue_tncn_nam_2024: "Thuế TNCN Năm 2025",
   tam_ung: "Tạm Ứng",
   thue_tncn: "Thuế TNCN",
   bhxh_bhtn_bhyt_total: "BHXH BHTN BHYT Total",

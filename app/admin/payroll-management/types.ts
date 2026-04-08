@@ -383,7 +383,7 @@ export const PAYROLL_FIELD_GROUPS: PayrollFieldGroup[] = [
     fields: [
       {
         key: "thue_tncn_nam_2024",
-        label: "Thuế TNCN Năm 2024",
+        label: "Thuế TNCN Năm 2025",
         type: "number",
         min: 0,
       },

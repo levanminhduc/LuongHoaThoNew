@@ -74,7 +74,7 @@ export const DEFAULT_FIELD_HEADERS: Record<string, string> = {
   ho_tro_xang_xe: "Hỗ Trợ Xăng Xe",
 
   // Thuế và bảo hiểm
-  thue_tncn_nam_2024: "Thuế TNCN Năm 2024",
+  thue_tncn_nam_2024: "Thuế TNCN Năm 2025",
   tam_ung: "Tạm Ứng",
   thue_tncn: "Thuế TNCN",
   bhxh_bhtn_bhyt_total: "BHXH + BHTN + BHYT",
