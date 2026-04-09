@@ -160,11 +160,8 @@ export async function POST(request: NextRequest) {
     } else {
       const salaryMonth = payroll.salary_month;
       if (salaryMonth && !validateMonthlyFormat(salaryMonth)) {
-        return NextResponse.json(
-          {
-            error: `Tháng lương "${salaryMonth}" không hợp lệ. Định dạng đúng: YYYY-MM (01-12)`,
-          },
-          { status: 400 },
+        console.warn(
+          `Non-standard salary_month format for employee ${employee_id}: ${salaryMonth}`,
         );
       }
     }

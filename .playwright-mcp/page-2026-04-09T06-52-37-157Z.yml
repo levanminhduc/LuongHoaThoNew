@@ -1,0 +1,50 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e49]:
+    - region "Thông báo chạy" [ref=e51]:
+      - generic [ref=e53]:
+        - generic [ref=e56]: Chào mừng bạn đến với Hệ thống Tra cứu và Ký nhận lương Công Ty May Hòa Thọ Điện Bàn
+        - generic [ref=e58]: Chào mừng bạn đến với Hệ thống Tra cứu và Ký nhận lương Công Ty May Hòa Thọ Điện Bàn
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "Tra Cứu Lương & Ký Xác Nhận Lương" [level=1] [ref=e5]
+      - heading "CÔNG TY MAY HÒA THỌ ĐIỆN BÀN" [level=2] [ref=e6]
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - img [ref=e11]
+            - text: Thông Tin Tra Cứu
+          - generic [ref=e14]:
+            - text: Nhấn vào để xem hướng dẫn →
+            - button "Hướng dẫn nhập mã nhân viên" [ref=e15] [cursor=pointer]:
+              - img [ref=e16]
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - text: Mã Nhân Viên
+            - textbox "Mã Nhân Viên" [ref=e21]:
+              - /placeholder: "Nhập mã nhân viên (VD: DB01234)"
+              - text: DB01234
+          - generic [ref=e22]:
+            - text: Mật Khẩu / CCCD
+            - generic [ref=e23]:
+              - textbox "Mật Khẩu / CCCD" [ref=e24]:
+                - /placeholder: Nhập mật khẩu hoặc số CCCD
+                - text: "123456"
+              - button [ref=e25] [cursor=pointer]:
+                - img [ref=e26]
+          - generic [ref=e30]:
+            - checkbox "Ghi nhớ đăng nhập" [ref=e31] [cursor=pointer]
+            - checkbox
+            - generic [ref=e32] [cursor=pointer]: Ghi nhớ đăng nhập
+          - alert [ref=e59]:
+            - generic [ref=e60]: Mật khẩu không đúng
+          - button "Tra Cứu Lương" [ref=e34] [cursor=pointer]:
+            - img
+            - text: Tra Cứu Lương
+          - button "Quên mật khẩu?" [ref=e36] [cursor=pointer]
+      - link "← Quay về trang chủ" [ref=e38] [cursor=pointer]:
+        - /url: /
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e44] [cursor=pointer]:
+    - img [ref=e45]
+  - alert [ref=e48]

@@ -299,7 +299,6 @@ export function useEmployeeLookup() {
       e.preventDefault();
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: "" });
-      dispatch({ type: "SET_RESULT", payload: null });
 
       try {
         const response = await fetch("/api/employee/lookup", {

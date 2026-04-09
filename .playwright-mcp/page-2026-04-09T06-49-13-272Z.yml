@@ -1,0 +1,32 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - toolbar [ref=e5]:
+      - generic [ref=e6]: Hòa Thọ Điện Bàn
+      - button [ref=e7] [cursor=pointer]:
+        - img [ref=e9]: brightness_auto
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: inventory_2
+        - heading "Quản lý Kho Chỉ" [level=1] [ref=e15]
+        - paragraph [ref=e16]: Đăng nhập để tiếp tục
+      - generic [ref=e17]:
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - generic [ref=e22]: badge
+            - generic [ref=e23]:
+              - generic: Mã Nhân Viên
+              - textbox "Mã Nhân Viên" [ref=e24]
+          - generic [ref=e27]: "Ví dụ: NV001"
+        - generic [ref=e30]:
+          - generic [ref=e32]: lock
+          - generic [ref=e33]:
+            - generic: Mật khẩu
+            - textbox "Mật khẩu" [ref=e34]
+          - generic [ref=e36] [cursor=pointer]: visibility
+        - checkbox "Ghi nhớ đăng nhập" [checked] [ref=e39] [cursor=pointer]:
+          - img [ref=e42]
+          - generic [ref=e44]: Ghi nhớ đăng nhập
+        - button "Đăng nhập" [ref=e46] [cursor=pointer]:
+          - generic [ref=e48]: Đăng nhập
+      - generic [ref=e49]: Quên mật khẩu? Liên hệ IT để cấp lại mật khẩu.
