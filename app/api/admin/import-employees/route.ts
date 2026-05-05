@@ -8,6 +8,7 @@ import { csrfProtection } from "@/lib/security-middleware";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { type JWTPayload } from "@/lib/auth";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getJwtSecret } from "@/lib/config/jwt";
 
 // Verify admin token
@@ -28,7 +29,7 @@ function verifyAdminToken(request: NextRequest) {
 
 // Hash CCCD for security
 async function hashCCCD(cccd: string): Promise<string> {
-  return await bcrypt.hash(cccd, 10);
+  return await bcrypt.hash(cccd, BCRYPT_ROUNDS);
 }
 
 export async function POST(request: NextRequest) {

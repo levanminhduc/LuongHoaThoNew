@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 
 // Enhanced JWT payload interface
 export interface JWTPayload {
@@ -296,7 +297,7 @@ export async function createAdminUser(
     const supabase = createServiceClient();
 
     // Hash password
-    const password_hash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     // Insert new admin user
     const { error } = await supabase.from("admin_users").insert({

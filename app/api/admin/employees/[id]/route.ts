@@ -6,6 +6,7 @@ import { cascadeUpdateEmployeeId } from "@/lib/cascade-update-employee";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 
 export async function PUT(
   request: NextRequest,
@@ -142,11 +143,11 @@ export async function PUT(
       };
 
       if (cccd) {
-        updateData.cccd_hash = await bcrypt.hash(cccd, 10);
+        updateData.cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
       }
 
       if (password) {
-        updateData.password_hash = await bcrypt.hash(password, 10);
+        updateData.password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
         updateData.last_password_change_at = getVietnamTimestamp();
       }
 
@@ -224,11 +225,11 @@ export async function PUT(
     };
 
     if (cccd) {
-      updateData.cccd_hash = await bcrypt.hash(cccd, 10);
+      updateData.cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
     }
 
     if (password) {
-      updateData.password_hash = await bcrypt.hash(password, 10);
+      updateData.password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
       updateData.last_password_change_at = getVietnamTimestamp();
     }
 

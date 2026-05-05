@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { rateLimit } from "@/lib/security-middleware";
 
@@ -182,8 +183,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 4: Hash new password and update ONLY password_hash
-    const saltRounds = 12; // High security
-    const newPasswordHash = await bcrypt.hash(new_password.trim(), saltRounds);
+    const newPasswordHash = await bcrypt.hash(new_password.trim(), BCRYPT_ROUNDS);
 
     // Use the stored function for atomic update
     const { error: updateError } = await supabase.rpc(

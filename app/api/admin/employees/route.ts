@@ -5,6 +5,7 @@ import { csrfProtection } from "@/lib/security-middleware";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 
 /**
@@ -318,10 +319,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cccd_hash = await bcrypt.hash(cccd, 10);
-    // If password provided, use it; otherwise use CCCD as default password
+    const cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
     const password_hash = password
-      ? await bcrypt.hash(password, 10)
+      ? await bcrypt.hash(password, BCRYPT_ROUNDS)
       : cccd_hash;
 
     const { data: newEmployee, error } = await supabase

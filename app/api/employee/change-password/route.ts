@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { rateLimit } from "@/lib/security-middleware";
 
 // Constants
@@ -196,8 +197,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Hash new password
-    const saltRounds = 12; // High security
-    const newPasswordHash = await bcrypt.hash(new_password.trim(), saltRounds);
+    const newPasswordHash = await bcrypt.hash(new_password.trim(), BCRYPT_ROUNDS);
 
     // Step 4: Update password and reset security fields
     // Build update object based on what columns exist
