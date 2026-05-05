@@ -76,12 +76,18 @@ export {
   EmployeeCreateRequestSchema,
   EmployeeUpdateRequestSchema,
   EmployeeListQuerySchema,
+  DepartmentPermissionGrantSchema,
+  DepartmentPermissionRevokeSchema,
+  DepartmentPermissionListQuerySchema,
 } from "./admin-employee";
 
 export type {
   EmployeeCreateRequest,
   EmployeeUpdateRequest,
   EmployeeListQuery,
+  DepartmentPermissionGrant,
+  DepartmentPermissionRevoke,
+  DepartmentPermissionListQuery,
 } from "./admin-employee";
 
 export {

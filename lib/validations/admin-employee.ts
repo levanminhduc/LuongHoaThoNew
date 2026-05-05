@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EmployeeIdSchema, DepartmentSchema, RoleSchema } from "./common";
+import { EmployeeIdSchema, DepartmentSchema, RoleSchema, NotesSchema } from "./common";
 
 const CCCD_REGEX = /^\d{12}$/;
 
@@ -38,3 +38,27 @@ export const EmployeeListQuerySchema = z.object({
 });
 
 export type EmployeeListQuery = z.infer<typeof EmployeeListQuerySchema>;
+
+export const DepartmentPermissionGrantSchema = z.object({
+  employee_id: EmployeeIdSchema,
+  department: DepartmentSchema,
+  notes: NotesSchema,
+});
+export type DepartmentPermissionGrant = z.infer<typeof DepartmentPermissionGrantSchema>;
+
+export const DepartmentPermissionRevokeSchema = z.object({
+  id: z.coerce.number().int().positive({ message: "Permission ID phải là số dương" }).optional(),
+  employee_id: EmployeeIdSchema.optional(),
+  department: DepartmentSchema.optional(),
+}).refine(
+  (data) => data.id !== undefined || (data.employee_id !== undefined && data.department !== undefined),
+  { message: "Cần cung cấp permission ID hoặc employee_id + department" },
+);
+export type DepartmentPermissionRevoke = z.infer<typeof DepartmentPermissionRevokeSchema>;
+
+export const DepartmentPermissionListQuerySchema = z.object({
+  employee_id: EmployeeIdSchema.optional(),
+  department: DepartmentSchema.optional(),
+  is_active: z.enum(["true", "false"]).optional(),
+});
+export type DepartmentPermissionListQuery = z.infer<typeof DepartmentPermissionListQuerySchema>;

@@ -4,6 +4,13 @@ import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  DepartmentPermissionGrantSchema,
+  DepartmentPermissionListQuerySchema,
+  DepartmentPermissionRevokeSchema,
+} from "@/lib/validations";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
@@ -19,14 +26,16 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
-    const employeeId = searchParams.get("employee_id");
-    const department = searchParams.get("department");
-    const isActive = searchParams.get("is_active");
 
-    // Updated query syntax: Use exact constraint names to resolve ambiguous relationships
-    // Supabase detected 2 foreign key relationships between department_permissions and employees:
-    // 1. fk_dept_perm_employee (employee_id -> employees.employee_id)
-    // 2. department_permissions_granted_by_fkey (granted_by -> employees.employee_id)
+    const parsedQuery = parseSchema(DepartmentPermissionListQuerySchema, Object.fromEntries(searchParams));
+    if (!parsedQuery.success) {
+      return NextResponse.json(createValidationErrorResponse(parsedQuery.errors), { status: 400 });
+    }
+
+    const employeeId = parsedQuery.data.employee_id ?? null;
+    const department = parsedQuery.data.department ?? null;
+    const isActive = parsedQuery.data.is_active ?? null;
+
     let query = supabase.from("department_permissions").select(`
         *,
         employees!fk_dept_perm_employee(
@@ -50,7 +59,7 @@ export async function GET(request: NextRequest) {
       query = query.eq("department", department);
     }
 
-    if (isActive !== null) {
+    if (isActive !== null && isActive !== undefined) {
       query = query.eq("is_active", isActive === "true");
     }
 
@@ -90,22 +99,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { employee_id, department, notes } = await request.json();
-
-    // Debug logging
-    console.log("=== DEBUG DEPARTMENT PERMISSION REQUEST ===");
-    console.log("Request data:", { employee_id, department, notes });
-    console.log("Auth user:", auth.user);
-    console.log("Auth user employee_id:", auth.user.employee_id);
-
-    if (!employee_id || !department) {
-      return NextResponse.json(
-        {
-          error: "Thiếu thông tin employee_id hoặc department",
-        },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+    const body = await request.json();
+    const parsedBody = parseSchema(DepartmentPermissionGrantSchema, body);
+    if (!parsedBody.success) {
+      return NextResponse.json(createValidationErrorResponse(parsedBody.errors), { status: 400 });
     }
+    const { employee_id, department, notes } = parsedBody.data;
 
     const supabase = createServiceClient();
 
@@ -287,18 +286,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const permissionId = searchParams.get("id");
-    const employeeId = searchParams.get("employee_id");
-    const department = searchParams.get("department");
 
-    if (!permissionId && (!employeeId || !department)) {
-      return NextResponse.json(
-        {
-          error: "Cần cung cấp permission ID hoặc employee_id + department",
-        },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+    const parsedDelete = parseSchema(DepartmentPermissionRevokeSchema, Object.fromEntries(searchParams));
+    if (!parsedDelete.success) {
+      return NextResponse.json(createValidationErrorResponse(parsedDelete.errors), { status: 400 });
     }
+
+    const permissionId = parsedDelete.data.id !== undefined ? String(parsedDelete.data.id) : null;
+    const employeeId = parsedDelete.data.employee_id ?? null;
+    const department = parsedDelete.data.department ?? null;
 
     const supabase = createServiceClient();
 
