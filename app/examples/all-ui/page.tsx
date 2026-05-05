@@ -564,7 +564,7 @@ export default function AllUIComponentsPage() {
 
         <div className="space-y-8">
           <div className="h-[200px] rounded-md border overflow-hidden">
-            <ResizablePanelGroup direction="horizontal">
+            <ResizablePanelGroup orientation="horizontal">
               <ResizablePanel defaultSize={25}>
                 <div className="flex h-full items-center justify-center p-6">
                   <span className="font-semibold">Sidebar</span>
