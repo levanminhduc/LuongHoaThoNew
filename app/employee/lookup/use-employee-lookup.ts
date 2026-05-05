@@ -12,6 +12,7 @@ import type { PayrollResult } from "@/lib/types/payroll";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 const STORAGE_KEY = "salary_lookup_credentials";
+let autoLookupInFlight = false;
 
 function encodeCredentials(employeeId: string, password: string): string {
   const data = JSON.stringify({ e: employeeId, p: password, t: Date.now() });
@@ -253,13 +254,7 @@ export function useEmployeeLookup() {
   const salaryInfoRef = useRef<HTMLDivElement>(null);
   const employeeIdInputRef = useRef<HTMLInputElement>(null);
   const cursorPositionRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const saved = decodeCredentials();
-    if (saved) {
-      dispatch({ type: "RESTORE_CREDENTIALS", payload: saved });
-    }
-  }, []);
+  const autoLookupStartedRef = useRef(false);
 
   useLayoutEffect(() => {
     if (cursorPositionRef.current === null || !employeeIdInputRef.current)
@@ -294,9 +289,18 @@ export function useEmployeeLookup() {
     return headers;
   }, [state.sessionToken]);
 
-  const handleSubmit = useCallback(
-    async (e: FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+  const runLookup = useCallback(
+    async ({
+      employeeId,
+      password,
+      rememberPassword,
+      shouldScroll,
+    }: {
+      employeeId: string;
+      password: string;
+      rememberPassword: boolean;
+      shouldScroll: boolean;
+    }) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: "" });
 
@@ -305,8 +309,8 @@ export function useEmployeeLookup() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            employee_id: state.employeeId.trim(),
-            cccd: state.cccd.trim(),
+            employee_id: employeeId.trim(),
+            cccd: password.trim(),
           }),
         });
 
@@ -321,18 +325,20 @@ export function useEmployeeLookup() {
             },
           });
 
-          if (state.rememberPassword) {
-            saveCredentials(state.employeeId.trim(), state.cccd.trim());
+          if (rememberPassword) {
+            saveCredentials(employeeId.trim(), password.trim());
           } else {
             clearCredentials();
           }
 
-          setTimeout(() => {
-            salaryInfoRef.current?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }, 100);
+          if (shouldScroll) {
+            setTimeout(() => {
+              salaryInfoRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }, 100);
+          }
         } else {
           dispatch({
             type: "SET_ERROR",
@@ -348,7 +354,38 @@ export function useEmployeeLookup() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     },
-    [state.employeeId, state.cccd, state.rememberPassword],
+    [],
+  );
+
+  useEffect(() => {
+    if (autoLookupStartedRef.current || autoLookupInFlight) return;
+    const saved = decodeCredentials();
+    if (!saved) return;
+
+    autoLookupStartedRef.current = true;
+    autoLookupInFlight = true;
+    dispatch({ type: "RESTORE_CREDENTIALS", payload: saved });
+    void runLookup({
+      employeeId: saved.employeeId,
+      password: saved.password,
+      rememberPassword: true,
+      shouldScroll: true,
+    }).finally(() => {
+      autoLookupInFlight = false;
+    });
+  }, [runLookup]);
+
+  const handleSubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      await runLookup({
+        employeeId: state.employeeId,
+        password: state.cccd,
+        rememberPassword: state.rememberPassword,
+        shouldScroll: true,
+      });
+    },
+    [runLookup, state.employeeId, state.cccd, state.rememberPassword],
   );
 
   const handleT13Submit = useCallback(async () => {

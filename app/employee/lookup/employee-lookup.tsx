@@ -103,17 +103,24 @@ export function EmployeeLookup() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handlers.handleSubmit} className="space-y-4">
+          <form
+            method="post"
+            action="/api/employee/lookup"
+            onSubmit={handlers.handleSubmit}
+            className="space-y-4"
+            autoComplete="on"
+          >
             <div className="space-y-2">
               <Label htmlFor="employeeId">Mã Nhân Viên</Label>
               <Input
                 id="employeeId"
+                name="employee_id"
                 ref={refs.employeeIdInputRef}
                 value={state.employeeId}
                 onChange={handlers.handleEmployeeIdChange}
                 placeholder="Nhập mã nhân viên (VD: DB01234)"
                 required
-                autoComplete="off"
+                autoComplete="username"
               />
             </div>
 
@@ -122,6 +129,7 @@ export function EmployeeLookup() {
               <div className="relative">
                 <Input
                   id="cccd"
+                  name="cccd"
                   type={state.showCccd ? "text" : "password"}
                   value={state.cccd}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -129,7 +137,7 @@ export function EmployeeLookup() {
                   }
                   placeholder="Nhập mật khẩu hoặc số CCCD"
                   required
-                  autoComplete="off"
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"

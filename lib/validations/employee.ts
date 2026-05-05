@@ -15,6 +15,25 @@ export const EmployeeSignSalaryRequestSchema = z.object({
   device_info: DeviceInfoSchema,
 });
 
+export const EmployeeLookupRequestSchema = z.object({
+  employee_id: EmployeeIdSchema,
+  cccd: z
+    .string()
+    .trim()
+    .min(1, { message: "Mật khẩu / CCCD không được để trống" })
+    .max(255, { message: "Mật khẩu / CCCD không được quá 255 ký tự" }),
+  is_t13: z
+    .preprocess((value) => {
+      if (value === undefined || value === null || value === "") return false;
+      if (typeof value === "string") {
+        return ["1", "true", "on", "yes"].includes(value.toLowerCase());
+      }
+      return value;
+    }, z.boolean())
+    .optional()
+    .default(false),
+});
+
 export const EmployeeSalaryHistoryRequestSchema = z.object({
   employee_id: EmployeeIdSchema,
   months: z
@@ -63,6 +82,7 @@ export const EmployeeAccessSchema = z.object({
 export type EmployeeSignSalaryRequest = z.infer<
   typeof EmployeeSignSalaryRequestSchema
 >;
+export type EmployeeLookupRequest = z.infer<typeof EmployeeLookupRequestSchema>;
 export type EmployeeSalaryHistoryRequest = z.infer<
   typeof EmployeeSalaryHistoryRequestSchema
 >;

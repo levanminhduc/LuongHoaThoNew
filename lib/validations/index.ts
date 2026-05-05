@@ -20,6 +20,7 @@ export {
 export type { Role, SignatureType, ImportStrategy, Pagination } from "./common";
 
 export {
+  EmployeeLookupRequestSchema,
   EmployeeSignSalaryRequestSchema,
   EmployeeSalaryHistoryRequestSchema,
   ManagementSignatureRequestSchema,
@@ -30,6 +31,7 @@ export {
 } from "./employee";
 
 export type {
+  EmployeeLookupRequest,
   EmployeeSignSalaryRequest,
   EmployeeSalaryHistoryRequest,
   ManagementSignatureRequest,
