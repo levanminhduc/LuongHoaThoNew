@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { SalaryMonthSchema } from "@/lib/validations";
 
 export async function GET(
   request: NextRequest,
@@ -26,13 +27,12 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const isT13 = searchParams.get("is_t13") === "true";
 
-    const monthPattern = isT13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    const formatMsg = isT13
-      ? "Định dạng tháng không hợp lệ (YYYY-13)"
-      : "Định dạng tháng không hợp lệ (YYYY-MM)";
-
-    if (!month || !monthPattern.test(month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400, headers: CACHE_HEADERS.shortPrivate });
+    const parsedMonth = SalaryMonthSchema.safeParse(month);
+    if (!parsedMonth.success) {
+      return NextResponse.json(
+        { success: false, error: "Tháng lương không hợp lệ", code: "VALIDATION_ERROR" },
+        { status: 400, headers: CACHE_HEADERS.shortPrivate },
+      );
     }
 
     const supabase = createServiceClient();

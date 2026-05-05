@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { DashboardStatsQuerySchema, parseSchema, createValidationErrorResponse } from "@/lib/validations";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -32,7 +33,11 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
-    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const parsed = parseSchema(DashboardStatsQuerySchema, Object.fromEntries(searchParams));
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), { status: 400 });
+    }
+    const payrollType = parsed.data.payroll_type;
 
     let query = supabase
       .from("payrolls")

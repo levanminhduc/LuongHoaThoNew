@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EmployeeIdSchema, DepartmentSchema, RoleSchema, NotesSchema } from "./common";
+import { EmployeeIdSchema, DepartmentSchema, RoleSchema, NotesSchema, SalaryMonthSchema } from "./common";
 
 const CCCD_REGEX = /^\d{12}$/;
 
@@ -62,3 +62,23 @@ export const DepartmentPermissionListQuerySchema = z.object({
   is_active: z.enum(["true", "false"]).optional(),
 });
 export type DepartmentPermissionListQuery = z.infer<typeof DepartmentPermissionListQuerySchema>;
+
+export const DashboardStatsQuerySchema = z.object({
+  payroll_type: z.enum(["monthly", "t13"]).default("monthly"),
+});
+export type DashboardStatsQuery = z.infer<typeof DashboardStatsQuerySchema>;
+
+export const PayrollSearchQuerySchema = z.object({
+  q: z.string().max(100).optional(),
+  salary_month: SalaryMonthSchema.optional(),
+  payroll_type: z.enum(["monthly", "t13"]).default("monthly"),
+});
+export type PayrollSearchQuery = z.infer<typeof PayrollSearchQuerySchema>;
+
+export const BulkSignatureHistoryQuerySchema = z.object({
+  month: SalaryMonthSchema.optional(),
+  payroll_type: z.enum(["monthly", "t13"]).default("monthly"),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+export type BulkSignatureHistoryQuery = z.infer<typeof BulkSignatureHistoryQuerySchema>;

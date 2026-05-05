@@ -6,6 +6,7 @@ import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { PayrollSearchQuerySchema, parseSchema, createValidationErrorResponse } from "@/lib/validations";
 
 interface EmployeeInfo {
   full_name: string | null;
@@ -41,9 +42,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get("q");
-    const salaryMonth = searchParams.get("salary_month");
-    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const parsed = parseSchema(PayrollSearchQuerySchema, Object.fromEntries(searchParams));
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), { status: 400 });
+    }
+    const { q: query, salary_month: salaryMonth, payroll_type: payrollType } = parsed.data;
 
     if (!query || query.length < 2) {
       return NextResponse.json(
@@ -201,7 +204,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (salaryMonth && salaryMonth !== "__EMPTY__") {
+    if (salaryMonth) {
       payrollQuery = payrollQuery.eq("salary_month", salaryMonth);
     }
 

@@ -79,6 +79,9 @@ export {
   DepartmentPermissionGrantSchema,
   DepartmentPermissionRevokeSchema,
   DepartmentPermissionListQuerySchema,
+  DashboardStatsQuerySchema,
+  PayrollSearchQuerySchema,
+  BulkSignatureHistoryQuerySchema,
 } from "./admin-employee";
 
 export type {
@@ -88,6 +91,9 @@ export type {
   DepartmentPermissionGrant,
   DepartmentPermissionRevoke,
   DepartmentPermissionListQuery,
+  DashboardStatsQuery,
+  PayrollSearchQuery,
+  BulkSignatureHistoryQuery,
 } from "./admin-employee";
 
 export {

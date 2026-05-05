@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { BulkSignatureHistoryQuerySchema, parseSchema, createValidationErrorResponse } from "@/lib/validations";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,10 +15,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get("month");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const offset = parseInt(searchParams.get("offset") || "0");
-    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const parsed = parseSchema(BulkSignatureHistoryQuerySchema, Object.fromEntries(searchParams));
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), { status: 400 });
+    }
+    const { month, payroll_type: payrollType, limit, offset } = parsed.data;
 
     const supabase = createServiceClient();
 
