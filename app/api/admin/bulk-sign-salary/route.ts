@@ -4,12 +4,16 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  BulkSignSalaryRequestSchema,
+} from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // 1. Verify admin authentication
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
@@ -18,21 +22,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const rawBody = await request.json();
+    const parsed = parseSchema(BulkSignSalaryRequestSchema, rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsed.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
     const {
       salary_month,
       admin_note,
       batch_size = 50,
       is_t13 = false,
-    } = await request.json();
-
-    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    const formatMsg = is_t13
-      ? "Định dạng tháng không hợp lệ (YYYY-13)"
-      : "Định dạng tháng không hợp lệ (YYYY-MM)";
-
-    if (!salary_month || !monthPattern.test(salary_month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400, headers: CACHE_HEADERS.sensitive });
-    }
+    } = parsed.data;
 
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";

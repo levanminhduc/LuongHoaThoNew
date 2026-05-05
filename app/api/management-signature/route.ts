@@ -3,6 +3,11 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ManagementSignatureRequestSchema,
+} from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,29 +25,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { salary_month, signature_type, notes, device_info, is_t13 } = body;
-
-    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    const formatMsg = is_t13
-      ? "Định dạng tháng không hợp lệ (YYYY-13)"
-      : "Định dạng tháng không hợp lệ (YYYY-MM)";
-
-    if (!salary_month || !monthPattern.test(salary_month)) {
+    const parsed = parseSchema(ManagementSignatureRequestSchema, body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: formatMsg },
+        createValidationErrorResponse(parsed.errors),
         { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
-
-    if (
-      !signature_type ||
-      !["giam_doc", "ke_toan", "nguoi_lap_bieu"].includes(signature_type)
-    ) {
-      return NextResponse.json(
-        { error: "Loại chữ ký không hợp lệ" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+    const { salary_month, signature_type, notes, device_info, is_t13 } = parsed.data;
 
     if (auth.user.role !== "admin" && auth.user.role !== signature_type) {
       return NextResponse.json(

@@ -7,18 +7,23 @@ import {
 } from "@/lib/utils/date-formatter";
 import { verifyEmployeeSession } from "@/lib/employee-session";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  EmployeeSignSalaryRequestSchema,
+} from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { salary_month, is_t13 } = body;
-
-    if (!salary_month) {
+    const parsed = parseSchema(EmployeeSignSalaryRequestSchema, body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Thiếu thông tin tháng lương" },
+        createValidationErrorResponse(parsed.errors),
         { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
+    const { salary_month, is_t13, employee_id: bodyEmployeeId, cccd } = parsed.data;
 
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";
@@ -36,8 +41,7 @@ export async function POST(request: NextRequest) {
       }
       authenticatedEmployeeId = session.employee_id;
     } else {
-      const { employee_id, cccd } = body;
-      if (!employee_id || !cccd) {
+      if (!bodyEmployeeId || !cccd) {
         return NextResponse.json(
           { error: "Thiếu thông tin bắt buộc (mã nhân viên, CCCD)" },
           { status: 400, headers: CACHE_HEADERS.sensitive },
@@ -49,7 +53,7 @@ export async function POST(request: NextRequest) {
         .select(
           "employee_id, full_name, cccd_hash, password_hash, last_password_change_at",
         )
-        .eq("employee_id", employee_id.trim())
+        .eq("employee_id", bodyEmployeeId.trim())
         .single();
 
       if (employeeError || !employee) {
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
           { status: 401, headers: CACHE_HEADERS.sensitive },
         );
       }
-      authenticatedEmployeeId = employee_id.trim();
+      authenticatedEmployeeId = bodyEmployeeId.trim();
     }
 
     // Bước 3: Lấy thông tin client để tracking
