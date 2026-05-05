@@ -14,6 +14,7 @@ import {
   getSignatureColumns,
   getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 interface BulkExportRequestBody {
   departments: string[];
@@ -222,7 +223,7 @@ export async function POST(request: NextRequest) {
     if (!auth || auth.user.role !== "admin") {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: "Request body không hợp lệ" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -245,19 +246,19 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Vui lòng chọn ít nhất một phòng ban" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
     if (!salary_month || typeof salary_month !== "string") {
       return NextResponse.json(
         { error: "Tháng lương không hợp lệ" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
     if (!payroll_type || !["monthly", "t13"].includes(payroll_type)) {
       return NextResponse.json(
         { error: "Loại lương không hợp lệ" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -301,7 +302,7 @@ export async function POST(request: NextRequest) {
           error: "Lỗi khi lấy dữ liệu lương",
           details: payrollResult.error.message,
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -526,6 +527,7 @@ export async function POST(request: NextRequest) {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": excelBuffer.length.toString(),
+        ...CACHE_HEADERS.sensitive,
       },
     });
   } catch (error) {
@@ -535,7 +537,7 @@ export async function POST(request: NextRequest) {
         error: "Có lỗi xảy ra khi xuất dữ liệu lương",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

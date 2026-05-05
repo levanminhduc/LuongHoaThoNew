@@ -16,6 +16,7 @@ import {
   EmployeeLookupRequestSchema,
   parseSchemaOrThrow,
 } from "@/lib/validations";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 type ResponseFormat = "json" | "html";
 
@@ -188,7 +189,7 @@ function createLookupErrorResponse(
   if (responseFormat === "html") {
     return createHtmlResponse(renderErrorHtml(error, employeeId), status);
   }
-  return NextResponse.json({ error }, { status });
+  return NextResponse.json({ error }, { status, headers: CACHE_HEADERS.sensitive });
 }
 
 function createLookupSuccessResponse(
@@ -199,11 +200,10 @@ function createLookupSuccessResponse(
   if (responseFormat === "html") {
     return createHtmlResponse(renderLookupResultHtml(payroll));
   }
-  return NextResponse.json({
-    success: true,
-    payroll,
-    session_token,
-  });
+  return NextResponse.json(
+    { success: true, payroll, session_token },
+    { headers: CACHE_HEADERS.sensitive },
+  );
 }
 
 function validateMonthlyFormat(salaryMonth: string): boolean {

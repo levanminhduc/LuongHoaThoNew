@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching bulk signature history:", error);
       return NextResponse.json(
         { error: "Lỗi khi lấy lịch sử ký hàng loạt" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -55,9 +56,9 @@ export async function GET(request: NextRequest) {
         offset,
         hasMore: (count || 0) > offset + limit,
       },
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Get bulk signature history error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
   }
 }

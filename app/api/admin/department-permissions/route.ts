@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền quản lý phân quyền" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -61,17 +62,17 @@ export async function GET(request: NextRequest) {
       console.error("Database error:", error);
       return NextResponse.json(
         { error: "Lỗi truy vấn dữ liệu" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     return NextResponse.json({
       success: true,
       permissions,
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Get department permissions error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
   }
 }
 
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền cấp phân quyền" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Thiếu thông tin employee_id hoặc department",
         },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Nhân viên không tồn tại hoặc đã bị khóa",
         },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
           error:
             "Chỉ có thể cấp quyền cho nhân viên có chức vụ giám đốc, kế toán, người lập biểu, trưởng phòng hoặc tổ trưởng",
         },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
           {
             error: "Quyền truy cập department này đã được cấp cho nhân viên",
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       } else {
         // Reactivate existing permission
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
         if (updateError) {
           return NextResponse.json(
             { error: "Lỗi cập nhật quyền truy cập" },
-            { status: 500 },
+            { status: 500, headers: CACHE_HEADERS.sensitive },
           );
         }
 
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
           success: true,
           message: "Đã kích hoạt lại quyền truy cập department",
           permission: updatedPermission,
-        });
+        }, { headers: CACHE_HEADERS.sensitive });
       }
     }
 
@@ -220,7 +221,7 @@ export async function POST(request: NextRequest) {
           {
             error: "Nhân viên đã có quyền truy cập department này",
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       } else if (insertError.code === "23503") {
         // Foreign key constraint violation
@@ -229,14 +230,14 @@ export async function POST(request: NextRequest) {
             error:
               "Dữ liệu tham chiếu không hợp lệ (employee_id hoặc granted_by)",
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       } else {
         return NextResponse.json(
           {
             error: `Lỗi tạo quyền truy cập: ${insertError.message}`,
           },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
     }
@@ -263,11 +264,11 @@ export async function POST(request: NextRequest) {
         message: "Đã cấp quyền truy cập department thành công",
         permission: newPermission,
       },
-      { status: 201 },
+      { status: 201, headers: CACHE_HEADERS.sensitive },
     );
   } catch (error) {
     console.error("Create department permission error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
   }
 }
 
@@ -281,7 +282,7 @@ export async function DELETE(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền thu hồi phân quyền" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -295,7 +296,7 @@ export async function DELETE(request: NextRequest) {
         {
           error: "Cần cung cấp permission ID hoặc employee_id + department",
         },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -326,14 +327,14 @@ export async function DELETE(request: NextRequest) {
       console.error("Revoke permission error:", error);
       return NextResponse.json(
         { error: "Lỗi thu hồi quyền truy cập" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (!revokedPermission) {
       return NextResponse.json(
         { error: "Không tìm thấy quyền truy cập" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -357,9 +358,9 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: "Đã thu hồi quyền truy cập department thành công",
       permission: revokedPermission,
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Delete department permission error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
   }
 }

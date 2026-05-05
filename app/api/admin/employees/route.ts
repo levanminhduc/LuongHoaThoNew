@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 /**
  * @swagger
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching employees:", error);
       return NextResponse.json(
         { error: "Lỗi khi lấy danh sách nhân viên" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -149,10 +150,10 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil((count || 0) / limit),
       },
       departments: uniqueDepartments,
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Employee GET error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi server" }, { status: 500, headers: CACHE_HEADERS.sensitive });
   }
 }
 
@@ -240,7 +241,7 @@ export async function POST(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -259,7 +260,7 @@ export async function POST(request: NextRequest) {
     if (!employee_id || !full_name || !cccd || !chuc_vu) {
       return NextResponse.json(
         { error: "Thiếu thông tin bắt buộc" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -267,7 +268,7 @@ export async function POST(request: NextRequest) {
     if (!/^\d{12}$/.test(cccd)) {
       return NextResponse.json(
         { error: "CCCD phải có đúng 12 chữ số" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -275,7 +276,7 @@ export async function POST(request: NextRequest) {
     if (password && password.length < 6) {
       return NextResponse.json(
         { error: "Mật khẩu phải có ít nhất 6 ký tự" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -292,7 +293,7 @@ export async function POST(request: NextRequest) {
     if (!validRoles.includes(chuc_vu)) {
       return NextResponse.json(
         { error: "Chức vụ không hợp lệ" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -300,7 +301,7 @@ export async function POST(request: NextRequest) {
     if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {
       return NextResponse.json(
         { error: "Không có quyền tạo nhân viên với chức vụ này" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -315,7 +316,7 @@ export async function POST(request: NextRequest) {
     if (existing) {
       return NextResponse.json(
         { error: "Mã nhân viên đã tồn tại" },
-        { status: 409 },
+        { status: 409, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -360,7 +361,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Lỗi khi tạo nhân viên" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -383,9 +384,9 @@ export async function POST(request: NextRequest) {
       success: true,
       employee: newEmployee,
       message: "Tạo nhân viên thành công",
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Employee POST error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi server" }, { status: 500, headers: CACHE_HEADERS.sensitive });
   }
 }

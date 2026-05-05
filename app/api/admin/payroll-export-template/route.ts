@@ -4,6 +4,7 @@ import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
 import { getJwtSecret } from "@/lib/config/jwt";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 // Verify admin token
 function verifyAdminToken(request: NextRequest) {
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -164,7 +165,7 @@ export async function GET(request: NextRequest) {
         last_updated: lastUpdated?.updated_at
           ? new Date(lastUpdated.updated_at).getTime()
           : 0,
-      });
+      }, { headers: CACHE_HEADERS.sensitive });
     }
 
     // Load mapping configuration if specified
@@ -348,6 +349,7 @@ export async function GET(request: NextRequest) {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Content-Length": excelBuffer.length.toString(),
+      ...CACHE_HEADERS.sensitive,
     };
 
     // Add mapping configuration metadata to headers
@@ -369,7 +371,7 @@ export async function GET(request: NextRequest) {
     console.error("Export template error:", error);
     return NextResponse.json(
       { error: "Lỗi khi tạo template export" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

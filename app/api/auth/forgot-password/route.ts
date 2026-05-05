@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { rateLimit } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000;
@@ -84,21 +85,21 @@ export async function POST(request: NextRequest) {
     if (!employee_code || !cccd || !new_password) {
       return NextResponse.json(
         { error: "Vui lòng điền đầy đủ thông tin" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (new_password.length < 8) {
       return NextResponse.json(
         { error: "Mật khẩu mới phải có ít nhất 8 ký tự" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
       return NextResponse.json(
         { error: "Mật khẩu mới phải có cả chữ và số" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
       );
       return NextResponse.json(
         { error: "Thông tin không hợp lệ" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
             error:
               "Tài khoản tạm thời bị khóa do quá nhiều lần thử sai. Vui lòng thử lại sau 30 phút.",
           },
-          { status: 403 },
+          { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
     }
@@ -213,7 +214,7 @@ export async function POST(request: NextRequest) {
           {
             error: `Vì lý do bảo mật, bạn chỉ có thể sử dụng chức năng Quên mật khẩu sau 24 giờ kể từ lần đổi mật khẩu trước. Bạn đã thay đổi mật khẩu vào lúc ${lastChangeDateFormatted}. Vui lòng thử lại sau ${hoursRemaining} giờ nữa hoặc liên hệ admin nếu cần hỗ trợ.`,
           },
-          { status: 403 },
+          { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
     }
@@ -264,7 +265,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Thông tin không hợp lệ" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -306,7 +307,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Không thể cập nhật mật khẩu. Vui lòng thử lại." },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -340,12 +341,12 @@ export async function POST(request: NextRequest) {
       success: true,
       message:
         "Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Forgot password error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra. Vui lòng thử lại sau." },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

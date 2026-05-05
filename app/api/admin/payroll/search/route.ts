@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 interface EmployeeInfo {
   full_name: string | null;
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     if (!query || query.length < 2) {
       return NextResponse.json(
         { error: "Từ khóa tìm kiếm phải có ít nhất 2 ký tự" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
           {
             error: "Không thể kết nối database. Vui lòng kiểm tra cấu hình.",
           },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
     } catch (connectError) {
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
         {
           error: "Lỗi kết nối database nghiêm trọng.",
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -108,51 +109,63 @@ export async function GET(request: NextRequest) {
             error:
               "Lỗi truy cập database. Vui lòng kiểm tra cấu hình RLS policies.",
           },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
 
       // Use existence check results
       if (!payrollExists || payrollExists.length === 0) {
-        return NextResponse.json({
-          success: true,
-          results: [],
-          total: 0,
-          message:
-            "Chưa có dữ liệu lương trong hệ thống. Vui lòng import dữ liệu trước.",
-        });
+        return NextResponse.json(
+          {
+            success: true,
+            results: [],
+            total: 0,
+            message:
+              "Chưa có dữ liệu lương trong hệ thống. Vui lòng import dữ liệu trước.",
+          },
+          { headers: CACHE_HEADERS.sensitive },
+        );
       }
 
       if (!employeeExists || employeeExists.length === 0) {
-        return NextResponse.json({
-          success: true,
-          results: [],
-          total: 0,
-          message:
-            "Chưa có dữ liệu nhân viên trong hệ thống. Vui lòng import dữ liệu trước.",
-        });
+        return NextResponse.json(
+          {
+            success: true,
+            results: [],
+            total: 0,
+            message:
+              "Chưa có dữ liệu nhân viên trong hệ thống. Vui lòng import dữ liệu trước.",
+          },
+          { headers: CACHE_HEADERS.sensitive },
+        );
       }
     }
 
     // If no data exists, return helpful message
     if (!payrollCount || payrollCount === 0) {
-      return NextResponse.json({
-        success: true,
-        results: [],
-        total: 0,
-        message:
-          "Chưa có dữ liệu lương trong hệ thống. Vui lòng import dữ liệu trước.",
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          results: [],
+          total: 0,
+          message:
+            "Chưa có dữ liệu lương trong hệ thống. Vui lòng import dữ liệu trước.",
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     if (!employeeCount || employeeCount === 0) {
-      return NextResponse.json({
-        success: true,
-        results: [],
-        total: 0,
-        message:
-          "Chưa có dữ liệu nhân viên trong hệ thống. Vui lòng import dữ liệu trước.",
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          results: [],
+          total: 0,
+          message:
+            "Chưa có dữ liệu nhân viên trong hệ thống. Vui lòng import dữ liệu trước.",
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     let payrollQuery = supabase
@@ -255,12 +268,15 @@ export async function GET(request: NextRequest) {
               created_at: record.created_at,
             }));
 
-          return NextResponse.json({
-            success: true,
-            results,
-            total: results.length,
-            note: "Used alternative query method",
-          });
+          return NextResponse.json(
+            {
+              success: true,
+              results,
+              total: results.length,
+              note: "Used alternative query method",
+            },
+            { headers: CACHE_HEADERS.sensitive },
+          );
         }
       }
     }
@@ -288,7 +304,7 @@ export async function GET(request: NextRequest) {
         {
           error: errorMessage,
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -330,11 +346,10 @@ export async function GET(request: NextRequest) {
           };
         }) || [];
 
-    return NextResponse.json({
-      success: true,
-      results,
-      total: results.length,
-    });
+    return NextResponse.json(
+      { success: true, results, total: results.length },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error(
       "Employee search error:",
@@ -345,7 +360,7 @@ export async function GET(request: NextRequest) {
       {
         error: "Có lỗi xảy ra khi tìm kiếm nhân viên",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }
@@ -360,7 +375,7 @@ export async function POST(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -387,7 +402,7 @@ export async function POST(request: NextRequest) {
         {
           error: errorMessage,
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -396,15 +411,15 @@ export async function POST(request: NextRequest) {
       ...new Set(monthsData?.map((item) => item.salary_month) || []),
     ];
 
-    return NextResponse.json({
-      success: true,
-      months: uniqueMonths,
-    });
+    return NextResponse.json(
+      { success: true, months: uniqueMonths },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Salary months fetch error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi lấy danh sách tháng lương" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

@@ -7,6 +7,7 @@ import {
 } from "@/lib/utils/date-formatter";
 import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
 import { verifyEmployeeSession } from "@/lib/employee-session";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!action) {
       return NextResponse.json(
         { error: "Thiếu thông tin bắt buộc" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       if (!session) {
         return NextResponse.json(
           { error: "Phien lam viec het han", code: "SESSION_EXPIRED" },
-          { status: 401 },
+          { status: 401, headers: CACHE_HEADERS.sensitive },
         );
       }
       authenticatedEmployeeId = session.employee_id;
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       if (!employee_id || !cccd) {
         return NextResponse.json(
           { error: "Thiếu thông tin bắt buộc" },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       if (empError || !empData) {
         return NextResponse.json(
           { error: "Không tìm thấy nhân viên với mã nhân viên đã nhập" },
-          { status: 404 },
+          { status: 404, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
       if (!isValidPassword) {
         return NextResponse.json(
           { error: "Xác thực không thành công" },
-          { status: 401 },
+          { status: 401, headers: CACHE_HEADERS.sensitive },
         );
       }
       authenticatedEmployeeId = employee_id.trim();
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (employeeError || !employee) {
       return NextResponse.json(
         { error: "Không tìm thấy nhân viên" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -109,24 +110,23 @@ export async function POST(request: NextRequest) {
       if (payrollsError) {
         return NextResponse.json(
           { error: "Không thể tải danh sách tháng lương" },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
 
       const months = payrolls?.map((p) => p.salary_month) || [];
 
-      return NextResponse.json({
-        success: true,
-        months,
-        payrollType,
-      });
+      return NextResponse.json(
+        { success: true, months, payrollType },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     if (action === "get_payroll") {
       if (!salary_month) {
         return NextResponse.json(
           { error: "Thiếu thông tin tháng lương" },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -153,7 +153,10 @@ export async function POST(request: NextRequest) {
         const errorMsg = is_t13
           ? "Không tìm thấy thông tin lương tháng 13 cho tháng này"
           : "Không tìm thấy thông tin lương cho tháng này";
-        return NextResponse.json({ error: errorMsg }, { status: 404 });
+        return NextResponse.json(
+          { error: errorMsg },
+          { status: 404, headers: CACHE_HEADERS.sensitive },
+        );
       }
 
       const baseResponse = {
@@ -201,7 +204,10 @@ export async function POST(request: NextRequest) {
           net_salary: payroll.tong_luong_13 || 0,
           tien_luong_thuc_nhan_cuoi_ky: payroll.tong_luong_13 || 0,
         };
-        return NextResponse.json({ success: true, payroll: t13Response });
+        return NextResponse.json(
+          { success: true, payroll: t13Response },
+          { headers: CACHE_HEADERS.sensitive },
+        );
       }
 
       const monthlyResponse = {
@@ -255,15 +261,21 @@ export async function POST(request: NextRequest) {
         tien_luong_thuc_nhan_cuoi_ky: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
       };
 
-      return NextResponse.json({ success: true, payroll: monthlyResponse });
+      return NextResponse.json(
+        { success: true, payroll: monthlyResponse },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
-    return NextResponse.json({ error: "Action không hợp lệ" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Action không hợp lệ" },
+      { status: 400, headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Salary history error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi xử lý yêu cầu" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

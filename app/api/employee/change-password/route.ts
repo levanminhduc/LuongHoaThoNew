@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { rateLimit } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 // Constants
 const MAX_ATTEMPTS = 5;
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     if (!employee_id || !current_password || !new_password) {
       return NextResponse.json(
         { error: "Thiếu thông tin bắt buộc" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -58,14 +59,14 @@ export async function POST(request: NextRequest) {
     if (new_password.length < 8) {
       return NextResponse.json(
         { error: "Mật khẩu mới phải có ít nhất 8 ký tự" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
       return NextResponse.json(
         { error: "Mật khẩu mới phải có cả chữ và số" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (current_password === new_password) {
       return NextResponse.json(
         { error: "Mật khẩu mới phải khác mật khẩu hiện tại" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Không tìm thấy nhân viên" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
           {
             error: `Tài khoản đã bị khóa. Vui lòng thử lại sau ${minutesLeft} phút.`,
           },
-          { status: 423 }, // Locked
+          { status: 423, headers: CACHE_HEADERS.sensitive }, // Locked
         );
       }
     }
@@ -185,13 +186,13 @@ export async function POST(request: NextRequest) {
                 ? "Tài khoản đã bị khóa do nhập sai quá nhiều lần"
                 : `Mật khẩu hiện tại không đúng. Còn ${MAX_ATTEMPTS - newFailedAttempts} lần thử.`,
           },
-          { status: 401 },
+          { status: 401, headers: CACHE_HEADERS.sensitive },
         );
       } else {
         // If columns don't exist, just return error without tracking
         return NextResponse.json(
           { error: "Mật khẩu hiện tại không đúng" },
-          { status: 401 },
+          { status: 401, headers: CACHE_HEADERS.sensitive },
         );
       }
     }
@@ -242,7 +243,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Không thể cập nhật mật khẩu. Vui lòng thử lại." },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -265,12 +266,12 @@ export async function POST(request: NextRequest) {
         password_changed: true,
         must_change_password: false,
       },
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Password change error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi đổi mật khẩu" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }
@@ -284,7 +285,7 @@ export async function GET(request: NextRequest) {
     if (!employeeId) {
       return NextResponse.json(
         { error: "Thiếu mã nhân viên" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -299,7 +300,7 @@ export async function GET(request: NextRequest) {
     if (error || !employee) {
       return NextResponse.json(
         { error: "Không tìm thấy nhân viên" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -307,9 +308,9 @@ export async function GET(request: NextRequest) {
       must_change_password:
         employee.must_change_password || !employee.password_changed_at,
       password_changed_at: employee.password_changed_at,
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Check password status error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
   }
 }

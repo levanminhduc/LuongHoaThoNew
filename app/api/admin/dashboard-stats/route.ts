@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching payrolls:", payrollsError);
       return NextResponse.json(
         { error: "Lỗi khi lấy dữ liệu lương" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
       stats,
       monthlyStats,
       payrollType,
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Dashboard stats error:", error);
     return NextResponse.json(
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
         error: "Có lỗi xảy ra khi lấy thống kê dashboard",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

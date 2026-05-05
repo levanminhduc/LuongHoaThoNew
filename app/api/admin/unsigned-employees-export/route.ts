@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import * as XLSX from "xlsx";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,14 +11,14 @@ export async function GET(request: NextRequest) {
     if (!auth) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (!["giam_doc", "ke_toan", "nguoi_lap_bieu"].includes(auth.user.role)) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     if (!month) {
       return NextResponse.json(
         { error: "Thiếu tham số month" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
     if (!payrollsData || payrollsData.length === 0) {
       return NextResponse.json(
         { error: "Không có dữ liệu để xuất" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -90,14 +91,14 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching employees:", employeeError);
       return NextResponse.json(
         { error: "Lỗi truy vấn dữ liệu nhân viên" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (!employees || employees.length === 0) {
       return NextResponse.json(
         { error: "Không có dữ liệu để xuất" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -170,6 +171,7 @@ export async function GET(request: NextRequest) {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": excelBuffer.length.toString(),
+        ...CACHE_HEADERS.sensitive,
       },
     });
   } catch (error) {
@@ -179,7 +181,7 @@ export async function GET(request: NextRequest) {
         error: "Lỗi khi xuất Excel",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

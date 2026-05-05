@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +12,7 @@ export async function GET(
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.shortPrivate },
       );
     }
 
@@ -25,7 +26,7 @@ export async function GET(
       : "Định dạng tháng không hợp lệ (YYYY-MM)";
 
     if (!monthPattern.test(month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400 });
+      return NextResponse.json({ error: formatMsg }, { status: 400, headers: CACHE_HEADERS.shortPrivate });
     }
 
     const supabase = createServiceClient();
@@ -111,9 +112,9 @@ export async function GET(
         ? Math.round((signedCount / totalCount) * 100)
         : 0,
       ...(signedEmployees.length > 0 && { signed_employees: signedEmployees }),
-    });
+    }, { headers: CACHE_HEADERS.shortPrivate });
   } catch (error) {
     console.error("Get signature stats error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.shortPrivate });
   }
 }

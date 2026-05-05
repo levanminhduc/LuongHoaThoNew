@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import XLSX from "xlsx-js-style";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 interface OvertimeExportBody {
   period_year: number;
@@ -301,7 +302,7 @@ export async function POST(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -318,7 +319,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Thiếu hoặc sai tham số period_year/period_month" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -334,13 +335,13 @@ export async function POST(request: NextRequest) {
     if (monthlyError) {
       return NextResponse.json(
         { error: "Lỗi truy vấn dữ liệu chấm công" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
     if (!monthlyData || monthlyData.length === 0) {
       return NextResponse.json(
         { error: "Không có dữ liệu để xuất" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -428,6 +429,7 @@ export async function POST(request: NextRequest) {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": buffer.length.toString(),
+        ...CACHE_HEADERS.sensitive,
       },
     });
   } catch (error) {
@@ -437,7 +439,7 @@ export async function POST(request: NextRequest) {
         error: "Có lỗi xảy ra khi xuất file",
         details: error instanceof Error ? error.message : "Unknown",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

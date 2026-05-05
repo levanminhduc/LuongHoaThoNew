@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền ký hàng loạt" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       : "Định dạng tháng không hợp lệ (YYYY-MM)";
 
     if (!salary_month || !monthPattern.test(salary_month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400 });
+      return NextResponse.json({ error: formatMsg }, { status: 400, headers: CACHE_HEADERS.sensitive });
     }
 
     const supabase = createServiceClient();
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
           error: "Lỗi khi lấy danh sách chưa ký",
           details: fetchError.message,
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
         total_processed: 0,
         successful: 0,
         failed: 0,
-      });
+      }, { headers: CACHE_HEADERS.sensitive });
     }
 
     const unsignedCount = unsignedPayrolls.length;
@@ -228,12 +229,12 @@ export async function POST(request: NextRequest) {
       duration_seconds: duration,
       salary_month,
       timestamp: getVietnamTimestamp(),
-    });
+    }, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Bulk sign salary error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi ký hàng loạt" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

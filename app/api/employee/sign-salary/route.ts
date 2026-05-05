@@ -6,6 +6,7 @@ import {
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
 import { verifyEmployeeSession } from "@/lib/employee-session";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     if (!salary_month) {
       return NextResponse.json(
         { error: "Thiếu thông tin tháng lương" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       if (!session) {
         return NextResponse.json(
           { error: "Phien lam viec het han", code: "SESSION_EXPIRED" },
-          { status: 401 },
+          { status: 401, headers: CACHE_HEADERS.sensitive },
         );
       }
       authenticatedEmployeeId = session.employee_id;
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       if (!employee_id || !cccd) {
         return NextResponse.json(
           { error: "Thiếu thông tin bắt buộc (mã nhân viên, CCCD)" },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       if (employeeError || !employee) {
         return NextResponse.json(
           { error: "Không tìm thấy nhân viên với mã nhân viên đã nhập" },
-          { status: 404 },
+          { status: 404, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -67,7 +68,10 @@ export async function POST(request: NextRequest) {
         const errorMsg = hasChangedPassword
           ? "Mật khẩu không đúng"
           : "Số CCCD không đúng";
-        return NextResponse.json({ error: errorMsg }, { status: 401 });
+        return NextResponse.json(
+          { error: errorMsg },
+          { status: 401, headers: CACHE_HEADERS.sensitive },
+        );
       }
       authenticatedEmployeeId = employee_id.trim();
     }
@@ -97,7 +101,7 @@ export async function POST(request: NextRequest) {
       console.error("Sign salary error:", signError);
       return NextResponse.json(
         { error: "Lỗi hệ thống khi ký tên: " + signError.message },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -113,34 +117,40 @@ export async function POST(request: NextRequest) {
         statusCode = 409; // Conflict
       }
 
-      return NextResponse.json({ error: errorMessage }, { status: statusCode });
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: statusCode, headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const salaryMonthDisplay = is_t13
       ? `Lương Tháng 13 - ${signResult.salary_month.split("-")[0]}`
       : formatSalaryMonth(signResult.salary_month);
 
-    return NextResponse.json({
-      success: true,
-      message: is_t13
-        ? "Ký nhận lương tháng 13 thành công!"
-        : "Ký nhận lương thành công!",
-      data: {
-        employee_name: signResult.signed_by,
-        signed_by: signResult.signed_by,
-        signed_at: signResult.signed_at,
-        signed_at_display: formatSignatureTime(signResult.signed_at),
-        employee_id: signResult.employee_id,
-        salary_month: signResult.salary_month,
-        salary_month_display: salaryMonthDisplay,
-        payroll_type: payrollType,
+    return NextResponse.json(
+      {
+        success: true,
+        message: is_t13
+          ? "Ký nhận lương tháng 13 thành công!"
+          : "Ký nhận lương thành công!",
+        data: {
+          employee_name: signResult.signed_by,
+          signed_by: signResult.signed_by,
+          signed_at: signResult.signed_at,
+          signed_at_display: formatSignatureTime(signResult.signed_at),
+          employee_id: signResult.employee_id,
+          salary_month: signResult.salary_month,
+          salary_month_display: salaryMonthDisplay,
+          payroll_type: payrollType,
+        },
       },
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Sign salary API error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi ký nhận lương" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

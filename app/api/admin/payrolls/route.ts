@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyAdminToken } from "@/lib/auth-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching payrolls:", payrollsError);
       return NextResponse.json(
         { error: "Lỗi khi lấy dữ liệu lương" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -47,16 +48,15 @@ export async function GET(request: NextRequest) {
       payrollType,
     };
 
-    return NextResponse.json({
-      success: true,
-      payrolls: payrolls || [],
-      stats,
-    });
+    return NextResponse.json(
+      { success: true, payrolls: payrolls || [], stats },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Get payrolls error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi lấy dữ liệu" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

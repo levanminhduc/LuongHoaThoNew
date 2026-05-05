@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyToken } from "@/lib/auth-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(
   request: NextRequest,
@@ -17,7 +18,7 @@ export async function GET(
     ) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.shortPrivate },
       );
     }
 
@@ -31,7 +32,7 @@ export async function GET(
       : "Định dạng tháng không hợp lệ (YYYY-MM)";
 
     if (!month || !monthPattern.test(month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400 });
+      return NextResponse.json({ error: formatMsg }, { status: 400, headers: CACHE_HEADERS.shortPrivate });
     }
 
     const supabase = createServiceClient();
@@ -55,7 +56,7 @@ export async function GET(
       console.error("Error fetching payrolls:", payrollError);
       return NextResponse.json(
         { error: "Lỗi khi lấy danh sách bảng lương" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.shortPrivate },
       );
     }
 
@@ -194,7 +195,7 @@ export async function GET(
               ) / 100
             : 0,
       },
-    });
+    }, { headers: CACHE_HEADERS.shortPrivate });
   } catch (error) {
     console.error("Signature progress error:", error);
     return NextResponse.json(
@@ -202,7 +203,7 @@ export async function GET(
         error: "Có lỗi xảy ra khi lấy tiến độ ký",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.shortPrivate },
     );
   }
 }

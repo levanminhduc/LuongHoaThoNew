@@ -6,6 +6,7 @@ import {
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
 import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
         { error: "Phien khong hop le", code: "INVALID_SESSION" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (!session) {
       return NextResponse.json(
         { error: "Phien lam viec het han", code: "SESSION_EXPIRED" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     if (employeeError || !employee) {
       return NextResponse.json(
         { error: "Không tìm thấy nhân viên" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -66,7 +67,10 @@ export async function GET(request: NextRequest) {
       const errorMsg = is_t13
         ? "Không tìm thấy thông tin lương tháng 13"
         : "Không tìm thấy thông tin lương";
-      return NextResponse.json({ error: errorMsg }, { status: 404 });
+      return NextResponse.json(
+        { error: errorMsg },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const baseResponse = {
@@ -113,7 +117,10 @@ export async function GET(request: NextRequest) {
         net_salary: payroll.tong_luong_13 || 0,
         tien_luong_thuc_nhan_cuoi_ky: payroll.tong_luong_13 || 0,
       };
-      return NextResponse.json({ success: true, payroll: t13Response });
+      return NextResponse.json(
+        { success: true, payroll: t13Response },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const monthlyResponse = {
@@ -164,12 +171,15 @@ export async function GET(request: NextRequest) {
       tien_luong_thuc_nhan_cuoi_ky: payroll.tien_luong_thuc_nhan_cuoi_ky || 0,
     };
 
-    return NextResponse.json({ success: true, payroll: monthlyResponse });
+    return NextResponse.json(
+      { success: true, payroll: monthlyResponse },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee detail error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi lấy chi tiết lương" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

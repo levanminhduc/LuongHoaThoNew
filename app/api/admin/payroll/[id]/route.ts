@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 // Get client IP address
 function getClientIP(request: NextRequest): string {
@@ -29,14 +30,17 @@ export async function GET(
     if (!auth) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const resolvedParams = await params;
     const payrollId = parseInt(resolvedParams.id);
     if (isNaN(payrollId)) {
-      return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
+      return NextResponse.json(
+        { error: "ID không hợp lệ" },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const supabase = createServiceClient();
@@ -71,7 +75,7 @@ export async function GET(
         // No departments allowed
         return NextResponse.json(
           { error: "Không có quyền truy cập dữ liệu này" },
-          { status: 403 },
+          { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
     } else if (auth.user.role === "to_truong") {
@@ -88,19 +92,19 @@ export async function GET(
     if (payrollError || !payrollData) {
       return NextResponse.json(
         { error: "Không tìm thấy bản ghi lương hoặc không có quyền truy cập" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      payroll: payrollData,
-    });
+    return NextResponse.json(
+      { success: true, payroll: payrollData },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Get payroll error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi lấy thông tin lương" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }
@@ -118,7 +122,7 @@ export async function PUT(
     if (!auth) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -126,14 +130,17 @@ export async function PUT(
     if (!auth.isRole("admin") && !auth.isRole("truong_phong")) {
       return NextResponse.json(
         { error: "Không có quyền chỉnh sửa dữ liệu lương" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const resolvedParams = await params;
     const payrollId = parseInt(resolvedParams.id);
     if (isNaN(payrollId)) {
-      return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
+      return NextResponse.json(
+        { error: "ID không hợp lệ" },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const { updates, changeReason } = await request.json();
@@ -141,7 +148,7 @@ export async function PUT(
     if (!updates || !changeReason) {
       return NextResponse.json(
         { error: "Thiếu dữ liệu cập nhật hoặc lý do thay đổi" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -158,7 +165,7 @@ export async function PUT(
     if (getCurrentError || !currentData) {
       return NextResponse.json(
         { error: "Không tìm thấy bản ghi lương" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -239,7 +246,7 @@ export async function PUT(
     if (Object.keys(validatedUpdates).length === 0) {
       return NextResponse.json(
         { error: "Không có thay đổi nào để cập nhật" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -257,7 +264,7 @@ export async function PUT(
       console.error("Update payroll error:", updateError);
       return NextResponse.json(
         { error: "Lỗi khi cập nhật dữ liệu lương" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -273,17 +280,20 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Cập nhật dữ liệu lương thành công",
-      payroll: updatedData,
-      changesCount: auditLogs.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Cập nhật dữ liệu lương thành công",
+        payroll: updatedData,
+        changesCount: auditLogs.length,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Update payroll error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi cập nhật dữ liệu lương" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }
