@@ -241,22 +241,25 @@ export async function POST(request: NextRequest) {
         0,
       ) || 0;
 
-    return NextResponse.json({
-      success: true,
-      overall: {
-        totalEmployees,
-        signedCount,
-        signedPercentage:
-          totalEmployees > 0
-            ? ((signedCount / totalEmployees) * 100).toFixed(1)
-            : "0",
-        totalSalary,
-        averageSalary:
-          totalEmployees > 0 ? Math.round(totalSalary / totalEmployees) : 0,
+    return NextResponse.json(
+      {
+        success: true,
+        overall: {
+          totalEmployees,
+          signedCount,
+          signedPercentage:
+            totalEmployees > 0
+              ? ((signedCount / totalEmployees) * 100).toFixed(1)
+              : "0",
+          totalSalary,
+          averageSalary:
+            totalEmployees > 0 ? Math.round(totalSalary / totalEmployees) : 0,
+        },
+        departments: departmentStats,
+        allowed_departments: allowedDepartments,
       },
-      departments: departmentStats,
-      allowed_departments: allowedDepartments,
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Departments statistics error:", error);
     return NextResponse.json(
