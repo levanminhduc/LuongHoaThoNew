@@ -5,7 +5,15 @@ import { csrfProtection } from "@/lib/security-middleware";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  EmployeeListQuerySchema,
+  EmployeeCreateRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 /**
  * @swagger
@@ -75,16 +83,22 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || "";
-    const department = searchParams.get("department") || "";
-    const role = searchParams.get("role") || "";
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const parsed = parseSchema(
+      EmployeeListQuerySchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
+    }
+    const { search, department, role, page, limit } = parsed.data;
     const offset = (page - 1) * limit;
 
     const supabase = createServiceClient();
@@ -125,7 +139,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching employees:", error);
       return NextResponse.json(
         { error: "Lỗi khi lấy danh sách nhân viên" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -139,19 +153,25 @@ export async function GET(request: NextRequest) {
       ...new Set(departments?.map((d) => d.department) || []),
     ];
 
-    return NextResponse.json({
-      employees: employees || [],
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+    return NextResponse.json(
+      {
+        employees: employees || [],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+        },
+        departments: uniqueDepartments,
       },
-      departments: uniqueDepartments,
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee GET error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -239,11 +259,18 @@ export async function POST(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const body = await request.json();
+    const parsedBody = parseSchema(EmployeeCreateRequestSchema, body);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedBody.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
     const {
       employee_id,
       full_name,
@@ -252,54 +279,14 @@ export async function POST(request: NextRequest) {
       chuc_vu,
       department,
       phone_number,
-      is_active = true,
-    } = body;
-
-    if (!employee_id || !full_name || !cccd || !chuc_vu) {
-      return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
-        { status: 400 },
-      );
-    }
-
-    // Validate CCCD format (12 digits)
-    if (!/^\d{12}$/.test(cccd)) {
-      return NextResponse.json(
-        { error: "CCCD phải có đúng 12 chữ số" },
-        { status: 400 },
-      );
-    }
-
-    // Validate password if provided
-    if (password && password.length < 6) {
-      return NextResponse.json(
-        { error: "Mật khẩu phải có ít nhất 6 ký tự" },
-        { status: 400 },
-      );
-    }
-
-    const validRoles = [
-      "admin",
-      "giam_doc",
-      "ke_toan",
-      "nguoi_lap_bieu",
-      "truong_phong",
-      "to_truong",
-      "nhan_vien",
-      "van_phong",
-    ];
-    if (!validRoles.includes(chuc_vu)) {
-      return NextResponse.json(
-        { error: "Chức vụ không hợp lệ" },
-        { status: 400 },
-      );
-    }
+      is_active,
+    } = parsedBody.data;
 
     const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
     if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {
       return NextResponse.json(
         { error: "Không có quyền tạo nhân viên với chức vụ này" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -314,14 +301,13 @@ export async function POST(request: NextRequest) {
     if (existing) {
       return NextResponse.json(
         { error: "Mã nhân viên đã tồn tại" },
-        { status: 409 },
+        { status: 409, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    const cccd_hash = await bcrypt.hash(cccd, 10);
-    // If password provided, use it; otherwise use CCCD as default password
+    const cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
     const password_hash = password
-      ? await bcrypt.hash(password, 10)
+      ? await bcrypt.hash(password, BCRYPT_ROUNDS)
       : cccd_hash;
 
     const { data: newEmployee, error } = await supabase
@@ -360,7 +346,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Lỗi khi tạo nhân viên" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -379,13 +365,19 @@ export async function POST(request: NextRequest) {
       // Don't fail the main operation if audit logging fails
     }
 
-    return NextResponse.json({
-      success: true,
-      employee: newEmployee,
-      message: "Tạo nhân viên thành công",
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        employee: newEmployee,
+        message: "Tạo nhân viên thành công",
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee POST error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

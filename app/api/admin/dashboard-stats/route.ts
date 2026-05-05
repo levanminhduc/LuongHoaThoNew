@@ -3,6 +3,12 @@ import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  DashboardStatsQuerySchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -25,13 +31,22 @@ export async function GET(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
-    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const parsed = parseSchema(
+      DashboardStatsQuerySchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
+    }
+    const payrollType = parsed.data.payroll_type;
 
     let query = supabase
       .from("payrolls")
@@ -63,7 +78,7 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching payrolls:", payrollsError);
       return NextResponse.json(
         { error: "Lỗi khi lấy dữ liệu lương" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -99,13 +114,16 @@ export async function GET(request: NextRequest) {
       {} as { [key: string]: { count: number; totalSalary: number } },
     );
 
-    return NextResponse.json({
-      success: true,
-      payrolls: payrolls || [],
-      stats,
-      monthlyStats,
-      payrollType,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        payrolls: payrolls || [],
+        stats,
+        monthlyStats,
+        payrollType,
+      },
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Dashboard stats error:", error);
     return NextResponse.json(
@@ -113,7 +131,7 @@ export async function GET(request: NextRequest) {
         error: "Có lỗi xảy ra khi lấy thống kê dashboard",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

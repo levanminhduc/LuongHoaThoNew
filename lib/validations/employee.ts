@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   EmployeeIdSchema,
   SalaryMonthSchema,
-  SalaryMonthNormalSchema,
   DepartmentSchema,
   SignatureTypeSchema,
   NotesSchema,
@@ -12,7 +11,9 @@ import {
 
 export const EmployeeSignSalaryRequestSchema = z.object({
   salary_month: SalaryMonthSchema,
-  device_info: DeviceInfoSchema,
+  is_t13: z.boolean().optional(),
+  employee_id: z.string().trim().min(1).max(50).optional(),
+  cccd: z.string().trim().min(9).max(20).optional(),
 });
 
 export const EmployeeLookupRequestSchema = z.object({
@@ -43,18 +44,18 @@ export const EmployeeSalaryHistoryRequestSchema = z.object({
 });
 
 export const ManagementSignatureRequestSchema = z.object({
-  salary_month: SalaryMonthNormalSchema,
+  salary_month: SalaryMonthSchema,
   signature_type: SignatureTypeSchema,
   notes: NotesSchema,
   device_info: DeviceInfoSchema,
+  is_t13: z.boolean().optional(),
 });
 
 export const BulkSignSalaryRequestSchema = z.object({
-  salary_month: SalaryMonthNormalSchema,
-  employee_ids: z
-    .array(EmployeeIdSchema)
-    .min(1, { message: "Phải chọn ít nhất một nhân viên" }),
-  notes: NotesSchema,
+  salary_month: SalaryMonthSchema,
+  admin_note: z.string().max(500).optional(),
+  batch_size: z.number().int().min(1).max(1000).optional(),
+  is_t13: z.boolean().optional(),
 });
 
 export const SignatureStatusParamsSchema = z.object({

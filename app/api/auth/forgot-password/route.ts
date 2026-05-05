@@ -2,8 +2,15 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { rateLimit } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ForgotPasswordRequestSchema,
+} from "@/lib/validations";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000;
@@ -70,7 +77,14 @@ async function logToSecurityLogs(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employee_code, cccd, new_password } = body;
+    const parsed = parseSchema(ForgotPasswordRequestSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
+    }
+    const { employee_code, cccd, new_password } = parsed.data;
 
     const ip =
       request.headers.get("x-forwarded-for") ||
@@ -79,27 +93,6 @@ export async function POST(request: NextRequest) {
     const ua = request.headers.get("user-agent");
     const ipHash = hashIp(ip);
     const userAgent = shrinkUA(ua);
-
-    if (!employee_code || !cccd || !new_password) {
-      return NextResponse.json(
-        { error: "Vui lòng điền đầy đủ thông tin" },
-        { status: 400 },
-      );
-    }
-
-    if (new_password.length < 8) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có ít nhất 8 ký tự" },
-        { status: 400 },
-      );
-    }
-
-    if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có cả chữ và số" },
-        { status: 400 },
-      );
-    }
 
     const rateLimitResult = rateLimit("passwordReset")(request);
     if (rateLimitResult) return rateLimitResult;
@@ -137,7 +130,7 @@ export async function POST(request: NextRequest) {
       );
       return NextResponse.json(
         { error: "Thông tin không hợp lệ" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -170,7 +163,7 @@ export async function POST(request: NextRequest) {
             error:
               "Tài khoản tạm thời bị khóa do quá nhiều lần thử sai. Vui lòng thử lại sau 30 phút.",
           },
-          { status: 403 },
+          { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
     }
@@ -212,7 +205,7 @@ export async function POST(request: NextRequest) {
           {
             error: `Vì lý do bảo mật, bạn chỉ có thể sử dụng chức năng Quên mật khẩu sau 24 giờ kể từ lần đổi mật khẩu trước. Bạn đã thay đổi mật khẩu vào lúc ${lastChangeDateFormatted}. Vui lòng thử lại sau ${hoursRemaining} giờ nữa hoặc liên hệ admin nếu cần hỗ trợ.`,
           },
-          { status: 403 },
+          { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
     }
@@ -263,12 +256,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Thông tin không hợp lệ" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    const saltRounds = 12;
-    const newPasswordHash = await bcrypt.hash(new_password.trim(), saltRounds);
+    const newPasswordHash = await bcrypt.hash(
+      new_password.trim(),
+      BCRYPT_ROUNDS,
+    );
 
     const { error: updateError } = await supabase.rpc(
       "update_employee_password",
@@ -306,7 +301,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Không thể cập nhật mật khẩu. Vui lòng thử lại." },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -336,16 +331,19 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    return NextResponse.json({
-      success: true,
-      message:
-        "Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Forgot password error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra. Vui lòng thử lại sau." },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

@@ -3,6 +3,14 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  DepartmentPermissionGrantSchema,
+  DepartmentPermissionListQuerySchema,
+  DepartmentPermissionRevokeSchema,
+} from "@/lib/validations";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
@@ -12,20 +20,28 @@ export async function GET(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền quản lý phân quyền" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
-    const employeeId = searchParams.get("employee_id");
-    const department = searchParams.get("department");
-    const isActive = searchParams.get("is_active");
 
-    // Updated query syntax: Use exact constraint names to resolve ambiguous relationships
-    // Supabase detected 2 foreign key relationships between department_permissions and employees:
-    // 1. fk_dept_perm_employee (employee_id -> employees.employee_id)
-    // 2. department_permissions_granted_by_fkey (granted_by -> employees.employee_id)
+    const parsedQuery = parseSchema(
+      DepartmentPermissionListQuerySchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400 },
+      );
+    }
+
+    const employeeId = parsedQuery.data.employee_id ?? null;
+    const department = parsedQuery.data.department ?? null;
+    const isActive = parsedQuery.data.is_active ?? null;
+
     let query = supabase.from("department_permissions").select(`
         *,
         employees!fk_dept_perm_employee(
@@ -49,7 +65,7 @@ export async function GET(request: NextRequest) {
       query = query.eq("department", department);
     }
 
-    if (isActive !== null) {
+    if (isActive !== null && isActive !== undefined) {
       query = query.eq("is_active", isActive === "true");
     }
 
@@ -61,17 +77,23 @@ export async function GET(request: NextRequest) {
       console.error("Database error:", error);
       return NextResponse.json(
         { error: "Lỗi truy vấn dữ liệu" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      permissions,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        permissions,
+      },
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Get department permissions error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -85,26 +107,19 @@ export async function POST(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền cấp phân quyền" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    const { employee_id, department, notes } = await request.json();
-
-    // Debug logging
-    console.log("=== DEBUG DEPARTMENT PERMISSION REQUEST ===");
-    console.log("Request data:", { employee_id, department, notes });
-    console.log("Auth user:", auth.user);
-    console.log("Auth user employee_id:", auth.user.employee_id);
-
-    if (!employee_id || !department) {
+    const body = await request.json();
+    const parsedBody = parseSchema(DepartmentPermissionGrantSchema, body);
+    if (!parsedBody.success) {
       return NextResponse.json(
-        {
-          error: "Thiếu thông tin employee_id hoặc department",
-        },
+        createValidationErrorResponse(parsedBody.errors),
         { status: 400 },
       );
     }
+    const { employee_id, department, notes } = parsedBody.data;
 
     const supabase = createServiceClient();
 
@@ -121,7 +136,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Nhân viên không tồn tại hoặc đã bị khóa",
         },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -139,7 +154,7 @@ export async function POST(request: NextRequest) {
           error:
             "Chỉ có thể cấp quyền cho nhân viên có chức vụ giám đốc, kế toán, người lập biểu, trưởng phòng hoặc tổ trưởng",
         },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -157,7 +172,7 @@ export async function POST(request: NextRequest) {
           {
             error: "Quyền truy cập department này đã được cấp cho nhân viên",
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       } else {
         // Reactivate existing permission
@@ -176,15 +191,18 @@ export async function POST(request: NextRequest) {
         if (updateError) {
           return NextResponse.json(
             { error: "Lỗi cập nhật quyền truy cập" },
-            { status: 500 },
+            { status: 500, headers: CACHE_HEADERS.sensitive },
           );
         }
 
-        return NextResponse.json({
-          success: true,
-          message: "Đã kích hoạt lại quyền truy cập department",
-          permission: updatedPermission,
-        });
+        return NextResponse.json(
+          {
+            success: true,
+            message: "Đã kích hoạt lại quyền truy cập department",
+            permission: updatedPermission,
+          },
+          { headers: CACHE_HEADERS.sensitive },
+        );
       }
     }
 
@@ -220,7 +238,7 @@ export async function POST(request: NextRequest) {
           {
             error: "Nhân viên đã có quyền truy cập department này",
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       } else if (insertError.code === "23503") {
         // Foreign key constraint violation
@@ -229,14 +247,14 @@ export async function POST(request: NextRequest) {
             error:
               "Dữ liệu tham chiếu không hợp lệ (employee_id hoặc granted_by)",
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       } else {
         return NextResponse.json(
           {
             error: `Lỗi tạo quyền truy cập: ${insertError.message}`,
           },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
     }
@@ -263,11 +281,14 @@ export async function POST(request: NextRequest) {
         message: "Đã cấp quyền truy cập department thành công",
         permission: newPermission,
       },
-      { status: 201 },
+      { status: 201, headers: CACHE_HEADERS.sensitive },
     );
   } catch (error) {
     console.error("Create department permission error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -281,23 +302,27 @@ export async function DELETE(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền thu hồi phân quyền" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const permissionId = searchParams.get("id");
-    const employeeId = searchParams.get("employee_id");
-    const department = searchParams.get("department");
 
-    if (!permissionId && (!employeeId || !department)) {
+    const parsedDelete = parseSchema(
+      DepartmentPermissionRevokeSchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsedDelete.success) {
       return NextResponse.json(
-        {
-          error: "Cần cung cấp permission ID hoặc employee_id + department",
-        },
+        createValidationErrorResponse(parsedDelete.errors),
         { status: 400 },
       );
     }
+
+    const permissionId =
+      parsedDelete.data.id !== undefined ? String(parsedDelete.data.id) : null;
+    const employeeId = parsedDelete.data.employee_id ?? null;
+    const department = parsedDelete.data.department ?? null;
 
     const supabase = createServiceClient();
 
@@ -326,14 +351,14 @@ export async function DELETE(request: NextRequest) {
       console.error("Revoke permission error:", error);
       return NextResponse.json(
         { error: "Lỗi thu hồi quyền truy cập" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (!revokedPermission) {
       return NextResponse.json(
         { error: "Không tìm thấy quyền truy cập" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -353,13 +378,19 @@ export async function DELETE(request: NextRequest) {
       p_response_status: 200,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Đã thu hồi quyền truy cập department thành công",
-      permission: revokedPermission,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Đã thu hồi quyền truy cập department thành công",
+        permission: revokedPermission,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Delete department permission error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

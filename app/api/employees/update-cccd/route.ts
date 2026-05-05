@@ -3,9 +3,11 @@ import { createServiceClient } from "@/utils/supabase/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import type { JWTPayload } from "@/lib/auth";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import { csrfProtection } from "@/lib/security-middleware";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -23,11 +25,13 @@ function verifyAdminToken(request: NextRequest) {
 }
 
 async function hashCCCD(cccd: string): Promise<string> {
-  return await bcrypt.hash(cccd, 10);
+  return await bcrypt.hash(cccd, BCRYPT_ROUNDS);
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const adminUser = verifyAdminToken(request);
     if (!adminUser) {
       return NextResponse.json(

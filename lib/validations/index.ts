@@ -47,6 +47,9 @@ export {
   PayrollQuerySchema,
   DataValidationRequestSchema,
   ImportHistoryCreateSchema,
+  BulkPayrollExportRequestSchema,
+  PeriodExportRequestSchema,
+  DualFilesImportMetaSchema,
 } from "./payroll";
 
 export type {
@@ -55,6 +58,9 @@ export type {
   PayrollQuery,
   DataValidationRequest,
   ImportHistoryCreate,
+  BulkPayrollExportRequest,
+  PeriodExportRequest,
+  DualFilesImportMeta,
 } from "./payroll";
 
 export {
@@ -65,3 +71,41 @@ export {
 } from "./errors";
 
 export type { ValidationResult, ValidationError, ParseResult } from "./errors";
+
+export {
+  EmployeeCreateRequestSchema,
+  EmployeeUpdateRequestSchema,
+  EmployeeListQuerySchema,
+  DepartmentPermissionGrantSchema,
+  DepartmentPermissionRevokeSchema,
+  DepartmentPermissionListQuerySchema,
+  DashboardStatsQuerySchema,
+  PayrollSearchQuerySchema,
+  BulkSignatureHistoryQuerySchema,
+} from "./admin-employee";
+
+export type {
+  EmployeeCreateRequest,
+  EmployeeUpdateRequest,
+  EmployeeListQuery,
+  DepartmentPermissionGrant,
+  DepartmentPermissionRevoke,
+  DepartmentPermissionListQuery,
+  DashboardStatsQuery,
+  PayrollSearchQuery,
+  BulkSignatureHistoryQuery,
+} from "./admin-employee";
+
+export {
+  AdminLoginRequestSchema,
+  ForgotPasswordRequestSchema,
+  ChangePasswordWithCccdRequestSchema,
+  EmployeeChangePasswordRequestSchema,
+} from "./auth";
+
+export type {
+  AdminLoginRequest,
+  ForgotPasswordRequest,
+  ChangePasswordWithCccdRequest,
+  EmployeeChangePasswordRequest,
+} from "./auth";

@@ -13,6 +13,7 @@ import {
   getSignatureColumns,
   getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (!auth) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Không có quyền xuất dữ liệu" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
           {
             error: "Chưa được phân quyền truy cập department nào",
           },
-          { status: 403 },
+          { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
       query = query.in("employees.department", allowedDepartments);
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
           {
             error: "Không có quyền truy cập department này",
           },
-          { status: 403 },
+          { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
           error: "Lỗi khi lấy dữ liệu lương",
           details: error.message,
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -175,7 +176,7 @@ export async function GET(request: NextRequest) {
                 ? `Thử xuất dữ liệu cho tháng: ${uniqueMonths.slice(0, 3).join(", ")}`
                 : "Vui lòng import dữ liệu lương trước khi xuất Excel",
           },
-          { status: 404 },
+          { status: 404, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -236,7 +237,7 @@ export async function GET(request: NextRequest) {
       if (filteredData.length === 0) {
         return NextResponse.json(
           { error: "Không có dữ liệu để xuất" },
-          { status: 404 },
+          { status: 404, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -607,6 +608,7 @@ export async function GET(request: NextRequest) {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": excelBuffer.length.toString(),
+        ...CACHE_HEADERS.sensitive,
       },
     });
   } catch (error) {
@@ -620,7 +622,7 @@ export async function GET(request: NextRequest) {
         error: "Có lỗi xảy ra khi xuất dữ liệu lương",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

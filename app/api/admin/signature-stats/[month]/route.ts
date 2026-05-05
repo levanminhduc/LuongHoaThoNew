@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { SalaryMonthSchema } from "@/lib/validations";
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +13,7 @@ export async function GET(
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.shortPrivate },
       );
     }
 
@@ -19,13 +21,16 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const isT13 = searchParams.get("is_t13") === "true";
 
-    const monthPattern = isT13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    const formatMsg = isT13
-      ? "Định dạng tháng không hợp lệ (YYYY-13)"
-      : "Định dạng tháng không hợp lệ (YYYY-MM)";
-
-    if (!monthPattern.test(month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400 });
+    const parsedMonth = SalaryMonthSchema.safeParse(month);
+    if (!parsedMonth.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Tháng lương không hợp lệ",
+          code: "VALIDATION_ERROR",
+        },
+        { status: 400, headers: CACHE_HEADERS.shortPrivate },
+      );
     }
 
     const supabase = createServiceClient();
@@ -100,20 +105,28 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      month,
-      payroll_type: isT13 ? "t13" : "monthly",
-      total_employees: totalCount,
-      already_signed: signedCount,
-      unsigned: unsignedCount,
-      completion_percentage: totalCount
-        ? Math.round((signedCount / totalCount) * 100)
-        : 0,
-      ...(signedEmployees.length > 0 && { signed_employees: signedEmployees }),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        month,
+        payroll_type: isT13 ? "t13" : "monthly",
+        total_employees: totalCount,
+        already_signed: signedCount,
+        unsigned: unsignedCount,
+        completion_percentage: totalCount
+          ? Math.round((signedCount / totalCount) * 100)
+          : 0,
+        ...(signedEmployees.length > 0 && {
+          signed_employees: signedEmployees,
+        }),
+      },
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Get signature stats error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.shortPrivate },
+    );
   }
 }

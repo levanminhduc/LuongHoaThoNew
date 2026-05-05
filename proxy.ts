@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 import { MAINTENANCE_MODE } from "@/lib/maintenance";
+import { applySecurityHeadersTo } from "@/lib/security-middleware";
 
 const PROTECTED_PATHS = [
   "/admin",
@@ -58,7 +59,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return await updateSession(request);
+  const response = await updateSession(request);
+  applySecurityHeadersTo(response);
+  return response;
 }
 
 export const config = {

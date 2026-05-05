@@ -3,11 +3,12 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import XLSX from "xlsx-js-style";
-
-interface OvertimeExportBody {
-  period_year: number;
-  period_month: number;
-}
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  PeriodExportRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 interface DailyExportRecord {
   day: number;
@@ -301,26 +302,20 @@ export async function POST(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    const body: OvertimeExportBody = await request.json();
-    const { period_year, period_month } = body;
-
-    if (
-      !period_year ||
-      !period_month ||
-      period_month < 1 ||
-      period_month > 12 ||
-      period_year < 2000 ||
-      period_year > 2100
-    ) {
-      return NextResponse.json(
-        { error: "Thiếu hoặc sai tham số period_year/period_month" },
-        { status: 400 },
-      );
+    const rawBody = await request.json();
+    const parsed = parseSchema(PeriodExportRequestSchema, rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
+
+    const { period_year, period_month } = parsed.data;
 
     const supabase = createServiceClient();
     const daysInMonth = new Date(period_year, period_month, 0).getDate();
@@ -334,13 +329,13 @@ export async function POST(request: NextRequest) {
     if (monthlyError) {
       return NextResponse.json(
         { error: "Lỗi truy vấn dữ liệu chấm công" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
     if (!monthlyData || monthlyData.length === 0) {
       return NextResponse.json(
         { error: "Không có dữ liệu để xuất" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -428,6 +423,7 @@ export async function POST(request: NextRequest) {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": buffer.length.toString(),
+        ...CACHE_HEADERS.sensitive,
       },
     });
   } catch (error) {
@@ -437,7 +433,7 @@ export async function POST(request: NextRequest) {
         error: "Có lỗi xảy ra khi xuất file",
         details: error instanceof Error ? error.message : "Unknown",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

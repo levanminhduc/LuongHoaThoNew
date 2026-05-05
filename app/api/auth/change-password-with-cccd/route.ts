@@ -2,8 +2,15 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { rateLimit } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ChangePasswordWithCccdRequestSchema,
+} from "@/lib/validations";
 
 // Constants for account-level lockout (passed to DB RPC)
 const MAX_ATTEMPTS = 5;
@@ -60,16 +67,22 @@ function okGeneric() {
       message:
         "Nếu thông tin hợp lệ, mật khẩu đã được cập nhật. Vui lòng thử đăng nhập với mật khẩu mới.",
     },
-    { status: 200 },
+    { status: 200, headers: CACHE_HEADERS.sensitive },
   );
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employee_code, cccd, new_password } = body;
+    const parsed = parseSchema(ChangePasswordWithCccdRequestSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
+    }
+    const { employee_code, cccd, new_password } = parsed.data;
 
-    // Get IP and UA for rate limiting and logging
     const ip =
       request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
@@ -78,30 +91,6 @@ export async function POST(request: NextRequest) {
     const ipHash = hashIp(ip);
     const userAgent = shrinkUA(ua);
 
-    // Input validation
-    if (!employee_code || !cccd || !new_password) {
-      return NextResponse.json(
-        { error: "Vui lòng điền đầy đủ thông tin" },
-        { status: 400 },
-      );
-    }
-
-    // Password strength validation
-    if (new_password.length < 8) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có ít nhất 8 ký tự" },
-        { status: 400 },
-      );
-    }
-
-    if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có cả chữ và số" },
-        { status: 400 },
-      );
-    }
-
-    // Check rate limit
     const rateLimitResult = rateLimit("passwordReset")(request);
     if (rateLimitResult) return rateLimitResult;
 
@@ -182,8 +171,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 4: Hash new password and update ONLY password_hash
-    const saltRounds = 12; // High security
-    const newPasswordHash = await bcrypt.hash(new_password.trim(), saltRounds);
+    const newPasswordHash = await bcrypt.hash(
+      new_password.trim(),
+      BCRYPT_ROUNDS,
+    );
 
     // Use the stored function for atomic update
     const { error: updateError } = await supabase.rpc(
@@ -208,7 +199,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: "Không thể cập nhật mật khẩu. Vui lòng thử lại." },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -228,18 +219,22 @@ export async function POST(request: NextRequest) {
     );
 
     // Return success with clear message
-    return NextResponse.json({
-      success: true,
-      message: "Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
-      data: {
-        password_changed: true,
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
+        data: {
+          password_changed: true,
+        },
       },
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Password reset error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra. Vui lòng thử lại sau." },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }
@@ -253,7 +248,7 @@ export async function GET(request: NextRequest) {
     if (!employeeCode) {
       return NextResponse.json(
         { error: "Thiếu mã nhân viên" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -270,7 +265,7 @@ export async function GET(request: NextRequest) {
     if (error || !employee) {
       return NextResponse.json(
         { error: "Không tìm thấy nhân viên" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -280,13 +275,19 @@ export async function GET(request: NextRequest) {
       employee.password_hash === employee.cccd_hash ||
       !employee.last_password_change_at;
 
-    return NextResponse.json({
-      using_cccd_as_password: isUsingCCCD,
-      password_version: employee.password_version || 0,
-      last_change: employee.last_password_change_at,
-    });
+    return NextResponse.json(
+      {
+        using_cccd_as_password: isUsingCCCD,
+        password_version: employee.password_version || 0,
+        last_change: employee.last_password_change_at,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Check password status error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

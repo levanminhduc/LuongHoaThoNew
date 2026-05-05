@@ -6,6 +6,13 @@ import { cascadeUpdateEmployeeId } from "@/lib/cascade-update-employee";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { BCRYPT_ROUNDS } from "@/lib/constants/security";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  EmployeeUpdateRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 export async function PUT(
   request: NextRequest,
@@ -18,13 +25,20 @@ export async function PUT(
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const resolvedParams = await params;
     const { id } = resolvedParams;
     const body = await request.json();
+    const parsedBody = parseSchema(EmployeeUpdateRequestSchema, body);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedBody.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
     const {
       employee_id,
       full_name,
@@ -34,61 +48,13 @@ export async function PUT(
       department,
       phone_number,
       is_active,
-    } = body;
-
-    if (!employee_id || !full_name || !chuc_vu) {
-      return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
-        { status: 400 },
-      );
-    }
-
-    // Validate CCCD format if provided
-    if (cccd && !/^\d{12}$/.test(cccd)) {
-      return NextResponse.json(
-        { error: "CCCD phải có đúng 12 chữ số" },
-        { status: 400 },
-      );
-    }
-
-    // Validate password if provided
-    if (password && password.length < 6) {
-      return NextResponse.json(
-        { error: "Mật khẩu phải có ít nhất 6 ký tự" },
-        { status: 400 },
-      );
-    }
-
-    // Validate employee_id format
-    if (!/^[A-Za-z0-9]+$/.test(employee_id)) {
-      return NextResponse.json(
-        { error: "Mã nhân viên chỉ được chứa chữ và số" },
-        { status: 400 },
-      );
-    }
-
-    const validRoles = [
-      "admin",
-      "giam_doc",
-      "ke_toan",
-      "nguoi_lap_bieu",
-      "truong_phong",
-      "to_truong",
-      "nhan_vien",
-      "van_phong",
-    ];
-    if (!validRoles.includes(chuc_vu)) {
-      return NextResponse.json(
-        { error: "Chức vụ không hợp lệ" },
-        { status: 400 },
-      );
-    }
+    } = parsedBody.data;
 
     const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
     if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {
       return NextResponse.json(
         { error: "Không có quyền thay đổi thành chức vụ này" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -106,7 +72,7 @@ export async function PUT(
     if (!existing) {
       return NextResponse.json(
         { error: "Nhân viên không tồn tại" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -128,7 +94,7 @@ export async function PUT(
             error: cascadeResult.message,
             details: cascadeResult.error,
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -142,11 +108,11 @@ export async function PUT(
       };
 
       if (cccd) {
-        updateData.cccd_hash = await bcrypt.hash(cccd, 10);
+        updateData.cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
       }
 
       if (password) {
-        updateData.password_hash = await bcrypt.hash(password, 10);
+        updateData.password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
         updateData.last_password_change_at = getVietnamTimestamp();
       }
 
@@ -164,7 +130,7 @@ export async function PUT(
         console.error("Error updating additional fields:", updateError);
         return NextResponse.json(
           { error: "Lỗi khi cập nhật thông tin bổ sung" },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -205,13 +171,16 @@ export async function PUT(
         console.error("Audit logging failed during cascade:", auditError);
       }
 
-      return NextResponse.json({
-        success: true,
-        employee: updatedEmployee,
-        message: `Cascade update thành công! Mã nhân viên đã được thay đổi từ ${id} thành ${employee_id}. ${cascadeResult.message}`,
-        employee_id_changed: true,
-        cascade_stats: cascadeResult.affectedTables,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          employee: updatedEmployee,
+          message: `Cascade update thành công! Mã nhân viên đã được thay đổi từ ${id} thành ${employee_id}. ${cascadeResult.message}`,
+          employee_id_changed: true,
+          cascade_stats: cascadeResult.affectedTables,
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const updateData: Record<string, unknown> = {
@@ -224,11 +193,11 @@ export async function PUT(
     };
 
     if (cccd) {
-      updateData.cccd_hash = await bcrypt.hash(cccd, 10);
+      updateData.cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
     }
 
     if (password) {
-      updateData.password_hash = await bcrypt.hash(password, 10);
+      updateData.password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
       updateData.last_password_change_at = getVietnamTimestamp();
     }
 
@@ -259,7 +228,7 @@ export async function PUT(
 
       return NextResponse.json(
         { error: "Lỗi khi cập nhật nhân viên" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -344,15 +313,21 @@ export async function PUT(
       // Don't fail the main operation if audit logging fails
     }
 
-    return NextResponse.json({
-      success: true,
-      employee: updatedEmployee,
-      message: "Cập nhật nhân viên thành công",
-      employee_id_changed: false,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        employee: updatedEmployee,
+        message: "Cập nhật nhân viên thành công",
+        employee_id_changed: false,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee PUT error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -367,7 +342,7 @@ export async function DELETE(
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -377,7 +352,7 @@ export async function DELETE(
           error:
             "Không có quyền xóa nhân viên. Vui lòng vô hiệu hóa thay vì xóa.",
         },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -394,7 +369,7 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json(
         { error: "Nhân viên không tồn tại" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -428,7 +403,7 @@ export async function DELETE(
 
         return NextResponse.json(
           { error: "Lỗi khi vô hiệu hóa nhân viên" },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -449,10 +424,13 @@ export async function DELETE(
         console.error("Audit logging failed:", auditError);
       }
 
-      return NextResponse.json({
-        success: true,
-        message: "Nhân viên đã được vô hiệu hóa (có dữ liệu lương liên quan)",
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Nhân viên đã được vô hiệu hóa (có dữ liệu lương liên quan)",
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     } else {
       const { error: deleteError } = await supabase
         .from("employees")
@@ -477,7 +455,7 @@ export async function DELETE(
 
         return NextResponse.json(
           { error: "Lỗi khi xóa nhân viên" },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -495,14 +473,20 @@ export async function DELETE(
         console.error("Audit logging failed:", auditError);
       }
 
-      return NextResponse.json({
-        success: true,
-        message: "Xóa nhân viên thành công",
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Xóa nhân viên thành công",
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
   } catch (error) {
     console.error("Employee DELETE error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -515,7 +499,7 @@ export async function GET(
     if (!admin) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -534,16 +518,22 @@ export async function GET(
     if (error || !employee) {
       return NextResponse.json(
         { error: "Nhân viên không tồn tại" },
-        { status: 404 },
+        { status: 404, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      employee,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        employee,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee GET by ID error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

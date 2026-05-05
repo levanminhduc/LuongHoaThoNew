@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  BulkSignatureHistoryQuerySchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,15 +14,21 @@ export async function GET(request: NextRequest) {
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get("month");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const offset = parseInt(searchParams.get("offset") || "0");
-    const payrollType = searchParams.get("payroll_type") || "monthly";
+    const parsed = parseSchema(
+      BulkSignatureHistoryQuerySchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
+    }
+    const { month, payroll_type: payrollType, limit, offset } = parsed.data;
 
     const supabase = createServiceClient();
 
@@ -42,22 +54,28 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching bulk signature history:", error);
       return NextResponse.json(
         { error: "Lỗi khi lấy lịch sử ký hàng loạt" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-      pagination: {
-        total: count || 0,
-        limit,
-        offset,
-        hasMore: (count || 0) > offset + limit,
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+        pagination: {
+          total: count || 0,
+          limit,
+          offset,
+          hasMore: (count || 0) > offset + limit,
+        },
       },
-    });
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Get bulk signature history error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

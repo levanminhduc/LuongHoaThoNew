@@ -3,6 +3,12 @@ import { authenticateUser, type JWTPayload } from "@/lib/auth";
 import jwt from "jsonwebtoken";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { rateLimit } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  AdminLoginRequestSchema,
+} from "@/lib/validations";
 
 /**
  * @swagger
@@ -37,16 +43,16 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = rateLimit("login")(request);
     if (rateLimitResult) return rateLimitResult;
 
-    const { username, password } = await request.json();
-
-    if (!username || !password) {
-      return NextResponse.json(
-        { error: "Thiếu tên đăng nhập hoặc mật khẩu" },
-        { status: 400 },
-      );
+    const body = await request.json();
+    const parsed = parseSchema(AdminLoginRequestSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
+    const { username, password } = parsed.data;
 
-    // Use enhanced authentication
     const authResult = await authenticateUser(username, password);
 
     if (!authResult.success || !authResult.user) {
@@ -54,7 +60,7 @@ export async function POST(request: NextRequest) {
         {
           error: authResult.error || "Tên đăng nhập hoặc mật khẩu không đúng",
         },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -94,12 +100,13 @@ export async function POST(request: NextRequest) {
       path: "/",
     });
 
+    response.headers.set("Cache-Control", "private, no-store, max-age=0");
     return response;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi đăng nhập" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

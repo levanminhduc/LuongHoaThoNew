@@ -4,6 +4,11 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import XLSX from "xlsx-js-style";
 import {
+  BulkPayrollExportRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
+import {
   FIELD_HEADERS,
   VISIBLE_FIELDS,
   CELL_STYLES,
@@ -14,12 +19,7 @@ import {
   getSignatureColumns,
   getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
-
-interface BulkExportRequestBody {
-  departments: string[];
-  salary_month: string;
-  payroll_type: "monthly" | "t13";
-}
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 interface PayrollRecord {
   [key: string]: unknown;
@@ -222,44 +222,29 @@ export async function POST(request: NextRequest) {
     if (!auth || auth.user.role !== "admin") {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
-        { status: 401 },
+        { status: 401, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    let body: BulkExportRequestBody;
+    let rawBody: unknown;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return NextResponse.json(
         { error: "Request body không hợp lệ" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
-    const { departments, salary_month, payroll_type } = body;
+    const parsed = parseSchema(BulkPayrollExportRequestSchema, rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
+    }
 
-    if (
-      !departments ||
-      !Array.isArray(departments) ||
-      departments.length === 0
-    ) {
-      return NextResponse.json(
-        { error: "Vui lòng chọn ít nhất một phòng ban" },
-        { status: 400 },
-      );
-    }
-    if (!salary_month || typeof salary_month !== "string") {
-      return NextResponse.json(
-        { error: "Tháng lương không hợp lệ" },
-        { status: 400 },
-      );
-    }
-    if (!payroll_type || !["monthly", "t13"].includes(payroll_type)) {
-      return NextResponse.json(
-        { error: "Loại lương không hợp lệ" },
-        { status: 400 },
-      );
-    }
+    const { departments, salary_month, payroll_type } = parsed.data;
 
     const supabase = createServiceClient();
     const isT13 = payroll_type === "t13";
@@ -301,7 +286,7 @@ export async function POST(request: NextRequest) {
           error: "Lỗi khi lấy dữ liệu lương",
           details: payrollResult.error.message,
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -526,6 +511,7 @@ export async function POST(request: NextRequest) {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": excelBuffer.length.toString(),
+        ...CACHE_HEADERS.sensitive,
       },
     });
   } catch (error) {
@@ -535,7 +521,7 @@ export async function POST(request: NextRequest) {
         error: "Có lỗi xảy ra khi xuất dữ liệu lương",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

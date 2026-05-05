@@ -1,10 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ManagementSignatureRequestSchema,
+} from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const auth = verifyToken(request);
     if (
       !auth ||
@@ -14,36 +23,25 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Không có quyền ký xác nhận" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     const body = await request.json();
-    const { salary_month, signature_type, notes, device_info, is_t13 } = body;
-
-    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    const formatMsg = is_t13
-      ? "Định dạng tháng không hợp lệ (YYYY-13)"
-      : "Định dạng tháng không hợp lệ (YYYY-MM)";
-
-    if (!salary_month || !monthPattern.test(salary_month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400 });
+    const parsed = parseSchema(ManagementSignatureRequestSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
-
-    if (
-      !signature_type ||
-      !["giam_doc", "ke_toan", "nguoi_lap_bieu"].includes(signature_type)
-    ) {
-      return NextResponse.json(
-        { error: "Loại chữ ký không hợp lệ" },
-        { status: 400 },
-      );
-    }
+    const { salary_month, signature_type, notes, device_info, is_t13 } =
+      parsed.data;
 
     if (auth.user.role !== "admin" && auth.user.role !== signature_type) {
       return NextResponse.json(
         { error: "Chức vụ không có quyền ký loại này" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -69,7 +67,7 @@ export async function POST(request: NextRequest) {
       console.error("Error fetching payrolls:", payrollError);
       return NextResponse.json(
         { error: "Lỗi khi kiểm tra danh sách bảng lương" },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -91,7 +89,7 @@ export async function POST(request: NextRequest) {
             message: `Cần ${totalCount - signedCount} nhân viên có bảng lương ký thêm để đạt 100%`,
           },
         },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -105,14 +103,14 @@ export async function POST(request: NextRequest) {
     if (empError || !employee) {
       return NextResponse.json(
         { error: "Nhân viên không tồn tại hoặc đã bị khóa" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     if (employee.chuc_vu !== signature_type && auth.user.role !== "admin") {
       return NextResponse.json(
         { error: "Chức vụ nhân viên không khớp với loại chữ ký" },
-        { status: 400 },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
 
@@ -146,7 +144,7 @@ export async function POST(request: NextRequest) {
               department: existingSignature.department,
             },
           },
-          { status: 400 },
+          { status: 400, headers: CACHE_HEADERS.sensitive },
         );
       }
     } catch {
@@ -188,7 +186,7 @@ export async function POST(request: NextRequest) {
         console.error("Error inserting signature:", insertError);
         return NextResponse.json(
           { error: "Lỗi khi lưu chữ ký" },
-          { status: 500 },
+          { status: 500, headers: CACHE_HEADERS.sensitive },
         );
       }
 
@@ -206,26 +204,32 @@ export async function POST(request: NextRequest) {
         updatedStatus = await statusResponse.json();
       }
 
-      return NextResponse.json({
-        success: true,
-        message: "Ký xác nhận thành công",
-        signature: insertedSignature,
-        updated_status: updatedStatus,
-        timestamp: vietnamTime,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Ký xác nhận thành công",
+          signature: insertedSignature,
+          updated_status: updatedStatus,
+          timestamp: vietnamTime,
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     } catch {
       console.log(
         "Management signatures table not available - returning mock response",
       );
 
-      return NextResponse.json({
-        success: true,
-        message: "Ký xác nhận thành công (Mock - Table chưa tồn tại)",
-        signature: signatureRecord,
-        updated_status: null,
-        timestamp: vietnamTime,
-        note: "Cần chạy migration script để tạo management_signatures table",
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Ký xác nhận thành công (Mock - Table chưa tồn tại)",
+          signature: signatureRecord,
+          updated_status: null,
+          timestamp: vietnamTime,
+          note: "Cần chạy migration script để tạo management_signatures table",
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
   } catch (error) {
     console.error("Management signature error:", error);
@@ -234,7 +238,7 @@ export async function POST(request: NextRequest) {
         error: "Có lỗi xảy ra khi ký xác nhận",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }

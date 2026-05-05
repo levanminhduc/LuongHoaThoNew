@@ -16,6 +16,8 @@ import {
   EmployeeLookupRequestSchema,
   parseSchemaOrThrow,
 } from "@/lib/validations";
+import { csrfProtection } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 type ResponseFormat = "json" | "html";
 
@@ -188,7 +190,10 @@ function createLookupErrorResponse(
   if (responseFormat === "html") {
     return createHtmlResponse(renderErrorHtml(error, employeeId), status);
   }
-  return NextResponse.json({ error }, { status });
+  return NextResponse.json(
+    { error },
+    { status, headers: CACHE_HEADERS.sensitive },
+  );
 }
 
 function createLookupSuccessResponse(
@@ -199,11 +204,10 @@ function createLookupSuccessResponse(
   if (responseFormat === "html") {
     return createHtmlResponse(renderLookupResultHtml(payroll));
   }
-  return NextResponse.json({
-    success: true,
-    payroll,
-    session_token,
-  });
+  return NextResponse.json(
+    { success: true, payroll, session_token },
+    { headers: CACHE_HEADERS.sensitive },
+  );
 }
 
 function validateMonthlyFormat(salaryMonth: string): boolean {
@@ -266,6 +270,9 @@ function validateT13Format(salaryMonth: string): boolean {
  *         $ref: '#/components/responses/InternalError'
  */
 export async function POST(request: NextRequest) {
+  const csrfResult = csrfProtection(request);
+  if (csrfResult) return csrfResult;
+
   const responseFormat = getResponseFormat(request);
   let employee_id = "";
   let cccd = "";

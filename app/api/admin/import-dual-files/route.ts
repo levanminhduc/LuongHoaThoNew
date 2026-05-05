@@ -7,6 +7,11 @@ import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { PayrollValidator } from "@/lib/payroll-validation";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import {
+  DualFilesImportMetaSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 interface ColumnMapping {
   excel_column_name: string;
@@ -104,23 +109,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Parse form data
     const formData = await request.formData();
-    const file1 = formData.get("file1") as File | null;
-    const file2 = formData.get("file2") as File | null;
-    const file1MappingsStr = formData.get("file1Mappings") as string | null;
-    const file2MappingsStr = formData.get("file2Mappings") as string | null;
+    const file1Raw = formData.get("file1");
+    const file2Raw = formData.get("file2");
+    const f1MappingsRaw = formData.get("file1Mappings");
+    const f2MappingsRaw = formData.get("file2Mappings");
 
-    if (!file1 && !file2) {
-      const error = ApiErrorHandler.createError(
-        ApiErrorHandler.ErrorCodes.VALIDATION_ERROR,
-        "Cần ít nhất một file để xử lý",
-        "No files provided in request",
+    const meta = {
+      has_file1: file1Raw instanceof File,
+      has_file2: file2Raw instanceof File,
+      file1Mappings:
+        typeof f1MappingsRaw === "string" ? f1MappingsRaw : undefined,
+      file2Mappings:
+        typeof f2MappingsRaw === "string" ? f2MappingsRaw : undefined,
+    };
+
+    const metaParsed = parseSchema(DualFilesImportMetaSchema, meta);
+    if (!metaParsed.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(metaParsed.errors),
+        { status: 400 },
       );
-      return NextResponse.json(ApiErrorHandler.createErrorResponse(error), {
-        status: 400,
-      });
     }
+
+    const file1 = file1Raw instanceof File ? file1Raw : null;
+    const file2 = file2Raw instanceof File ? file2Raw : null;
+    const file1MappingsStr = meta.file1Mappings ?? null;
+    const file2MappingsStr = meta.file2Mappings ?? null;
 
     const supabase = createServiceClient();
     let totalRecords = 0;

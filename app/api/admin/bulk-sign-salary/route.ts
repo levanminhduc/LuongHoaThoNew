@@ -3,35 +3,39 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  BulkSignSalaryRequestSchema,
+} from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // 1. Verify admin authentication
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("admin")) {
       return NextResponse.json(
         { error: "Chỉ admin mới có quyền ký hàng loạt" },
-        { status: 403 },
+        { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
 
+    const rawBody = await request.json();
+    const parsed = parseSchema(BulkSignSalaryRequestSchema, rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
+    }
     const {
       salary_month,
       admin_note,
       batch_size = 50,
       is_t13 = false,
-    } = await request.json();
-
-    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    const formatMsg = is_t13
-      ? "Định dạng tháng không hợp lệ (YYYY-13)"
-      : "Định dạng tháng không hợp lệ (YYYY-MM)";
-
-    if (!salary_month || !monthPattern.test(salary_month)) {
-      return NextResponse.json({ error: formatMsg }, { status: 400 });
-    }
+    } = parsed.data;
 
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";
@@ -64,19 +68,22 @@ export async function POST(request: NextRequest) {
           error: "Lỗi khi lấy danh sách chưa ký",
           details: fetchError.message,
         },
-        { status: 500 },
+        { status: 500, headers: CACHE_HEADERS.sensitive },
       );
     }
 
     // 4. Check if there are unsigned payrolls
     if (!unsignedPayrolls || unsignedPayrolls.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: "Tất cả nhân viên đã ký hết rồi!",
-        total_processed: 0,
-        successful: 0,
-        failed: 0,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Tất cả nhân viên đã ký hết rồi!",
+          total_processed: 0,
+          successful: 0,
+          failed: 0,
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const unsignedCount = unsignedPayrolls.length;
@@ -209,31 +216,34 @@ export async function POST(request: NextRequest) {
     }
 
     const typeLabel = is_t13 ? "lương tháng 13" : "lương";
-    return NextResponse.json({
-      success: true,
-      message: `Hoàn thành ký hàng loạt ${typeLabel}! ${totalSuccessful}/${unsignedCount} thành công`,
-      bulk_batch_id: bulkBatchId,
-      payroll_type: payrollType,
-      statistics: {
-        total_employees_in_month: totalCount || 0,
-        already_signed_before: alreadySignedCount,
-        unsigned_before: unsignedCount,
-        processed: unsignedCount,
-        successful: totalSuccessful,
-        failed: totalFailed,
-        now_signed: alreadySignedCount + totalSuccessful,
-        still_unsigned: totalFailed,
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Hoàn thành ký hàng loạt ${typeLabel}! ${totalSuccessful}/${unsignedCount} thành công`,
+        bulk_batch_id: bulkBatchId,
+        payroll_type: payrollType,
+        statistics: {
+          total_employees_in_month: totalCount || 0,
+          already_signed_before: alreadySignedCount,
+          unsigned_before: unsignedCount,
+          processed: unsignedCount,
+          successful: totalSuccessful,
+          failed: totalFailed,
+          now_signed: alreadySignedCount + totalSuccessful,
+          still_unsigned: totalFailed,
+        },
+        errors: allErrors.length > 0 ? allErrors.slice(0, 10) : undefined,
+        duration_seconds: duration,
+        salary_month,
+        timestamp: getVietnamTimestamp(),
       },
-      errors: allErrors.length > 0 ? allErrors.slice(0, 10) : undefined,
-      duration_seconds: duration,
-      salary_month,
-      timestamp: getVietnamTimestamp(),
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Bulk sign salary error:", error);
     return NextResponse.json(
       { error: "Có lỗi xảy ra khi ký hàng loạt" },
-      { status: 500 },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
     );
   }
 }
