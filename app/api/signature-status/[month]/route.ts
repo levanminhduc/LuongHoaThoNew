@@ -30,7 +30,11 @@ export async function GET(
     const parsedMonth = SalaryMonthSchema.safeParse(month);
     if (!parsedMonth.success) {
       return NextResponse.json(
-        { success: false, error: "Tháng lương không hợp lệ", code: "VALIDATION_ERROR" },
+        {
+          success: false,
+          error: "Tháng lương không hợp lệ",
+          code: "VALIDATION_ERROR",
+        },
         { status: 400, headers: CACHE_HEADERS.shortPrivate },
       );
     }
@@ -140,31 +144,34 @@ export async function GET(
       "nguoi_lap_bieu",
     ].filter((type) => !managementSignatures[type]);
 
-    return NextResponse.json({
-      success: true,
-      month,
-      payroll_type: isT13 ? "t13" : "monthly",
-      employee_completion: {
-        total_employees: totalCount,
-        signed_employees: signedCount,
-        completion_percentage: completionPercentage,
-        is_100_percent_complete: is100PercentComplete,
-        unsigned_employees_sample: unsignedSample || [],
+    return NextResponse.json(
+      {
+        success: true,
+        month,
+        payroll_type: isT13 ? "t13" : "monthly",
+        employee_completion: {
+          total_employees: totalCount,
+          signed_employees: signedCount,
+          completion_percentage: completionPercentage,
+          is_100_percent_complete: is100PercentComplete,
+          unsigned_employees_sample: unsignedSample || [],
+        },
+        management_signatures: {
+          giam_doc: managementSignatures["giam_doc"] || null,
+          ke_toan: managementSignatures["ke_toan"] || null,
+          nguoi_lap_bieu: managementSignatures["nguoi_lap_bieu"] || null,
+        },
+        summary: {
+          total_signature_types: 3,
+          completed_signatures: completedSignatures,
+          remaining_signatures: remainingSignatures,
+          is_fully_signed: completedSignatures === 3,
+          employee_completion_required: is100PercentComplete,
+        },
+        timestamp: getVietnamTimestamp(),
       },
-      management_signatures: {
-        giam_doc: managementSignatures["giam_doc"] || null,
-        ke_toan: managementSignatures["ke_toan"] || null,
-        nguoi_lap_bieu: managementSignatures["nguoi_lap_bieu"] || null,
-      },
-      summary: {
-        total_signature_types: 3,
-        completed_signatures: completedSignatures,
-        remaining_signatures: remainingSignatures,
-        is_fully_signed: completedSignatures === 3,
-        employee_completion_required: is100PercentComplete,
-      },
-      timestamp: getVietnamTimestamp(),
-    }, { headers: CACHE_HEADERS.shortPrivate });
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Signature status error:", error);
     return NextResponse.json(

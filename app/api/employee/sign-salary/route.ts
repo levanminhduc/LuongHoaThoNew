@@ -21,12 +21,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = parseSchema(EmployeeSignSalaryRequestSchema, body);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
-    const { salary_month, is_t13, employee_id: bodyEmployeeId, cccd } = parsed.data;
+    const {
+      salary_month,
+      is_t13,
+      employee_id: bodyEmployeeId,
+      cccd,
+    } = parsed.data;
 
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";

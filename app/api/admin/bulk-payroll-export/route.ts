@@ -238,10 +238,10 @@ export async function POST(request: NextRequest) {
 
     const parsed = parseSchema(BulkPayrollExportRequestSchema, rawBody);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
 
     const { departments, salary_month, payroll_type } = parsed.data;

@@ -30,12 +30,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = parseSchema(ManagementSignatureRequestSchema, body);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
-    const { salary_month, signature_type, notes, device_info, is_t13 } = parsed.data;
+    const { salary_month, signature_type, notes, device_info, is_t13 } =
+      parsed.data;
 
     if (auth.user.role !== "admin" && auth.user.role !== signature_type) {
       return NextResponse.json(

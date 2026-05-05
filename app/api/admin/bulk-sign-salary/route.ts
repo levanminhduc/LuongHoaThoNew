@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.json();
     const parsed = parseSchema(BulkSignSalaryRequestSchema, rawBody);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
     const {
       salary_month,
@@ -74,13 +74,16 @@ export async function POST(request: NextRequest) {
 
     // 4. Check if there are unsigned payrolls
     if (!unsignedPayrolls || unsignedPayrolls.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: "Tất cả nhân viên đã ký hết rồi!",
-        total_processed: 0,
-        successful: 0,
-        failed: 0,
-      }, { headers: CACHE_HEADERS.sensitive });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Tất cả nhân viên đã ký hết rồi!",
+          total_processed: 0,
+          successful: 0,
+          failed: 0,
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const unsignedCount = unsignedPayrolls.length;
@@ -213,26 +216,29 @@ export async function POST(request: NextRequest) {
     }
 
     const typeLabel = is_t13 ? "lương tháng 13" : "lương";
-    return NextResponse.json({
-      success: true,
-      message: `Hoàn thành ký hàng loạt ${typeLabel}! ${totalSuccessful}/${unsignedCount} thành công`,
-      bulk_batch_id: bulkBatchId,
-      payroll_type: payrollType,
-      statistics: {
-        total_employees_in_month: totalCount || 0,
-        already_signed_before: alreadySignedCount,
-        unsigned_before: unsignedCount,
-        processed: unsignedCount,
-        successful: totalSuccessful,
-        failed: totalFailed,
-        now_signed: alreadySignedCount + totalSuccessful,
-        still_unsigned: totalFailed,
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Hoàn thành ký hàng loạt ${typeLabel}! ${totalSuccessful}/${unsignedCount} thành công`,
+        bulk_batch_id: bulkBatchId,
+        payroll_type: payrollType,
+        statistics: {
+          total_employees_in_month: totalCount || 0,
+          already_signed_before: alreadySignedCount,
+          unsigned_before: unsignedCount,
+          processed: unsignedCount,
+          successful: totalSuccessful,
+          failed: totalFailed,
+          now_signed: alreadySignedCount + totalSuccessful,
+          still_unsigned: totalFailed,
+        },
+        errors: allErrors.length > 0 ? allErrors.slice(0, 10) : undefined,
+        duration_seconds: duration,
+        salary_month,
+        timestamp: getVietnamTimestamp(),
       },
-      errors: allErrors.length > 0 ? allErrors.slice(0, 10) : undefined,
-      duration_seconds: duration,
-      salary_month,
-      timestamp: getVietnamTimestamp(),
-    }, { headers: CACHE_HEADERS.sensitive });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Bulk sign salary error:", error);
     return NextResponse.json(

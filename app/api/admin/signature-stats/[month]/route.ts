@@ -24,7 +24,11 @@ export async function GET(
     const parsedMonth = SalaryMonthSchema.safeParse(month);
     if (!parsedMonth.success) {
       return NextResponse.json(
-        { success: false, error: "Tháng lương không hợp lệ", code: "VALIDATION_ERROR" },
+        {
+          success: false,
+          error: "Tháng lương không hợp lệ",
+          code: "VALIDATION_ERROR",
+        },
         { status: 400, headers: CACHE_HEADERS.shortPrivate },
       );
     }
@@ -101,20 +105,28 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      month,
-      payroll_type: isT13 ? "t13" : "monthly",
-      total_employees: totalCount,
-      already_signed: signedCount,
-      unsigned: unsignedCount,
-      completion_percentage: totalCount
-        ? Math.round((signedCount / totalCount) * 100)
-        : 0,
-      ...(signedEmployees.length > 0 && { signed_employees: signedEmployees }),
-    }, { headers: CACHE_HEADERS.shortPrivate });
+    return NextResponse.json(
+      {
+        success: true,
+        month,
+        payroll_type: isT13 ? "t13" : "monthly",
+        total_employees: totalCount,
+        already_signed: signedCount,
+        unsigned: unsignedCount,
+        completion_percentage: totalCount
+          ? Math.round((signedCount / totalCount) * 100)
+          : 0,
+        ...(signedEmployees.length > 0 && {
+          signed_employees: signedEmployees,
+        }),
+      },
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Get signature stats error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.shortPrivate });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.shortPrivate },
+    );
   }
 }

@@ -10,7 +10,6 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 
-
 interface DailyExportRecord {
   day: number;
   checkOut: string;
@@ -310,10 +309,10 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.json();
     const parsed = parseSchema(PeriodExportRequestSchema, rawBody);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
 
     const { period_year, period_month } = parsed.data;

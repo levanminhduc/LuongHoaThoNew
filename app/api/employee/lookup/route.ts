@@ -190,7 +190,10 @@ function createLookupErrorResponse(
   if (responseFormat === "html") {
     return createHtmlResponse(renderErrorHtml(error, employeeId), status);
   }
-  return NextResponse.json({ error }, { status, headers: CACHE_HEADERS.sensitive });
+  return NextResponse.json(
+    { error },
+    { status, headers: CACHE_HEADERS.sensitive },
+  );
 }
 
 function createLookupSuccessResponse(

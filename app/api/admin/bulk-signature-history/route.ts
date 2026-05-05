@@ -2,7 +2,11 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
-import { BulkSignatureHistoryQuerySchema, parseSchema, createValidationErrorResponse } from "@/lib/validations";
+import {
+  BulkSignatureHistoryQuerySchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,9 +19,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const parsed = parseSchema(BulkSignatureHistoryQuerySchema, Object.fromEntries(searchParams));
+    const parsed = parseSchema(
+      BulkSignatureHistoryQuerySchema,
+      Object.fromEntries(searchParams),
+    );
     if (!parsed.success) {
-      return NextResponse.json(createValidationErrorResponse(parsed.errors), { status: 400 });
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
     const { month, payroll_type: payrollType, limit, offset } = parsed.data;
 
@@ -49,18 +58,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-      pagination: {
-        total: count || 0,
-        limit,
-        offset,
-        hasMore: (count || 0) > offset + limit,
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+        pagination: {
+          total: count || 0,
+          limit,
+          offset,
+          hasMore: (count || 0) > offset + limit,
+        },
       },
-    }, { headers: CACHE_HEADERS.shortPrivate });
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Get bulk signature history error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

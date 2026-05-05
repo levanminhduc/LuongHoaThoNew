@@ -171,13 +171,16 @@ export async function PUT(
         console.error("Audit logging failed during cascade:", auditError);
       }
 
-      return NextResponse.json({
-        success: true,
-        employee: updatedEmployee,
-        message: `Cascade update thành công! Mã nhân viên đã được thay đổi từ ${id} thành ${employee_id}. ${cascadeResult.message}`,
-        employee_id_changed: true,
-        cascade_stats: cascadeResult.affectedTables,
-      }, { headers: CACHE_HEADERS.sensitive });
+      return NextResponse.json(
+        {
+          success: true,
+          employee: updatedEmployee,
+          message: `Cascade update thành công! Mã nhân viên đã được thay đổi từ ${id} thành ${employee_id}. ${cascadeResult.message}`,
+          employee_id_changed: true,
+          cascade_stats: cascadeResult.affectedTables,
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     const updateData: Record<string, unknown> = {
@@ -310,15 +313,21 @@ export async function PUT(
       // Don't fail the main operation if audit logging fails
     }
 
-    return NextResponse.json({
-      success: true,
-      employee: updatedEmployee,
-      message: "Cập nhật nhân viên thành công",
-      employee_id_changed: false,
-    }, { headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      {
+        success: true,
+        employee: updatedEmployee,
+        message: "Cập nhật nhân viên thành công",
+        employee_id_changed: false,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee PUT error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -415,10 +424,13 @@ export async function DELETE(
         console.error("Audit logging failed:", auditError);
       }
 
-      return NextResponse.json({
-        success: true,
-        message: "Nhân viên đã được vô hiệu hóa (có dữ liệu lương liên quan)",
-      }, { headers: CACHE_HEADERS.sensitive });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Nhân viên đã được vô hiệu hóa (có dữ liệu lương liên quan)",
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     } else {
       const { error: deleteError } = await supabase
         .from("employees")
@@ -461,14 +473,20 @@ export async function DELETE(
         console.error("Audit logging failed:", auditError);
       }
 
-      return NextResponse.json({
-        success: true,
-        message: "Xóa nhân viên thành công",
-      }, { headers: CACHE_HEADERS.sensitive });
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Xóa nhân viên thành công",
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
   } catch (error) {
     console.error("Employee DELETE error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -504,12 +522,18 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      employee,
-    }, { headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      {
+        success: true,
+        employee,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee GET by ID error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

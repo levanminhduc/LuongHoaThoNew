@@ -34,18 +34,14 @@ export async function POST(request: NextRequest) {
     const rawBody: ExportRequestBody = await request.json();
     const parsed = parseSchema(PeriodExportRequestSchema, rawBody);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
 
     const { period_year, period_month } = parsed.data;
-    const {
-      employee_ids,
-      export_type,
-      include_daily = false,
-    } = rawBody;
+    const { employee_ids, export_type, include_daily = false } = rawBody;
 
     const supabase = createServiceClient();
 

@@ -118,8 +118,10 @@ export async function POST(request: NextRequest) {
     const meta = {
       has_file1: file1Raw instanceof File,
       has_file2: file2Raw instanceof File,
-      file1Mappings: typeof f1MappingsRaw === "string" ? f1MappingsRaw : undefined,
-      file2Mappings: typeof f2MappingsRaw === "string" ? f2MappingsRaw : undefined,
+      file1Mappings:
+        typeof f1MappingsRaw === "string" ? f1MappingsRaw : undefined,
+      file2Mappings:
+        typeof f2MappingsRaw === "string" ? f2MappingsRaw : undefined,
     };
 
     const metaParsed = parseSchema(DualFilesImportMetaSchema, meta);

@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = parseSchema(ForgotPasswordRequestSchema, body);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
     const { employee_code, cccd, new_password } = parsed.data;
 
@@ -260,7 +260,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newPasswordHash = await bcrypt.hash(new_password.trim(), BCRYPT_ROUNDS);
+    const newPasswordHash = await bcrypt.hash(
+      new_password.trim(),
+      BCRYPT_ROUNDS,
+    );
 
     const { error: updateError } = await supabase.rpc(
       "update_employee_password",
@@ -328,11 +331,14 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    return NextResponse.json({
-      success: true,
-      message:
-        "Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
-    }, { headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Forgot password error:", error);
     return NextResponse.json(

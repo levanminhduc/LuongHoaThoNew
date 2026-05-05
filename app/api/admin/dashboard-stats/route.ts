@@ -4,7 +4,11 @@ import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
-import { DashboardStatsQuerySchema, parseSchema, createValidationErrorResponse } from "@/lib/validations";
+import {
+  DashboardStatsQuerySchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -33,9 +37,14 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
-    const parsed = parseSchema(DashboardStatsQuerySchema, Object.fromEntries(searchParams));
+    const parsed = parseSchema(
+      DashboardStatsQuerySchema,
+      Object.fromEntries(searchParams),
+    );
     if (!parsed.success) {
-      return NextResponse.json(createValidationErrorResponse(parsed.errors), { status: 400 });
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
     const payrollType = parsed.data.payroll_type;
 
@@ -105,13 +114,16 @@ export async function GET(request: NextRequest) {
       {} as { [key: string]: { count: number; totalSalary: number } },
     );
 
-    return NextResponse.json({
-      success: true,
-      payrolls: payrolls || [],
-      stats,
-      monthlyStats,
-      payrollType,
-    }, { headers: CACHE_HEADERS.shortPrivate });
+    return NextResponse.json(
+      {
+        success: true,
+        payrolls: payrolls || [],
+        stats,
+        monthlyStats,
+        payrollType,
+      },
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Dashboard stats error:", error);
     return NextResponse.json(

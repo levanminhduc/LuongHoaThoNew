@@ -27,9 +27,15 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
 
-    const parsedQuery = parseSchema(DepartmentPermissionListQuerySchema, Object.fromEntries(searchParams));
+    const parsedQuery = parseSchema(
+      DepartmentPermissionListQuerySchema,
+      Object.fromEntries(searchParams),
+    );
     if (!parsedQuery.success) {
-      return NextResponse.json(createValidationErrorResponse(parsedQuery.errors), { status: 400 });
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400 },
+      );
     }
 
     const employeeId = parsedQuery.data.employee_id ?? null;
@@ -75,13 +81,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      permissions,
-    }, { headers: CACHE_HEADERS.shortPrivate });
+    return NextResponse.json(
+      {
+        success: true,
+        permissions,
+      },
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Get department permissions error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -102,7 +114,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsedBody = parseSchema(DepartmentPermissionGrantSchema, body);
     if (!parsedBody.success) {
-      return NextResponse.json(createValidationErrorResponse(parsedBody.errors), { status: 400 });
+      return NextResponse.json(
+        createValidationErrorResponse(parsedBody.errors),
+        { status: 400 },
+      );
     }
     const { employee_id, department, notes } = parsedBody.data;
 
@@ -180,11 +195,14 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        return NextResponse.json({
-          success: true,
-          message: "Đã kích hoạt lại quyền truy cập department",
-          permission: updatedPermission,
-        }, { headers: CACHE_HEADERS.sensitive });
+        return NextResponse.json(
+          {
+            success: true,
+            message: "Đã kích hoạt lại quyền truy cập department",
+            permission: updatedPermission,
+          },
+          { headers: CACHE_HEADERS.sensitive },
+        );
       }
     }
 
@@ -267,7 +285,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Create department permission error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -287,12 +308,19 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
 
-    const parsedDelete = parseSchema(DepartmentPermissionRevokeSchema, Object.fromEntries(searchParams));
+    const parsedDelete = parseSchema(
+      DepartmentPermissionRevokeSchema,
+      Object.fromEntries(searchParams),
+    );
     if (!parsedDelete.success) {
-      return NextResponse.json(createValidationErrorResponse(parsedDelete.errors), { status: 400 });
+      return NextResponse.json(
+        createValidationErrorResponse(parsedDelete.errors),
+        { status: 400 },
+      );
     }
 
-    const permissionId = parsedDelete.data.id !== undefined ? String(parsedDelete.data.id) : null;
+    const permissionId =
+      parsedDelete.data.id !== undefined ? String(parsedDelete.data.id) : null;
     const employeeId = parsedDelete.data.employee_id ?? null;
     const department = parsedDelete.data.department ?? null;
 
@@ -350,13 +378,19 @@ export async function DELETE(request: NextRequest) {
       p_response_status: 200,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Đã thu hồi quyền truy cập department thành công",
-      permission: revokedPermission,
-    }, { headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Đã thu hồi quyền truy cập department thành công",
+        permission: revokedPermission,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Delete department permission error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

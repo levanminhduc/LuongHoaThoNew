@@ -30,7 +30,11 @@ export async function GET(
     const parsedMonth = SalaryMonthSchema.safeParse(month);
     if (!parsedMonth.success) {
       return NextResponse.json(
-        { success: false, error: "Tháng lương không hợp lệ", code: "VALIDATION_ERROR" },
+        {
+          success: false,
+          error: "Tháng lương không hợp lệ",
+          code: "VALIDATION_ERROR",
+        },
         { status: 400, headers: CACHE_HEADERS.shortPrivate },
       );
     }
@@ -163,39 +167,42 @@ export async function GET(
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
 
-    return NextResponse.json({
-      success: true,
-      month,
-      payroll_type: isT13 ? "t13" : "monthly",
-      employee_progress: {
-        completion_percentage: employeeCompletionPercentage,
-        signed_count: signedCount,
-        total_count: totalCount,
-        last_updated: lastEmployeeSignature || null,
-        is_complete: signedCount === totalCount && totalCount > 0,
+    return NextResponse.json(
+      {
+        success: true,
+        month,
+        payroll_type: isT13 ? "t13" : "monthly",
+        employee_progress: {
+          completion_percentage: employeeCompletionPercentage,
+          signed_count: signedCount,
+          total_count: totalCount,
+          last_updated: lastEmployeeSignature || null,
+          is_complete: signedCount === totalCount && totalCount > 0,
+        },
+        management_progress: managementProgress,
+        recent_activity: recentActivity.slice(0, 10),
+        real_time_data: {
+          timestamp: getVietnamTimestamp(),
+          next_refresh: nextRefreshTime.toISOString(),
+          refresh_interval_seconds: 30,
+        },
+        statistics: {
+          total_signatures_needed: totalCount + 3,
+          total_signatures_completed:
+            signedCount + managementProgress.completed_types.length,
+          overall_completion_percentage:
+            totalCount > 0
+              ? Math.round(
+                  ((signedCount + managementProgress.completed_types.length) /
+                    (totalCount + 3)) *
+                    100 *
+                    100,
+                ) / 100
+              : 0,
+        },
       },
-      management_progress: managementProgress,
-      recent_activity: recentActivity.slice(0, 10),
-      real_time_data: {
-        timestamp: getVietnamTimestamp(),
-        next_refresh: nextRefreshTime.toISOString(),
-        refresh_interval_seconds: 30,
-      },
-      statistics: {
-        total_signatures_needed: totalCount + 3,
-        total_signatures_completed:
-          signedCount + managementProgress.completed_types.length,
-        overall_completion_percentage:
-          totalCount > 0
-            ? Math.round(
-                ((signedCount + managementProgress.completed_types.length) /
-                  (totalCount + 3)) *
-                  100 *
-                  100,
-              ) / 100
-            : 0,
-      },
-    }, { headers: CACHE_HEADERS.shortPrivate });
+      { headers: CACHE_HEADERS.shortPrivate },
+    );
   } catch (error) {
     console.error("Signature progress error:", error);
     return NextResponse.json(

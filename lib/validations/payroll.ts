@@ -82,20 +82,28 @@ export const DualFilesImportMetaSchema = z
   .refine((d) => d.has_file1 || d.has_file2, {
     message: "Can it nhat 1 file (file1 hoac file2)",
   })
-  .refine((d) => !d.has_file1 || (d.file1Mappings && d.file1Mappings.length > 0), {
-    message: "file1Mappings bat buoc khi co file1",
-    path: ["file1Mappings"],
-  })
-  .refine((d) => !d.has_file2 || (d.file2Mappings && d.file2Mappings.length > 0), {
-    message: "file2Mappings bat buoc khi co file2",
-    path: ["file2Mappings"],
-  });
+  .refine(
+    (d) => !d.has_file1 || (d.file1Mappings && d.file1Mappings.length > 0),
+    {
+      message: "file1Mappings bat buoc khi co file1",
+      path: ["file1Mappings"],
+    },
+  )
+  .refine(
+    (d) => !d.has_file2 || (d.file2Mappings && d.file2Mappings.length > 0),
+    {
+      message: "file2Mappings bat buoc khi co file2",
+      path: ["file2Mappings"],
+    },
+  );
 
 export type PayrollImportRow = z.infer<typeof PayrollImportRowSchema>;
 export type PayrollImportRequest = z.infer<typeof PayrollImportRequestSchema>;
 export type PayrollQuery = z.infer<typeof PayrollQuerySchema>;
 export type DataValidationRequest = z.infer<typeof DataValidationRequestSchema>;
 export type ImportHistoryCreate = z.infer<typeof ImportHistoryCreateSchema>;
-export type BulkPayrollExportRequest = z.infer<typeof BulkPayrollExportRequestSchema>;
+export type BulkPayrollExportRequest = z.infer<
+  typeof BulkPayrollExportRequestSchema
+>;
 export type PeriodExportRequest = z.infer<typeof PeriodExportRequestSchema>;
 export type DualFilesImportMeta = z.infer<typeof DualFilesImportMetaSchema>;

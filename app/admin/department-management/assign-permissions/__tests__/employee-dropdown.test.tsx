@@ -43,7 +43,11 @@ function EmployeeItem({ employee }: { employee: Employee }) {
   );
 }
 
-function EmployeeList({ employees = mockEmployees }: { employees?: Employee[] }) {
+function EmployeeList({
+  employees = mockEmployees,
+}: {
+  employees?: Employee[];
+}) {
   if (employees.length === 0) {
     return <div data-testid="empty-list">Chọn nhân viên...</div>;
   }

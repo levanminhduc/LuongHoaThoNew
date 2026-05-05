@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = parseSchema(EmployeeChangePasswordRequestSchema, body);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
     const { employee_id, current_password, new_password } = parsed.data;
 
@@ -186,7 +186,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Hash new password
-    const newPasswordHash = await bcrypt.hash(new_password.trim(), BCRYPT_ROUNDS);
+    const newPasswordHash = await bcrypt.hash(
+      new_password.trim(),
+      BCRYPT_ROUNDS,
+    );
 
     // Step 4: Update password and reset security fields
     // Build update object based on what columns exist
@@ -246,15 +249,18 @@ export async function POST(request: NextRequest) {
         : "First-time password change from CCCD",
     );
 
-    return NextResponse.json({
-      success: true,
-      message: "Đổi mật khẩu thành công",
-      data: {
-        employee_id,
-        password_changed: true,
-        must_change_password: false,
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Đổi mật khẩu thành công",
+        data: {
+          employee_id,
+          password_changed: true,
+          must_change_password: false,
+        },
       },
-    }, { headers: CACHE_HEADERS.sensitive });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Password change error:", error);
     return NextResponse.json(
@@ -292,13 +298,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      must_change_password:
-        employee.must_change_password || !employee.password_changed_at,
-      password_changed_at: employee.password_changed_at,
-    }, { headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      {
+        must_change_password:
+          employee.must_change_password || !employee.password_changed_at,
+        password_changed_at: employee.password_changed_at,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Check password status error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

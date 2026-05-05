@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = parseSchema(AdminLoginRequestSchema, body);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
     const { username, password } = parsed.data;
 

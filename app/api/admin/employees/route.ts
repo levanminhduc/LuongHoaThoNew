@@ -93,10 +93,10 @@ export async function GET(request: NextRequest) {
       Object.fromEntries(searchParams),
     );
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
     const { search, department, role, page, limit } = parsed.data;
     const offset = (page - 1) * limit;
@@ -153,19 +153,25 @@ export async function GET(request: NextRequest) {
       ...new Set(departments?.map((d) => d.department) || []),
     ];
 
-    return NextResponse.json({
-      employees: employees || [],
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+    return NextResponse.json(
+      {
+        employees: employees || [],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+        },
+        departments: uniqueDepartments,
       },
-      departments: uniqueDepartments,
-    }, { headers: CACHE_HEADERS.sensitive });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee GET error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }
 
@@ -359,13 +365,19 @@ export async function POST(request: NextRequest) {
       // Don't fail the main operation if audit logging fails
     }
 
-    return NextResponse.json({
-      success: true,
-      employee: newEmployee,
-      message: "Tạo nhân viên thành công",
-    }, { headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      {
+        success: true,
+        employee: newEmployee,
+        message: "Tạo nhân viên thành công",
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Employee POST error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Lỗi server" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

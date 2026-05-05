@@ -76,10 +76,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = parseSchema(ChangePasswordWithCccdRequestSchema, body);
     if (!parsed.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(parsed.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
     const { employee_code, cccd, new_password } = parsed.data;
 
@@ -171,7 +171,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 4: Hash new password and update ONLY password_hash
-    const newPasswordHash = await bcrypt.hash(new_password.trim(), BCRYPT_ROUNDS);
+    const newPasswordHash = await bcrypt.hash(
+      new_password.trim(),
+      BCRYPT_ROUNDS,
+    );
 
     // Use the stored function for atomic update
     const { error: updateError } = await supabase.rpc(
@@ -216,13 +219,17 @@ export async function POST(request: NextRequest) {
     );
 
     // Return success with clear message
-    return NextResponse.json({
-      success: true,
-      message: "Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
-      data: {
-        password_changed: true,
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.",
+        data: {
+          password_changed: true,
+        },
       },
-    }, { headers: CACHE_HEADERS.sensitive });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Password reset error:", error);
     return NextResponse.json(
@@ -268,13 +275,19 @@ export async function GET(request: NextRequest) {
       employee.password_hash === employee.cccd_hash ||
       !employee.last_password_change_at;
 
-    return NextResponse.json({
-      using_cccd_as_password: isUsingCCCD,
-      password_version: employee.password_version || 0,
-      last_change: employee.last_password_change_at,
-    }, { headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      {
+        using_cccd_as_password: isUsingCCCD,
+        password_version: employee.password_version || 0,
+        last_change: employee.last_password_change_at,
+      },
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Check password status error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
+    return NextResponse.json(
+      { error: "Có lỗi xảy ra" },
+      { status: 500, headers: CACHE_HEADERS.sensitive },
+    );
   }
 }

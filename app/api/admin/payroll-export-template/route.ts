@@ -161,11 +161,14 @@ export async function GET(request: NextRequest) {
         .limit(1)
         .single();
 
-      return NextResponse.json({
-        last_updated: lastUpdated?.updated_at
-          ? new Date(lastUpdated.updated_at).getTime()
-          : 0,
-      }, { headers: CACHE_HEADERS.sensitive });
+      return NextResponse.json(
+        {
+          last_updated: lastUpdated?.updated_at
+            ? new Date(lastUpdated.updated_at).getTime()
+            : 0,
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
     }
 
     // Load mapping configuration if specified
