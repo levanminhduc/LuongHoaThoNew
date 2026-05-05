@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       stats,
       monthlyStats,
       payrollType,
-    }, { headers: CACHE_HEADERS.sensitive });
+    }, { headers: CACHE_HEADERS.shortPrivate });
   } catch (error) {
     console.error("Dashboard stats error:", error);
     return NextResponse.json(

@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         offset,
         hasMore: (count || 0) > offset + limit,
       },
-    }, { headers: CACHE_HEADERS.sensitive });
+    }, { headers: CACHE_HEADERS.shortPrivate });
   } catch (error) {
     console.error("Get bulk signature history error:", error);
     return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500, headers: CACHE_HEADERS.sensitive });
