@@ -16,6 +16,7 @@ import {
   EmployeeLookupRequestSchema,
   parseSchemaOrThrow,
 } from "@/lib/validations";
+import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 type ResponseFormat = "json" | "html";
@@ -266,6 +267,9 @@ function validateT13Format(salaryMonth: string): boolean {
  *         $ref: '#/components/responses/InternalError'
  */
 export async function POST(request: NextRequest) {
+  const csrfResult = csrfProtection(request);
+  if (csrfResult) return csrfResult;
+
   const responseFormat = getResponseFormat(request);
   let employee_id = "";
   let cccd = "";

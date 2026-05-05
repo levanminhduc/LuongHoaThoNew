@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import { csrfProtection } from "@/lib/security-middleware";
 
 // GET payroll data for to_truong's department
 export async function GET(request: NextRequest) {
@@ -134,6 +135,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
+
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("to_truong")) {
       return NextResponse.json(

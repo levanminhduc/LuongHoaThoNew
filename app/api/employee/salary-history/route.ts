@@ -7,10 +7,14 @@ import {
 } from "@/lib/utils/date-formatter";
 import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
 import { verifyEmployeeSession } from "@/lib/employee-session";
+import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
+
     const body = await request.json();
     const { action, salary_month, is_t13 } = body;
 

@@ -2,6 +2,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 
 // GET own payroll data for nhan_vien
 export async function GET(request: NextRequest) {
@@ -129,6 +130,9 @@ export async function GET(request: NextRequest) {
 // GET personal payroll summary for nhan_vien
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
+
     const auth = verifyToken(request);
     if (!auth || !auth.isRole("nhan_vien")) {
       return NextResponse.json(
