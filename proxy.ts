@@ -33,20 +33,26 @@ export async function proxy(request: NextRequest) {
 
   if (MAINTENANCE_MODE) {
     if (isMaintenanceAllowed(pathname)) {
-      return NextResponse.next();
+      const response = NextResponse.next();
+      applySecurityHeadersTo(response);
+      return response;
     }
 
     if (pathname.startsWith("/api")) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           error: "Hệ thống đang bảo trì",
           message: "Vui lòng thử lại sau",
         },
         { status: 503 },
       );
+      applySecurityHeadersTo(response);
+      return response;
     }
 
-    return NextResponse.redirect(new URL("/maintenance", request.url));
+    const response = NextResponse.redirect(new URL("/maintenance", request.url));
+    applySecurityHeadersTo(response);
+    return response;
   }
 
   if (isProtectedRoute(pathname)) {
@@ -55,7 +61,9 @@ export async function proxy(request: NextRequest) {
     if (!token) {
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      const response = NextResponse.redirect(loginUrl);
+      applySecurityHeadersTo(response);
+      return response;
     }
   }
 

@@ -34,11 +34,24 @@ export async function POST(request: NextRequest) {
       salary_month,
       admin_note,
       batch_size = 50,
-      is_t13 = false,
+      is_t13,
     } = parsed.data;
 
+    const isT13Month = /^\d{4}-(13|T13)$/i.test(salary_month);
+    const payrollType = isT13Month ? "t13" : "monthly";
+
+    if (is_t13 !== undefined && is_t13 !== isT13Month) {
+      return NextResponse.json(
+        {
+          error:
+            "Tham số is_t13 không khớp với salary_month. Server tự động xác định từ salary_month.",
+          derived_is_t13: isT13Month,
+        },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+
     const supabase = createServiceClient();
-    const payrollType = is_t13 ? "t13" : "monthly";
 
     let unsignedQuery = supabase
       .from("payrolls")
@@ -46,7 +59,7 @@ export async function POST(request: NextRequest) {
       .eq("salary_month", salary_month)
       .eq("is_signed", false);
 
-    if (is_t13) {
+    if (isT13Month) {
       unsignedQuery = unsignedQuery.eq("payroll_type", "t13");
     } else {
       unsignedQuery = unsignedQuery.or(
@@ -94,7 +107,7 @@ export async function POST(request: NextRequest) {
       .select("*", { count: "exact", head: true })
       .eq("salary_month", salary_month);
 
-    if (is_t13) {
+    if (isT13Month) {
       totalQuery = totalQuery.eq("payroll_type", "t13");
     } else {
       totalQuery = totalQuery.or(
@@ -215,7 +228,7 @@ export async function POST(request: NextRequest) {
       console.error("Failed to insert bulk signature log:", logError);
     }
 
-    const typeLabel = is_t13 ? "lương tháng 13" : "lương";
+    const typeLabel = isT13Month ? "lương tháng 13" : "lương";
     return NextResponse.json(
       {
         success: true,

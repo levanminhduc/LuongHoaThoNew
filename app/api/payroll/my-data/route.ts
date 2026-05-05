@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 // GET own payroll data for nhan_vien
 export async function GET(request: NextRequest) {
@@ -103,21 +104,24 @@ export async function GET(request: NextRequest) {
       p_response_status: 200,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: payrolls,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+    return NextResponse.json(
+      {
+        success: true,
+        data: payrolls,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+        },
+        employee: {
+          employee_id: auth.user.employee_id,
+          department: auth.user.department,
+        },
+        payrollType,
       },
-      employee: {
-        employee_id: auth.user.employee_id,
-        department: auth.user.department,
-      },
-      payrollType,
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("My data payroll error:", error);
     return NextResponse.json(
@@ -199,26 +203,29 @@ export async function POST(request: NextRequest) {
         signedAt: d.signed_at,
       })) || [];
 
-    return NextResponse.json({
-      success: true,
-      summary: {
-        year: currentYear,
-        employee_id: auth.user.employee_id,
-        totalMonths,
-        signedMonths,
-        signedPercentage:
-          totalMonths > 0
-            ? ((signedMonths / totalMonths) * 100).toFixed(1)
-            : "0",
-        totalGrossSalary,
-        totalNetSalary,
-        totalTax,
-        totalInsurance,
-        averageNetSalary:
-          totalMonths > 0 ? Math.round(totalNetSalary / totalMonths) : 0,
+    return NextResponse.json(
+      {
+        success: true,
+        summary: {
+          year: currentYear,
+          employee_id: auth.user.employee_id,
+          totalMonths,
+          signedMonths,
+          signedPercentage:
+            totalMonths > 0
+              ? ((signedMonths / totalMonths) * 100).toFixed(1)
+              : "0",
+          totalGrossSalary,
+          totalNetSalary,
+          totalTax,
+          totalInsurance,
+          averageNetSalary:
+            totalMonths > 0 ? Math.round(totalNetSalary / totalMonths) : 0,
+        },
+        monthlyBreakdown,
       },
-      monthlyBreakdown,
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Personal summary error:", error);
     return NextResponse.json(

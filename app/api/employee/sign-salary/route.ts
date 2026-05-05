@@ -33,8 +33,21 @@ export async function POST(request: NextRequest) {
       cccd,
     } = parsed.data;
 
+    const isT13Month = /^\d{4}-(13|T13)$/i.test(salary_month);
+    const payrollType = isT13Month ? "t13" : "monthly";
+
+    if (is_t13 !== undefined && is_t13 !== isT13Month) {
+      return NextResponse.json(
+        {
+          error:
+            "Tham số is_t13 không khớp với salary_month. Server tự động xác định từ salary_month.",
+          derived_is_t13: isT13Month,
+        },
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+
     const supabase = createServiceClient();
-    const payrollType = is_t13 ? "t13" : "monthly";
 
     let authenticatedEmployeeId: string;
 
@@ -135,14 +148,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const salaryMonthDisplay = is_t13
+    const salaryMonthDisplay = isT13Month
       ? `Lương Tháng 13 - ${signResult.salary_month.split("-")[0]}`
       : formatSalaryMonth(signResult.salary_month);
 
     return NextResponse.json(
       {
         success: true,
-        message: is_t13
+        message: isT13Month
           ? "Ký nhận lương tháng 13 thành công!"
           : "Ký nhận lương thành công!",
         data: {

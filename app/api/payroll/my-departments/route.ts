@@ -4,6 +4,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { csrfProtection } from "@/lib/security-middleware";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 // GET payroll data for truong_phong's assigned departments
 export async function GET(request: NextRequest) {
@@ -127,18 +128,21 @@ export async function GET(request: NextRequest) {
       p_response_status: 200,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: payrolls,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+    return NextResponse.json(
+      {
+        success: true,
+        data: payrolls,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+        },
+        allowed_departments: allowedDepartments,
+        payrollType,
       },
-      allowed_departments: allowedDepartments,
-      payrollType,
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("My departments payroll error:", error);
     return NextResponse.json(

@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { DEFAULT_FIELD_HEADERS } from "@/lib/utils/header-mapping";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   type ImportErrorRecord,
   isEmptyValue,
@@ -147,10 +148,13 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return NextResponse.json(
-        { success: false, error: "Thieu file Excel", code: "VALIDATION_ERROR" },
-        { status: 400 },
+      const error = ApiErrorHandler.createError(
+        ApiErrorHandler.ErrorCodes.VALIDATION_ERROR,
+        "Thiếu file Excel",
       );
+      return NextResponse.json(ApiErrorHandler.createErrorResponse(error), {
+        status: 400,
+      });
     }
 
     // Validate file type
@@ -465,40 +469,46 @@ export async function POST(request: NextRequest) {
           ),
         );
 
-      return NextResponse.json({
-        success: successCount > 0,
+      return NextResponse.json(
+        {
+          success: successCount > 0,
+          data: result,
+          errors: standardizedErrors,
+          importErrors: errors,
+          message,
+          metadata: {
+            totalRecords: rows.length,
+            successCount,
+            errorCount: errors.length,
+            skippedCount,
+            processingTime,
+            autoFixCount: 0,
+          },
+          originalHeaders: headers,
+          importBatchId: batchId,
+        },
+        { headers: CACHE_HEADERS.sensitive },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
         data: result,
-        errors: standardizedErrors,
-        importErrors: errors,
         message,
         metadata: {
           totalRecords: rows.length,
           successCount,
-          errorCount: errors.length,
-          skippedCount,
+          errorCount: 0,
+          skippedCount: 0,
           processingTime,
           autoFixCount: 0,
         },
         originalHeaders: headers,
         importBatchId: batchId,
-      });
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: result,
-      message,
-      metadata: {
-        totalRecords: rows.length,
-        successCount,
-        errorCount: 0,
-        skippedCount: 0,
-        processingTime,
-        autoFixCount: 0,
       },
-      originalHeaders: headers,
-      importBatchId: batchId,
-    });
+      { headers: CACHE_HEADERS.sensitive },
+    );
   } catch (error) {
     console.error("Payroll import error:", error);
     const apiError = ApiErrorHandler.fromError(

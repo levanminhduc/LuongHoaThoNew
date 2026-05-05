@@ -7,6 +7,7 @@ import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { PayrollValidator } from "@/lib/payroll-validation";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   DualFilesImportMetaSchema,
   parseSchema,
@@ -368,7 +369,7 @@ export async function POST(request: NextRequest) {
             autoFixCount: allAutoFixes.length,
           });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Import dual files error:", error);
     const apiError = ApiErrorHandler.fromError(
