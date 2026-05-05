@@ -8,6 +8,12 @@ import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  EmployeeListQuerySchema,
+  EmployeeCreateRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 /**
  * @swagger
@@ -82,11 +88,17 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || "";
-    const department = searchParams.get("department") || "";
-    const role = searchParams.get("role") || "";
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const parsed = parseSchema(
+      EmployeeListQuerySchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsed.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const { search, department, role, page, limit } = parsed.data;
     const offset = (page - 1) * limit;
 
     const supabase = createServiceClient();
@@ -246,6 +258,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsedBody = parseSchema(EmployeeCreateRequestSchema, body);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedBody.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
     const {
       employee_id,
       full_name,
@@ -254,48 +273,8 @@ export async function POST(request: NextRequest) {
       chuc_vu,
       department,
       phone_number,
-      is_active = true,
-    } = body;
-
-    if (!employee_id || !full_name || !cccd || !chuc_vu) {
-      return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Validate CCCD format (12 digits)
-    if (!/^\d{12}$/.test(cccd)) {
-      return NextResponse.json(
-        { error: "CCCD phải có đúng 12 chữ số" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Validate password if provided
-    if (password && password.length < 6) {
-      return NextResponse.json(
-        { error: "Mật khẩu phải có ít nhất 6 ký tự" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    const validRoles = [
-      "admin",
-      "giam_doc",
-      "ke_toan",
-      "nguoi_lap_bieu",
-      "truong_phong",
-      "to_truong",
-      "nhan_vien",
-      "van_phong",
-    ];
-    if (!validRoles.includes(chuc_vu)) {
-      return NextResponse.json(
-        { error: "Chức vụ không hợp lệ" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+      is_active,
+    } = parsedBody.data;
 
     const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
     if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {

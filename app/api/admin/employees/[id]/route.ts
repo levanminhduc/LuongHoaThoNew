@@ -8,6 +8,11 @@ import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  EmployeeUpdateRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 export async function PUT(
   request: NextRequest,
@@ -27,6 +32,13 @@ export async function PUT(
     const resolvedParams = await params;
     const { id } = resolvedParams;
     const body = await request.json();
+    const parsedBody = parseSchema(EmployeeUpdateRequestSchema, body);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedBody.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
     const {
       employee_id,
       full_name,
@@ -36,55 +48,7 @@ export async function PUT(
       department,
       phone_number,
       is_active,
-    } = body;
-
-    if (!employee_id || !full_name || !chuc_vu) {
-      return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Validate CCCD format if provided
-    if (cccd && !/^\d{12}$/.test(cccd)) {
-      return NextResponse.json(
-        { error: "CCCD phải có đúng 12 chữ số" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Validate password if provided
-    if (password && password.length < 6) {
-      return NextResponse.json(
-        { error: "Mật khẩu phải có ít nhất 6 ký tự" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Validate employee_id format
-    if (!/^[A-Za-z0-9]+$/.test(employee_id)) {
-      return NextResponse.json(
-        { error: "Mã nhân viên chỉ được chứa chữ và số" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    const validRoles = [
-      "admin",
-      "giam_doc",
-      "ke_toan",
-      "nguoi_lap_bieu",
-      "truong_phong",
-      "to_truong",
-      "nhan_vien",
-      "van_phong",
-    ];
-    if (!validRoles.includes(chuc_vu)) {
-      return NextResponse.json(
-        { error: "Chức vụ không hợp lệ" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+    } = parsedBody.data;
 
     const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
     if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {

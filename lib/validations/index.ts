@@ -73,6 +73,18 @@ export {
 export type { ValidationResult, ValidationError, ParseResult } from "./errors";
 
 export {
+  EmployeeCreateRequestSchema,
+  EmployeeUpdateRequestSchema,
+  EmployeeListQuerySchema,
+} from "./admin-employee";
+
+export type {
+  EmployeeCreateRequest,
+  EmployeeUpdateRequest,
+  EmployeeListQuery,
+} from "./admin-employee";
+
+export {
   AdminLoginRequestSchema,
   ForgotPasswordRequestSchema,
   ChangePasswordWithCccdRequestSchema,
