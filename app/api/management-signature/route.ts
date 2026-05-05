@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
@@ -11,6 +12,8 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const auth = verifyToken(request);
     if (
       !auth ||

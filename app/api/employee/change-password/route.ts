@@ -3,7 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
-import { rateLimit } from "@/lib/security-middleware";
+import { rateLimit, csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   parseSchema,
@@ -39,6 +39,8 @@ async function logSecurityEvent(
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const body = await request.json();
     const parsed = parseSchema(EmployeeChangePasswordRequestSchema, body);
     if (!parsed.success) {

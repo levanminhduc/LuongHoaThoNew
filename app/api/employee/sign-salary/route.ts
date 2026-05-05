@@ -6,6 +6,7 @@ import {
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
 import { verifyEmployeeSession } from "@/lib/employee-session";
+import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   parseSchema,
@@ -15,6 +16,8 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const body = await request.json();
     const parsed = parseSchema(EmployeeSignSalaryRequestSchema, body);
     if (!parsed.success) {

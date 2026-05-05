@@ -7,6 +7,7 @@ import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import { csrfProtection } from "@/lib/security-middleware";
 
 function verifyAdminToken(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -29,6 +30,8 @@ async function hashCCCD(cccd: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
     const adminUser = verifyAdminToken(request);
     if (!adminUser) {
       return NextResponse.json(
