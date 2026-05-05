@@ -70,7 +70,8 @@ export function formatDateTime(dateString: string): string {
   try {
     const date = new Date(dateString);
 
-    // ✅ FINAL FIX: Force Vietnam timezone để đảm bảo consistency
+    if (isNaN(date.getTime())) return dateString;
+
     const vietnamTime = date.toLocaleString("vi-VN", {
       timeZone: "Asia/Ho_Chi_Minh", // Force Vietnam timezone
       year: "numeric",
@@ -103,6 +104,7 @@ export function formatSignatureTime(dateString: string): string {
     const [datePart, timePart] = cleaned.split(" ");
     if (!datePart) return dateString;
     const [y, m, d] = datePart.split("-");
+    if (!y || !m || !d) return dateString;
     const time = timePart ? timePart.substring(0, 5) : "";
     return time ? `${time} ${d}/${m}/${y}` : `${d}/${m}/${y}`;
   } catch (error) {
