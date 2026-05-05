@@ -4,6 +4,11 @@ import jwt from "jsonwebtoken";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { rateLimit } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  AdminLoginRequestSchema,
+} from "@/lib/validations";
 
 /**
  * @swagger
@@ -38,16 +43,16 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = rateLimit("login")(request);
     if (rateLimitResult) return rateLimitResult;
 
-    const { username, password } = await request.json();
-
-    if (!username || !password) {
+    const body = await request.json();
+    const parsed = parseSchema(AdminLoginRequestSchema, body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Thiếu tên đăng nhập hoặc mật khẩu" },
+        createValidationErrorResponse(parsed.errors),
         { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
+    const { username, password } = parsed.data;
 
-    // Use enhanced authentication
     const authResult = await authenticateUser(username, password);
 
     if (!authResult.success || !authResult.user) {

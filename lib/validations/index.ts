@@ -65,3 +65,17 @@ export {
 } from "./errors";
 
 export type { ValidationResult, ValidationError, ParseResult } from "./errors";
+
+export {
+  AdminLoginRequestSchema,
+  ForgotPasswordRequestSchema,
+  ChangePasswordWithCccdRequestSchema,
+  EmployeeChangePasswordRequestSchema,
+} from "./auth";
+
+export type {
+  AdminLoginRequest,
+  ForgotPasswordRequest,
+  ChangePasswordWithCccdRequest,
+  EmployeeChangePasswordRequest,
+} from "./auth";

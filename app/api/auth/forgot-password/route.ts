@@ -6,6 +6,11 @@ import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { rateLimit } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ForgotPasswordRequestSchema,
+} from "@/lib/validations";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000;
@@ -72,7 +77,14 @@ async function logToSecurityLogs(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employee_code, cccd, new_password } = body;
+    const parsed = parseSchema(ForgotPasswordRequestSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsed.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const { employee_code, cccd, new_password } = parsed.data;
 
     const ip =
       request.headers.get("x-forwarded-for") ||
@@ -81,27 +93,6 @@ export async function POST(request: NextRequest) {
     const ua = request.headers.get("user-agent");
     const ipHash = hashIp(ip);
     const userAgent = shrinkUA(ua);
-
-    if (!employee_code || !cccd || !new_password) {
-      return NextResponse.json(
-        { error: "Vui lòng điền đầy đủ thông tin" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    if (new_password.length < 8) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có ít nhất 8 ký tự" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có cả chữ và số" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
 
     const rateLimitResult = rateLimit("passwordReset")(request);
     if (rateLimitResult) return rateLimitResult;

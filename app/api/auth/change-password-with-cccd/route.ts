@@ -6,6 +6,11 @@ import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { rateLimit } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ChangePasswordWithCccdRequestSchema,
+} from "@/lib/validations";
 
 // Constants for account-level lockout (passed to DB RPC)
 const MAX_ATTEMPTS = 5;
@@ -69,9 +74,15 @@ function okGeneric() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employee_code, cccd, new_password } = body;
+    const parsed = parseSchema(ChangePasswordWithCccdRequestSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsed.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const { employee_code, cccd, new_password } = parsed.data;
 
-    // Get IP and UA for rate limiting and logging
     const ip =
       request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
@@ -80,30 +91,6 @@ export async function POST(request: NextRequest) {
     const ipHash = hashIp(ip);
     const userAgent = shrinkUA(ua);
 
-    // Input validation
-    if (!employee_code || !cccd || !new_password) {
-      return NextResponse.json(
-        { error: "Vui lòng điền đầy đủ thông tin" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Password strength validation
-    if (new_password.length < 8) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có ít nhất 8 ký tự" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có cả chữ và số" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Check rate limit
     const rateLimitResult = rateLimit("passwordReset")(request);
     if (rateLimitResult) return rateLimitResult;
 

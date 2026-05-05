@@ -5,6 +5,11 @@ import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { rateLimit } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  EmployeeChangePasswordRequestSchema,
+} from "@/lib/validations";
 
 // Constants
 const MAX_ATTEMPTS = 5;
@@ -34,43 +39,24 @@ async function logSecurityEvent(
 
 export async function POST(request: NextRequest) {
   try {
-    const { employee_id, current_password, new_password } =
-      await request.json();
+    const body = await request.json();
+    const parsed = parseSchema(EmployeeChangePasswordRequestSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsed.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const { employee_id, current_password, new_password } = parsed.data;
 
-    // Get IP for rate limiting and logging
     const ip =
       request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
       "unknown";
 
-    // Check rate limit
     const rateLimitResult = rateLimit("passwordChange")(request);
     if (rateLimitResult) return rateLimitResult;
 
-    // Validate input
-    if (!employee_id || !current_password || !new_password) {
-      return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Password strength validation
-    if (new_password.length < 8) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có ít nhất 8 ký tự" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    if (!/[a-zA-Z]/.test(new_password) || !/[0-9]/.test(new_password)) {
-      return NextResponse.json(
-        { error: "Mật khẩu mới phải có cả chữ và số" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Prevent using same password
     if (current_password === new_password) {
       return NextResponse.json(
         { error: "Mật khẩu mới phải khác mật khẩu hiện tại" },
