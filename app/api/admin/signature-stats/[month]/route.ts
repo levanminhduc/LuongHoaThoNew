@@ -18,8 +18,6 @@ export async function GET(
     }
 
     const { month } = await params;
-    const { searchParams } = new URL(request.url);
-    const isT13 = searchParams.get("is_t13") === "true";
 
     const parsedMonth = SalaryMonthSchema.safeParse(month);
     if (!parsedMonth.success) {
@@ -28,6 +26,21 @@ export async function GET(
           success: false,
           error: "Tháng lương không hợp lệ",
           code: "VALIDATION_ERROR",
+        },
+        { status: 400, headers: CACHE_HEADERS.shortPrivate },
+      );
+    }
+
+    const isT13 = /^\d{4}-(13|T13)$/i.test(month);
+    const { searchParams } = new URL(request.url);
+    const clientIsT13 = searchParams.get("is_t13");
+    if (clientIsT13 !== null && (clientIsT13 === "true") !== isT13) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "is_t13 không khớp với salary_month",
+          code: "VALIDATION_ERROR",
+          derived_is_t13: isT13,
         },
         { status: 400, headers: CACHE_HEADERS.shortPrivate },
       );
