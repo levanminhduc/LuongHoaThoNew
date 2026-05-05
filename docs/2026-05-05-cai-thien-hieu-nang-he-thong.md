@@ -875,7 +875,27 @@ Những việc này sẽ đem lại giá trị thực tế hơn việc chạy th
 - bcrypt rounds nhất quán 12 trên toàn hệ thống, không còn chỗ nào dùng 10.
 - Cache headers đồng nhất cho tất cả API routes — dữ liệu nhạy cảm không bao giờ bị cache public.
 - Zod validation trả lỗi 400 nhất quán cho tất cả route quan trọng, input sai không lọt vào query.
-- Security headers (CSP, HSTS, X-Frame-Options, v.v.) áp dụng nhất quán qua middleware chung.
+- Security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy) áp dụng nhất quán qua `proxy.ts`.
+
+**Codex adversarial review (sau merge):**
+
+Chạy `codex-impl-review` (effort=high) trên `000b2a0...HEAD` qua 4 rounds, kết quả `VERDICT: APPROVE`.
+
+| Round | Issues phát hiện | Severity | Fix commit |
+|---|---|---|---|
+| 1 | 4 issues: T13 cross-field validation, 6 routes thiếu `CACHE_HEADERS.sensitive`, `applySecurityHeadersTo` bỏ early returns trong `proxy.ts`, ad-hoc error shape trong `payroll-import` | medium × 2, low × 2 | `294c6d3` |
+| 2 | 1 issue: POST stats responses của `my-department`/`my-departments` thiếu no-store cache | medium | `9182599` |
+| 3 | 1 issue: T13 status/stats routes vẫn phụ thuộc query `?is_t13=`, có thể trả sai data sau khi sign T13 | medium | `973cd5a` |
+| 4 | 0 issues — APPROVE | — | — |
+
+**Cách fix issues codex:**
+
+- **T13 derivation server-side:** Tất cả route signing (`bulk-sign-salary`, `management-signature`, `employee/sign-salary`) và route status/stats (`signature-status/[month]`, `signature-progress/[month]`, `admin/signature-stats/[month]`) đều derive `isT13` từ `salary_month` bằng regex `/^\d{4}-(13|T13)$/i`. Nếu client gửi `is_t13` mâu thuẫn với giá trị derive, trả 400 với `derived_is_t13` trong response.
+- **CACHE_HEADERS.sensitive bổ sung:** Áp dụng cho `payroll/my-data` (cả 2 success response), `payroll/my-department` (GET + POST stats), `payroll/my-departments` (GET + POST stats), `import-dual-files`, `payroll-import` (cả 2 success response), `admin/logout` (Pattern C: `response.headers.set` sau `cookies.delete`).
+- **Security headers cho mọi return path:** `proxy.ts` gọi `applySecurityHeadersTo(response)` trên tất cả nhánh return (maintenance mode, auth redirect, normal flow), không chỉ sau `updateSession()`.
+- **Error shape thống nhất:** `payroll-import` thay ad-hoc `{ success, error, code }` bằng `ApiErrorHandler.createError(ErrorCodes.VALIDATION_ERROR, ...)` + `createErrorResponse(...)` để khớp với surrounding code.
+
+**3 commit fix sau review:** `294c6d3`, `9182599`, `973cd5a`. Toàn bộ tests vẫn pass 22/22, typecheck 0 errors.
 
 ### Giai Đoạn 2-4 — Chưa Bắt Đầu
 
