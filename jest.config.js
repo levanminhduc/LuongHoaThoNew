@@ -14,7 +14,7 @@ const customJestConfig = {
   moduleDirectories: ["node_modules", "<rootDir>/"],
 
   // Handle module aliases (these should match your tsconfig.json paths)
-  moduleNameMapping: {
+  moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
 
