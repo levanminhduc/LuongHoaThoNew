@@ -5,6 +5,11 @@ import { csrfProtection } from "@/lib/security-middleware";
 import { formatAttendanceSigningDate } from "@/lib/utils/signing-date-generator";
 import XLSX from "xlsx-js-style";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  PeriodExportRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
 interface ExportRequestBody {
   period_year: number;
@@ -26,26 +31,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body: ExportRequestBody = await request.json();
-    const {
-      period_year,
-      period_month,
-      employee_ids,
-      export_type,
-      include_daily = false,
-    } = body;
-
-    if (
-      !period_year ||
-      !period_month ||
-      period_month < 1 ||
-      period_month > 12
-    ) {
+    const rawBody: ExportRequestBody = await request.json();
+    const parsed = parseSchema(PeriodExportRequestSchema, rawBody);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Thiếu hoặc sai tham số period_year/period_month" },
+        createValidationErrorResponse(parsed.errors),
         { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
+
+    const { period_year, period_month } = parsed.data;
+    const {
+      employee_ids,
+      export_type,
+      include_daily = false,
+    } = rawBody;
 
     const supabase = createServiceClient();
 

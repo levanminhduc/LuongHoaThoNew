@@ -144,16 +144,13 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
 
-    if (!file) {
-      const error = ApiErrorHandler.createError(
-        ApiErrorHandler.ErrorCodes.VALIDATION_ERROR,
-        "Không có file nào được upload",
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { success: false, error: "Thieu file Excel", code: "VALIDATION_ERROR" },
+        { status: 400 },
       );
-      return NextResponse.json(ApiErrorHandler.createErrorResponse(error), {
-        status: 400,
-      });
     }
 
     // Validate file type

@@ -4,11 +4,12 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import XLSX from "xlsx-js-style";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  PeriodExportRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
 
-interface OvertimeExportBody {
-  period_year: number;
-  period_month: number;
-}
 
 interface DailyExportRecord {
   day: number;
@@ -306,22 +307,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body: OvertimeExportBody = await request.json();
-    const { period_year, period_month } = body;
-
-    if (
-      !period_year ||
-      !period_month ||
-      period_month < 1 ||
-      period_month > 12 ||
-      period_year < 2000 ||
-      period_year > 2100
-    ) {
+    const rawBody = await request.json();
+    const parsed = parseSchema(PeriodExportRequestSchema, rawBody);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Thiếu hoặc sai tham số period_year/period_month" },
+        createValidationErrorResponse(parsed.errors),
         { status: 400, headers: CACHE_HEADERS.sensitive },
       );
     }
+
+    const { period_year, period_month } = parsed.data;
 
     const supabase = createServiceClient();
     const daysInMonth = new Date(period_year, period_month, 0).getDate();

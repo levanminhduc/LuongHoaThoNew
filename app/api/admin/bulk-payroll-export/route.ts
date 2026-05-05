@@ -4,6 +4,11 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import XLSX from "xlsx-js-style";
 import {
+  BulkPayrollExportRequestSchema,
+  parseSchema,
+  createValidationErrorResponse,
+} from "@/lib/validations";
+import {
   FIELD_HEADERS,
   VISIBLE_FIELDS,
   CELL_STYLES,
@@ -15,12 +20,6 @@ import {
   getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
-
-interface BulkExportRequestBody {
-  departments: string[];
-  salary_month: string;
-  payroll_type: "monthly" | "t13";
-}
 
 interface PayrollRecord {
   [key: string]: unknown;
@@ -227,9 +226,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let body: BulkExportRequestBody;
+    let rawBody: unknown;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return NextResponse.json(
         { error: "Request body không hợp lệ" },
@@ -237,30 +236,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { departments, salary_month, payroll_type } = body;
+    const parsed = parseSchema(BulkPayrollExportRequestSchema, rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsed.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
 
-    if (
-      !departments ||
-      !Array.isArray(departments) ||
-      departments.length === 0
-    ) {
-      return NextResponse.json(
-        { error: "Vui lòng chọn ít nhất một phòng ban" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-    if (!salary_month || typeof salary_month !== "string") {
-      return NextResponse.json(
-        { error: "Tháng lương không hợp lệ" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-    if (!payroll_type || !["monthly", "t13"].includes(payroll_type)) {
-      return NextResponse.json(
-        { error: "Loại lương không hợp lệ" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+    const { departments, salary_month, payroll_type } = parsed.data;
 
     const supabase = createServiceClient();
     const isT13 = payroll_type === "t13";

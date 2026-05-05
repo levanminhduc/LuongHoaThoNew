@@ -47,6 +47,9 @@ export {
   PayrollQuerySchema,
   DataValidationRequestSchema,
   ImportHistoryCreateSchema,
+  BulkPayrollExportRequestSchema,
+  PeriodExportRequestSchema,
+  DualFilesImportMetaSchema,
 } from "./payroll";
 
 export type {
@@ -55,6 +58,9 @@ export type {
   PayrollQuery,
   DataValidationRequest,
   ImportHistoryCreate,
+  BulkPayrollExportRequest,
+  PeriodExportRequest,
+  DualFilesImportMeta,
 } from "./payroll";
 
 export {

@@ -19,11 +19,11 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json(
-        { error: "Không có file nào được upload" },
+        { success: false, error: "Thieu file Excel", code: "VALIDATION_ERROR" },
         { status: 400 },
       );
     }
