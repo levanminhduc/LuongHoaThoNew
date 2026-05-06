@@ -130,7 +130,7 @@ export function EmployeeLookupResult({
                 <span className="relative z-10">Xem Chi Tiết</span>
               </Button>
 
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
