@@ -1,9 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
-import jwt from "jsonwebtoken";
-import { type JWTPayload } from "@/lib/auth";
-import { getJwtSecret } from "@/lib/config/jwt";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 
 interface AuditLog {
   id: number;
@@ -29,21 +27,6 @@ interface AuditGroup {
   }>;
 }
 
-// Verify admin token
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
-    return decoded.role === "admin" ? decoded : null;
-  } catch {
-    return null;
-  }
-}
 
 // GET audit trail for specific payroll record
 export async function GET(
@@ -51,13 +34,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Verify admin authentication
-    const admin = verifyAdminToken(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const resolvedParams = await params;
@@ -235,13 +214,9 @@ export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // Verify admin authentication
-    const admin = verifyAdminToken(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { startDate, endDate, employeeId } = await request.json();

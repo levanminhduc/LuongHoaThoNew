@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { verifyToken } from "@/lib/auth-middleware";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import XLSX from "xlsx-js-style";
 import {
@@ -218,11 +218,11 @@ export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    const auth = verifyToken(request);
-    if (!auth || auth.user.role !== "admin") {
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
       return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401, headers: CACHE_HEADERS.sensitive },
+        { error: auth.error },
+        { status: auth.status, headers: CACHE_HEADERS.sensitive },
       );
     }
 

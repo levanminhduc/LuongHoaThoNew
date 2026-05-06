@@ -1,15 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { verifyAdminToken } from "@/lib/auth-middleware";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = verifyAdminToken(request);
-    if (!admin) {
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
       return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401, headers: CACHE_HEADERS.sensitive },
+        { error: auth.error },
+        { status: auth.status, headers: CACHE_HEADERS.sensitive },
       );
     }
 

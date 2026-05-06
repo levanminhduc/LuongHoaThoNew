@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
 import { csrfProtection } from "@/lib/security-middleware";
-import jwt from "jsonwebtoken";
 import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { DEFAULT_FIELD_HEADERS } from "@/lib/utils/header-mapping";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
@@ -14,7 +13,7 @@ import {
   validateSalaryMonth,
   validateEmployeeExists,
 } from "@/lib/import-error-collector";
-import { getJwtSecret } from "@/lib/config/jwt";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 
 // Type definitions for mapping
 interface ColumnAlias {
@@ -31,21 +30,6 @@ interface MappingConfig {
   configuration_field_mappings?: FieldMapping[];
 }
 
-// Verify admin token
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, getJwtSecret()) as { role?: string };
-    return decoded.role === "admin" ? decoded : null;
-  } catch {
-    return null;
-  }
-}
 
 // Function to load aliases from database and create comprehensive header mapping
 async function createHeaderToFieldMapping(
@@ -130,18 +114,9 @@ export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // Verify admin authentication
-    const admin = verifyAdminToken(request);
-    if (!admin) {
-      const error = ApiErrorHandler.createError(
-        ApiErrorHandler.ErrorCodes.UNAUTHORIZED,
-        ApiErrorHandler.getUserFriendlyMessage(
-          ApiErrorHandler.ErrorCodes.UNAUTHORIZED,
-        ),
-      );
-      return NextResponse.json(ApiErrorHandler.createErrorResponse(error), {
-        status: 401,
-      });
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const formData = await request.formData();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -47,6 +47,18 @@ interface NavItem {
   title: string;
   icon: LucideIcon;
   href: string;
+  allowedRoles?: string[];
+}
+
+function getCurrentRole(): string {
+  try {
+    const userStr = localStorage.getItem("user_info");
+    if (!userStr) return "admin";
+    const parsed = JSON.parse(userStr) as { role?: string };
+    return parsed.role || "admin";
+  } catch {
+    return "admin";
+  }
 }
 
 const mainNavItems: NavItem[] = [
@@ -59,6 +71,7 @@ const mainNavItems: NavItem[] = [
     title: "Quản Lý Nhân Viên",
     icon: Users,
     href: "/admin/employee-management",
+    allowedRoles: ["admin", "van_phong", "nguoi_lap_bieu"],
   },
   {
     title: "Quản Lý Lương",
@@ -160,6 +173,11 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const logout = useLogout();
+  const [currentRole, setCurrentRole] = useState("admin");
+
+  useEffect(() => {
+    setCurrentRole(getCurrentRole());
+  }, []);
 
   const isActive = useCallback((href: string) => pathname === href, [pathname]);
 
@@ -176,9 +194,27 @@ export function AdminSidebar() {
     [router],
   );
 
-  const mainItems = useMemo(() => mainNavItems, []);
-  const dataItems = useMemo(() => dataManagementItems, []);
-  const toolItems = useMemo(() => adminToolsItems, []);
+  const filterByRole = useCallback(
+    (items: NavItem[]) =>
+      items.filter(
+        (item) =>
+          item.allowedRoles ? item.allowedRoles.includes(currentRole) : currentRole === "admin",
+      ),
+    [currentRole],
+  );
+
+  const mainItems = useMemo(
+    () => filterByRole(mainNavItems),
+    [filterByRole],
+  );
+  const dataItems = useMemo(
+    () => filterByRole(dataManagementItems),
+    [filterByRole],
+  );
+  const toolItems = useMemo(
+    () => filterByRole(adminToolsItems),
+    [filterByRole],
+  );
 
   return (
     <Sidebar

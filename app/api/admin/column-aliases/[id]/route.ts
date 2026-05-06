@@ -1,26 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
-import jwt from "jsonwebtoken";
-import { type JWTPayload } from "@/lib/auth";
 import { type ColumnAlias, type ApiResponse } from "@/lib/column-alias-config";
-import { getJwtSecret } from "@/lib/config/jwt";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
-    return decoded.role === "admin" ? decoded : null;
-  } catch {
-    return null;
-  }
-}
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 
 // GET: Fetch specific column alias
 export async function GET(
@@ -28,11 +11,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const adminUser = verifyAdminToken(request);
-    if (!adminUser) {
+    const authResult = verifyAdminAccess(request);
+    if (!authResult.ok) {
       return NextResponse.json(
-        { success: false, message: "Không có quyền truy cập" },
-        { status: 401 },
+        { success: false, message: authResult.error },
+        { status: authResult.status },
       );
     }
 
@@ -82,11 +65,11 @@ export async function PUT(
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    const adminUser = verifyAdminToken(request);
-    if (!adminUser) {
+    const authResult = verifyAdminAccess(request);
+    if (!authResult.ok) {
       return NextResponse.json(
-        { success: false, message: "Không có quyền truy cập" },
-        { status: 401 },
+        { success: false, message: authResult.error },
+        { status: authResult.status },
       );
     }
 
@@ -207,11 +190,11 @@ export async function DELETE(
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    const adminUser = verifyAdminToken(request);
-    if (!adminUser) {
+    const authResult = verifyAdminAccess(request);
+    if (!authResult.ok) {
       return NextResponse.json(
-        { success: false, message: "Không có quyền truy cập" },
-        { status: 401 },
+        { success: false, message: authResult.error },
+        { status: authResult.status },
       );
     }
 

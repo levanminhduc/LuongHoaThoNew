@@ -5,27 +5,9 @@ import {
   type EmployeeData,
 } from "@/lib/employee-parser";
 import { csrfProtection } from "@/lib/security-middleware";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { type JWTPayload } from "@/lib/auth";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
-import { getJwtSecret } from "@/lib/config/jwt";
-
-// Verify admin token
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
-    return decoded.role === "admin" ? decoded : null;
-  } catch {
-    return null;
-  }
-}
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 
 // Hash CCCD for security
 async function hashCCCD(cccd: string): Promise<string> {
@@ -36,13 +18,9 @@ export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // Verify admin authentication
-    const admin = verifyAdminToken(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const formData = await request.formData();

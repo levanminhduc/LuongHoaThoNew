@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { csrfProtection } from "@/lib/security-middleware";
-import jwt from "jsonwebtoken";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { getJwtSecret } from "@/lib/config/jwt";
-
-async function verifyAdminToken(token: string): Promise<boolean> {
-  try {
-    jwt.verify(token, getJwtSecret());
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 
 interface ImportError {
   row: number;
@@ -50,16 +40,9 @@ export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // Verify admin authentication
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const isValid = await verifyAdminToken(token);
-    if (!isValid) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const body: ErrorExportRequest = await request.json();
@@ -204,16 +187,9 @@ export async function POST(request: NextRequest) {
 // GET endpoint to download error template
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const isValid = await verifyAdminToken(token);
-    if (!isValid) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     // Create empty error template

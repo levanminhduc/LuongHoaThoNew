@@ -1,15 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { verifyAdminToken } from "@/lib/auth-middleware";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = verifyAdminToken(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { searchParams } = new URL(request.url);

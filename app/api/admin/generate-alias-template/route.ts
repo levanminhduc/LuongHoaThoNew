@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { verifyAdminToken } from "@/lib/auth-middleware";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 import * as XLSX from "xlsx";
 
 // All payroll fields from the database schema (39 fields + required fields)
@@ -96,13 +96,9 @@ const DEFAULT_FIELD_HEADERS: Record<string, string> = {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const admin = verifyAdminToken(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const supabase = createServiceClient();

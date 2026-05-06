@@ -103,6 +103,9 @@ export function AdminDashboardV2() {
       const userData = JSON.parse(userStr);
       if (userData.role !== "admin") {
         switch (userData.role) {
+          case "van_phong":
+            router.push("/admin/employee-management");
+            break;
           case "truong_phong":
             router.push("/manager/dashboard");
             break;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { verifyAdminToken } from "@/lib/auth-middleware";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
 
@@ -13,12 +13,9 @@ interface FieldMapping {
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await verifyAdminToken(request);
-    if (!authResult.success) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const supabase = createServiceClient();

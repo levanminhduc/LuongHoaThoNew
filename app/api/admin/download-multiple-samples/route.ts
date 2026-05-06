@@ -1,25 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import jwt from "jsonwebtoken";
 import JSZip from "jszip";
-import { type JWTPayload } from "@/lib/auth";
-import { getJwtSecret } from "@/lib/config/jwt";
-
-// Verify admin token
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
-    return decoded.role === "admin" ? decoded : null;
-  } catch {
-    return null;
-  }
-}
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 
 function createExcelBuffer(data: unknown[][], sheetName: string) {
   const workbook = XLSX.utils.book_new();
@@ -43,13 +25,9 @@ function createExcelBuffer(data: unknown[][], sheetName: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const admin = verifyAdminToken(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     // Dữ liệu file 1 - Tháng 1

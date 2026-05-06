@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,23 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const logout = useLogout();
+  const [currentRole, setCurrentRole] = useState("admin");
+
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem("user_info");
+      if (!userStr) return;
+      const parsed = JSON.parse(userStr) as { role?: string };
+      setCurrentRole(parsed.role || "admin");
+    } catch {
+      // fall back to admin
+    }
+  }, []);
+
+  const adminHref =
+    currentRole === "van_phong"
+      ? "/admin/employee-management"
+      : "/admin/dashboard";
 
   const pageTitle = title || pathTitleMap[pathname] || "Admin";
 
@@ -58,7 +76,7 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
       <Breadcrumb className="hidden md:flex">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/admin/dashboard">Admin</BreadcrumbLink>
+            <BreadcrumbLink href={adminHref}>Admin</BreadcrumbLink>
           </BreadcrumbItem>
           {breadcrumbs ? (
             breadcrumbs.map((crumb, index) => (
@@ -105,9 +123,11 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>Tài khoản Admin</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/admin/dashboard")}>
-              Dashboard
-            </DropdownMenuItem>
+            {currentRole !== "van_phong" && (
+              <DropdownMenuItem onClick={() => router.push("/admin/dashboard")}>
+                Dashboard
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
               Cài đặt
             </DropdownMenuItem>

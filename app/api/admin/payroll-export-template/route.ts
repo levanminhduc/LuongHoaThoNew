@@ -2,25 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
-import jwt from "jsonwebtoken";
-import { getJwtSecret } from "@/lib/config/jwt";
+import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
-
-// Verify admin token
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, getJwtSecret()) as { role?: string };
-    return decoded.role === "admin" ? decoded : null;
-  } catch {
-    return null;
-  }
-}
 
 // Mapping database fields to user-friendly Vietnamese headers
 const FIELD_HEADERS: Record<string, string> = {
@@ -134,12 +117,11 @@ const PAYROLL_FIELDS = [
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const admin = verifyAdminToken(request);
-    if (!admin) {
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
       return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401, headers: CACHE_HEADERS.sensitive },
+        { error: auth.error },
+        { status: auth.status, headers: CACHE_HEADERS.sensitive },
       );
     }
 

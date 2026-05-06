@@ -93,6 +93,21 @@ export function verifyAdminToken(request: NextRequest): {
     : { success: false };
 }
 
+export type AdminAccessResult =
+  | { ok: true; user: JWTPayload }
+  | { ok: false; status: 401 | 403; error: string };
+
+export function verifyAdminAccess(request: NextRequest): AdminAccessResult {
+  const auth = verifyToken(request);
+  if (!auth) {
+    return { ok: false, status: 401, error: "Phiên đăng nhập đã hết hạn" };
+  }
+  if (auth.user.role !== "admin") {
+    return { ok: false, status: 403, error: "Không có quyền truy cập" };
+  }
+  return { ok: true, user: auth.user };
+}
+
 // Audit logs authorization (admin only)
 export function verifyAuditLogsAccess(request: NextRequest): {
   success: boolean;
