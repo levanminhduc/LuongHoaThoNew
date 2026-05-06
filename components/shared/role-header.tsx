@@ -22,6 +22,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { useLogout } from "@/lib/hooks/use-logout";
 
 interface RoleHeaderProps {
   roleLabel: string;
@@ -35,24 +36,13 @@ export function RoleHeader({
   roleLabel,
   roleInitials,
   dashboardPath,
-  loginPath = "/",
   pathTitleMap = {},
 }: RoleHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const logout = useLogout();
 
   const pageTitle = pathTitleMap[pathname] || "Dashboard";
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push(loginPath);
-  };
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
@@ -97,7 +87,7 @@ export function RoleHeader({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={handleLogout}
+              onClick={logout}
               className="text-destructive"
             >
               Đăng Xuất

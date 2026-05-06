@@ -7,6 +7,7 @@ import { ENABLE_TICKER } from "@/lib/features";
 import ErrorBoundary from "@/components/error-boundary";
 import { SafeClientComponent } from "@/components/safe-client-component";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/lib/providers/query-provider";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -44,15 +45,17 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className={inter.className}>
         <ErrorBoundary>
-          {ENABLE_TICKER ? (
-            <SafeClientComponent componentName="TickerGate" fallback={null}>
-              <header className="sticky top-0 z-50">
-                <TickerGate />
-              </header>
-            </SafeClientComponent>
-          ) : null}
-          {children}
-          <Toaster position="top-center" />
+          <QueryProvider>
+            {ENABLE_TICKER ? (
+              <SafeClientComponent componentName="TickerGate" fallback={null}>
+                <header className="sticky top-0 z-50">
+                  <TickerGate />
+                </header>
+              </SafeClientComponent>
+            ) : null}
+            {children}
+            <Toaster position="top-center" />
+          </QueryProvider>
         </ErrorBoundary>
       </body>
     </html>

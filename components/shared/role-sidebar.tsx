@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LogOut, Building2 } from "lucide-react";
 import {
@@ -17,6 +17,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useLogout } from "@/lib/hooks/use-logout";
 import type { LucideIcon } from "lucide-react";
 
 export interface RoleNavItem {
@@ -64,22 +65,10 @@ export function RoleSidebar({
   title,
   subtitle,
   navGroups,
-  loginPath = "/",
 }: RoleSidebarProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-
-  const handleLogout = useCallback(async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push(loginPath);
-  }, [router, loginPath]);
+  const logout = useLogout();
 
   const isActive = useCallback((href: string) => pathname === href, [pathname]);
 
@@ -129,7 +118,7 @@ export function RoleSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={handleLogout}
+              onClick={logout}
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
               tooltip="Đăng Xuất"
             >

@@ -4,6 +4,33 @@
 // Used for __tests__/testing-library.js
 // Learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom";
+import "whatwg-fetch";
+import { ReadableStream, TransformStream, WritableStream } from "stream/web";
+import { TextDecoder, TextEncoder } from "util";
+
+global.TextEncoder = global.TextEncoder || TextEncoder;
+global.TextDecoder = global.TextDecoder || TextDecoder;
+global.ReadableStream = global.ReadableStream || ReadableStream;
+global.WritableStream = global.WritableStream || WritableStream;
+global.TransformStream = global.TransformStream || TransformStream;
+global.__REAL_FETCH__ = global.fetch;
+global.__REAL_REQUEST__ = global.Request;
+global.__REAL_RESPONSE__ = global.Response;
+global.__REAL_HEADERS__ = global.Headers;
+global.BroadcastChannel =
+  global.BroadcastChannel ||
+  class BroadcastChannel {
+    constructor(name) {
+      this.name = name;
+    }
+    postMessage() {}
+    close() {}
+    addEventListener() {}
+    removeEventListener() {}
+    dispatchEvent() {
+      return true;
+    }
+  };
 
 // Mock Next.js router
 jest.mock("next/router", () => ({

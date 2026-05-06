@@ -40,6 +40,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useLogout } from "@/lib/hooks/use-logout";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -158,12 +159,7 @@ export function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push("/admin/login");
-  }, [router]);
+  const logout = useLogout();
 
   const isActive = useCallback((href: string) => pathname === href, [pathname]);
 
@@ -270,7 +266,7 @@ export function AdminSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={handleLogout}
+              onClick={logout}
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
               tooltip="Đăng Xuất"
             >

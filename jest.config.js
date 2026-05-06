@@ -40,7 +40,7 @@ const customJestConfig = {
 
   // Transform configuration
   transform: {
-    "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { presets: ["next/babel"] }],
+    "^.+\\.(js|jsx|ts|tsx|mjs)$": ["babel-jest", { presets: ["next/babel"] }],
   },
 
   // Module file extensions
@@ -51,7 +51,7 @@ const customJestConfig = {
 
   // Transform ignore patterns
   transformIgnorePatterns: [
-    "/node_modules/",
+    "[\\\\/]node_modules[\\\\/](?!(@mswjs|@open-draft|msw|outvariant|strict-event-emitter|headers-polyfill|until-async|rettime)[\\\\/])",
     "^.+\\.module\\.(css|sass|scss)$",
   ],
 

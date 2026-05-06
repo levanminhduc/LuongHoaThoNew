@@ -22,6 +22,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { useLogout } from "@/lib/hooks/use-logout";
 
 interface AdminHeaderProps {
   title?: string;
@@ -45,14 +46,9 @@ const pathTitleMap: Record<string, string> = {
 export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const logout = useLogout();
 
   const pageTitle = title || pathTitleMap[pathname] || "Admin";
-
-  const handleLogout = () => {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push("/admin/login");
-  };
 
   return (
     <header className="sticky top-8 sm:top-9 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
@@ -117,7 +113,7 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={handleLogout}
+              onClick={logout}
               className="text-destructive"
             >
               Đăng Xuất
