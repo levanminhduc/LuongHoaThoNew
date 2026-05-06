@@ -97,11 +97,45 @@ const config: Config = {
             transform: "translateX(360%) skewX(-18deg)",
           },
         },
+        "employee-detail-pulse": {
+          "0%, 100%": {
+            boxShadow:
+              "0 14px 30px -14px rgba(37,99,235,0.95), inset 0 1px 0 rgba(255,255,255,0.34), 0 0 0 0 rgba(14,165,233,0)",
+            filter: "brightness(1)",
+          },
+          "18%": {
+            boxShadow:
+              "0 20px 42px -12px rgba(37,99,235,1), inset 0 1px 0 rgba(255,255,255,0.48), 0 0 0 5px rgba(14,165,233,0.22)",
+            filter: "brightness(1.16)",
+          },
+          "36%": {
+            boxShadow:
+              "0 16px 34px -14px rgba(37,99,235,0.98), inset 0 1px 0 rgba(255,255,255,0.38), 0 0 0 9px rgba(14,165,233,0)",
+            filter: "brightness(1.04)",
+          },
+        },
+        "employee-detail-flash": {
+          "0%, 100%": {
+            opacity: "0.36",
+          },
+          "18%": {
+            opacity: "1",
+          },
+          "36%": {
+            opacity: "0.5",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "employee-card-shine": "employee-card-shine 4.2s ease-in-out infinite",
+        "employee-detail-flash":
+          "employee-detail-flash 2.35s ease-in-out infinite",
+        "employee-detail-pulse":
+          "employee-detail-pulse 2.35s ease-in-out infinite",
+        "employee-detail-shine":
+          "employee-card-shine 2.35s cubic-bezier(0.22,1,0.36,1) infinite",
       },
     },
   },

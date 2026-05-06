@@ -88,19 +88,19 @@ export function EmployeeLookupResult({
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex min-w-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/15 px-2 py-2 text-[0.68rem] text-white/85 shadow-sm backdrop-blur xs:gap-2 xs:px-3 xs:text-xs sm:text-base">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2 max-[420px]:grid-cols-1">
+              <div className="flex min-w-0 items-center gap-1.5 rounded-md border border-white/15 bg-white/15 px-2 py-2 text-[0.68rem] leading-snug text-white/85 shadow-sm backdrop-blur xs:gap-2 xs:px-3 xs:text-xs sm:text-base">
                 <Building2 className="h-3.5 w-3.5 shrink-0 text-cyan-100 sm:h-4 sm:w-4" />
-                <span className="min-w-0 truncate whitespace-nowrap">
+                <span className="min-w-0 break-words">
                   Bộ Phận:{" "}
                   <span className="font-semibold text-white">
                     {result.department || "Không xác định"}
                   </span>
                 </span>
               </div>
-              <div className="flex min-w-0 items-center justify-end gap-1.5 rounded-md border border-white/15 bg-white/15 px-2 py-2 text-[0.68rem] text-white/85 shadow-sm backdrop-blur xs:gap-2 xs:px-3 xs:text-xs sm:text-base">
+              <div className="flex min-w-fit items-center justify-end gap-1.5 rounded-md border border-white/15 bg-white/15 px-2 py-2 text-[0.68rem] text-white/85 shadow-sm backdrop-blur max-[420px]:justify-start xs:gap-2 xs:px-3 xs:text-xs sm:text-base">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-amber-100 sm:h-4 sm:w-4" />
-                <span className="min-w-0 truncate whitespace-nowrap">
+                <span className="whitespace-nowrap">
                   Ngày công:{" "}
                   <span className="font-semibold text-white">
                     {result.ngay_cong_trong_gio != null
@@ -124,7 +124,7 @@ export function EmployeeLookupResult({
                 type="button"
                 size="sm"
                 onClick={onShowDetail}
-                className="relative isolate min-h-9 overflow-hidden border border-primary/40 bg-[linear-gradient(135deg,hsl(var(--primary))_0%,#1656d6_48%,#0a2c7d_100%)] px-3 text-white shadow-[0_12px_28px_-18px_rgba(37,99,235,0.95)] before:absolute before:inset-y-[-50%] before:left-[-70%] before:z-0 before:w-1/2 before:skew-x-[-18deg] before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.14),rgba(255,255,255,0.58),rgba(255,255,255,0.14),transparent)] before:content-[''] before:animate-employee-card-shine hover:bg-[linear-gradient(135deg,hsl(var(--primary))_0%,#1656d6_48%,#0a2c7d_100%)] hover:text-white motion-reduce:before:animate-none"
+                className="relative isolate min-h-9 overflow-hidden border border-sky-200/70 bg-[linear-gradient(135deg,#0ea5e9_0%,#2563eb_42%,#0a2c7d_100%)] px-3 font-bold text-white shadow-[0_14px_30px_-14px_rgba(37,99,235,0.95),inset_0_1px_0_rgba(255,255,255,0.34)] transition-[transform,filter] [transition-duration:200ms] before:absolute before:inset-y-[-55%] before:left-[-76%] before:z-0 before:w-1/2 before:skew-x-[-18deg] before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.18),rgba(255,255,255,0.72),rgba(255,255,255,0.18),transparent)] before:content-[''] before:animate-employee-detail-shine after:absolute after:inset-0 after:z-0 after:rounded-md after:border after:border-white/45 after:content-[''] after:animate-employee-detail-flash animate-employee-detail-pulse hover:scale-[1.03] hover:bg-[linear-gradient(135deg,#0ea5e9_0%,#2563eb_42%,#0a2c7d_100%)] hover:text-white hover:brightness-110 active:scale-[0.96] motion-reduce:animate-none motion-reduce:before:animate-none motion-reduce:after:animate-none"
               >
                 <FileText className="relative z-10 h-4 w-4" />
                 <span className="relative z-10">Xem Chi Tiết</span>
