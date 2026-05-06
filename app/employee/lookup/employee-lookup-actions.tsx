@@ -24,20 +24,20 @@ export function EmployeeLookupActions({
       className={`grid grid-cols-2 ${T13_ENABLED ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-2`}
     >
       <Button
-        variant="outline"
+        variant="default"
         size="sm"
         onClick={onShowDetail}
-        className="w-full min-h-[44px] flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+        className="w-full min-h-[44px]"
       >
         <FileText className="w-4 h-4 flex-shrink-0" />
         <span>Chi Tiết</span>
       </Button>
 
       <Button
-        variant="outline"
+        variant="default"
         size="sm"
         onClick={onShowHistory}
-        className="w-full min-h-[44px] flex items-center justify-center gap-2 text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
+        className="w-full min-h-[44px]"
       >
         <Calendar className="w-4 h-4 flex-shrink-0" />
         <span>Lịch Sử</span>
@@ -45,11 +45,11 @@ export function EmployeeLookupActions({
 
       {T13_ENABLED && (
         <Button
-          variant="outline"
+          variant="default"
           size="sm"
           onClick={onShowT13}
           disabled={t13Loading}
-          className="w-full min-h-[44px] flex items-center justify-center gap-2 text-amber-600 hover:text-amber-700 border-amber-200 hover:border-amber-300"
+          className="w-full min-h-[44px]"
         >
           {t13Loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -63,10 +63,10 @@ export function EmployeeLookupActions({
       )}
 
       <Button
-        variant="outline"
+        variant="default"
         size="sm"
         onClick={onShowPassword}
-        className="w-full min-h-[44px] flex items-center justify-center gap-2 text-purple-600 hover:text-purple-700 border-purple-200 hover:border-purple-300"
+        className="w-full min-h-[44px]"
       >
         <Lock className="w-4 h-4 flex-shrink-0" />
         <span>Đổi MK</span>

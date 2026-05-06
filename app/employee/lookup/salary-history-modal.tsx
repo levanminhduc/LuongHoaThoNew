@@ -193,9 +193,11 @@ export function SalaryHistoryModal({
     isNumber?: boolean;
     isCurrency?: boolean;
   }) => (
-    <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-      <span className="text-sm text-gray-600 font-medium">{label}:</span>
-      <span className="text-sm font-semibold text-gray-900">
+    <div className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
+      <span className="text-sm text-muted-foreground font-medium">
+        {label}:
+      </span>
+      <span className="text-sm font-semibold text-foreground">
         {isCurrency
           ? formatCurrencyLocal(value as number)
           : isNumber
@@ -250,7 +252,7 @@ export function SalaryHistoryModal({
                 {months.map((month) => (
                   <SelectItem key={month} value={month}>
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-blue-500" />
+                      <Calendar className="w-4 h-4" />
                       {isT13
                         ? `Lương Tháng 13 - ${month.split("-")[0]}`
                         : formatSalaryMonth(month)}
@@ -270,8 +272,8 @@ export function SalaryHistoryModal({
 
           {loadingPayroll && (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <span className="ml-2 text-gray-600">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="ml-2 text-muted-foreground">
                 Đang tải thông tin lương...
               </span>
             </div>
@@ -285,8 +287,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Calculator className="w-4 h-4 text-amber-600" />
-                          <span className="text-amber-700">
+                          <Calculator className="w-4 h-4" />
+                          <span>
                             Thông Tin Lương Tháng 13
                           </span>
                         </CardTitle>
@@ -318,8 +320,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-blue-600" />
-                          <span className="text-blue-700">
+                          <Calendar className="w-4 h-4" />
+                          <span>
                             Chi Tiết 12 Tháng
                           </span>
                         </CardTitle>
@@ -388,21 +390,21 @@ export function SalaryHistoryModal({
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-green-50 border-green-200">
+                    <Card className="bg-muted/50">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Banknote className="w-4 h-4 text-green-600" />
-                          <span className="text-green-700">
+                          <Banknote className="w-4 h-4" />
+                          <span>
                             Tổng Lương Tháng 13
                           </span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-center p-4 bg-white rounded-lg border border-green-200">
-                          <p className="text-sm text-green-600 font-medium mb-2">
+                        <div className="text-center p-4 bg-background rounded-lg border">
+                          <p className="text-sm text-muted-foreground font-medium mb-2">
                             Tổng Lương Tháng 13
                           </p>
-                          <p className="text-2xl font-bold text-green-700">
+                          <p className="text-2xl font-bold text-foreground">
                             {formatCurrencyLocal(payrollData.tong_luong_13)}
                           </p>
                         </div>
@@ -414,8 +416,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Calculator className="w-4 h-4 text-blue-600" />
-                          <span className="text-blue-700">
+                          <Calculator className="w-4 h-4" />
+                          <span>
                             Hệ Số và Thông Số Cơ Bản
                           </span>
                         </CardTitle>
@@ -447,8 +449,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-green-600" />
-                          <span className="text-green-700">
+                          <Clock className="w-4 h-4" />
+                          <span>
                             Thời Gian Làm Việc
                           </span>
                         </CardTitle>
@@ -492,8 +494,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <DollarSign className="w-4 h-4 text-purple-600" />
-                          <span className="text-purple-700">
+                          <DollarSign className="w-4 h-4" />
+                          <span>
                             Lương Sản Phẩm và Đơn Giá
                           </span>
                         </CardTitle>
@@ -542,8 +544,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Gift className="w-4 h-4 text-orange-600" />
-                          <span className="text-orange-700">
+                          <Gift className="w-4 h-4" />
+                          <span>
                             Thưởng và Phụ Cấp
                           </span>
                         </CardTitle>
@@ -588,8 +590,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Shield className="w-4 h-4 text-indigo-600" />
-                          <span className="text-indigo-700">
+                          <Shield className="w-4 h-4" />
+                          <span>
                             Bảo Hiểm và Phúc Lợi
                           </span>
                         </CardTitle>
@@ -626,8 +628,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-teal-600" />
-                          <span className="text-teal-700">Phép và Lễ</span>
+                          <Calendar className="w-4 h-4" />
+                          <span>Phép và Lễ</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-1">
@@ -647,8 +649,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-emerald-600" />
-                          <span className="text-emerald-700">
+                          <TrendingUp className="w-4 h-4" />
+                          <span>
                             Tổng Lương và Phụ Cấp Khác
                           </span>
                         </CardTitle>
@@ -675,8 +677,8 @@ export function SalaryHistoryModal({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Minus className="w-4 h-4 text-red-600" />
-                          <span className="text-red-700">Thuế và Khấu Trừ</span>
+                          <Minus className="w-4 h-4" />
+                          <span>Thuế và Khấu Trừ</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-1">
@@ -708,21 +710,21 @@ export function SalaryHistoryModal({
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-green-50 border-green-200">
+                    <Card className="bg-muted/50">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <Banknote className="w-4 h-4 text-green-600" />
-                          <span className="text-green-700">
+                          <Banknote className="w-4 h-4" />
+                          <span>
                             Lương Thực Nhận
                           </span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-center p-4 bg-white rounded-lg border border-green-200">
-                          <p className="text-sm text-green-600 font-medium mb-2">
+                        <div className="text-center p-4 bg-background rounded-lg border">
+                          <p className="text-sm text-muted-foreground font-medium mb-2">
                             Tiền Lương Thực Nhận Cuối Kỳ
                           </p>
-                          <p className="text-2xl font-bold text-green-700">
+                          <p className="text-2xl font-bold text-foreground">
                             {formatCurrencyLocal(
                               payrollData.tien_luong_thuc_nhan_cuoi_ky,
                             )}
@@ -732,27 +734,27 @@ export function SalaryHistoryModal({
                     </Card>
 
                     {payrollData.is_signed && (
-                      <Card className="bg-blue-50 border-blue-200">
+                      <Card className="bg-muted/50">
                         <CardHeader className="pb-3">
                           <CardTitle className="text-lg flex items-center gap-2">
-                            <PenTool className="w-4 h-4 text-blue-600" />
-                            <span className="text-blue-700">
+                            <PenTool className="w-4 h-4" />
+                            <span>
                               Thông Tin Ký Nhận
                             </span>
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="flex items-center gap-3">
-                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <CheckCircle className="w-6 h-6" />
                             <div>
-                              <p className="font-medium text-green-800">
+                              <p className="font-medium text-foreground">
                                 Đã ký nhận lương
                               </p>
-                              <p className="text-sm text-green-600">
+                              <p className="text-sm text-muted-foreground">
                                 Người ký: {payrollData.signed_by_name}
                               </p>
                               {payrollData.signed_at_display && (
-                                <p className="text-sm text-green-600">
+                                <p className="text-sm text-muted-foreground">
                                   Thời gian: {payrollData.signed_at_display}
                                 </p>
                               )}
@@ -766,7 +768,7 @@ export function SalaryHistoryModal({
 
                 <Separator />
 
-                <div className="text-sm text-gray-500 text-center">
+                <div className="text-sm text-muted-foreground text-center">
                   <p>Nguồn dữ liệu: {payrollData.source_file}</p>
                   <p className="mt-1">
                     <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất

@@ -35,7 +35,6 @@ interface ChangePasswordModalProps {
 interface PasswordStrength {
   score: number;
   label: string;
-  color: string;
   issues: string[];
 }
 
@@ -64,7 +63,6 @@ export function ChangePasswordModal({
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({
     score: 0,
     label: "",
-    color: "",
     issues: [],
   });
 
@@ -112,23 +110,17 @@ export function ChangePasswordModal({
 
     // Determine strength label and color
     let label = "";
-    let color = "";
-
     if (score <= 2) {
       label = "Yếu";
-      color = "bg-red-500";
     } else if (score === 3) {
       label = "Trung bình";
-      color = "bg-yellow-500";
     } else if (score === 4) {
       label = "Tốt";
-      color = "bg-blue-500";
     } else {
       label = "Mạnh";
-      color = "bg-green-500";
     }
 
-    return { score: score * 20, label, color, issues };
+    return { score: score * 20, label, issues };
   };
 
   // Handle password input change
@@ -137,7 +129,7 @@ export function ChangePasswordModal({
     if (value) {
       setPasswordStrength(checkPasswordStrength(value));
     } else {
-      setPasswordStrength({ score: 0, label: "", color: "", issues: [] });
+      setPasswordStrength({ score: 0, label: "", issues: [] });
     }
   };
 
@@ -252,7 +244,7 @@ export function ChangePasswordModal({
     });
     setError("");
     setSuccess(false);
-    setPasswordStrength({ score: 0, label: "", color: "", issues: [] });
+    setPasswordStrength({ score: 0, label: "", issues: [] });
 
     onClose();
   };
@@ -268,7 +260,7 @@ export function ChangePasswordModal({
           <DialogDescription>
             Thay đổi mật khẩu để bảo vệ tài khoản của bạn.
             {mustChangePassword && (
-              <span className="text-yellow-600">
+              <span className="text-muted-foreground">
                 Lần đầu đổi mật khẩu, vui lòng nhập số CCCD làm mật khẩu hiện
                 tại.
               </span>
@@ -312,7 +304,7 @@ export function ChangePasswordModal({
                       current: !prev.current,
                     }))
                   }
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                 >
                   {showPasswords.current ? (
                     <EyeOff className="w-4 h-4" />
@@ -342,7 +334,7 @@ export function ChangePasswordModal({
                   onClick={() =>
                     setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
                   }
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                 >
                   {showPasswords.new ? (
                     <EyeOff className="w-4 h-4" />
@@ -359,17 +351,7 @@ export function ChangePasswordModal({
                     <span className="text-xs text-muted-foreground">
                       Độ mạnh:
                     </span>
-                    <span
-                      className={`text-xs font-medium ${
-                        passwordStrength.score <= 40
-                          ? "text-red-600"
-                          : passwordStrength.score <= 60
-                            ? "text-yellow-600"
-                            : passwordStrength.score <= 80
-                              ? "text-blue-600"
-                              : "text-green-600"
-                      }`}
-                    >
+                    <span className="text-xs font-medium text-foreground">
                       {passwordStrength.label}
                     </span>
                   </div>
@@ -379,7 +361,7 @@ export function ChangePasswordModal({
                     <ul className="text-xs text-muted-foreground space-y-1">
                       {passwordStrength.issues.map((issue, idx) => (
                         <li key={idx} className="flex items-center gap-1">
-                          <span className="text-yellow-600">•</span> {issue}
+                          <span>•</span> {issue}
                         </li>
                       ))}
                     </ul>
@@ -415,7 +397,7 @@ export function ChangePasswordModal({
                       confirm: !prev.confirm,
                     }))
                   }
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                 >
                   {showPasswords.confirm ? (
                     <EyeOff className="w-4 h-4" />
@@ -426,12 +408,14 @@ export function ChangePasswordModal({
               </div>
               {formData.confirmPassword &&
                 (formData.newPassword === formData.confirmPassword ? (
-                  <p className="text-xs text-green-600 flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
                     Mật khẩu khớp
                   </p>
                 ) : (
-                  <p className="text-xs text-red-600">Mật khẩu không khớp</p>
+                  <p className="text-xs text-destructive">
+                    Mật khẩu không khớp
+                  </p>
                 ))}
             </div>
 
@@ -444,18 +428,18 @@ export function ChangePasswordModal({
             )}
 
             {success && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-700">
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertDescription>
                   Đổi mật khẩu thành công! Đang chuyển hướng...
                 </AlertDescription>
               </Alert>
             )}
 
             {/* Security Tips */}
-            <Alert className="border-blue-200 bg-blue-50">
-              <ShieldCheck className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-xs text-blue-700">
+            <Alert>
+              <ShieldCheck className="h-4 w-4" />
+              <AlertDescription className="text-xs">
                 <strong>Lưu ý bảo mật:</strong> Sử dụng mật khẩu mạnh với ít
                 nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
               </AlertDescription>

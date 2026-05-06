@@ -65,9 +65,11 @@ export function PayrollDetailModal({
     isNumber?: boolean;
     isCurrency?: boolean;
   }) => (
-    <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-      <span className="text-sm text-gray-600 font-medium">{label}:</span>
-      <span className="text-sm font-semibold text-gray-900">
+    <div className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
+      <span className="text-sm text-muted-foreground font-medium">
+        {label}:
+      </span>
+      <span className="text-sm font-semibold text-foreground">
         {isCurrency
           ? formatCurrencyLocal(value as number)
           : isNumber
@@ -112,8 +114,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Calculator className="w-4 h-4 text-blue-600" />
-                <span className="text-blue-700">Hệ Số và Thông Số Cơ Bản</span>
+                <Calculator className="w-4 h-4" />
+                <span>Hệ Số và Thông Số Cơ Bản</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
@@ -144,8 +146,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="w-4 h-4 text-green-600" />
-                <span className="text-green-700">Thời Gian Làm Việc</span>
+                <Clock className="w-4 h-4" />
+                <span>Thời Gian Làm Việc</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
@@ -186,8 +188,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-purple-600" />
-                <span className="text-purple-700">
+                <DollarSign className="w-4 h-4" />
+                <span>
                   Lương Sản Phẩm và Đơn Giá
                 </span>
               </CardTitle>
@@ -237,8 +239,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Gift className="w-4 h-4 text-orange-600" />
-                <span className="text-orange-700">Thưởng và Phụ Cấp</span>
+                <Gift className="w-4 h-4" />
+                <span>Thưởng và Phụ Cấp</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
@@ -287,8 +289,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="w-4 h-4 text-indigo-600" />
-                <span className="text-indigo-700">Bảo Hiểm và Phúc Lợi</span>
+                <Shield className="w-4 h-4" />
+                <span>Bảo Hiểm và Phúc Lợi</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
@@ -324,8 +326,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-teal-600" />
-                <span className="text-teal-700">Phép và Lễ</span>
+                <Calendar className="w-4 h-4" />
+                <span>Phép và Lễ</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
@@ -346,8 +348,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-600" />
-                <span className="text-emerald-700">
+                <TrendingUp className="w-4 h-4" />
+                <span>
                   Tổng Lương và Phụ Cấp Khác
                 </span>
               </CardTitle>
@@ -375,8 +377,8 @@ export function PayrollDetailModal({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Minus className="w-4 h-4 text-red-600" />
-                <span className="text-red-700">Thuế và Khấu Trừ</span>
+                <Minus className="w-4 h-4" />
+                <span>Thuế và Khấu Trừ</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
@@ -409,19 +411,19 @@ export function PayrollDetailModal({
           </Card>
 
           {/* Lương thực nhận */}
-          <Card className="bg-green-50 border-green-200">
+          <Card className="bg-muted/50">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Banknote className="w-4 h-4 text-green-600" />
-                <span className="text-green-700">Lương Thực Nhận</span>
+                <Banknote className="w-4 h-4" />
+                <span>Lương Thực Nhận</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center p-4 bg-white rounded-lg border border-green-200">
-                <p className="text-sm text-green-600 font-medium mb-2">
+              <div className="text-center p-4 bg-background rounded-lg border">
+                <p className="text-sm text-muted-foreground font-medium mb-2">
                   Tiền Lương Thực Nhận Cuối Kỳ
                 </p>
-                <p className="text-2xl font-bold text-green-700">
+                <p className="text-2xl font-bold text-foreground">
                   {formatCurrencyLocal(
                     payrollData.tien_luong_thuc_nhan_cuoi_ky,
                   )}
@@ -433,7 +435,7 @@ export function PayrollDetailModal({
           <Separator />
 
           {/* Thông tin nguồn */}
-          <div className="text-sm text-gray-500 text-center">
+          <div className="text-sm text-muted-foreground text-center">
             <p>Nguồn dữ liệu: {payrollData.source_file}</p>
             <p className="mt-1">
               <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham
@@ -448,7 +450,7 @@ export function PayrollDetailModal({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="w-full bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800 h-12 text-base font-medium"
+              className="w-full h-12 text-base font-medium"
             >
               <X className="w-5 h-5 mr-2" />
               Đóng Lại

@@ -68,14 +68,14 @@ export function EmployeeLookup() {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transition-colors animate-pulse"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border bg-background text-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   aria-label="Hướng dẫn nhập mã nhân viên"
                 >
                   <Info className="w-4 h-4" />
                 </button>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-80 text-sm">
-                <p className="font-semibold text-amber-700 mb-2">
+                <p className="font-semibold text-foreground mb-2">
                   Hướng dẫn nhập Mã Nhân Viên
                 </p>
                 <div className="space-y-2 text-muted-foreground">
@@ -84,7 +84,7 @@ export function EmployeeLookup() {
                       NV <strong>chính thức</strong>: nhập <strong>DB0</strong>{" "}
                       + mã NV
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       VD: Mã 1234 → DB01234
                     </p>
                   </div>
@@ -93,7 +93,7 @@ export function EmployeeLookup() {
                       NV <strong>thử việc</strong>: nhập <strong>DBT0</strong> +
                       mã NV
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       VD: Mã 1234 → DBT01234
                     </p>
                   </div>
@@ -142,7 +142,7 @@ export function EmployeeLookup() {
                 <button
                   type="button"
                   onClick={() => dispatch({ type: "TOGGLE_SHOW_CCCD" })}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {state.showCccd ? (
                     <EyeOff className="h-4 w-4" />
@@ -164,7 +164,7 @@ export function EmployeeLookup() {
                 />
                 <label
                   htmlFor="remember"
-                  className="text-sm text-gray-600 cursor-pointer"
+                  className="text-sm text-muted-foreground cursor-pointer"
                 >
                   Ghi nhớ đăng nhập
                 </label>
@@ -173,7 +173,7 @@ export function EmployeeLookup() {
                 <button
                   type="button"
                   onClick={handlers.handleClearSavedCredentials}
-                  className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700"
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Trash2 className="w-3 h-3" />
                   Xóa lưu
@@ -212,7 +212,7 @@ export function EmployeeLookup() {
                     payload: "showForgotPasswordModal",
                   })
                 }
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                className="text-sm text-primary underline-offset-4 hover:underline"
               >
                 Quên mật khẩu?
               </button>
@@ -241,8 +241,8 @@ export function EmployeeLookup() {
         </div>
       )}
 
-      <div className="text-center text-sm text-gray-500">
-        <Link href="/" className="text-blue-600 hover:text-blue-800">
+      <div className="text-center text-sm text-muted-foreground">
+        <Link href="/" className="text-primary underline-offset-4 hover:underline">
           ← Quay về trang chủ
         </Link>
       </div>

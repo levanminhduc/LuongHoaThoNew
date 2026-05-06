@@ -7,13 +7,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  User,
   DollarSign,
   PenTool,
   CheckCircle,
   Clock,
   Loader2,
-  Timer,
+  Building2,
 } from "lucide-react";
 import {
   formatSalaryMonth,
@@ -45,33 +44,50 @@ export function EmployeeLookupResult({
   onShowPassword,
   t13Loading,
 }: EmployeeLookupResultProps) {
+  const salaryMonthLabel = (() => {
+    const match = /^(\d{4})-(\d{1,2})$/.exec(result.salary_month);
+    if (!match) {
+      return result.salary_month_display || formatSalaryMonth(result.salary_month);
+    }
+
+    const [, year, month] = match;
+    return `Bảng Lương Tháng ${month.padStart(2, "0")} - ${year}`;
+  })();
+
   return (
     <Card>
       <CardContent className="pt-6 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold">{result.full_name}</h2>
-          </div>
-          <Badge variant="secondary">
-            {result.salary_month_display ||
-              formatSalaryMonth(result.salary_month)}
-          </Badge>
-        </div>
+        <div className="rounded-lg border border-primary bg-primary/20 p-4 sm:p-5">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4">
+            <h2 className="min-w-0 truncate text-xl font-bold leading-tight text-foreground sm:text-2xl">
+              <span className="block truncate">
+                  {result.full_name}
+              </span>
+            </h2>
+            <Badge variant="secondary" className="w-fit max-w-[11.75rem] truncate sm:max-w-none">
+              {salaryMonthLabel}
+            </Badge>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <Timer className="w-4 h-4" />
-            <span>Chức vụ: {result.position || "Không xác định"}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            <span>
-              Ngày công trong giờ:{" "}
-              {result.ngay_cong_trong_gio != null
-                ? formatNumber(result.ngay_cong_trong_gio)
-                : "—"}
-            </span>
+            <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground sm:text-base">
+              <Building2 className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate">
+                Bộ Phận:{" "}
+                <span className="font-semibold text-foreground">
+                  {result.department || "Không xác định"}
+                </span>
+              </span>
+            </div>
+            <div className="flex min-w-0 items-center justify-end gap-2 text-sm text-muted-foreground sm:text-base">
+              <Clock className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate">
+                Ngày công:{" "}
+                <span className="font-semibold text-foreground">
+                  {result.ngay_cong_trong_gio != null
+                    ? formatNumber(result.ngay_cong_trong_gio)
+                    : "—"}
+                </span>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -93,30 +109,30 @@ export function EmployeeLookupResult({
             Tóm Tắt Lương
           </h3>
 
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border">
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-700">Hệ Số Làm Việc:</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Hệ Số Làm Việc:</span>
+              <span className="font-semibold text-foreground">
                 {formatNumber(result.he_so_lam_viec || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-700">Hệ Số Phụ Cấp KQ:</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Hệ Số Phụ Cấp KQ:</span>
+              <span className="font-semibold text-foreground">
                 {formatNumber(result.he_so_phu_cap_ket_qua || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-700">
+              <span className="text-muted-foreground">
                 Tiền Khen Thưởng Chuyên Cần:
               </span>
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-foreground">
                 {formatCurrency(result.tien_khen_thuong_chuyen_can || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-700">PC Lương:</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">PC Lương:</span>
+              <span className="font-semibold text-foreground">
                 {formatCurrency(
                   (result.tien_tang_ca_vuot || 0) +
                     (result.luong_cnkcp_vuot || 0),
@@ -124,26 +140,26 @@ export function EmployeeLookupResult({
               </span>
             </div>
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-700">Lương Học Việc PC:</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">Lương Học Việc PC:</span>
+              <span className="font-semibold text-foreground">
                 {formatCurrency(result.luong_hoc_viec_pc_luong || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-700">BHXH BHTN BHYT:</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-muted-foreground">BHXH BHTN BHYT:</span>
+              <span className="font-semibold text-foreground">
                 {formatCurrency(result.bhxh_bhtn_bhyt_total || 0)}
               </span>
             </div>
           </div>
 
-          <Card className="mt-4 bg-emerald-50 border-emerald-200">
+          <Card className="mt-4 border-primary bg-primary text-primary-foreground">
             <CardContent className="pt-6">
               <div className="text-center">
-                <p className="text-sm font-medium text-emerald-600">
+                <p className="text-sm font-medium text-primary-foreground/80">
                   Lương Thực Nhận Cuối Kỳ
                 </p>
-                <p className="text-lg md:text-2xl font-bold text-emerald-700">
+                <p className="text-lg md:text-2xl font-bold">
                   {formatCurrency(result.tien_luong_thuc_nhan_cuoi_ky || 0)}
                 </p>
               </div>
@@ -160,28 +176,28 @@ export function EmployeeLookupResult({
           </h3>
 
           {signSuccess && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-700">
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
                 Đã ký nhận lương thành công! Cảm ơn bạn đã xác nhận.
               </AlertDescription>
             </Alert>
           )}
 
           {result.is_signed ? (
-            <Card className="bg-green-50 border-green-200">
+            <Card className="border-primary bg-primary text-primary-foreground">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                  <CheckCircle className="w-6 h-6" />
                   <div>
-                    <p className="font-medium text-green-800">
+                    <p className="font-medium">
                       Đã ký nhận lương
                     </p>
-                    <p className="text-sm text-green-600">
+                    <p className="text-sm text-primary-foreground/80">
                       Người ký: {result.signed_by_name}
                     </p>
                     {result.signed_at && (
-                      <p className="text-sm text-green-600">
+                      <p className="text-sm text-primary-foreground/80">
                         Thời gian: {result.signed_at_display}
                       </p>
                     )}
@@ -190,16 +206,16 @@ export function EmployeeLookupResult({
               </CardContent>
             </Card>
           ) : (
-            <Card className="bg-amber-50 border-amber-200">
+            <Card className="border-primary bg-primary text-primary-foreground">
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <Clock className="w-6 h-6 text-amber-600" />
+                    <Clock className="w-6 h-6" />
                     <div>
-                      <p className="font-medium text-amber-800">
+                      <p className="font-medium">
                         Chưa ký nhận lương
                       </p>
-                      <p className="text-sm text-amber-600">
+                      <p className="text-sm text-primary-foreground/80">
                         Vui lòng ký nhận để xác nhận bạn đã nhận thông tin lương
                         tháng {result.salary_month}
                       </p>
@@ -208,7 +224,8 @@ export function EmployeeLookupResult({
                   <Button
                     onClick={onSign}
                     disabled={signingLoading}
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    variant="secondary"
+                    className="w-full"
                   >
                     {signingLoading ? (
                       <>
@@ -228,16 +245,6 @@ export function EmployeeLookupResult({
               </CardContent>
             </Card>
           )}
-        </div>
-
-        <Separator />
-
-        <div className="text-sm text-gray-500">
-          <p>Nguồn dữ liệu: {result.source_file}</p>
-          <p className="mt-1">
-            <strong>Lưu ý:</strong> Thông tin này chỉ mang tính chất tham khảo.
-            Vui lòng liên hệ phòng Kế Toán Lương nếu có thắc mắc.
-          </p>
         </div>
       </CardContent>
     </Card>

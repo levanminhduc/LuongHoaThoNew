@@ -43,7 +43,6 @@ interface ForgotPasswordModalProps {
 interface PasswordStrength {
   score: number;
   label: string;
-  color: string;
   issues: string[];
 }
 
@@ -92,7 +91,6 @@ export function ForgotPasswordModal({
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({
     score: 0,
     label: "",
-    color: "",
     issues: [],
   });
 
@@ -133,23 +131,17 @@ export function ForgotPasswordModal({
     }
 
     let label = "";
-    let color = "";
-
     if (score <= 2) {
       label = "Yếu";
-      color = "bg-red-500";
     } else if (score === 3) {
       label = "Trung bình";
-      color = "bg-yellow-500";
     } else if (score === 4) {
       label = "Tốt";
-      color = "bg-blue-500";
     } else {
       label = "Mạnh";
-      color = "bg-green-500";
     }
 
-    return { score: score * 20, label, color, issues };
+    return { score: score * 20, label, issues };
   };
 
   const handlePasswordChange = (value: string) => {
@@ -157,7 +149,7 @@ export function ForgotPasswordModal({
     if (value) {
       setPasswordStrength(checkPasswordStrength(value));
     } else {
-      setPasswordStrength({ score: 0, label: "", color: "", issues: [] });
+      setPasswordStrength({ score: 0, label: "", issues: [] });
     }
   };
 
@@ -215,7 +207,7 @@ export function ForgotPasswordModal({
     });
     setError("");
     setSuccess(false);
-    setPasswordStrength({ score: 0, label: "", color: "", issues: [] });
+    setPasswordStrength({ score: 0, label: "", issues: [] });
 
     onClose();
   };
@@ -231,14 +223,8 @@ export function ForgotPasswordModal({
             <KeyRound className="w-5 h-5" />
             Quên Mật Khẩu
           </DialogTitle>
-          <DialogDescription className="space-y-2">
-            {/* <span className="block">
-              Đặt lại mật khẩu bằng cách xác thực số CCCD của bạn.
-            </span>
-            <span className="block text-amber-600 font-medium">
-              ⚠️ Bạn chỉ có thể sử dụng chức năng này sau 24 giờ kể từ lần đổi
-              mật khẩu trước
-            </span> */}
+          <DialogDescription>
+            Đặt lại mật khẩu bằng cách xác thực số CCCD của bạn.
           </DialogDescription>
         </DialogHeader>
 
@@ -309,7 +295,7 @@ export function ForgotPasswordModal({
                               new: !prev.new,
                             }))
                           }
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                         >
                           {showPasswords.new ? (
                             <EyeOff className="w-4 h-4" />
@@ -326,17 +312,7 @@ export function ForgotPasswordModal({
                           <span className="text-xs text-muted-foreground">
                             Độ mạnh:
                           </span>
-                          <span
-                            className={`text-xs font-medium ${
-                              passwordStrength.score <= 40
-                                ? "text-red-600"
-                                : passwordStrength.score <= 60
-                                  ? "text-yellow-600"
-                                  : passwordStrength.score <= 80
-                                    ? "text-blue-600"
-                                    : "text-green-600"
-                            }`}
-                          >
+                          <span className="text-xs font-medium text-foreground">
                             {passwordStrength.label}
                           </span>
                         </div>
@@ -349,7 +325,7 @@ export function ForgotPasswordModal({
                           <ul className="text-xs text-muted-foreground space-y-1">
                             {passwordStrength.issues.map((issue, idx) => (
                               <li key={idx} className="flex items-center gap-1">
-                                <span className="text-yellow-600">•</span>{" "}
+                                <span>•</span>{" "}
                                 {issue}
                               </li>
                             ))}
@@ -385,7 +361,7 @@ export function ForgotPasswordModal({
                               confirm: !prev.confirm,
                             }))
                           }
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                         >
                           {showPasswords.confirm ? (
                             <EyeOff className="w-4 h-4" />
@@ -397,8 +373,8 @@ export function ForgotPasswordModal({
                     </FormControl>
                     {confirmPasswordValue.length > 0 &&
                       newPasswordValue === confirmPasswordValue && (
-                        <p className="text-xs text-blue-700 flex items-center gap-1">
-                          <span className="text-blue-600">✓</span> Mật khẩu xác
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span>✓</span> Mật khẩu xác
                           nhận khớp
                         </p>
                       )}
@@ -415,18 +391,18 @@ export function ForgotPasswordModal({
               )}
 
               {success && (
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-700">
+                <Alert>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertDescription>
                     Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật
                     khẩu mới.
                   </AlertDescription>
                 </Alert>
               )}
 
-              <Alert className="border-blue-200 bg-blue-50">
-                <Info className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-xs text-blue-700">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-xs">
                   <strong>Lưu ý:</strong> Vì lý do bảo mật, bạn chỉ có thể sử
                   dụng chức năng này sau 24 giờ kể từ lần đổi mật khẩu trước.
                   Nếu cần hỗ trợ ngay, vui lòng liên hệ Văn Phòng.

@@ -37,7 +37,6 @@ interface ResetPasswordModalProps {
 interface PasswordStrength {
   score: number;
   label: string;
-  color: string;
   issues: string[];
 }
 
@@ -65,7 +64,6 @@ export function ResetPasswordModal({
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({
     score: 0,
     label: "",
-    color: "",
     issues: [],
   });
 
@@ -113,23 +111,17 @@ export function ResetPasswordModal({
 
     // Determine strength label and color
     let label = "";
-    let color = "";
-
     if (score <= 2) {
       label = "Yếu";
-      color = "bg-red-500";
     } else if (score === 3) {
       label = "Trung bình";
-      color = "bg-yellow-500";
     } else if (score === 4) {
       label = "Tốt";
-      color = "bg-blue-500";
     } else {
       label = "Mạnh";
-      color = "bg-green-500";
     }
 
-    return { score: score * 20, label, color, issues };
+    return { score: score * 20, label, issues };
   };
 
   // Handle password input change
@@ -138,7 +130,7 @@ export function ResetPasswordModal({
     if (value) {
       setPasswordStrength(checkPasswordStrength(value));
     } else {
-      setPasswordStrength({ score: 0, label: "", color: "", issues: [] });
+      setPasswordStrength({ score: 0, label: "", issues: [] });
     }
   };
 
@@ -232,7 +224,7 @@ export function ResetPasswordModal({
     });
     setError("");
     setSuccess(false);
-    setPasswordStrength({ score: 0, label: "", color: "", issues: [] });
+    setPasswordStrength({ score: 0, label: "", issues: [] });
 
     onClose();
   };
@@ -249,7 +241,7 @@ export function ResetPasswordModal({
             <span className="block">
               Đặt mật khẩu mới cho tài khoản của bạn.
             </span>
-            <span className="block text-yellow-600 font-medium">
+            <span className="block text-muted-foreground font-medium">
               ⚠️ Đảm bảo bạn đang sử dụng thiết bị cá nhân
             </span>
           </DialogDescription>
@@ -258,9 +250,9 @@ export function ResetPasswordModal({
         <ScrollArea className="max-h-[65vh] pr-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Confirmation Alert */}
-            <Alert className="border-blue-200 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-sm text-blue-700">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription className="text-sm">
                 <strong>Bạn đang đổi mật khẩu cho:</strong>
                 <div className="mt-1 font-medium">
                   {employeeId} - {employeeName}
@@ -287,7 +279,7 @@ export function ResetPasswordModal({
                   onClick={() =>
                     setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
                   }
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                 >
                   {showPasswords.new ? (
                     <EyeOff className="w-4 h-4" />
@@ -305,15 +297,7 @@ export function ResetPasswordModal({
                       Độ mạnh:
                     </span>
                     <span
-                      className={`text-xs font-medium ${
-                        passwordStrength.score <= 40
-                          ? "text-red-600"
-                          : passwordStrength.score <= 60
-                            ? "text-yellow-600"
-                            : passwordStrength.score <= 80
-                              ? "text-blue-600"
-                              : "text-green-600"
-                      }`}
+                      className="text-xs font-medium text-foreground"
                     >
                       {passwordStrength.label}
                     </span>
@@ -324,7 +308,7 @@ export function ResetPasswordModal({
                     <ul className="text-xs text-muted-foreground space-y-1">
                       {passwordStrength.issues.map((issue, idx) => (
                         <li key={idx} className="flex items-center gap-1">
-                          <span className="text-yellow-600">•</span> {issue}
+                          <span>•</span> {issue}
                         </li>
                       ))}
                     </ul>
@@ -360,7 +344,7 @@ export function ResetPasswordModal({
                       confirm: !prev.confirm,
                     }))
                   }
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                 >
                   {showPasswords.confirm ? (
                     <EyeOff className="w-4 h-4" />
@@ -371,7 +355,7 @@ export function ResetPasswordModal({
               </div>
               {formData.confirmPassword &&
                 formData.newPassword !== formData.confirmPassword && (
-                  <p className="text-xs text-red-600">
+                  <p className="text-xs text-destructive">
                     Mật khẩu xác nhận không khớp
                   </p>
                 )}
@@ -386,18 +370,18 @@ export function ResetPasswordModal({
             )}
 
             {success && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-700">
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertDescription>
                   Đổi mật khẩu thành công! Đang chuyển hướng...
                 </AlertDescription>
               </Alert>
             )}
 
             {/* Security Tips */}
-            <Alert className="border-amber-200 bg-amber-50">
-              <ShieldCheck className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-xs text-amber-700">
+            <Alert>
+              <ShieldCheck className="h-4 w-4" />
+              <AlertDescription className="text-xs">
                 <strong>Lưu ý bảo mật:</strong> Sử dụng mật khẩu mạnh với ít
                 nhất 8 ký tự, bao gồm chữ và số. Không chia sẻ mật khẩu với
                 người khác.
