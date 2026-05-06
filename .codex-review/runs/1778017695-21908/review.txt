@@ -1,0 +1,17 @@
+### ISSUE-1: W3 hardcoded-path gate scans endpoint constants
+- Category: sequencing
+- Severity: critical
+- Problem: Step 3.0.5a includes `lib/api/endpoints.ts` in the `/api` hardcoded-path gate, but that file is intentionally supposed to contain `/api/...` endpoint constants.
+- Why it matters: The gate will always fail once real endpoint constants are added, blocking W3 even when hooks correctly use `ENDPOINTS`.
+- Suggested fix: Remove `lib/api/endpoints.ts` from the hardcoded-path gate. Keep the `VERIFY|Pseudo-paths|TODO|TBD` gate for `endpoints.ts`, and run `/api` hardcoded-path checks only against W3-touched hook/client files.
+
+### ISSUE-2: Audit validation text still inconsistent
+- Category: risk
+- Severity: low
+- Problem: Step 0.4b still says the expected smoke result is “5 fetch variants + denylist”, while the updated smoke now covers 6 variants plus `lib/hooks`; the final audit command also repeats `lib/stores lib/sync`.
+- Why it matters: This is not a functional flaw, but it creates needless ambiguity for an implementation agent following the plan literally.
+- Suggested fix: Update the expected smoke text to match the script output, and dedupe final audit args to `app components lib/hooks lib/stores lib/sync`.
+
+### VERDICT
+- Status: REVISE
+- Reason: One W3 gate is now guaranteed to fail because it scans the file that owns endpoint constants.

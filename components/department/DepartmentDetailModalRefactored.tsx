@@ -29,6 +29,9 @@ import {
   transformPayrollRecordToResult,
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
+import { apiClient, downloadBlob } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
+import { getCurrentVietnamYear, getRecentYearOptions } from "@/utils/dateUtils";
 
 const DepartmentChartsTab = dynamic(() => import("./DepartmentChartsTab"), {
   ssr: false,
@@ -187,7 +190,7 @@ export default function DepartmentDetailModalRefactored({
   // Year state for T13 - extract from month prop or use current year
   const [t13Year, setT13Year] = useState<string>(() => {
     // Extract year from month prop (format: YYYY-MM) or use current year
-    return month ? month.substring(0, 4) : new Date().getFullYear().toString();
+    return month ? month.substring(0, 4) : getCurrentVietnamYear().toString();
   });
 
   useEffect(() => {
@@ -239,21 +242,19 @@ export default function DepartmentDetailModalRefactored({
         DepartmentCache.clearCache(departmentName, cacheKeyMonth);
       }
 
-      const token = localStorage.getItem("admin_token");
-      // Build URL with year parameter for T13
-      const apiUrl =
-        payrollType === "t13"
-          ? `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}&year=${t13Year}`
-          : `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}&payroll_type=${payrollType}`;
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.MONTH, month);
+      params.set(QUERY_PARAMS.PAYROLL_TYPE, payrollType);
+      if (payrollType === "t13") {
+        params.set(QUERY_PARAMS.YEAR, t13Year);
+      }
 
-      const response = await fetch(apiUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const data = await apiClient.get<{
+        department?: DepartmentDetail;
+        error?: string;
+      }>(`${ENDPOINTS.departments.detail(departmentName)}?${params}`);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (data.department) {
         const departmentData = data.department;
 
         // Use correct cache key based on payroll type
@@ -265,8 +266,7 @@ export default function DepartmentDetailModalRefactored({
 
         setDepartmentData(departmentData);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Lỗi khi tải dữ liệu department");
+        setError(data.error || "Lỗi khi tải dữ liệu department");
       }
     } catch (error) {
       console.error("Error loading department detail:", error);
@@ -281,9 +281,13 @@ export default function DepartmentDetailModalRefactored({
   ) => {
     setExporting(true);
     try {
-      const token = localStorage.getItem("admin_token");
-
-      const url = `/api/admin/payroll-export?month=${month}&department=${encodeURIComponent(departmentName)}&payroll_type=${payrollType}`;
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.MONTH, month);
+      params.set(QUERY_PARAMS.DEPARTMENT, departmentName);
+      params.set(QUERY_PARAMS.PAYROLL_TYPE, payrollType);
+      if (payrollType === "t13") {
+        params.set(QUERY_PARAMS.YEAR, t13Year);
+      }
       let filename = `department-${departmentName}-${month}`;
 
       if (payrollType === "t13") {
@@ -296,26 +300,10 @@ export default function DepartmentDetailModalRefactored({
         filename += "-employees";
       }
 
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = `${filename}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(downloadUrl);
-        document.body.removeChild(a);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Lỗi khi xuất dữ liệu");
-      }
+      const { blob, filename: responseFilename } = await apiClient.blob(
+        `${ENDPOINTS.payroll.export}?${params}`,
+      );
+      downloadBlob(blob, responseFilename ?? `${filename}.xlsx`);
     } catch (error) {
       console.error("Error exporting data:", error);
       setError("Có lỗi xảy ra khi xuất dữ liệu");
@@ -392,8 +380,7 @@ export default function DepartmentDetailModalRefactored({
                   title="Chọn năm cho lương T13"
                 >
                   {/* Generate last 5 years */}
-                  {Array.from({ length: 5 }, (_, i) => {
-                    const year = new Date().getFullYear() - i;
+                  {getRecentYearOptions(5).map((year) => {
                     return (
                       <option key={year} value={year.toString()}>
                         Năm {year}

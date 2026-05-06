@@ -1,0 +1,10 @@
+Reading prompt from stdin...
+ERROR: The process "35960" not found.
+2026-05-05T21:45:19.639004Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1 seconds
+Output:
+
+2026-05-05T21:45:47.427979Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.7 seconds
+Output:
+

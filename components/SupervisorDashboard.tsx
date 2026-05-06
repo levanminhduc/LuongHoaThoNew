@@ -38,7 +38,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getPreviousMonth } from "@/utils/dateUtils";
+import {
+  formatVietnamMonthLabel,
+  getPayrollMonthOptionsWithT13,
+  getPreviousMonth,
+  getRecentMonthValues,
+} from "@/utils/dateUtils";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
 import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
 import DepartmentDetailModalRefactored from "@/components/department/DepartmentDetailModalRefactored";
@@ -46,8 +51,14 @@ import {
   transformPayrollRecordToResult,
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
-import DashboardCache from "@/utils/dashboardCache";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
+import {
+  payrollExportFilenamePrefix,
+  usePayrollExportMutation,
+  useSupervisorPayrollQuery,
+  useSupervisorStatsQuery,
+  useSupervisorTrendQuery,
+} from "@/lib/hooks/use-role-payroll";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -64,137 +75,12 @@ const SupervisorDashboardCharts = dynamic(
   },
 );
 
-// Helper function to format month label
-const formatMonthLabel = (value: string) => {
-  const [year, month] = value.split("-");
-
-  if (month === "13") {
-    return `Lương Tháng 13 - ${year}`;
-  }
-
-  const date = new Date(Number(year), Number(month) - 1, 1);
-  return date.toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "long",
-  });
-};
-
-// Helper function to generate month options including T13
-const generateMonthOptions = (years = 2) => {
-  const options: { value: string; label: string }[] = [];
-  const currentYear = new Date().getFullYear();
-
-  for (let i = 0; i < years; i++) {
-    const year = currentYear - i;
-    const month13Value = `${year}-13`;
-    options.push({
-      value: month13Value,
-      label: formatMonthLabel(month13Value),
-    });
-
-    for (let month = 12; month >= 1; month--) {
-      const monthValue = `${year}-${String(month).padStart(2, "0")}`;
-      options.push({ value: monthValue, label: formatMonthLabel(monthValue) });
-    }
-  }
-
-  return options;
-};
-
-// Helper function to get payroll query params
-const getPayrollQueryParams = (selectedMonth: string) => {
-  if (selectedMonth.endsWith("-13")) {
-    const year = selectedMonth.split("-")[0];
-    return `payroll_type=t13&year=${year}`;
-  }
-
-  return `month=${selectedMonth}`;
-};
-
 interface User {
   employee_id: string;
   username: string;
   role: string;
   department: string;
   permissions: string[];
-}
-
-interface PayrollRecord {
-  id: number;
-  employee_id: string;
-  salary_month: string;
-
-  he_so_lam_viec?: number;
-  he_so_phu_cap_ket_qua?: number;
-  he_so_luong_co_ban?: number;
-  luong_toi_thieu_cty?: number;
-
-  ngay_cong_trong_gio?: number;
-  gio_cong_tang_ca?: number;
-  gio_an_ca?: number;
-  tong_gio_lam_viec?: number;
-  tong_he_so_quy_doi?: number;
-  ngay_cong_chu_nhat?: number;
-
-  tong_luong_san_pham_cong_doan?: number;
-  don_gia_tien_luong_tren_gio?: number;
-  tien_luong_san_pham_trong_gio?: number;
-  tien_luong_tang_ca?: number;
-  tien_luong_30p_an_ca?: number;
-  tien_khen_thuong_chuyen_can?: number;
-  luong_hoc_viec_pc_luong?: number;
-  tong_cong_tien_luong_san_pham?: number;
-  ho_tro_thoi_tiet_nong?: number;
-  bo_sung_luong?: number;
-  tien_tang_ca_vuot?: number;
-  luong_cnkcp_vuot?: number;
-
-  bhxh_21_5_percent?: number;
-  pc_cdcs_pccc_atvsv?: number;
-  luong_phu_nu_hanh_kinh?: number;
-  tien_con_bu_thai_7_thang?: number;
-  ho_tro_gui_con_nha_tre?: number;
-
-  ngay_cong_phep_le?: number;
-  tien_phep_le?: number;
-
-  tong_cong_tien_luong?: number;
-  tien_boc_vac?: number;
-  ho_tro_xang_xe?: number;
-
-  thue_tncn_nam_2024?: number;
-  tam_ung?: number;
-  thue_tncn?: number;
-  bhxh_bhtn_bhyt_total?: number;
-  truy_thu_the_bhyt?: number;
-
-  tien_luong_thuc_nhan_cuoi_ky: number;
-
-  so_thang_chia_13?: number;
-  tong_sp_12_thang?: number;
-  chi_dot_1_13?: number;
-  chi_dot_2_13?: number;
-  tong_luong_13?: number;
-
-  is_signed: boolean;
-  signed_at: string | null;
-  signed_by_name?: string;
-
-  employees: {
-    employee_id?: string;
-    full_name: string;
-    department?: string;
-    chuc_vu: string;
-  };
-}
-
-interface DepartmentStats {
-  department: string;
-  totalEmployees: number;
-  signedCount: number;
-  signedPercentage: string;
-  totalSalary: number;
-  averageSalary: number;
 }
 
 interface SupervisorDashboardProps {
@@ -205,22 +91,18 @@ export default function SupervisorDashboard({
   user,
 }: SupervisorDashboardProps) {
   const searchParams = useSearchParams();
-  const [payrollData, setPayrollData] = useState<PayrollRecord[]>([]);
-  const [departmentStats, setDepartmentStats] =
-    useState<DepartmentStats | null>(null);
   const [selectedMonth, setSelectedMonth] =
     useState<string>(getPreviousMonth());
-  const [loading, setLoading] = useState(true);
-  interface TrendItem {
-    month: string;
-    monthLabel: string;
-    totalEmployees: number;
-    signedCount: number;
-    totalSalary: number;
-    signedPercentage: number;
-  }
-  const [monthlyTrend, setMonthlyTrend] = useState<TrendItem[]>([]);
-  const [exportingExcel, setExportingExcel] = useState(false);
+  const trendMonths = getRecentMonthValues(6);
+  const payrollQuery = useSupervisorPayrollQuery(selectedMonth);
+  const statsQuery = useSupervisorStatsQuery(selectedMonth);
+  const trendQuery = useSupervisorTrendQuery(trendMonths);
+  const exportMutation = usePayrollExportMutation();
+  const payrollData = payrollQuery.data?.data ?? [];
+  const departmentStats = statsQuery.data?.statistics ?? null;
+  const monthlyTrend = trendQuery.data ?? [];
+  const loading = payrollQuery.isLoading || statsQuery.isLoading;
+  const exportingExcel = exportMutation.isPending;
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [showPayrollModalT13, setShowPayrollModalT13] = useState(false);
   const [selectedPayrollData, setSelectedPayrollData] =
@@ -233,156 +115,18 @@ export default function SupervisorDashboard({
   const [showT13PayrollDetail, setShowT13PayrollDetail] = useState(false);
 
   useEffect(() => {
-    loadDepartmentData();
-    loadMonthlyTrend();
-  }, [selectedMonth]);
-
-  // Handle URL query params for T13
-  useEffect(() => {
     const tab = searchParams?.get("tab");
     if (tab === "t13") {
       setShowT13Modal(true);
     }
   }, [searchParams]);
 
-  const loadDepartmentData = async () => {
-    const cachedPayroll = DashboardCache.getCacheData<PayrollRecord[]>(
-      `supervisor_${user.department}`,
-      selectedMonth,
-      "payroll",
-    );
-    const cachedStats = DashboardCache.getCacheData<DepartmentStats>(
-      `supervisor_${user.department}`,
-      selectedMonth,
-      "stats",
-    );
-
-    if (cachedPayroll && cachedStats) {
-      setPayrollData(cachedPayroll);
-      setDepartmentStats(cachedStats);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-
-      const payrollResponse = await fetch(
-        `/api/payroll/my-department?${queryParams}&limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (payrollResponse.ok) {
-        const payrollData = await payrollResponse.json();
-        const data = payrollData.data || [];
-        setPayrollData(data);
-        DashboardCache.setCacheData(
-          `supervisor_${user.department}`,
-          selectedMonth,
-          "payroll",
-          data,
-        );
-      }
-
-      const statsResponse = await fetch(`/api/payroll/my-department`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ month: selectedMonth }),
-      });
-
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setDepartmentStats(statsData.statistics);
-        DashboardCache.setCacheData(
-          `supervisor_${user.department}`,
-          selectedMonth,
-          "stats",
-          statsData.statistics,
-        );
-      }
-    } catch (error) {
-      console.error("Error loading department data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMonthlyTrend = async () => {
-    const cachedTrends = DashboardCache.getCacheData<TrendItem[]>(
-      `supervisor_${user.department}`,
-      "trends",
-      "trends",
-    );
-
-    if (cachedTrends) {
-      setMonthlyTrend(cachedTrends);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("admin_token");
-      const months = [];
-
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        months.push(date.toISOString().slice(0, 7));
-      }
-
-      const trendData = await Promise.all(
-        months.map(async (month) => {
-          const response = await fetch(`/api/payroll/my-department`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ month }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            return {
-              month,
-              monthLabel: new Date(month + "-01").toLocaleDateString("vi-VN", {
-                month: "short",
-                year: "numeric",
-              }),
-              totalEmployees: data.statistics.totalEmployees,
-              signedCount: data.statistics.signedCount,
-              totalSalary: data.statistics.totalSalary / 1000000,
-              signedPercentage: parseFloat(data.statistics.signedPercentage),
-            };
-          }
-          return null;
-        }),
-      );
-
-      const validTrends = trendData.filter((t): t is TrendItem => t !== null);
-      setMonthlyTrend(validTrends);
-      DashboardCache.setCacheData(
-        `supervisor_${user.department}`,
-        "trends",
-        "trends",
-        validTrends,
-      );
-    } catch (error) {
-      console.error("Error loading monthly trend:", error);
-    }
-  };
-
   const handleViewEmployee = (employeeId: string) => {
     const payrollRecord = payrollData.find((p) => p.employee_id === employeeId);
-    if (payrollRecord) {
-      const payrollResult = transformPayrollRecordToResult(payrollRecord);
+    if (payrollRecord?.employees) {
+      const payrollResult = transformPayrollRecordToResult(
+        payrollRecord as Parameters<typeof transformPayrollRecordToResult>[0],
+      );
       payrollResult.source_file = "Supervisor Dashboard";
 
       if (selectedMonth.endsWith("-13")) {
@@ -405,46 +149,17 @@ export default function SupervisorDashboard({
     exportType: "employees" | "overview" | "trends" = "employees",
   ) => {
     try {
-      setExportingExcel(true);
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-
-      const url = `/api/admin/payroll-export?${queryParams}&department=${encodeURIComponent(user.department)}`;
-      let filename = `Luong_${user.department}_${selectedMonth}`;
-
-      if (exportType === "overview") {
-        filename += "_overview";
-      } else if (exportType === "trends") {
-        filename += "_trends";
-      }
-
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await exportMutation.mutateAsync({
+        selectedMonth,
+        department: user.department,
+        filenamePrefix: payrollExportFilenamePrefix({
+          selectedMonth,
+          department: user.department,
+          exportType,
+        }),
       });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(downloadUrl);
-        document.body.removeChild(a);
-      } else {
-        const errorData = await response.json();
-        console.error(
-          "Export error:",
-          errorData.error || "Lỗi khi xuất dữ liệu",
-        );
-      }
     } catch (error) {
       console.error("Error exporting Excel:", error);
-    } finally {
-      setExportingExcel(false);
     }
   };
 
@@ -484,7 +199,7 @@ export default function SupervisorDashboard({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {generateMonthOptions(2).map((option) => (
+              {getPayrollMonthOptionsWithT13(2).map((option) => (
                 <SelectItem
                   key={option.value}
                   value={option.value}
@@ -536,7 +251,7 @@ export default function SupervisorDashboard({
                 {(departmentStats.totalSalary / 1000000).toFixed(1)}M
               </div>
               <p className="text-xs text-muted-foreground truncate">
-                VND {formatMonthLabel(selectedMonth)}
+                VND {formatVietnamMonthLabel(selectedMonth)}
               </p>
             </CardContent>
           </Card>
@@ -610,7 +325,7 @@ export default function SupervisorDashboard({
                 Tổng Quan Department
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Thống kê tổng quan {formatMonthLabel(selectedMonth)}
+                Thống kê tổng quan {formatVietnamMonthLabel(selectedMonth)}
               </p>
             </div>
             <Button
@@ -699,7 +414,7 @@ export default function SupervisorDashboard({
                   - {user.department}
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  {formatMonthLabel(selectedMonth)}
+                  {formatVietnamMonthLabel(selectedMonth)}
                 </CardDescription>
               </div>
               <Button

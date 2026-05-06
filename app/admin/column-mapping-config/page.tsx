@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -51,8 +51,15 @@ import {
 import { PAYROLL_FIELD_CONFIG } from "@/lib/advanced-excel-parser";
 import {
   type ColumnAlias,
-  type MappingConfiguration,
 } from "@/lib/column-alias-config";
+import {
+  useColumnAliasesQuery,
+  useCreateColumnAliasMutation,
+  useDeleteColumnAliasMutation,
+  useMappingConfigurationsQuery,
+  useUpdateColumnAliasMutation,
+} from "@/lib/hooks/use-column-mapping";
+import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
 interface AliasFormData {
   database_field: string;
@@ -61,11 +68,7 @@ interface AliasFormData {
 }
 
 export default function ColumnMappingConfigPage() {
-  const [loading, setLoading] = useState(false);
-  const [aliases, setAliases] = useState<ColumnAlias[]>([]);
-  const [configurations, setConfigurations] = useState<MappingConfiguration[]>(
-    [],
-  );
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showAliasDialog, setShowAliasDialog] = useState(false);
@@ -77,81 +80,42 @@ export default function ColumnMappingConfigPage() {
   });
   const [selectedField, setSelectedField] = useState<string>("all");
   const router = useRouter();
+  const aliasFilters = useMemo(
+    () => ({
+      databaseField: selectedField !== "all" ? selectedField : undefined,
+      limit: 100,
+      sortBy: "database_field" as const,
+      sortOrder: "asc" as const,
+    }),
+    [selectedField],
+  );
+  const aliasesQuery = useColumnAliasesQuery(aliasFilters, isAuthorized);
+  const configurationsQuery = useMappingConfigurationsQuery(
+    { limit: 100 },
+    isAuthorized,
+  );
+  const createAliasMutation = useCreateColumnAliasMutation();
+  const updateAliasMutation = useUpdateColumnAliasMutation();
+  const deleteAliasMutation = useDeleteColumnAliasMutation();
+  const refreshAliases = aliasesQuery.refetch;
+  const aliases = aliasesQuery.data?.data || [];
+  const configurations = configurationsQuery.data?.data || [];
+  const loading =
+    aliasesQuery.isLoading ||
+    configurationsQuery.isLoading ||
+    createAliasMutation.isPending ||
+    updateAliasMutation.isPending ||
+    deleteAliasMutation.isPending;
 
   useEffect(() => {
-    // Check authentication
     const token = localStorage.getItem("admin_token");
     if (!token) {
       router.push("/admin/login");
       return;
     }
 
-    loadData();
+    setIsAuthorized(true);
   }, [router]);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([loadAliases(), loadConfigurations()]);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setError("Lỗi khi tải dữ liệu");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadAliases = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-      const params = new URLSearchParams({
-        limit: "100",
-        sort_by: "database_field",
-        sort_order: "asc",
-      });
-
-      if (selectedField && selectedField !== "all") {
-        params.append("database_field", selectedField);
-      }
-
-      const response = await fetch(`/api/admin/column-aliases?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setAliases(result.data || []);
-      } else {
-        throw new Error(result.message || "Lỗi khi tải aliases");
-      }
-    } catch (error) {
-      console.error("Error loading aliases:", error);
-      setError("Lỗi khi tải danh sách aliases");
-    }
-  };
-
-  const loadConfigurations = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/admin/mapping-configurations", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setConfigurations(result.data || []);
-      } else {
-        throw new Error(result.message || "Lỗi khi tải configurations");
-      }
-    } catch (error) {
-      console.error("Error loading configurations:", error);
-      setError("Lỗi khi tải danh sách cấu hình");
-    }
-  };
 
   const handleCreateAlias = async () => {
     if (!aliasForm.database_field || !aliasForm.alias_name) {
@@ -159,32 +123,17 @@ export default function ColumnMappingConfigPage() {
       return;
     }
 
-    setLoading(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/admin/column-aliases", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(aliasForm),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setMessage("Tạo alias thành công");
-        setShowAliasDialog(false);
-        resetAliasForm();
-        await loadAliases();
-      } else {
-        setError(result.message || "Lỗi khi tạo alias");
-      }
+      await createAliasMutation.mutateAsync(aliasForm);
+      setMessage("Tạo alias thành công");
+      setError("");
+      setShowAliasDialog(false);
+      resetAliasForm();
     } catch (error) {
       console.error("Error creating alias:", error);
-      setError("Có lỗi xảy ra khi tạo alias");
-    } finally {
-      setLoading(false);
+      setError(
+        error instanceof Error ? error.message : "Có lỗi xảy ra khi tạo alias",
+      );
     }
   };
 
@@ -194,40 +143,25 @@ export default function ColumnMappingConfigPage() {
       return;
     }
 
-    setLoading(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(
-        `/api/admin/column-aliases/${editingAlias.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            alias_name: aliasForm.alias_name,
-            confidence_score: aliasForm.confidence_score,
-            is_active: true,
-          }),
-        },
-      );
-
-      const result = await response.json();
-      if (result.success) {
-        setMessage("Cập nhật alias thành công");
-        setShowAliasDialog(false);
-        setEditingAlias(null);
-        resetAliasForm();
-        await loadAliases();
-      } else {
-        setError(result.message || "Lỗi khi cập nhật alias");
-      }
+      await updateAliasMutation.mutateAsync({
+        id: editingAlias.id!,
+        alias_name: aliasForm.alias_name,
+        confidence_score: aliasForm.confidence_score,
+        is_active: true,
+      });
+      setMessage("Cập nhật alias thành công");
+      setError("");
+      setShowAliasDialog(false);
+      setEditingAlias(null);
+      resetAliasForm();
     } catch (error) {
       console.error("Error updating alias:", error);
-      setError("Có lỗi xảy ra khi cập nhật alias");
-    } finally {
-      setLoading(false);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Có lỗi xảy ra khi cập nhật alias",
+      );
     }
   };
 
@@ -236,28 +170,15 @@ export default function ColumnMappingConfigPage() {
       return;
     }
 
-    setLoading(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/column-aliases/${alias.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        setMessage("Xóa alias thành công");
-        await loadAliases();
-      } else {
-        setError(result.message || "Lỗi khi xóa alias");
-      }
+      await deleteAliasMutation.mutateAsync(alias.id!);
+      setMessage("Xóa alias thành công");
+      setError("");
     } catch (error) {
       console.error("Error deleting alias:", error);
-      setError("Có lỗi xảy ra khi xóa alias");
-    } finally {
-      setLoading(false);
+      setError(
+        error instanceof Error ? error.message : "Có lỗi xảy ra khi xóa alias",
+      );
     }
   };
 
@@ -392,7 +313,7 @@ export default function ColumnMappingConfigPage() {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={loadAliases}
+                  onClick={() => refreshAliases()}
                   disabled={loading}
                   className="flex items-center gap-2 w-full sm:w-auto"
                 >
@@ -628,9 +549,9 @@ export default function ColumnMappingConfigPage() {
                             <div className="text-sm">
                               <div>{config.created_by}</div>
                               <div className="text-gray-500">
-                                {new Date(
-                                  config.created_at!,
-                                ).toLocaleDateString("vi-VN")}
+                                {formatTimestampFromDBRaw(
+                                  config.created_at,
+                                ).split(" ")[1] || ""}
                               </div>
                             </div>
                           </TableCell>

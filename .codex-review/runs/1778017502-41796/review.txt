@@ -1,0 +1,31 @@
+### ISSUE-1: W3 hardcoded-path gate now blocks on legacy files
+- Category: sequencing
+- Severity: critical
+- Problem: Step 3.0.5a now scans `lib/hooks/ lib/stores/ lib/sync/`, but existing legacy files such as `lib/hooks/useImportPreview.ts` and `lib/stores/mapping-config-store.ts` still hardcode `/api` until W5.
+- Why it matters: W3 cannot pass its own endpoint gate before reaching the W5 tasks that migrate those files.
+- Suggested fix: Split the gate: in W3 scan only new/touched W3 client data files, then run the full `lib/hooks lib/stores lib/sync` gate in W5 final. Or move those legacy migrations before Task 3.0.5a.
+
+### ISSUE-2: Task 5.8b depends on a later W5.9 hook
+- Category: sequencing
+- Severity: high
+- Problem: `app/admin/bulk-signature/page.tsx` in Task 5.8b uses `useUnsignedEmployeesQuery (W5.9)`, but 5.8b executes before 5.9.
+- Why it matters: The task depends on code that does not exist yet.
+- Suggested fix: Create `useUnsignedEmployeesQuery` inside 5.8b before migrating `bulk-signature`, or move that row to 5.9 after the hook exists.
+
+### ISSUE-3: Store “delegates to hooks” is invalid architecture
+- Category: architecture
+- Severity: high
+- Problem: Task 5.8b says to refactor `lib/stores/*.ts` to “delegate to hooks”. Zustand stores cannot call React hooks.
+- Why it matters: This would violate Rules of Hooks if implemented literally.
+- Suggested fix: State only the valid pattern: remove async fetch/data methods from the store; create React Query hooks; call those hooks from React components; keep Zustand only for local UI state.
+
+### ISSUE-4: Endpoint audit list not updated for 5.8b
+- Category: sequencing
+- Severity: medium
+- Problem: Task 5.8b adds new endpoints/hooks, but Task 3.0’s required endpoint audit table does not include mapping configs, data validation, password reset history, employee check, bulk signature unsigned employees, or test-column-mapping defer.
+- Why it matters: The mandatory contract audit can complete without covering endpoints needed later.
+- Suggested fix: Add every 5.8b endpoint/hook/defer decision to Task 3.0’s audit table, or add a separate pre-5.8b endpoint audit gate before implementing those hooks.
+
+### VERDICT
+- Status: REVISE
+- Reason: Round 8 improves scope coverage, but it introduces sequencing blockers around the expanded gates and W5.8b dependencies.

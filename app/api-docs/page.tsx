@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import "swagger-ui-react/swagger-ui.css";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS } from "@/lib/api/endpoints";
 
 function suppressSwaggerWarnings() {
   const originalError = console.error;
@@ -62,39 +64,27 @@ export default function ApiDocsPage() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("/api/api-docs/openapi", {
-        credentials: "include",
-      });
+      await apiClient.get(ENDPOINTS.apiDocs.openapi);
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("auth_token="));
 
-      if (response.ok) {
-        const token = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("auth_token="));
-
-        if (token) {
-          const payload = JSON.parse(atob(token.split("=")[1].split(".")[1]));
-          setAuthState({
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-            user: {
-              username: payload.username,
-              role: payload.role,
-            },
-          });
-        } else {
-          setAuthState({
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-            user: null,
-          });
-        }
+      if (token) {
+        const payload = JSON.parse(atob(token.split("=")[1].split(".")[1]));
+        setAuthState({
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          user: {
+            username: payload.username,
+            role: payload.role,
+          },
+        });
       } else {
         setAuthState({
-          isAuthenticated: false,
+          isAuthenticated: true,
           isLoading: false,
-          error: "Bạn cần đăng nhập với quyền admin để xem tài liệu API",
+          error: null,
           user: null,
         });
       }

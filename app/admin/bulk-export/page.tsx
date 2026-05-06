@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -21,24 +21,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileDown, Loader2 } from "lucide-react";
+import {
+  useBulkExportMutation,
+  useDepartmentsQuery,
+} from "@/lib/hooks/use-bulk-export";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 type PayrollType = "monthly" | "t13";
 
 export default function BulkExportPage() {
   const router = useRouter();
-  const [departments, setDepartments] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loadingDepts, setLoadingDepts] = useState(true);
   const [payrollType, setPayrollType] = useState<PayrollType>("monthly");
   const [salaryMonth, setSalaryMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return getVietnamTimestamp().slice(0, 7);
   });
   const [salaryYear, setSalaryYear] = useState(() =>
-    String(new Date().getFullYear()),
+    getVietnamTimestamp().slice(0, 4),
   );
-  const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [hasInitializedDepartments, setHasInitializedDepartments] =
+    useState(false);
+  const departmentsQuery = useDepartmentsQuery();
+  const bulkExportMutation = useBulkExportMutation();
+  const loadingDepts = departmentsQuery.isLoading;
+  const exporting = bulkExportMutation.isPending;
+  const departments = useMemo(() => {
+    const rawDepartments = departmentsQuery.data?.departments ?? [];
+    const names = rawDepartments
+      .map((dept) => dept.name ?? dept.department ?? "")
+      .filter(Boolean);
+
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b, "vi"));
+  }, [departmentsQuery.data]);
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -61,41 +76,14 @@ export default function BulkExportPage() {
       router.push("/admin/login");
       return;
     }
-
-    fetchDepartments(token);
   }, [router]);
 
-  async function fetchDepartments(token: string) {
-    setLoadingDepts(true);
-    try {
-      const res = await fetch("/api/admin/departments", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Không thể tải danh sách phòng ban");
-      const json = await res.json();
+  useEffect(() => {
+    if (hasInitializedDepartments || departments.length === 0) return;
 
-      let depts: string[] = [];
-      if (Array.isArray(json)) {
-        depts = (json as { name?: string; department?: string }[])
-          .map((d) => d.name ?? d.department ?? "")
-          .filter(Boolean);
-      } else if (json?.departments && Array.isArray(json.departments)) {
-        depts = (json.departments as { name?: string; department?: string }[])
-          .map((d) => d.name ?? d.department ?? "")
-          .filter(Boolean);
-      }
-
-      const sorted = [...new Set(depts)].sort((a, b) =>
-        a.localeCompare(b, "vi"),
-      );
-      setDepartments(sorted);
-      setSelected(new Set(sorted));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingDepts(false);
-    }
-  }
+    setSelected(new Set(departments));
+    setHasInitializedDepartments(true);
+  }, [departments, hasInitializedDepartments]);
 
   function toggleDept(dept: string) {
     setSelected((prev) => {
@@ -123,7 +111,6 @@ export default function BulkExportPage() {
 
   async function handleExport() {
     setExportError(null);
-    setExporting(true);
 
     const token = localStorage.getItem("admin_token");
     if (!token) {
@@ -132,45 +119,15 @@ export default function BulkExportPage() {
     }
 
     try {
-      const res = await fetch("/api/admin/bulk-payroll-export", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          departments: [...selected],
-          salary_month: buildSalaryMonth(),
-          payroll_type: payrollType,
-        }),
+      await bulkExportMutation.mutateAsync({
+        departments: [...selected],
+        salary_month: buildSalaryMonth(),
+        payroll_type: payrollType,
       });
-
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(
-          (json as { error?: string }).error ?? `Lỗi xuất file (${res.status})`,
-        );
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      const month = buildSalaryMonth();
-      a.download =
-        payrollType === "t13"
-          ? `Luong13_${salaryYear}_ToanBo.xlsx`
-          : `Luong_${month}_ToanBo.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
     } catch (err) {
       setExportError(
         err instanceof Error ? err.message : "Có lỗi xảy ra khi xuất file",
       );
-    } finally {
-      setExporting(false);
     }
   }
 

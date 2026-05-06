@@ -38,6 +38,10 @@ import {
   Database,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
+import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
+import { getCurrentMonth, getRecentMonthOptions } from "@/utils/dateUtils";
 
 interface ValidationStats {
   totalEmployees: number;
@@ -70,25 +74,7 @@ export default function DataValidationPage() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [error, setError] = useState("");
 
-  // Generate month options (current month and previous 12 months)
-  const generateMonthOptions = () => {
-    const options = [];
-    const now = new Date();
-
-    for (let i = 0; i < 13; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const value = `${year}-${month}`;
-      const label = `${month}/${year}`;
-
-      options.push({ value, label });
-    }
-
-    return options;
-  };
-
-  const monthOptions = generateMonthOptions();
+  const monthOptions = getRecentMonthOptions(13);
 
   useEffect(() => {
     // Check authentication
@@ -114,8 +100,7 @@ export default function DataValidationPage() {
 
     // Set default month to current month
     if (!selectedMonth) {
-      const currentMonth = getCurrentMonth();
-      setSelectedMonth(currentMonth);
+      setSelectedMonth(getCurrentMonth());
     }
   }, [router, selectedMonth]);
 
@@ -125,13 +110,6 @@ export default function DataValidationPage() {
     }
   }, [selectedMonth]);
 
-  const getCurrentMonth = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    return `${year}-${month}`;
-  };
-
   const fetchValidationData = async (forceRefresh = false) => {
     if (!selectedMonth) return;
 
@@ -140,25 +118,20 @@ export default function DataValidationPage() {
       setRefreshing(forceRefresh);
       setError("");
 
-      const token = localStorage.getItem("admin_token");
-      const url = `/api/admin/data-validation?month=${selectedMonth}${forceRefresh ? "&force_refresh=true" : ""}`;
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.MONTH, selectedMonth);
+      if (forceRefresh) {
+        params.set(QUERY_PARAMS.FORCE_REFRESH, "true");
+      }
 
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const result = await apiClient.get<ValidationData & { error?: string }>(
+        `${ENDPOINTS.dataValidation.list}?${params}`,
+      );
 
-      if (response.ok) {
-        const result = await response.json();
+      if (result.success) {
         setData(result);
-      } else if (response.status === 401) {
-        localStorage.removeItem("admin_token");
-        localStorage.removeItem("user_info");
-        router.push("/admin/login");
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Lỗi khi tải dữ liệu");
+        setError(result.error || "Lỗi khi tải dữ liệu");
       }
     } catch (error) {
       console.error("Error fetching validation data:", error);
@@ -344,8 +317,8 @@ export default function DataValidationPage() {
               <Database className="h-4 w-4" />
               <AlertDescription>
                 Dữ liệu được cache lúc:{" "}
-                {new Date(data.cacheTimestamp).toLocaleString("vi-VN")} (Cache
-                24h để tối ưu hiệu suất)
+                {formatTimestampFromDBRaw(data.cacheTimestamp)} (Cache 24h để
+                tối ưu hiệu suất)
               </AlertDescription>
             </Alert>
           )}

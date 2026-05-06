@@ -20,13 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  VirtualizedTable,
+  type VirtualColumn,
+} from "@/components/ui/virtualized-table";
 import {
   UserX,
   Search,
@@ -39,6 +35,9 @@ import {
   Loader2,
   Download,
 } from "lucide-react";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { apiClient, downloadBlob } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 interface Employee {
   employee_id: string;
@@ -93,6 +92,7 @@ export default function UnsignedEmployeesModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [totalPages, setTotalPages] = useState(1);
   const [departments, setDepartments] = useState<string[]>([]);
   const [departmentCounts, setDepartmentCounts] = useState<
@@ -111,8 +111,8 @@ export default function UnsignedEmployeesModal({
   }, [searchQuery]);
 
   const getCacheKey = useCallback(
-    (page: number, search: string, dept: string) => {
-      return `unsigned-employees-${userRole}-${selectedMonth}-${page}-${search}-${dept}`;
+    (page: number, search: string, dept: string, pageSize: number) => {
+      return `unsigned-employees-${userRole}-${selectedMonth}-${page}-${pageSize}-${search}-${dept}`;
     },
     [userRole, selectedMonth],
   );
@@ -134,7 +134,7 @@ export default function UnsignedEmployeesModal({
 
   const loadEmployees = useCallback(
     async (page = 1, search = "", dept = "all") => {
-      const cacheKey = getCacheKey(page, search, dept);
+      const cacheKey = getCacheKey(page, search, dept, limit);
 
       const cachedData = getCachedData(cacheKey);
       if (cachedData) {
@@ -149,38 +149,31 @@ export default function UnsignedEmployeesModal({
       setError("");
 
       try {
-        const token = localStorage.getItem("admin_token");
-        if (!token) {
-          setError("Không có quyền truy cập");
-          return;
-        }
-
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: "50",
-          include_payroll: "true",
-          month: selectedMonth,
-          unsigned_only: "true",
-        });
+        const params = new URLSearchParams();
+        params.set(QUERY_PARAMS.PAGE, page.toString());
+        params.set(QUERY_PARAMS.LIMIT, limit.toString());
+        params.set(QUERY_PARAMS.INCLUDE_PAYROLL, "true");
+        params.set(QUERY_PARAMS.MONTH, selectedMonth);
+        params.set(QUERY_PARAMS.UNSIGNED_ONLY, "true");
 
         if (search && search.length >= 2) {
-          params.append("search", search);
+          params.append(QUERY_PARAMS.SEARCH, search);
         }
 
         if (dept && dept !== "all") {
-          params.append("department", dept);
+          params.append(QUERY_PARAMS.DEPARTMENT, dept);
         }
 
-        const response = await fetch(`/api/employees/all-employees?${params}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Cache-Control": "max-age=3600",
+        const data = await apiClient.get<CachedData & { error?: string }>(
+          `${ENDPOINTS.employees.all}?${params}`,
+          {
+            headers: {
+              "Cache-Control": "max-age=3600",
+            },
           },
-        });
+        );
 
-        const data = await response.json();
-
-        if (response.ok) {
+        if (!data.error) {
           setEmployees(data.employees || []);
           setTotalPages(data.pagination?.totalPages || 1);
           setDepartments(data.departments || []);
@@ -197,7 +190,7 @@ export default function UnsignedEmployeesModal({
         setLoading(false);
       }
     },
-    [selectedMonth, getCacheKey, getCachedData, setCachedData],
+    [selectedMonth, limit, getCacheKey, getCachedData, setCachedData],
   );
 
   useEffect(() => {
@@ -222,6 +215,11 @@ export default function UnsignedEmployeesModal({
 
   const handleDepartmentChange = (dept: string) => {
     setSelectedDepartment(dept);
+    setCurrentPage(1);
+  };
+
+  const handleLimitChange = (value: string) => {
+    setLimit(Number(value));
     setCurrentPage(1);
   };
 
@@ -256,52 +254,84 @@ export default function UnsignedEmployeesModal({
     return labels[chucVu as keyof typeof labels] || chucVu;
   };
 
+  const unsignedColumns: VirtualColumn<Employee>[] = [
+    {
+      key: "employee_id",
+      header: "Mã NV",
+      width: "110px",
+      cell: (employee) => (
+        <Badge variant="outline">{employee.employee_id}</Badge>
+      ),
+    },
+    {
+      key: "full_name",
+      header: "Họ Tên",
+      width: "minmax(180px, 1.4fr)",
+      cell: (employee) => (
+        <div className="flex items-center gap-2">
+          <User className="w-4 h-4 text-gray-400" />
+          <span className="font-medium">{employee.full_name}</span>
+        </div>
+      ),
+    },
+    {
+      key: "department",
+      header: "Phòng Ban",
+      width: "minmax(160px, 1fr)",
+      cell: (employee) => (
+        <div className="flex items-center gap-2">
+          <Building2 className="w-4 h-4 text-gray-400" />
+          <span>{employee.department}</span>
+        </div>
+      ),
+    },
+    {
+      key: "chuc_vu",
+      header: "Chức Vụ",
+      width: "150px",
+      cell: (employee) => (
+        <Badge className={getChucVuColor(employee.chuc_vu)}>
+          {getChucVuLabel(employee.chuc_vu)}
+        </Badge>
+      ),
+    },
+    {
+      key: "salary",
+      header: "Lương Thực Nhận",
+      width: "170px",
+      className: "text-right",
+      cell: (employee) => (
+        <span className="font-semibold">
+          {formatSalary(employee.salary_amount || 0)}
+        </span>
+      ),
+    },
+  ];
+
   const handleExportExcel = async () => {
     try {
       setExporting(true);
       setError("");
 
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setError("Không có quyền truy cập");
-        return;
-      }
-
-      const params = new URLSearchParams({
-        month: selectedMonth,
-      });
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.MONTH, selectedMonth);
 
       if (debouncedSearch && debouncedSearch.length >= 2) {
-        params.append("search", debouncedSearch);
+        params.append(QUERY_PARAMS.SEARCH, debouncedSearch);
       }
 
       if (selectedDepartment && selectedDepartment !== "all") {
-        params.append("department", selectedDepartment);
+        params.append(QUERY_PARAMS.DEPARTMENT, selectedDepartment);
       }
 
-      const response = await fetch(
-        `/api/admin/unsigned-employees-export?${params}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const { blob, filename } = await apiClient.blob(
+        `${ENDPOINTS.payroll.unsignedExport}?${params}`,
       );
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = `NV_Chua_Ky_${selectedMonth}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(downloadUrl);
-        document.body.removeChild(a);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Lỗi khi xuất Excel");
-      }
+      const [datePart] = getVietnamTimestamp().split(" ");
+      downloadBlob(
+        blob,
+        filename ?? `NV_Chua_Ky_${selectedMonth}_${datePart}.xlsx`,
+      );
     } catch (error) {
       console.error("Error exporting Excel:", error);
       setError("Lỗi khi xuất Excel");
@@ -368,6 +398,18 @@ export default function UnsignedEmployeesModal({
                   <Building2 className="w-4 h-4" />
                   {departments.length} phòng ban
                 </div>
+                <Select value={String(limit)} onValueChange={handleLimitChange}>
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[20, 50, 100, 200].map((value) => (
+                      <SelectItem key={value} value={String(value)}>
+                        {value} dòng
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   onClick={handleExportExcel}
                   disabled={exporting || employees.length === 0}
@@ -411,66 +453,15 @@ export default function UnsignedEmployeesModal({
 
           {!loading && !error && employees.length > 0 && (
             <div className="space-y-4">
-              <div className="overflow-x-auto max-h-96">
-                <Table className="w-full text-sm">
-                  <TableHeader className="bg-gray-50 sticky top-0">
-                    <TableRow>
-                      <TableHead className="text-left p-3 font-medium">
-                        Mã NV
-                      </TableHead>
-                      <TableHead className="text-left p-3 font-medium">
-                        Họ Tên
-                      </TableHead>
-                      <TableHead className="text-left p-3 font-medium">
-                        Phòng Ban
-                      </TableHead>
-                      <TableHead className="text-left p-3 font-medium">
-                        Chức Vụ
-                      </TableHead>
-                      <TableHead className="text-right p-3 font-medium">
-                        Lương Thực Nhận
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {employees.map((employee) => (
-                      <TableRow
-                        key={employee.employee_id}
-                        className="border-b hover:bg-gray-50"
-                      >
-                        <TableCell className="p-3">
-                          <Badge variant="outline">
-                            {employee.employee_id}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="p-3">
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-gray-400" />
-                            <span className="font-medium">
-                              {employee.full_name}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="p-3">
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-gray-400" />
-                            <span>{employee.department}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="p-3">
-                          <Badge className={getChucVuColor(employee.chuc_vu)}>
-                            {getChucVuLabel(employee.chuc_vu)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="p-3 text-right">
-                          <span className="font-semibold">
-                            {formatSalary(employee.salary_amount || 0)}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="overflow-x-auto">
+                <VirtualizedTable
+                  data={employees}
+                  columns={unsignedColumns}
+                  rowKey={(employee) => employee.employee_id}
+                  containerHeight="min(500px, 60dvh)"
+                  caption="Danh sách nhân viên chưa ký"
+                  emptyState="Không có dữ liệu"
+                />
               </div>
 
               {totalPages > 1 && (

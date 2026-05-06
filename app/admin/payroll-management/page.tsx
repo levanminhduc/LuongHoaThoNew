@@ -14,16 +14,23 @@ import type {
   PayrollData,
   PayrollUpdateRequest,
 } from "./types";
+import {
+  usePayrollDetailQuery,
+  useUpdatePayrollMutation,
+} from "@/lib/hooks/use-payroll";
 
 export default function PayrollManagementPage() {
   const router = useRouter();
   const [selectedEmployee, setSelectedEmployee] =
     useState<PayrollSearchResult | null>(null);
   const [payrollData, setPayrollData] = useState<PayrollData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const selectedPayrollId = selectedEmployee?.payroll_id ?? null;
+  const payrollDetailQuery = usePayrollDetailQuery<PayrollData>(selectedPayrollId);
+  const updatePayrollMutation = useUpdatePayrollMutation<PayrollData>();
+  const loading = payrollDetailQuery.isFetching;
+  const saving = updatePayrollMutation.isPending;
 
   // Check admin authentication on mount
   useEffect(() => {
@@ -38,83 +45,45 @@ export default function PayrollManagementPage() {
     setSelectedEmployee(employee);
     setError("");
     setSuccessMessage("");
-    await loadPayrollData(employee.payroll_id);
   };
 
-  const loadPayrollData = async (payrollId: number) => {
-    setLoading(true);
-    setError("");
+  useEffect(() => {
+    if (!payrollDetailQuery.data) return;
 
-    try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setError("Không có quyền truy cập");
-        return;
-      }
+    setPayrollData(payrollDetailQuery.data.payroll);
+  }, [payrollDetailQuery.data]);
 
-      const response = await fetch(`/api/admin/payroll/${payrollId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  useEffect(() => {
+    if (!payrollDetailQuery.error) return;
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setPayrollData(data.payroll);
-      } else {
-        setError(data.error || "Lỗi khi tải dữ liệu lương");
-        setPayrollData(null);
-      }
-    } catch {
-      setError("Có lỗi xảy ra khi tải dữ liệu lương");
-      setPayrollData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setPayrollData(null);
+    setError(
+      payrollDetailQuery.error instanceof Error
+        ? payrollDetailQuery.error.message
+        : "Lỗi khi tải dữ liệu lương",
+    );
+  }, [payrollDetailQuery.error]);
 
   const handleSavePayroll = async (updateRequest: PayrollUpdateRequest) => {
     if (!payrollData) return;
 
-    setSaving(true);
     setError("");
     setSuccessMessage("");
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setError("Không có quyền truy cập");
-        return;
-      }
-
-      const response = await fetch(`/api/admin/payroll/${payrollData.id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateRequest),
+      const data = await updatePayrollMutation.mutateAsync({
+        payrollId: payrollData.id,
+        ...updateRequest,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setPayrollData(data.payroll);
-        setSuccessMessage(`Cập nhật thành công ${data.changesCount} thay đổi`);
-
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => setSuccessMessage(""), 5000);
-
-        // Reload payroll data to get fresh data
-        await loadPayrollData(payrollData.id);
-      } else {
-        setError(data.error || "Lỗi khi cập nhật dữ liệu lương");
-      }
-    } catch {
-      setError("Có lỗi xảy ra khi cập nhật dữ liệu lương");
-    } finally {
-      setSaving(false);
+      setPayrollData(data.payroll);
+      setSuccessMessage(`Cập nhật thành công ${data.changesCount} thay đổi`);
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Có lỗi xảy ra khi cập nhật dữ liệu lương",
+      );
     }
   };
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import EmployeeDashboard from "@/components/EmployeeDashboard";
+import { useLogout } from "@/lib/hooks/use-logout";
 
 interface User {
   employee_id: string;
@@ -16,6 +17,7 @@ export default function EmployeeDashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const logout = useLogout("/");
 
   useEffect(() => {
     checkAuthentication();
@@ -63,17 +65,6 @@ export default function EmployeeDashboardPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push("/");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -86,5 +77,5 @@ export default function EmployeeDashboardPage() {
     return null; // Will redirect
   }
 
-  return <EmployeeDashboard user={user} onLogout={handleLogout} />;
+  return <EmployeeDashboard user={user} onLogout={logout} />;
 }

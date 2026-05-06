@@ -37,57 +37,38 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { type JWTPayload } from "@/lib/auth";
-import { getPreviousMonth } from "@/utils/dateUtils";
+import {
+  formatVietnamMonthLabel,
+  getPayrollMonthOptionsWithT13,
+  getPreviousMonth,
+} from "@/utils/dateUtils";
 import { DepartmentDetailModalRefactored } from "./department";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
 import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
 import { type PayrollResult } from "@/lib/utils/payroll-transformer";
+import { apiClient, downloadBlob } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
-// Helper function to format month label
 const formatMonthLabel = (value: string) => {
-  const [year, month] = value.split("-");
-
-  if (month === "13") {
-    return `Lương Tháng 13 - ${year}`;
-  }
-
-  const date = new Date(Number(year), Number(month) - 1, 1);
-  return date.toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "long",
-  });
+  return formatVietnamMonthLabel(value);
 };
 
-// Helper function to generate month options including T13
 const generateMonthOptions = (years = 2) => {
-  const options: { value: string; label: string }[] = [];
-  const currentYear = new Date().getFullYear();
-
-  for (let i = 0; i < years; i++) {
-    const year = currentYear - i;
-    const month13Value = `${year}-13`;
-    options.push({
-      value: month13Value,
-      label: formatMonthLabel(month13Value),
-    });
-
-    for (let month = 12; month >= 1; month--) {
-      const monthValue = `${year}-${String(month).padStart(2, "0")}`;
-      options.push({ value: monthValue, label: formatMonthLabel(monthValue) });
-    }
-  }
-
-  return options;
+  return getPayrollMonthOptionsWithT13(years);
 };
 
-// Helper function to get payroll query params
-const getPayrollQueryParams = (selectedMonth: string) => {
+const appendPayrollQueryParams = (
+  params: URLSearchParams,
+  selectedMonth: string,
+) => {
   if (selectedMonth.endsWith("-13")) {
     const year = selectedMonth.split("-")[0];
-    return `payroll_type=t13&year=${year}`;
+    params.set(QUERY_PARAMS.PAYROLL_TYPE, "t13");
+    params.set(QUERY_PARAMS.YEAR, year);
+    return;
   }
 
-  return `month=${selectedMonth}`;
+  params.set(QUERY_PARAMS.MONTH, selectedMonth);
 };
 
 interface DepartmentStats {
@@ -166,25 +147,20 @@ export default function OverviewModal({
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-      const response = await fetch(
-        `/api/admin/departments?include_stats=true&${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.INCLUDE_STATS, "true");
+      appendPayrollQueryParams(params, selectedMonth);
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await apiClient.get<{
+        departments?: DepartmentStats[];
+        error?: string;
+      }>(`${ENDPOINTS.departments.list}?${params}`);
+
+      if (data.departments) {
         setDepartments(data.departments || []);
       } else {
-        const errorData = await response.json().catch(() => ({}));
         setError(
-          errorData.error ||
-            `Không thể tải dữ liệu thống kê (Mã lỗi: ${response.status})`,
+          data.error || "Không thể tải dữ liệu thống kê. Vui lòng thử lại.",
         );
       }
     } catch (error) {
@@ -210,34 +186,16 @@ export default function OverviewModal({
   const handleExportDepartment = async (departmentName: string) => {
     setExportingDepartment(departmentName);
     try {
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-      const response = await fetch(
-        `/api/admin/payroll-export?${queryParams}&department=${encodeURIComponent(departmentName)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const params = new URLSearchParams();
+      appendPayrollQueryParams(params, selectedMonth);
+      params.set(QUERY_PARAMS.DEPARTMENT, departmentName);
+      const { blob, filename } = await apiClient.blob(
+        `${ENDPOINTS.payroll.export}?${params}`,
       );
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `department-${departmentName}-${selectedMonth}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        const errorData = await response.json();
-        console.error(
-          "Export error:",
-          errorData.error || "Lỗi khi xuất dữ liệu",
-        );
-      }
+      downloadBlob(
+        blob,
+        filename ?? `department-${departmentName}-${selectedMonth}.xlsx`,
+      );
     } catch (error) {
       console.error("Error exporting department data:", error);
     } finally {

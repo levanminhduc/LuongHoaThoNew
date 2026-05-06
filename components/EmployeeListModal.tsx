@@ -39,6 +39,8 @@ import {
   XCircle,
   Loader2,
 } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 interface Employee {
   employee_id: string;
@@ -157,43 +159,35 @@ export default function EmployeeListModal({
       setError("");
 
       try {
-        const token = localStorage.getItem("admin_token");
-        if (!token) {
-          setError("Không có quyền truy cập");
-          return;
-        }
-
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: "50",
-          include_payroll: "true",
-          month: selectedMonth,
-        });
+        const params = new URLSearchParams();
+        params.set(QUERY_PARAMS.PAGE, page.toString());
+        params.set(QUERY_PARAMS.LIMIT, "50");
+        params.set(QUERY_PARAMS.INCLUDE_PAYROLL, "true");
+        params.set(QUERY_PARAMS.MONTH, selectedMonth);
 
         if (search && search.length >= 2) {
-          params.append("search", search);
+          params.append(QUERY_PARAMS.SEARCH, search);
         }
 
         if (dept && dept !== "all") {
-          params.append("department", dept);
+          params.append(QUERY_PARAMS.DEPARTMENT, dept);
         }
 
-        const response = await fetch(`/api/employees/all-employees?${params}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Cache-Control": "max-age=3600", // Request caching
+        const data = await apiClient.get<CachedData & { error?: string }>(
+          `${ENDPOINTS.employees.all}?${params}`,
+          {
+            headers: {
+              "Cache-Control": "max-age=3600",
+            },
           },
-        });
+        );
 
-        const data = await response.json();
-
-        if (response.ok) {
+        if (!data.error) {
           setEmployees(data.employees || []);
           setTotalPages(data.pagination?.totalPages || 1);
           setDepartments(data.departments || []);
           setDepartmentCounts(data.departmentCounts || {});
 
-          // Cache the response
           setCachedData(cacheKey, data);
         } else {
           setError(data.error || "Lỗi khi tải danh sách nhân viên");
@@ -207,7 +201,6 @@ export default function EmployeeListModal({
     },
     [selectedMonth, getCacheKey, getCachedData, setCachedData],
   );
-
   // Load data when modal opens or filters change
   useEffect(() => {
     if (isOpen) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,10 @@ import { Switch } from "@/components/ui/switch";
 import { Eye, EyeOff, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  useEmployeeMutation,
+  useEmployeesQuery,
+} from "@/lib/hooks/use-employees";
 
 interface Employee {
   employee_id: string;
@@ -70,38 +74,17 @@ export default function EmployeeForm({
     phone_number: employee?.phone_number || "",
     is_active: employee?.is_active ?? true,
   });
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
-  const [departments, setDepartments] = useState<string[]>([]);
   const [openDepartment, setOpenDepartment] = useState(false);
+  const departmentsQuery = useEmployeesQuery({ limit: 1 });
+  const employeeMutation = useEmployeeMutation();
+  const loading = employeeMutation.isPending;
+  const departments = departmentsQuery.data?.departments ?? [];
 
   const filteredRoleOptions = roleOptions.filter(
     (role) => !restrictedRoles.includes(role.value),
   );
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const token = localStorage.getItem("admin_token");
-        const response = await fetch("/api/admin/employees?limit=1", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setDepartments(data.departments || []);
-        }
-      } catch (error) {
-        console.error("Error fetching departments:", error);
-      }
-    };
-
-    fetchDepartments();
-  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -153,16 +136,7 @@ export default function EmployeeForm({
       return;
     }
 
-    setLoading(true);
-
     try {
-      const token = localStorage.getItem("admin_token");
-      const url = employee
-        ? `/api/admin/employees/${employee.employee_id}`
-        : "/api/admin/employees";
-
-      const method = employee ? "PUT" : "POST";
-
       const submitData = {
         ...formData,
         cccd: formData.cccd || undefined,
@@ -179,28 +153,21 @@ export default function EmployeeForm({
         }
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submitData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Có lỗi xảy ra");
-      }
-
-      const result = await response.json();
+      const result = employee
+        ? await employeeMutation.mutateAsync({
+            action: "update",
+            employee: submitData,
+            originalEmployeeId: employee.employee_id,
+          })
+        : await employeeMutation.mutateAsync({
+            action: "create",
+            employee: submitData,
+          });
       toast.success(result.message);
       onSuccess();
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
-    } finally {
-      setLoading(false);
     }
   };
 

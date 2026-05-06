@@ -1,0 +1,43 @@
+## Issues Accepted & Fixed (Round 4)
+
+### ISSUE-1 (R4): Audit script misses backtick + spaced + multiline fetches → FIXED
+- Updated regex to `fetch\s*\(\s*[\`'\"]/api` with `--multiline --multiline-dotall`.
+- Smoke test fixtures now include 5 variants: single-quote, double-quote, backtick, spaced, multiline. Smoke asserts all 5 are caught and denylisted `lookup` does NOT leak.
+
+### ISSUE-2 (R4): MSW real-fetch unreliable → FIXED
+- Replaced bare `import 'whatwg-fetch'` with explicit `installRealFetch()` function:
+  1. `delete (globalThis as any).fetch` (also Request/Response/Headers) — forces removal of any prior jest mock.
+  2. Clear `require.cache[require.resolve('whatwg-fetch')]` so the polyfill IIFE re-runs.
+  3. `require('whatwg-fetch')` — installs on now-undefined globalThis.fetch.
+  4. Throws if final `fetch._isMockFunction` is true.
+- Smoke test now also asserts MSW actually intercepts an end-to-end fetch (not just that fetch isn't a mock).
+
+### ISSUE-3 (R4): Task 1.3 depends on Task 1.8 but comes before → FIXED
+- Added explicit "Execution order" section at top of Wave 1: 1.1 → 1.2 → **1.8** → 1.3 → 1.4 → 1.5 → 1.5b → 1.6 → 1.7 → 1.9.
+- Step 1.3.1 now references this order explicitly: "Task 1.8 (MSW + stateful localStorage infrastructure) MUST be completed before this task."
+
+### ISSUE-4 (R4): Hook snippets violate endpoint-constant rule → FIXED
+- Added `import { ENDPOINTS } from '@/lib/api/endpoints';` to all hook file headers in plan: use-payroll, use-dashboard, use-bulk-export, use-departments, use-attendance, use-payroll-import.
+- Task 3.7 download templates rewritten to use `ENDPOINTS.templates.{employee|attendance|payroll}` (was hardcoded `/api/...` strings).
+- Step 3.0.5a hard gate `rg -n "['\"]/api/" lib/hooks/` enforces 0 hardcoded paths post-implementation.
+
+### ISSUE-5 (R4): `salary_month` rename incomplete in ENDPOINTS + Task 5.8 → FIXED
+- ENDPOINTS function params renamed: `signatureStatus(salaryMonth: string)`, `signatureProgress(salaryMonth: string)`.
+- Task 5.8 instruction updated: `useAttendanceListQuery({ salary_month, department, page, limit })`.
+- All hook input types now use `salary_month` (PayrollFilters, useDashboardStatsQuery, all export mutations, attendance hooks).
+- T13 round-trip test asserts `capturedBody.month === undefined` to lock the rename in.
+
+### ISSUE-6 (R4): Task 4.2 employee-management lacks activation proof → FIXED
+- Task 4.2 expanded with Step 4.2.2 (page-size selector "Hiển thị" with 20/50/100/200 options) and Step 4.2.3 (full integration test that mocks 150 rows and asserts `screen.getByRole('grid')` + `aria-rowcount === '150'`).
+- Manual smoke step (4.2.4) instructs to set page-size 200 to trigger virtualized branch.
+
+### ISSUE-7 (R4): W3 integration tests too shallow → FIXED
+- Added "W3 Integration Test Recipe" section at top of Wave 3 — 5 mandatory assertions per migrated screen: (1) initial load, (2) loading state, (3) error state on 500, (4) filter/search refetch with query param, (5) mutation triggers list refetch.
+- Provided full template test file demonstrating all 5 assertions.
+- Step 3.2.5 (and other W3 task tests) now reference the recipe and explicitly state "single 'renders initial data' test does NOT pass the W3 bar."
+
+## Issues Disputed
+None — all 7 round-4 issues accepted and addressed.
+
+## Your Turn
+Re-review.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,6 +16,8 @@ import {
   showBulkSignatureSuccessToast,
   showNetworkErrorToast,
 } from "@/lib/toast-utils";
+import { useSignatureStatsQuery } from "@/lib/hooks/use-dashboard";
+import { useBulkSignMutation } from "@/lib/hooks/use-payroll";
 
 interface SignatureStats {
   total_employees: number;
@@ -57,40 +59,13 @@ export function BulkSignatureDialog({
   onSuccess,
 }: BulkSignatureDialogProps) {
   const [open, setOpen] = useState(false);
-  const [stats, setStats] = useState<SignatureStats | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingStats, setLoadingStats] = useState(false);
   const [result, setResult] = useState<BulkSignatureResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      fetchStats();
-    }
-  }, [open, month]);
-
-  const fetchStats = async () => {
-    setLoadingStats(true);
-    try {
-      const response = await fetch(`/api/admin/signature-stats/${month}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setStats(data);
-      } else {
-        showErrorToast(data.error || "Lỗi khi lấy thống kê");
-      }
-    } catch {
-      showNetworkErrorToast();
-    } finally {
-      setLoadingStats(false);
-    }
-  };
+  const statsQuery = useSignatureStatsQuery<SignatureStats>(month, open);
+  const bulkSignMutation = useBulkSignMutation();
+  const stats = statsQuery.data ?? null;
+  const loadingStats = statsQuery.isLoading || statsQuery.isFetching;
+  const loading = bulkSignMutation.isPending;
 
   const handleBulkSign = async () => {
     if (!stats || stats.unsigned === 0) {
@@ -98,41 +73,33 @@ export function BulkSignatureDialog({
       return;
     }
 
-    setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch("/api/admin/bulk-sign-salary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-        },
-        body: JSON.stringify({
-          salary_month: month,
-          batch_size: 50,
-        }),
-      });
+      const data = (await bulkSignMutation.mutateAsync({
+        salary_month: month,
+        batch_size: 50,
+      })) as BulkSignatureResult;
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success) {
         setResult(data);
-        showBulkSignatureSuccessToast(data.signed_count, data.total_processed, {
-          onViewDetails: onSuccess,
-        });
+        showBulkSignatureSuccessToast(
+          data.statistics.successful,
+          data.statistics.processed,
+          {
+            onViewDetails: onSuccess,
+          },
+        );
         onSuccess?.();
-        fetchStats();
       } else {
-        setError(data.error || "Có lỗi xảy ra");
-        showErrorToast(data.error || "Có lỗi xảy ra");
+        setError(data.message || "Có lỗi xảy ra");
+        showErrorToast(data.message || "Có lỗi xảy ra");
       }
-    } catch {
-      setError("Lỗi kết nối server");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Lỗi kết nối server";
+      setError(message);
       showNetworkErrorToast();
-    } finally {
-      setLoading(false);
     }
   };
 

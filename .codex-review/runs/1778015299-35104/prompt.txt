@@ -1,0 +1,51 @@
+## Issues Accepted & Fixed (Round 2)
+
+### ISSUE-1 (R2): Opt-in MSW not wired into new tests → FIXED
+- All test snippets in plan now `import { server } from 'tests/mocks/enable-msw'` (changed via global rename across plan).
+- `enable-msw.ts` now imports `whatwg-fetch` to install real fetch on test file load (overriding any global jest mock).
+- Added save/restore of `__originalJestFetch` so `jest.setup.js`'s mock survives across non-MSW tests.
+- Documented the ONE additive edit allowed in `jest.setup.js` (expose `_origFetch` as `globalThis.__originalJestFetch`).
+
+### ISSUE-2 (R2): Audit script ignored extra args + bad excludes → FIXED
+- Rewrote `tests/scripts/audit-fetch.sh` to iterate `"$@"` for all positional args.
+- Switched from `grep --exclude-dir` to `rg --glob '!path/**'` (proper prefix matching).
+- Added Step 0.4b: smoke test (`tests/scripts/__smoke__/audit-fetch-smoke.sh`) that builds a synthetic tree with in-scope + denied files and verifies the script catches the right ones and excludes denied paths. Must pass before relying on the helper.
+
+### ISSUE-3 (R2): Endpoint audit not propagated → FIXED
+- Step 3.0.5 now creates **`lib/api/endpoints.ts`** — typed constants for ALL paths used by hooks. Committed file (single source of truth).
+- All hook snippets in plan rewritten to import `ENDPOINTS` and use `ENDPOINTS.X.Y(...)` instead of hardcoded `/api/...` strings.
+- Includes `QUERY_PARAMS` constants (e.g. `SALARY_MONTH` instead of `month`).
+- Renamed `month` → `salary_month` in `useDashboardStatsQuery` and `useSignatureProgressQuery` (matches BE).
+
+### ISSUE-4 (R2): "Skip hook + keep direct fetch" violates 0-fetch bar → FIXED
+- Step 3.0.6 (new policy section) explicitly removes that option.
+- Missing endpoint now must (a) reroute through existing endpoint, OR (b) defer screen out of W3/W5 scope (with §2 update + user sign-off in PR), OR (c) expand spec to include BE work (out of GĐ3+4, opens new spec). No "leave direct fetch behind" option.
+
+### ISSUE-5 (R2): Logout doesn't clear `user_info` → FIXED
+- `apiClient.clearToken()` now clears `admin_token`, `auth_token`, `user_info`, `admin_user`, `employee_user`.
+- `useLogout()` clears the same set.
+- Step 0.6 audits existing logout sites to discover any additional auth keys, with instruction to add them to defaults BEFORE running Tasks 1.3 / 1.5b.
+- Added test in Task 1.3 that verifies all 5 keys are cleared on 401.
+
+### ISSUE-6 (R2): W5 5.7 + 5.8 missing integration tests → FIXED
+- Task 5.7 now has explicit Step 5.7.5 with test path + assertions for all 3 department-management pages.
+- Task 5.8 now has explicit Step 5.8.3 with test path + assertions for both attendance pages.
+
+### ISSUE-7 (R2): Final bundle compares against wrong baseline → FIXED
+- Task 5.10.2 explicitly references `bundle-baseline-preflight.txt` (Step 0.3) as the comparison source, with note "NOT bundle-baseline.txt or bundle-after-w1.txt".
+- Final % computation table uses the pre-flight number explicitly.
+
+### ISSUE-8 (R2): Fallback D Server Components is out of scope → FIXED
+- Removed Server Components migration as an executable fallback step.
+- Replaced with "ESCALATION ONLY" — if A/B/C fail, escalate to user with 3 options (lower bar, defer to new spec, reduce W3+ scope). No silent execution.
+
+### ISSUE-9 (R2): withToast onSuccess overwritten → FIXED
+- Rewrote `withToast` to accept user `onSuccess` / `onError` callbacks and compose them.
+- Added 2 tests verifying composition preserves both toast and user callback.
+- Updated all hooks in plan to use composition pattern: `...withToast({ success, onSuccess: () => qc.invalidateQueries(...) })` instead of separate spread + onSuccess.
+
+## Issues Disputed
+None — all 9 round-2 issues accepted and addressed.
+
+## Your Turn
+Re-review the updated plan. Same path as before. Keep prior accepted points closed unless regression exists.

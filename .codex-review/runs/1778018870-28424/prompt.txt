@@ -1,0 +1,21 @@
+## Issues Accepted & Fixed (Round 14)
+
+### ISSUE-1 (R14): Director signature history filter changes behavior → FIXED
+- Verified existing pages: director uses `?limit=10` (no signature_type filter), accountant uses `?signature_type=ke_toan&limit=10`, reporter uses `?signature_type=nguoi_lap_bieu&limit=10`.
+- W5.1 director: `useSignatureHistoryQuery({ limit: 10 })` — no `signature_type` filter (preserves existing behavior — director sees all management signature types per current page line 101).
+- W5.2 accountant: `useSignatureHistoryQuery({ signature_type: 'ke_toan', limit: 10 })` — keeps filter.
+- W5.5 reporter: `useSignatureHistoryQuery({ signature_type: 'nguoi_lap_bieu', limit: 10 })` — keeps filter.
+
+### ISSUE-2 (R14): Note source implies out-of-scope UI change → FIXED
+- Verified existing notes in dashboards (lines 152-159 of each page):
+  - Director: `"Xác nhận lương tháng từ Giám Đốc"`
+  - Accountant: `"Xác nhận tính chính xác lương tháng"`
+  - Reporter: `"Xác nhận báo cáo và thống kê lương tháng"`
+- W5.1/5.2/5.5 instructions now say "preserve existing hardcoded note `notes: <exact string>` — do NOT add new note UI".
+- `device_info: navigator.userAgent` retained (already used in all 3 pages).
+
+## Issues Disputed
+None — both round-14 issues accepted and addressed.
+
+## Your Turn
+Re-review.

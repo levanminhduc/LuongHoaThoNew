@@ -6,6 +6,8 @@
 
 import { useMappingConfigStore } from "@/lib/stores/mapping-config-store";
 import { cacheUtils } from "@/lib/cache/mapping-config-cache";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 import type { MappingConfiguration } from "@/lib/column-alias-config";
 
 // ===== SYNC INTERFACES =====
@@ -35,6 +37,11 @@ export interface SyncOptions {
   enableBroadcastChannel: boolean;
   enableStorageEvents: boolean;
   enableVisibilitySync: boolean;
+}
+
+function appendParams(path: string, params: URLSearchParams) {
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
 }
 
 // ===== SYNC MANAGER =====
@@ -276,20 +283,11 @@ class MappingConfigSyncManager {
       const token = localStorage.getItem("admin_token");
       if (!token) return;
 
-      // Get current configurations timestamp from API
-      const response = await fetch(
-        "/api/admin/mapping-configurations?timestamp_only=true",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.TIMESTAMP_ONLY, "true");
+      const data = await apiClient.get<{ last_updated?: number }>(
+        appendParams(ENDPOINTS.mappingConfigs.list, params),
       );
-
-      if (!response.ok) return;
-
-      const data = await response.json();
       const serverTimestamp = data.last_updated || 0;
 
       // Compare with our last sync timestamp

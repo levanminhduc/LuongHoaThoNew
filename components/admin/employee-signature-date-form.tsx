@@ -12,6 +12,7 @@ import {
   showErrorToast,
   showNetworkErrorToast,
 } from "@/lib/toast-utils";
+import { useEmployeeSignatureDateStreamMutation } from "@/lib/hooks/use-dashboard";
 
 interface SignedEmployee {
   employee_id: string;
@@ -24,7 +25,6 @@ interface EmployeeSignatureDateFormProps {
   isT13: boolean;
   signedEmployees: SignedEmployee[];
   loadingEmployees: boolean;
-  authHeader: Record<string, string>;
   onSuccess?: () => void;
 }
 
@@ -41,7 +41,6 @@ export function EmployeeSignatureDateForm({
   isT13,
   signedEmployees,
   loadingEmployees,
-  authHeader,
   onSuccess,
 }: EmployeeSignatureDateFormProps) {
   const [scope, setScope] = useState<"all" | "selected">("all");
@@ -61,6 +60,7 @@ export function EmployeeSignatureDateForm({
   const [streamStartTime, setStreamStartTime] = useState(0);
   const [completionResult, setCompletionResult] =
     useState<CompletionResult | null>(null);
+  const updateMutation = useEmployeeSignatureDateStreamMutation();
 
   const handleSubmit = useCallback(async () => {
     if (!fromDate) {
@@ -73,15 +73,23 @@ export function EmployeeSignatureDateForm({
     }
 
     const endDate = toDate || fromDate;
-    const from = new Date(fromDate);
-    const to = new Date(endDate);
-    if (to < from) {
+    const fromParts = fromDate.split("-").map(Number);
+    const toParts = endDate.split("-").map(Number);
+    const fromTime = Date.UTC(
+      fromParts[0] ?? 0,
+      (fromParts[1] ?? 1) - 1,
+      fromParts[2] ?? 1,
+    );
+    const toTime = Date.UTC(
+      toParts[0] ?? 0,
+      (toParts[1] ?? 1) - 1,
+      toParts[2] ?? 1,
+    );
+    if (toTime < fromTime) {
       setError("Ngày kết thúc phải >= ngày bắt đầu");
       return;
     }
-    const diffDays = Math.round(
-      (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const diffDays = Math.round((toTime - fromTime) / (1000 * 60 * 60 * 24));
 
     const baseDate = fromDate;
     const rangeDays = diffDays;
@@ -94,17 +102,13 @@ export function EmployeeSignatureDateForm({
     setStreamStartTime(0);
 
     try {
-      const res = await fetch("/api/admin/update-signature-date", {
-        method: "POST",
-        headers: authHeader,
-        body: JSON.stringify({
-          salary_month: effectiveMonth,
-          base_date: baseDate,
-          random_range_days: rangeDays,
-          scope,
-          employee_ids: scope === "selected" ? selectedIds : undefined,
-          is_t13: isT13,
-        }),
+      const res = await updateMutation.mutateAsync({
+        salary_month: effectiveMonth,
+        base_date: baseDate,
+        random_range_days: rangeDays,
+        scope,
+        employee_ids: scope === "selected" ? selectedIds : undefined,
+        is_t13: isT13,
       });
 
       const contentType = res.headers.get("content-type") ?? "";
@@ -191,10 +195,10 @@ export function EmployeeSignatureDateForm({
     toDate,
     scope,
     selectedIds,
-    authHeader,
     effectiveMonth,
     isT13,
     onSuccess,
+    updateMutation,
   ]);
 
   const toggleEmployee = (id: string) => {

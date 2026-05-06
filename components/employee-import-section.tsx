@@ -25,6 +25,8 @@ import {
   XCircle,
   AlertTriangle,
 } from "lucide-react";
+import { apiClient, downloadBlob } from "@/lib/api/client";
+import { ENDPOINTS } from "@/lib/api/endpoints";
 
 interface ImportResult {
   success: boolean;
@@ -62,33 +64,10 @@ export function EmployeeImportSection() {
   const handleDownloadTemplate = async () => {
     setDownloadingTemplate(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setImportMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        return;
-      }
-
-      const response = await fetch("/api/admin/download-employee-template", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "template-danh-sach-nhan-vien.xlsx";
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else if (response.status === 401) {
-        setImportMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-      } else {
-        setImportMessage("Lỗi khi tải file template");
-      }
+      const { blob, filename } = await apiClient.blob(
+        ENDPOINTS.templates.employee,
+      );
+      downloadBlob(blob, filename ?? "template-danh-sach-nhan-vien.xlsx");
     } catch {
       setImportMessage("Có lỗi xảy ra khi tải file template");
     } finally {
@@ -107,30 +86,18 @@ export function EmployeeImportSection() {
     setImportResult(null);
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setImportMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        return;
-      }
-
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/admin/import-employees", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const data = await apiClient.post<ImportResult & { error?: string }>(
+        ENDPOINTS.employees.import,
+        formData,
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success) {
         setImportResult(data);
         setImportMessage(data.message);
 
-        // Reset file input nếu import thành công hoàn toàn
         if (data.errorCount === 0) {
           setFile(null);
           const fileInput = document.getElementById(
@@ -138,13 +105,8 @@ export function EmployeeImportSection() {
           ) as HTMLInputElement;
           if (fileInput) fileInput.value = "";
         }
-      } else if (response.status === 401) {
-        setImportMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       } else {
         setImportMessage(`Lỗi: ${data.error}`);
-        if (data.details) {
-          console.error("Import details:", data.details);
-        }
       }
     } catch (error) {
       setImportMessage("Có lỗi xảy ra khi import file");

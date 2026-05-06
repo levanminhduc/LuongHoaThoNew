@@ -49,6 +49,8 @@ import {
 } from "@/lib/toast-utils";
 import EmployeeForm from "@/app/admin/employee-management/components/EmployeeForm";
 import EmployeeAuditLogs from "@/app/admin/employee-management/components/EmployeeAuditLogs";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 interface Employee {
   employee_id: string;
@@ -126,31 +128,23 @@ export default function EmployeeManagementModal({
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...(search && { search }),
-        ...(selectedDepartment &&
-          selectedDepartment !== "all_departments" && {
-            department: selectedDepartment,
-          }),
-        ...(selectedRole &&
-          selectedRole !== "all_roles" && { role: selectedRole }),
-      });
-
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/employees?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch employees");
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.PAGE, pagination.page.toString());
+      params.set(QUERY_PARAMS.LIMIT, pagination.limit.toString());
+      if (search) {
+        params.set(QUERY_PARAMS.SEARCH, search);
+      }
+      if (selectedDepartment && selectedDepartment !== "all_departments") {
+        params.set(QUERY_PARAMS.DEPARTMENT, selectedDepartment);
+      }
+      if (selectedRole && selectedRole !== "all_roles") {
+        params.set(QUERY_PARAMS.ROLE, selectedRole);
       }
 
-      const data: EmployeeResponse = await response.json();
+      const data = await apiClient.get<EmployeeResponse>(
+        `${ENDPOINTS.employees.list}?${params}`,
+      );
+
       setEmployees(data.employees);
       setPagination(data.pagination);
       setDepartments(data.departments);
@@ -192,21 +186,9 @@ export default function EmployeeManagementModal({
   const handleDelete = async (employeeId: string) => {
     try {
       setDeletingId(employeeId);
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/employees/${employeeId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete employee");
-      }
-
-      await response.json();
+      await apiClient.delete<{ success?: boolean; message?: string }>(
+        ENDPOINTS.employees.delete(employeeId),
+      );
       const employee = employees.find((e) => e.employee_id === employeeId);
       showDeleteSuccessToast(employee?.full_name || employeeId, "nhân viên");
       fetchEmployees();

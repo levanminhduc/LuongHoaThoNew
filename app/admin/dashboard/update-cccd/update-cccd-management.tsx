@@ -23,6 +23,7 @@ import { EmployeeSearchForm } from "./components/employee-search-form";
 import { CCCDUpdateForm } from "./components/cccd-update-form";
 import { ConfirmAlertDialog } from "@/components/ui/alert-dialogs";
 import { showSuccessToast, showErrorToast } from "@/lib/toast-utils";
+import { useUpdateCccdMutation } from "@/lib/hooks/use-employees";
 
 interface Employee {
   employee_id: string;
@@ -47,9 +48,10 @@ export function UpdateCCCDManagement() {
     null,
   );
   const [updateResult, setUpdateResult] = useState<UpdateResult | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingCCCD, setPendingCCCD] = useState("");
+  const updateCccdMutation = useUpdateCccdMutation();
+  const isUpdating = updateCccdMutation.isPending;
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -72,25 +74,14 @@ export function UpdateCCCDManagement() {
   const executeCCCDUpdate = async () => {
     if (!selectedEmployee || !pendingCCCD) return;
 
-    setIsUpdating(true);
     setUpdateResult(null);
     setShowConfirmDialog(false);
 
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/employees/update-cccd", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          employee_id: selectedEmployee.employee_id,
-          new_cccd: pendingCCCD,
-        }),
+      const data = await updateCccdMutation.mutateAsync({
+        employee_id: selectedEmployee.employee_id,
+        new_cccd: pendingCCCD,
       });
-
-      const data = await response.json();
 
       if (data.success) {
         showSuccessToast("Cập nhật CCCD thành công!");
@@ -119,8 +110,6 @@ export function UpdateCCCDManagement() {
         success: false,
         message: "Lỗi kết nối. Vui lòng thử lại.",
       });
-    } finally {
-      setIsUpdating(false);
     }
   };
 

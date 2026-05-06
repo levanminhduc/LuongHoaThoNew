@@ -1,0 +1,73 @@
+### ISSUE-1: Auth-scoped cache keys missing
+- Category: architecture
+- Severity: high
+- Problem: Query keys in tasks use `['employees', filters]`, `['payroll', filters]`, `['departments']`, `['signature-progress', month]` without guaranteed role/user scope.
+- Why it matters: Switching users/roles in the same browser can expose stale payroll/department data across access boundaries.
+- Suggested fix: Add an auth-scope key builder in W1 and require every query key to include `{ role, employee_id, allowed_departments/version }`, or clear the QueryClient on logout/login/401.
+
+### ISSUE-2: 401 redirect logic is unsafe
+- Category: correctness
+- Severity: high
+- Problem: `pathname?.startsWith('/admin') ? '/admin/login' : '/login'` sends `null` pathname to `/login`, and this repo does not currently have `app/login`.
+- Why it matters: A 401 on first paint or compat-null pathname can redirect admin users to a missing route.
+- Suggested fix: Add a plan task for a tested redirect resolver using `window.location.pathname` fallback, confirm the `/login` route exists, and test `pathname === null`.
+
+### ISSUE-3: MSW setup conflicts with existing Jest globals
+- Category: sequencing
+- Severity: high
+- Problem: Existing `jest.setup.js` globally mocks `fetch` and uses non-stateful `localStorage`; global MSW with `onUnhandledRequest:'error'` will not behave as planned.
+- Why it matters: W1 tests may fail or silently bypass MSW, and existing 22 tests can break before any screen migration.
+- Suggested fix: First refactor test setup: make MSW opt-in or remove global `fetch` mock for MSW tests, use stateful storage mocks, and avoid catch-all GET handlers.
+
+### ISSUE-4: Many tasks are not bite-sized
+- Category: sequencing
+- Severity: high
+- Problem: Tasks say “Same pattern as Task N” or “migrate batch by batch” for W2, W4, and especially W5.
+- Why it matters: Agent workers can implement different shapes, miss files, or skip required edge cases.
+- Suggested fix: Expand every repeated task with exact files, imports removed/added, hook names, endpoint contracts, tests, and verification commands.
+
+### ISSUE-5: Integration test coverage contradicts the spec
+- Category: correctness
+- Severity: high
+- Problem: W5 only requires tests for 3 dashboard screens, while final criteria say every migrated W3+W5 screen needs an integration test.
+- Why it matters: The acceptance bar cannot be proven by the task list.
+- Suggested fix: Add explicit integration-test subtasks for every migrated W5 page/component, including department management, attendance pages, and heavy modals.
+
+### ISSUE-6: Hook endpoint contracts are inaccurate
+- Category: correctness
+- Severity: critical
+- Problem: Planned hooks reference endpoints/shapes that do not match current routes, e.g. payroll search/detail, signature progress, role dashboards, and admin-only dashboard stats.
+- Why it matters: Implementing the plan literally will produce broken screens or 401s for non-admin dashboards.
+- Suggested fix: Add an endpoint audit task before each hook and replace speculative snippets with verified route, method, params, response, and auth role contracts.
+
+### ISSUE-7: Download/export flows are not supported by `apiClient`
+- Category: correctness
+- Severity: high
+- Problem: The plan migrates export endpoints through JSON-only `apiClient.post`, but existing flows consume `blob()` and response headers.
+- Why it matters: Excel template/export downloads will break even if fetch calls disappear.
+- Suggested fix: Add `apiClient.blob` or `apiClient.raw` to W1 with tests, then specify download hooks for every export/template/import-error endpoint.
+
+### ISSUE-8: Bundle acceptance is not fully verifiable
+- Category: risk
+- Severity: medium
+- Problem: Baseline is captured after W1, not before the whole change, and fallback if W2 misses 30% is vague.
+- Why it matters: The PR may claim the ≥30% reduction without comparing against the real starting point.
+- Suggested fix: Capture pre-flight bundle before dependency/provider changes, define concrete fallback tasks, and make the 30% gate block W3.
+
+### ISSUE-9: Virtualized table design is underspecified
+- Category: architecture
+- Severity: high
+- Problem: The wrapper uses absolutely positioned table rows inside normal table markup and assumes keyboard row navigation without implementing focus behavior.
+- Why it matters: Column alignment, sticky headers, measurement, and accessibility can fail despite tests passing.
+- Suggested fix: Use a proven TanStack table virtualization layout, add a virtualized-mode test, and define focus/ARIA behavior before applying it to six screens.
+
+### ISSUE-10: Out-of-scope guards are too weak
+- Category: scope
+- Severity: medium
+- Problem: W5’s broad `app/ components/` audit plus “for each remaining file” can pull in lookup/auth/debug/test files before the final grep exclusion.
+- Why it matters: The plan can accidentally touch explicitly out-of-scope login or employee lookup flows.
+- Suggested fix: Add a hard denylist/allowlist before W5 and require every audit command to exclude out-of-scope paths from the start.
+
+### VERDICT
+- Status: REVISE
+- Reason: The plan has solid direction, but key contracts, tests, auth/cache safety, MSW setup, and several wave tasks are not concrete enough to implement safely.

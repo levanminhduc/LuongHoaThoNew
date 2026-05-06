@@ -1,0 +1,52 @@
+### ISSUE-1: Fetch audit misses template-literal fetches
+- Category: correctness
+- Severity: high
+- Problem: `audit-fetch.sh` searches only `fetch\(['"]?/api`, so it misses existing/common patterns like ``fetch(`/api/...`)`` and `fetch( \n "/api/..." )`.
+- Why it matters: The final “0 direct fetch” gate can pass while direct API fetches remain.
+- Suggested fix: Update the regex to cover backticks and whitespace, then add smoke fixtures for single quote, double quote, backtick, and spaced/multiline fetch calls.
+
+### ISSUE-2: MSW real-fetch replacement is still unreliable
+- Category: correctness
+- Severity: high
+- Problem: `require('whatwg-fetch')` generally installs a polyfill as a side effect; it does not reliably export `{ fetch }`, and if `global.fetch` is already a Jest mock the fallback can still return the mock.
+- Why it matters: MSW tests may still run against mocked fetch instead of an interceptable implementation.
+- Suggested fix: Explicitly delete/replace `globalThis.fetch` before loading the polyfill, or use a known fetch implementation; keep the smoke test proving `fetch._isMockFunction` is false and MSW intercepts.
+
+### ISSUE-3: Task 1.3 depends on Task 1.8 but comes before it
+- Category: sequencing
+- Severity: high
+- Problem: Task 1.3 tests import `tests/mocks/enable-msw`, but Task 1.8 creates that file later.
+- Why it matters: The planned red test for Task 1.3 fails for the wrong reason: missing MSW infrastructure, not missing `client.ts`.
+- Suggested fix: Move MSW/test-storage setup before API client tests, or make Task 1.3 tests self-contained without `enable-msw`.
+
+### ISSUE-4: Hook snippets still violate the endpoint-constant rule
+- Category: correctness
+- Severity: high
+- Problem: Several snippets use `ENDPOINTS` without importing it, and Task 3.7 still hardcodes `/api/...` paths for export/template hooks.
+- Why it matters: Workers following the snippets hit TypeScript errors or fail the “no hardcoded `/api` in hooks” gate.
+- Suggested fix: Add `ENDPOINTS`/`QUERY_PARAMS` imports to every hook snippet and replace all hook hardcoded paths before implementation.
+
+### ISSUE-5: `salary_month` enforcement remains self-inconsistent
+- Category: correctness
+- Severity: high
+- Problem: `ENDPOINTS` still uses function params named `month`, and Task 5.8 still instructs `useAttendanceListQuery({ month, ... })`.
+- Why it matters: The final `month` grep will fail, and implementers can still send the wrong field name.
+- Suggested fix: Rename all endpoint/helper params and call sites to `salaryMonth` or `salary_month`; update Task 5.8 to pass `salary_month`.
+
+### ISSUE-6: Employee-management virtualization still lacks activation proof
+- Category: risk
+- Severity: medium
+- Problem: The new page-size selector and 150-row `role="grid"` integration test are in the 4.3-4.7 recipe, but Task 4.2 for `employee-management` is outside that recipe.
+- Why it matters: One of the primary virtualized screens can still ship without proving the virtualized branch is reachable.
+- Suggested fix: Add the same page-size selector and 150-row grid test explicitly to Task 4.2.
+
+### ISSUE-7: W3 integration tests are still too shallow
+- Category: correctness
+- Severity: medium
+- Problem: The W3 employee-management test only verifies initial render, and other W3 tasks say “mirror” that pattern.
+- Why it matters: Search/filter, mutation, invalidation, and error behavior are not verified for the top-pain migrations.
+- Suggested fix: Add a W3 test recipe matching W5: load, loading state, error state, filter/search refetch, and at least one mutation/refetch assertion per migrated screen.
+
+### VERDICT
+- Status: REVISE
+- Reason: The plan is close, but the fetch audit, MSW setup, task ordering, endpoint constants, and a few acceptance tests still have concrete implementation blockers.

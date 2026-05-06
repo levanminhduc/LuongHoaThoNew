@@ -1,0 +1,17 @@
+### ISSUE-1: Director signature history filter changes current behavior
+- Category: correctness
+- Severity: medium
+- Problem: W5.1 now tells director dashboard to call `useSignatureHistoryQuery({ months, signature_type: 'giam_doc', ... })`, but the current director page calls `/api/signature-history?limit=10` with no `signature_type` filter.
+- Why it matters: Director history currently shows all management signature types. Adding `signature_type: 'giam_doc'` silently hides accountant/reporter signatures and changes dashboard behavior.
+- Suggested fix: For director, use `useSignatureHistoryQuery({ months, payroll_type, limit, offset })` without `signature_type` unless the existing UI has an explicit filter. Keep `signature_type` for accountant/reporter where current pages already use it.
+
+### ISSUE-2: Management signature notes source implies an out-of-scope UI change
+- Category: scope
+- Severity: medium
+- Problem: W5.1/5.2/5.5 say mutations must pass `notes` “from a UI text field”, but the current dashboards use fixed note strings and the W5 recipe says to keep UI/layout unchanged.
+- Why it matters: An implementer may add new note inputs just to satisfy the plan, changing user-facing UI beyond the migration scope.
+- Suggested fix: Say to preserve the existing note source: pass the current hardcoded role-specific note string unless a note field already exists. Keep `device_info: navigator.userAgent`.
+
+### VERDICT
+- Status: REVISE
+- Reason: Hook schemas now match the backend, but W5 role-dashboard instructions still introduce avoidable behavior/UI changes.

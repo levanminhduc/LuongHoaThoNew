@@ -1,0 +1,27 @@
+## Issues Accepted & Fixed (Round 7)
+
+### ISSUE-1 (R7): Audit regex uses lookbehind unsupported by default rg → FIXED
+- Wrapped the lookbehind regex in `--pcre2` mode with feature detection: `if rg --pcre2 --version >/dev/null 2>&1`.
+- Fallback path uses `\bfetch\s*\(` + `grep -Ev` pipe to filter out `prefetch(`, `refetch(`, `function fetch(`, `async fetch(`, `.prefetch(`, `.refetch(`.
+- Smoke test now adds a `prefetch()` / `refetch()` fixture and asserts they are NOT flagged. This proves the filter works in either mode.
+- Smoke message updated to "6 variants + lib/hooks scope + denylist".
+
+### ISSUE-2 (R7): W5 audits omit lib/hooks → FIXED
+- Step 5.9.1 audit command updated to `app components lib/hooks`.
+- Step 5.9.3 final audit command updated to `app components lib/hooks` — matches the Final Validation Checklist target.
+
+### ISSUE-3 (R7): withToast tests not typecheck-clean → FIXED
+- All `opts.onSuccess?.(...)` and `opts.onError?.(...)` calls now pass 3 arguments matching the inferred callback signature.
+- Used `undefined as never` and `{} as never` casts for the test-only `vars`/`ctx` placeholders.
+- Both initial 3 tests AND the composition tests use 3-argument calls.
+
+### ISSUE-4 (R7): auth-redirect test redefines window.location → FIXED
+- Replaced `Object.defineProperty(window, 'location', ...)` with `window.history.pushState({}, '', '/admin/dashboard')`.
+- jsdom supports `history.pushState`, which updates `window.location.pathname` for the resolver fallback to read.
+- Test description updated to clarify "falls back to window.location".
+
+## Issues Disputed
+None — all 4 round-7 issues accepted and addressed.
+
+## Your Turn
+Re-review.

@@ -1,0 +1,23 @@
+## Issues Accepted & Fixed (Round 5)
+
+### ISSUE-1 (R5): MSW smoke test instructions conflict → FIXED
+- Removed Step 1.8.3a's smoke snippet (replaced with pointer to consolidated 1.8.5).
+- Step 1.8.5 is now the single source of truth: `tests/mocks/__tests__/msw-smoke.test.ts` includes 3 tests (no-mock fetch, MSW intercept, stateful localStorage). Expected count updated to "3 passed".
+
+### ISSUE-2 (R5): tests/scripts never committed → FIXED
+- Added Step 0.4c: explicit `git add tests/scripts/scope-denylist.txt tests/scripts/audit-fetch.sh tests/scripts/__smoke__/audit-fetch-smoke.sh` + `git commit -m "chore(audit): ..."` at end of pre-flight, before W1 starts.
+
+### ISSUE-3 (R5): Raw fetch greps still in W3/W5 verifications → FIXED
+- Replaced 7 remaining instances of `grep -n "fetch(['\"]?/api"` and `grep -rn "fetch(['\"]?/api"` with `./tests/scripts/audit-fetch.sh <dir>` across W3 (Tasks 3.4.6, 3.6.5, 3.7.3, 3.8.4, 3.2.7) and W5 dashboard recipe (steps 1, 3) and Task 5.1.1.
+- All migration-step verifications now route through the audit script that catches backtick/spaced/multiline fetch variants.
+
+### ISSUE-4 (R5): Code snippets violate repo no-comments rule → FIXED
+- Added prominent "Code style" rule at top of W1 referencing `.claude/rules/development-rules.md` — explanatory comments stay in plan PROSE, not in source files.
+- Stripped explanatory comments from `enable-msw.ts`, `endpoints.ts` (kept only `// VERIFY` markers consumed by gate), `PayrollFilters`, `DashboardStatsFilters` JSDoc comments.
+- Allowed exceptions documented: lint-pragma, `// VERIFY` marker (gate-consumed), JSDoc on public APIs only.
+
+## Issues Disputed
+None — all 4 round-5 issues accepted and addressed.
+
+## Your Turn
+Re-review.

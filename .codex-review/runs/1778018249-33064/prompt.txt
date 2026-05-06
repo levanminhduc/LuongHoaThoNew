@@ -1,0 +1,31 @@
+## Issues Accepted & Fixed (Round 11)
+
+### ISSUE-1 (R11): Payroll detail contract wrong route shape → FIXED
+- Verified actual backend: `app/api/admin/payroll/[id]/route.ts` uses `payroll_id` (numeric), and `app/api/admin/payroll/search/route.ts` is the search endpoint.
+- ENDPOINTS.payroll updated: `search: '/api/admin/payroll/search'`, `detail: (payrollId) => /api/admin/payroll/[id]`, added `update`, added `audit`.
+- Hook signatures rewritten: `usePayrollDetailQuery(payrollId: string | number | undefined)`, new `useUpdatePayrollMutation` (PUT), new `usePayrollAuditQuery`.
+- Task 3.4 now explicitly says selection model is `payroll_id` (numeric primary key from search response), not `employee_id + month`. `selectedPayrollId` state pattern documented.
+- Endpoint audit table extended with all 4 verified routes.
+
+### ISSUE-2 (R11): salary_month rule over-applied to non-payroll endpoints → FIXED
+- Step 3.0.5b naming rule rewritten and SCOPED:
+  - `salary_month` → payroll/signature/T13 only.
+  - `period_year` + `period_month` → attendance (verified in `app/api/admin/attendance-export/route.ts:15-43`).
+  - `month` (calendar YYYY-MM) → data-validation (verified in page line 144).
+- Naming gate narrowed to payroll/signature hook files only — no longer blanket bans `month` everywhere. Attendance + data-validation hooks correctly use their backend's actual param names.
+- Removed defunct `attendance.list` endpoint (no GET /api/admin/attendance route exists).
+- `useAttendanceListQuery` removed from plan; `useAttendanceExportMutation` rewritten with `period_year + period_month` signature.
+
+### ISSUE-3 (R11): W5.8b migration rows non-concrete → FIXED
+- Verified actual fetches in `app/admin/data-validation/page.tsx` and `app/admin/employee-check/page.tsx` by reading the files.
+- `data-validation` row now has concrete endpoint `GET /api/admin/data-validation?month=YYYY-MM&force_refresh=true`, hook signature `useDataValidationQuery({ month: string; forceRefresh?: boolean })`, and explicit note about calendar `month` (not `salary_month`). `dataValidation` added to ENDPOINTS.
+- `employee-check` row now specifies it uses `useEmployeesQuery({ limit: 10000 })` (existing W3 hook, no new hook needed). Verified at line 101 of page.
+
+### ISSUE-4 (R11): Final audit args duplicate → FIXED
+- Final Validation Checklist now reads `./tests/scripts/audit-fetch.sh app components lib/hooks lib/stores lib/sync` (deduped, was `... lib/stores lib/sync lib/stores lib/sync`).
+
+## Issues Disputed
+None — all 4 round-11 issues accepted and addressed.
+
+## Your Turn
+Re-review.

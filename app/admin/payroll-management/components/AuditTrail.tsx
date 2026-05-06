@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -25,56 +24,21 @@ import {
   formatCurrency,
 } from "@/lib/utils/date-formatter";
 import type { AuditLogEntry } from "../types";
+import { usePayrollAuditQuery } from "@/lib/hooks/use-payroll";
 
 interface AuditTrailProps {
   payrollId: number | null;
 }
 
 export function AuditTrail({ payrollId }: AuditTrailProps) {
-  const [auditTrail, setAuditTrail] = useState<AuditLogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (payrollId) {
-      loadAuditTrail();
-    } else {
-      setAuditTrail([]);
-    }
-  }, [payrollId]);
-
-  const loadAuditTrail = async () => {
-    if (!payrollId) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setError("Không có quyền truy cập");
-        return;
-      }
-
-      const response = await fetch(`/api/admin/payroll/audit/${payrollId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setAuditTrail(data.auditTrail || []);
-      } else {
-        setError(data.error || "Lỗi khi tải lịch sử thay đổi");
-      }
-    } catch {
-      setError("Có lỗi xảy ra khi tải lịch sử thay đổi");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const auditTrailQuery = usePayrollAuditQuery(payrollId);
+  const auditTrail =
+    (auditTrailQuery.data?.auditTrail as AuditLogEntry[] | undefined) ?? [];
+  const loading = auditTrailQuery.isLoading;
+  const error =
+    auditTrailQuery.error instanceof Error
+      ? auditTrailQuery.error.message
+      : "";
 
   const getFieldDisplayName = (fieldName: string): string => {
     const fieldMap: Record<string, string> = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,21 +11,20 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { CalendarClock, Loader2 } from "lucide-react";
-import { showNetworkErrorToast } from "@/lib/toast-utils";
 import { EmployeeSignatureDateForm } from "@/components/admin/employee-signature-date-form";
 import { ManagementSignatureDateForm } from "@/components/admin/management-signature-date-form";
+import {
+  useSignatureDateMonthsQuery,
+  useSignatureStatusQuery,
+  useSignedEmployeesQuery,
+} from "@/lib/hooks/use-dashboard";
+import type { SignedEmployee } from "@/lib/hooks/use-dashboard";
 
 interface ManagementSigInfo {
   id: string;
   signed_by_id: string;
   signed_by_name: string;
   signed_at: string;
-}
-
-interface SignedEmployee {
-  employee_id: string;
-  full_name: string;
-  department: string;
 }
 
 interface MonthOption {
@@ -49,114 +48,43 @@ export function UpdateSignatureDateDialog({
   onSuccess,
 }: UpdateSignatureDateDialogProps) {
   const [open, setOpen] = useState(false);
-  const [availableMonths, setAvailableMonths] = useState<MonthOption[]>([]);
-  const [loadingMonths, setLoadingMonths] = useState(false);
   const [salaryMonth, setSalaryMonth] = useState("");
 
   const isT13 = salaryMonth.endsWith("-13") || salaryMonth.endsWith("-T13");
-  const [signedEmployees, setSignedEmployees] = useState<SignedEmployee[]>([]);
-  const [loadingEmployees, setLoadingEmployees] = useState(false);
-  const [mgmtSigs, setMgmtSigs] = useState<
-    Record<string, ManagementSigInfo | null>
-  >({
+  const emptyMgmtSigs: Record<string, ManagementSigInfo | null> = {
     giam_doc: null,
     ke_toan: null,
     nguoi_lap_bieu: null,
-  });
-  const [loadingMgmt, setLoadingMgmt] = useState(false);
-
-  const getAuthHeaders = () => ({
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("admin_token") : ""}`,
-  });
-
+  };
   const effectiveMonth = salaryMonth;
-
-  const fetchAvailableMonths = useCallback(async () => {
-    setLoadingMonths(true);
-    try {
-      const res = await fetch("/api/admin/update-signature-date", {
-        headers: getAuthHeaders(),
-      });
-      const data = await res.json();
-      if (res.ok && data.months) {
-        const options = data.months.map((m: string) => ({
-          value: m,
-          label: formatMonthLabel(m),
-        }));
-        setAvailableMonths(options);
-        if (options.length > 0 && !salaryMonth) {
-          setSalaryMonth(options[0].value);
-        }
-      }
-    } catch {
-      showNetworkErrorToast();
-    } finally {
-      setLoadingMonths(false);
-    }
-  }, []);
-
-  const fetchManagementStatus = useCallback(async () => {
-    if (!effectiveMonth) return;
-    setLoadingMgmt(true);
-    try {
-      const res = await fetch(
-        `/api/signature-status/${effectiveMonth}?is_t13=${isT13}`,
-        { headers: getAuthHeaders() },
-      );
-      const data = await res.json();
-      if (res.ok && data.management_signatures) {
-        setMgmtSigs(data.management_signatures);
-      }
-    } catch {
-      showNetworkErrorToast();
-    } finally {
-      setLoadingMgmt(false);
-    }
-  }, [effectiveMonth, isT13]);
-
-  const fetchSignedEmployees = useCallback(async () => {
-    if (!effectiveMonth) return;
-    setLoadingEmployees(true);
-    try {
-      const token = localStorage.getItem("admin_token");
-      const res = await fetch(
-        `/api/admin/update-signature-date?month=${effectiveMonth}&is_t13=${isT13}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setSignedEmployees(data.signed_employees || []);
-      } else {
-        console.error("Fetch signed employees error:", data);
-        setSignedEmployees([]);
-      }
-    } catch (err) {
-      console.error("Fetch signed employees network error:", err);
-      showNetworkErrorToast();
-      setSignedEmployees([]);
-    } finally {
-      setLoadingEmployees(false);
-    }
-  }, [effectiveMonth, isT13]);
+  const monthsQuery = useSignatureDateMonthsQuery(open);
+  const statusQuery = useSignatureStatusQuery<{
+    management_signatures: Record<string, ManagementSigInfo | null>;
+  }>(effectiveMonth, open && Boolean(effectiveMonth));
+  const signedEmployeesQuery = useSignedEmployeesQuery(
+    effectiveMonth,
+    isT13,
+    open && Boolean(effectiveMonth),
+  );
+  const availableMonths: MonthOption[] = (monthsQuery.data?.months ?? []).map(
+    (month) => ({
+      value: month,
+      label: formatMonthLabel(month),
+    }),
+  );
+  const loadingMonths = monthsQuery.isLoading || monthsQuery.isFetching;
+  const signedEmployees: SignedEmployee[] =
+    signedEmployeesQuery.data?.signed_employees ?? [];
+  const loadingEmployees =
+    signedEmployeesQuery.isLoading || signedEmployeesQuery.isFetching;
+  const mgmtSigs = statusQuery.data?.management_signatures ?? emptyMgmtSigs;
+  const loadingMgmt = statusQuery.isLoading || statusQuery.isFetching;
 
   useEffect(() => {
-    if (open) {
-      fetchAvailableMonths();
+    if (availableMonths.length > 0 && !salaryMonth) {
+      setSalaryMonth(availableMonths[0].value);
     }
-  }, [open, fetchAvailableMonths]);
-
-  useEffect(() => {
-    if (open && salaryMonth) {
-      fetchManagementStatus();
-      fetchSignedEmployees();
-    }
-  }, [open, salaryMonth, fetchManagementStatus, fetchSignedEmployees]);
+  }, [availableMonths, salaryMonth]);
 
   return (
     <>
@@ -212,7 +140,6 @@ export function UpdateSignatureDateDialog({
               isT13={isT13}
               signedEmployees={signedEmployees}
               loadingEmployees={loadingEmployees}
-              authHeader={getAuthHeaders()}
               onSuccess={onSuccess}
             />
 
@@ -221,9 +148,7 @@ export function UpdateSignatureDateDialog({
               isT13={isT13}
               mgmtSigs={mgmtSigs}
               loadingMgmt={loadingMgmt}
-              authHeader={getAuthHeaders()}
               onSuccess={onSuccess}
-              onRefresh={fetchManagementStatus}
             />
           </div>
         </DialogContent>

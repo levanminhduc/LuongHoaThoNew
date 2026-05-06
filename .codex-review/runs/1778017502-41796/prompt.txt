@@ -1,0 +1,24 @@
+## Issues Accepted & Fixed (Round 8)
+
+### ISSUE-1 (R8): Audit excludes `lib/stores` + `lib/sync` → FIXED
+- Confirmed `lib/stores/mapping-config-store.ts` has 4 direct fetches (lines 143, 163, 186, 203 — verified by grep).
+- Final Validation Checklist + Step 5.0.1 + Step 5.9.1 + Step 5.9.3 audit commands now include `lib/stores lib/sync`.
+- Replaced via global rename: `app components lib/hooks` → `app components lib/hooks lib/stores lib/sync`.
+
+### ISSUE-2 (R8): W5 backlog incomplete for admin pages → FIXED
+- Added new Task 5.8b with explicit table mapping every remaining admin page (`bulk-signature`, `column-mapping-config`, `data-validation`, `password-reset-history`, `employee-check`, `test-column-mapping`) → endpoint(s) → hook(s) → test path → migrate/defer decision.
+- `lib/stores/mapping-config-store.ts` has dedicated subsection: replace store's data layer with React Query hooks (preferred), keep zustand only for shared UI state.
+- `app/admin/test-column-mapping` flagged DEFER → added to denylist with dedicated commit.
+- Each MIGRATE row has explicit 6-step checklist (hook + unit test + page refactor + audit-fetch verification + integration test + commit).
+
+### ISSUE-3 (R8): Hook hardcoded-path gate misses backticks → FIXED
+- Step 3.0.5a hard gate regex updated from `['"]/api/` to `[\"'\`]/api/` (includes backtick).
+- Gate now scans `lib/hooks/ lib/stores/ lib/sync/` (was just `lib/hooks/`).
+- Final Validation Checklist gate updated to match.
+- Both gates exit 1 with clear FAIL message if any hardcoded path slips through.
+
+## Issues Disputed
+None — all 3 round-8 issues accepted and addressed.
+
+## Your Turn
+Re-review.

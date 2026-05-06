@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { exportAOAToExcel, getXLSX } from "@/lib/lazy/xlsx";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 const EMPLOYEE_ID_ALIASES = [
   "mã nhân viên",
@@ -98,16 +100,11 @@ async function parseEmployeeIdsFromExcel(buffer: ArrayBuffer): Promise<string[]>
 }
 
 async function fetchAllEmployeeIds(): Promise<Set<string>> {
-  const token = localStorage.getItem("admin_token");
-  const res = await fetch("/api/admin/employees?limit=10000", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!res.ok) {
-    throw new Error("Không thể lấy danh sách nhân viên từ hệ thống");
-  }
-
-  const data = await res.json();
+  const params = new URLSearchParams();
+  params.set(QUERY_PARAMS.LIMIT, "10000");
+  const data = await apiClient.get<{
+    employees: { employee_id: string }[];
+  }>(`${ENDPOINTS.employees.list}?${params}`);
   return new Set(
     (data.employees as { employee_id: string }[]).map((e) => e.employee_id),
   );

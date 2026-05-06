@@ -53,6 +53,13 @@ import {
   ImportProgress,
   ImportResultSummary,
 } from "@/components/admin/import-export-widgets";
+import {
+  useAliasTemplateMutation,
+  useColumnAliasesMutation,
+  useExportImportErrorsMutation,
+  useImportPayrollMutation,
+  usePayrollExportTemplateMutation,
+} from "@/lib/hooks/use-payroll-import";
 
 type ImportStatus =
   | "idle"
@@ -90,7 +97,6 @@ interface ImportResult {
 
 export default function PayrollImportExportPage() {
   const [loading, setLoading] = useState(false);
-  const [exportLoading, setExportLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -114,6 +120,13 @@ export default function PayrollImportExportPage() {
 
   const router = useRouter();
   const { configurations, defaultConfig } = useMappingConfig();
+  const importPayrollMutation = useImportPayrollMutation();
+  const payrollExportTemplateMutation = usePayrollExportTemplateMutation();
+  const aliasTemplateMutation = useAliasTemplateMutation();
+  const columnAliasesMutation = useColumnAliasesMutation();
+  const exportImportErrorsMutation = useExportImportErrorsMutation();
+  const exportLoading =
+    payrollExportTemplateMutation.isPending || aliasTemplateMutation.isPending;
 
   // Auto-load configurations
   useAutoLoadConfigurations();
@@ -138,71 +151,20 @@ export default function PayrollImportExportPage() {
 
   const handleExport = async (options?: ExportOptions) => {
     if (!options) {
-      // Open export dialog if no options provided
       setShowExportDialog(true);
       return;
     }
 
-    setExportLoading(true);
     setError("");
     setMessage("");
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        throw new Error("Không tìm thấy token xác thực");
-      }
-
-      const params = new URLSearchParams({
-        includeData: options.includeData ? "true" : "false",
+      await payrollExportTemplateMutation.mutateAsync({
+        includeData: options.includeData,
+        salaryMonth: options.salaryMonth,
+        configId: options.configId,
+        customFilename: options.customFilename,
       });
-
-      if (options.includeData && options.salaryMonth) {
-        params.append("salaryMonth", options.salaryMonth);
-      }
-
-      if (options.configId) {
-        params.append("configId", options.configId.toString());
-      }
-
-      const response = await fetch(
-        `/api/admin/payroll-export-template?${params}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Lỗi khi tải template");
-      }
-
-      // Download file
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      // Use custom filename if provided, otherwise generate one
-      const filename =
-        options.customFilename ||
-        (() => {
-          const timestamp = new Date().toISOString().slice(0, 10);
-          const configSuffix = options.configId ? "-with-config" : "";
-          return options.includeData
-            ? `luong-export-${options.salaryMonth || "all"}${configSuffix}-${timestamp}.xlsx`
-            : `template-luong${configSuffix}-${timestamp}.xlsx`;
-        })();
-
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
       const configInfo = options.configId ? " với mapping configuration" : "";
       setMessage(
         `Đã tải ${options.includeData ? "dữ liệu" : "template"}${configInfo} thành công!`,
@@ -210,60 +172,18 @@ export default function PayrollImportExportPage() {
     } catch (error) {
       console.error("Export error:", error);
       setError(error instanceof Error ? error.message : "Lỗi khi export");
-    } finally {
-      setExportLoading(false);
     }
   };
 
-  // Handle generate template from configuration
   const handleGenerateConfigTemplate = () => {
     setShowExportDialog(true);
   };
 
-  // Generate template from Column Aliases
   const handleGenerateAliasTemplate = async () => {
     try {
-      setExportLoading(true);
       setError("");
-
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setError("Không tìm thấy token xác thực");
-        return;
-      }
-
-      const response = await fetch("/api/admin/generate-alias-template", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Lỗi khi tạo template từ aliases");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      const timestamp = new Date().toISOString().slice(0, 10);
-      a.download = `template-luong-aliases-${timestamp}.xlsx`;
-
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      // Get alias statistics from response headers
-      const totalAliases = response.headers.get("X-Total-Aliases") || "0";
-      const fieldsWithAliases =
-        response.headers.get("X-Fields-With-Aliases") || "0";
-      const aliasCoverage = response.headers.get("X-Alias-Coverage") || "0%";
-
-      setMessage(`Template từ Column Aliases đã được tạo thành công!
-        Sử dụng ${totalAliases} aliases cho ${fieldsWithAliases} fields (${aliasCoverage} coverage)`);
+      await aliasTemplateMutation.mutateAsync(undefined);
+      setMessage("Template từ Column Aliases đã được tạo thành công!");
     } catch (error) {
       console.error("Generate alias template error:", error);
       setError(
@@ -271,8 +191,6 @@ export default function PayrollImportExportPage() {
           ? error.message
           : "Lỗi khi tạo template từ Column Aliases",
       );
-    } finally {
-      setExportLoading(false);
     }
   };
 
@@ -291,11 +209,6 @@ export default function PayrollImportExportPage() {
     setImportBatchId("");
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        throw new Error("Không tìm thấy token xác thực");
-      }
-
       setImportStatus("importing");
       const progressInterval = setInterval(() => {
         setProgress((prev) => Math.min(prev + 10, 90));
@@ -304,60 +217,53 @@ export default function PayrollImportExportPage() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch("/api/admin/payroll-import", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const result = await importPayrollMutation.mutateAsync(formData);
 
       clearInterval(progressInterval);
       setProgress(100);
 
-      const result = await response.json();
-
-      if (response.ok) {
-        const importData = result.data || result;
-        const importErrors = result.importErrors || importData.errors || [];
-        const originalHeaders =
-          result.originalHeaders || importData.originalHeaders || [];
-
-        const resultWithErrors: ImportResult = {
-          ...importData,
-          errors: importErrors,
-          originalHeaders,
-          skippedCount:
-            result.metadata?.skippedCount || importData.skippedCount || 0,
+      const importResult = result as {
+        success?: boolean;
+        data?: Partial<ImportResult> & { importBatchId?: string };
+        importErrors?: ImportResult["errors"];
+        originalHeaders?: string[];
+        metadata?: {
+          skippedCount?: number;
+          importBatchId?: string;
         };
+        message?: string;
+        importBatchId?: string;
+      };
+      const importData = (importResult.data || importResult) as Partial<ImportResult> & {
+        importBatchId?: string;
+      };
+      const importErrors = importResult.importErrors || importData.errors || [];
+      const originalHeaders =
+        importResult.originalHeaders || importData.originalHeaders || [];
 
-        if (result.success) {
-          setResults(resultWithErrors);
-          setMessage(result.message || "Import thành công!");
-          setImportStatus("complete");
-          const batchId =
-            result.data?.importBatchId ||
-            result.importBatchId ||
-            result.metadata?.importBatchId;
-          if (batchId) {
-            setImportBatchId(batchId);
-          }
-        } else {
-          setResults(resultWithErrors);
-          setMessage(result.message || "Import hoàn tất với một số lỗi");
-          setImportStatus(importErrors.length > 0 ? "error" : "complete");
-          const batchId =
-            result.data?.importBatchId ||
-            result.importBatchId ||
-            result.metadata?.importBatchId;
-          if (batchId) {
-            setImportBatchId(batchId);
-          }
-        }
+      const resultWithErrors: ImportResult = {
+        ...(importData as ImportResult),
+        errors: importErrors,
+        originalHeaders,
+        skippedCount:
+          importResult.metadata?.skippedCount || importData.skippedCount || 0,
+      };
+
+      setResults(resultWithErrors);
+      if (importResult.success) {
+        setMessage(importResult.message || "Import thành công!");
+        setImportStatus("complete");
       } else {
-        throw new Error(
-          result.error?.message || result.message || "Import thất bại",
-        );
+        setMessage(importResult.message || "Import hoàn tất với một số lỗi");
+        setImportStatus(importErrors.length > 0 ? "error" : "complete");
+      }
+
+      const batchId =
+        importData.importBatchId ||
+        importResult.importBatchId ||
+        importResult.metadata?.importBatchId;
+      if (batchId) {
+        setImportBatchId(batchId);
       }
     } catch (error) {
       console.error("Import error:", error);
@@ -382,7 +288,6 @@ export default function PayrollImportExportPage() {
     }
   };
 
-  // Analysis functions
   const handleAnalysisFileSelect = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -394,10 +299,8 @@ export default function PayrollImportExportPage() {
     }
   };
 
-  // Load Column Aliases from API
   const loadColumnAliasesFromAPI = async () => {
     try {
-      // Check if we're in browser environment
       if (
         typeof window === "undefined" ||
         typeof localStorage === "undefined"
@@ -405,29 +308,10 @@ export default function PayrollImportExportPage() {
         return [];
       }
 
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        console.warn("No admin token found for loading aliases");
-        return [];
-      }
-
-      const response = await fetch(
-        "/api/admin/column-aliases?limit=200&is_active=true",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `API call failed: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const result = await response.json();
+      const result = await columnAliasesMutation.mutateAsync({
+        limit: 200,
+        is_active: true,
+      });
       if (result.success) {
         console.log(
           `Loaded ${result.data?.length || 0} column aliases for analysis`,
@@ -440,6 +324,28 @@ export default function PayrollImportExportPage() {
       console.error("Error loading column aliases:", error);
       // Return empty array instead of throwing to allow analysis to continue
       return [];
+    }
+  };
+
+  const handleExportImportErrors = async () => {
+    if (!results?.errors) return;
+
+    try {
+      await exportImportErrorsMutation.mutateAsync({
+        errors: results.errors.map((err) => ({
+          row: err.row,
+          column: err.field,
+          field: err.field,
+          currentValue: err.employee_id || err.salary_month,
+          errorType: err.errorType || "validation",
+          severity: "medium",
+          message: err.error,
+        })),
+        format: "excel",
+        fileName: "import_errors",
+      });
+    } catch (exportErr) {
+      console.error("Export error:", exportErr);
     }
   };
 
@@ -607,7 +513,6 @@ export default function PayrollImportExportPage() {
   };
 
   const handleFixMapping = () => {
-    // TODO: Open mapping configuration dialog
     setMessage("Mapping configuration dialog will be implemented");
   };
 
@@ -1050,51 +955,8 @@ export default function PayrollImportExportPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={async () => {
-                        try {
-                          const token = localStorage.getItem("admin_token");
-                          if (!token || !results.errors) return;
-
-                          const response = await fetch(
-                            "/api/admin/export-import-errors",
-                            {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({
-                                errors: results.errors.map((err) => ({
-                                  row: err.row,
-                                  column: err.field,
-                                  field: err.field,
-                                  currentValue:
-                                    err.employee_id || err.salary_month,
-                                  errorType: err.errorType || "validation",
-                                  severity: "medium",
-                                  message: err.error,
-                                })),
-                                format: "excel",
-                                fileName: "import_errors",
-                              }),
-                            },
-                          );
-
-                          if (response.ok) {
-                            const blob = await response.blob();
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = `import_errors_${new Date().toISOString().split("T")[0]}.xlsx`;
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            document.body.removeChild(a);
-                          }
-                        } catch (exportErr) {
-                          console.error("Export error:", exportErr);
-                        }
-                      }}
+                      onClick={handleExportImportErrors}
+                      disabled={exportImportErrorsMutation.isPending}
                       className="w-full sm:w-auto text-blue-600 border-blue-300 hover:bg-blue-50"
                     >
                       <Download className="h-4 w-4 mr-2" />

@@ -1,0 +1,45 @@
+## Issues Accepted & Fixed (Round 3)
+
+### ISSUE-1 (R3): MSW fetch replacement won't work with bare `import 'whatwg-fetch'` → FIXED
+- `enable-msw.ts` now explicitly assigns `globalThis.fetch = getRealFetch()` in `beforeAll`. `getRealFetch` does a fresh `require('whatwg-fetch')` to retrieve the real implementation (bypassing any prior `global.fetch = jest.fn()`).
+- Added smoke test (Step 1.8.3a) that asserts `fetch._isMockFunction` is falsy and `localStorage` is stateful.
+
+### ISSUE-2 (R3): Self-contradicting jest.setup.js instructions → FIXED
+- ZERO modifications to `jest.setup.js`. All save/restore logic moved fully into `enable-msw.ts`.
+- Step 1.8.3 explicitly states "`jest.setup.js` is NOT modified by this plan."
+
+### ISSUE-3 (R3): Tests rely on non-stateful localStorage → FIXED
+- `enable-msw.ts` installs a stateful `localStorage` (object-backed `getItem`/`setItem`/`removeItem`/`clear`/`key`/`length`).
+- `client.test.ts` rewritten to import from `enable-msw` and use MSW handlers (no more `global.fetch = jest.fn()` patterns); auth tests now actually verify token storage state.
+- `auth-redirect.test.ts` imports `enable-msw` for stateful storage.
+
+### ISSUE-4 (R3): ENDPOINTS may ship as pseudo-contracts → FIXED
+- Added Step 3.0.5a: HARD GATE before commit — `rg -n "VERIFY|Pseudo-paths|TODO|TBD" lib/api/endpoints.ts` must return 0 hits.
+- Same gate verifies `rg -n "['\"]/api/" lib/hooks/` returns 0 hits (no hook hardcodes a path).
+- Gate is re-runnable after each hook task to catch regression.
+- Updated all hook snippets in plan to use `ENDPOINTS.X.Y(...)` (no remaining literal `/api/...` in hook snippets).
+
+### ISSUE-5 (R3): `salary_month` rename incomplete → FIXED
+- All hooks now consistently use `salary_month`: `PayrollFilters`, `useDashboardStatsQuery`, `useSignatureProgressQuery`, all export hooks (`useBulkExportMutation`, `useUnsignedEmployeesExportMutation`, `useAttendanceExportMutation`), W5 dashboards, attendance hooks.
+- Added Step 3.0.5b: naming convention enforcement section — explicit "NEVER use `month`" rule + verification grep + T13 round-trip test that asserts `capturedBody.salary_month === '2026-T13'` and `capturedBody.month === undefined`.
+- Added final-checklist grep: `rg -n "\bmonth(\?)?\s*:" lib/hooks/ lib/api/endpoints.ts | grep -v "salary_month"` must be empty.
+
+### ISSUE-6 (R3): Audit smoke `sed` rewrite is broken → FIXED
+- Removed `sed` rewrite. New smoke test copies `audit-fetch.sh` AND `scope-denylist.txt` into `$TMP/scripts/` together so `SCRIPT_DIR` resolves to the same dir naturally. Fixtures live in `$TMP/fixtures/`.
+- Added `trap 'rm -rf "$TMP"' EXIT` for cleanup.
+- Echoes the result before assertions for debug visibility on failure.
+
+### ISSUE-7 (R3): Final fetch audit uses raw grep → FIXED
+- Final Validation Checklist now uses `./tests/scripts/audit-fetch.sh app components` and explicitly enumerates all role dashboard paths covered (admin, director, accountant, manager, supervisor, reporter, employee/dashboard, components).
+- Task 3.9.2 also rewritten to use the audit script (was raw grep).
+- Final command must produce empty output or `w5-final-audit.txt` justified entries.
+
+### ISSUE-8 (R3): Virtualization may never activate → FIXED
+- Recipe for 4.3-4.7 now requires adding a "Hiển thị" page-size selector (e.g. 20/50/100/200) so admins can intentionally load enough rows to trigger virtualization.
+- Step 6 of recipe now requires a page-level integration test that mocks 150 rows and asserts `screen.getByRole('grid')` renders (verifying the virtualized branch is reachable, not just that the component compiles).
+
+## Issues Disputed
+None — all 8 round-3 issues accepted and addressed.
+
+## Your Turn
+Re-review the updated plan. Same path as before.

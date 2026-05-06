@@ -1,0 +1,6 @@
+Reading prompt from stdin...
+ERROR: The process "32644" not found.
+2026-05-05T21:48:33.608027Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.8 seconds
+Output:
+

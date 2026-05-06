@@ -21,6 +21,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useEmployeeAuditLogsQuery } from "@/lib/hooks/use-employees";
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface AuditLog {
   id: string;
@@ -101,78 +103,43 @@ export default function EmployeeAuditLogs({
   employeeName,
 }: EmployeeAuditLogsProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const limit = 20;
-
-  const fetchAuditLogs = async (reset: boolean = false) => {
-    try {
-      setLoading(true);
-      const currentOffset = reset ? 0 : offset;
-
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        throw new Error("No admin token found");
-      }
-
-      const response = await fetch(
-        `/api/admin/employees/${employeeId}/audit-logs?limit=${limit}&offset=${currentOffset}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData: { error?: string } = {};
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: errorText };
-        }
-        throw new Error(
-          `${response.status}: ${errorData.error || response.statusText}`,
-        );
-      }
-
-      const data = await response.json();
-
-      if (reset) {
-        setLogs(data.logs);
-        setOffset(data.logs.length);
-      } else {
-        setLogs((prev) => [...prev, ...data.logs]);
-        setOffset((prev) => prev + data.logs.length);
-      }
-
-      setHasMore(data.pagination.hasMore);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Lỗi: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const auditLogsQuery = useEmployeeAuditLogsQuery(employeeId, {
+    limit,
+    offset,
+  });
+  const loading = auditLogsQuery.isFetching;
 
   useEffect(() => {
-    fetchAuditLogs(true);
+    setLogs([]);
+    setOffset(0);
+    setHasMore(true);
   }, [employeeId]);
 
-  const formatTimestamp = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+  useEffect(() => {
+    if (!auditLogsQuery.data) return;
+
+    setLogs((prev) =>
+      offset === 0
+        ? auditLogsQuery.data.logs
+        : [...prev, ...auditLogsQuery.data.logs],
+    );
+    setHasMore(auditLogsQuery.data.pagination.hasMore);
+  }, [auditLogsQuery.data, offset]);
+
+  useEffect(() => {
+    if (!auditLogsQuery.error) return;
+
+    const errorMessage =
+      auditLogsQuery.error instanceof Error
+        ? auditLogsQuery.error.message
+        : "Unknown error";
+    toast.error(`Lỗi: ${errorMessage}`);
+  }, [auditLogsQuery.error]);
+
+  const formatTimestamp = (timestamp: string) => formatVietnamTimestamp(timestamp);
 
   const formatValue = (value: string | undefined) => {
     if (!value) return "-";
@@ -267,7 +234,7 @@ export default function EmployeeAuditLogs({
             <div className="text-center mt-4">
               <Button
                 variant="outline"
-                onClick={() => fetchAuditLogs(false)}
+                onClick={() => setOffset((prev) => prev + limit)}
                 disabled={loading}
               >
                 {loading ? "Đang tải..." : "Tải thêm"}

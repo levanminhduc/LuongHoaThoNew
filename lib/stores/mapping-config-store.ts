@@ -14,6 +14,9 @@ import {
   mappingConfigCache,
 } from "@/lib/cache/mapping-config-cache";
 import { syncManager } from "@/lib/sync/mapping-config-sync";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS } from "@/lib/api/endpoints";
+import type { ApiResponse } from "@/lib/column-alias-config";
 
 // ===== INTERFACES =====
 
@@ -114,20 +117,6 @@ const isValidToken = () => {
   return !!token;
 };
 
-const getAuthHeaders = (): Record<string, string> => {
-  if (typeof window === "undefined" || typeof localStorage === "undefined") {
-    return { "Content-Type": "application/json" };
-  }
-  const token = localStorage.getItem("admin_token");
-  if (!token) {
-    return { "Content-Type": "application/json" };
-  }
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-};
-
 const isCacheValid = (timestamp: number | null, expiry: number) => {
   if (!timestamp) return false;
   return Date.now() - timestamp < expiry;
@@ -135,22 +124,22 @@ const isCacheValid = (timestamp: number | null, expiry: number) => {
 
 // ===== API FUNCTIONS =====
 
+const assertSuccess = <T,>(response: ApiResponse<T>, fallback: string) => {
+  if (!response.success) {
+    throw new Error(response.message || fallback);
+  }
+  return response;
+};
+
 const apiLoadConfigurations = async (): Promise<MappingConfiguration[]> => {
   if (!isValidToken()) {
     throw new Error("Không có quyền truy cập");
   }
 
-  const response = await fetch("/api/admin/mapping-configurations", {
-    headers: getAuthHeaders(),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Lỗi khi tải configurations");
-  }
-
-  const data = await response.json();
-  return data.data || [];
+  const response = await apiClient.get<ApiResponse<MappingConfiguration[]>>(
+    ENDPOINTS.mappingConfigs.list,
+  );
+  return assertSuccess(response, "Lỗi khi tải configurations").data || [];
 };
 
 const apiSaveConfiguration = async (
@@ -160,19 +149,15 @@ const apiSaveConfiguration = async (
     throw new Error("Không có quyền truy cập");
   }
 
-  const response = await fetch("/api/admin/mapping-configurations", {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(config),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Lỗi khi lưu configuration");
+  const response = await apiClient.post<ApiResponse<MappingConfiguration>>(
+    ENDPOINTS.mappingConfigs.create,
+    config,
+  );
+  const data = assertSuccess(response, "Lỗi khi lưu configuration").data;
+  if (!data) {
+    throw new Error("Lỗi khi lưu configuration");
   }
-
-  const data = await response.json();
-  return data.data;
+  return data;
 };
 
 const apiUpdateConfiguration = async (
@@ -183,16 +168,11 @@ const apiUpdateConfiguration = async (
     throw new Error("Không có quyền truy cập");
   }
 
-  const response = await fetch(`/api/admin/mapping-configurations/${id}`, {
-    method: "PUT",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(updates),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Lỗi khi cập nhật configuration");
-  }
+  const response = await apiClient.put<ApiResponse<MappingConfiguration>>(
+    ENDPOINTS.mappingConfigs.detail(id),
+    updates,
+  );
+  assertSuccess(response, "Lỗi khi cập nhật configuration");
 };
 
 const apiDeleteConfiguration = async (id: number): Promise<void> => {
@@ -200,15 +180,10 @@ const apiDeleteConfiguration = async (id: number): Promise<void> => {
     throw new Error("Không có quyền truy cập");
   }
 
-  const response = await fetch(`/api/admin/mapping-configurations/${id}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Lỗi khi xóa configuration");
-  }
+  const response = await apiClient.delete<ApiResponse<never>>(
+    ENDPOINTS.mappingConfigs.detail(id),
+  );
+  assertSuccess(response, "Lỗi khi xóa configuration");
 };
 
 // ===== ZUSTAND STORE =====

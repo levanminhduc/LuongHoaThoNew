@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Search, Loader2, User, AlertCircle } from "lucide-react";
+import { useEmployeeCccdSearchQuery } from "@/lib/hooks/use-employees";
 
 interface Employee {
   employee_id: string;
@@ -23,57 +24,23 @@ export function EmployeeSearchForm({
   onEmployeeSelect,
 }: EmployeeSearchFormProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
-
-  const searchEmployees = useCallback(async (query: string) => {
-    if (query.length < 2) {
-      setEmployees([]);
-      setHasSearched(false);
-      return;
-    }
-
-    setIsSearching(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(
-        `/api/employees/update-cccd?q=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setEmployees(data.employees);
-        setHasSearched(true);
-      } else {
-        setError(data.error || "Có lỗi xảy ra khi tìm kiếm");
-        setEmployees([]);
-      }
-    } catch (error) {
-      console.error("Error searching employees:", error);
-      setError("Lỗi kết nối. Vui lòng thử lại.");
-      setEmployees([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
+  const employeesQuery = useEmployeeCccdSearchQuery(debouncedQuery);
+  const employees = (employeesQuery.data?.employees ?? []) as Employee[];
+  const isSearching = employeesQuery.isFetching;
+  const error =
+    employeesQuery.error instanceof Error ? employeesQuery.error.message : null;
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      searchEmployees(searchQuery);
+      const trimmed = searchQuery.trim();
+      setDebouncedQuery(trimmed);
+      setHasSearched(trimmed.length >= 2);
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchEmployees]);
+  }, [searchQuery]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);

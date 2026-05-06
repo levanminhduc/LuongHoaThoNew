@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,35 +31,24 @@ import {
   Download,
 } from "lucide-react";
 import { exportJSONToExcel } from "@/lib/lazy/xlsx";
-
-interface ImportError {
-  row: number;
-  employeeId: string;
-  message: string;
-}
-
-interface ImportResult {
-  success: boolean;
-  totalRecords: number;
-  insertedDaily: number;
-  insertedMonthly: number;
-  skippedRecords: number;
-  errors: ImportError[];
-  invalidEmployees: string[];
-  importBatchId: string;
-}
+import { useAttendanceImportMutation } from "@/lib/hooks/use-attendance";
+import { useDownloadTemplateMutation } from "@/lib/hooks/use-bulk-export";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import type { AttendanceImportResult as ImportResult } from "@/lib/hooks/use-attendance";
 
 export default function AttendanceImportPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const importMutation = useAttendanceImportMutation();
+  const templateMutation = useDownloadTemplateMutation("attendance");
+  const loading = importMutation.isPending;
+  const downloadingTemplate = templateMutation.isPending;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
@@ -100,7 +90,7 @@ export default function AttendanceImportPage() {
         });
       });
 
-      const timestamp = new Date().toISOString().slice(0, 10);
+      const timestamp = getVietnamTimestamp().slice(0, 10);
       const filename = `Loi_Import_ChamCong_${timestamp}.xlsx`;
       await exportJSONToExcel(errorData, filename, "Danh Sách Lỗi");
     } finally {
@@ -108,82 +98,30 @@ export default function AttendanceImportPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!file) return;
 
-    setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        router.push("/admin/login");
-        return;
-      }
-
       const formData = new FormData();
       formData.append("file", file);
-
-      const response = await fetch("/api/admin/attendance-import", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Có lỗi xảy ra khi import");
-        return;
-      }
-
+      const data = await importMutation.mutateAsync(formData);
       setResult(data);
-    } catch {
-      setError("Có lỗi xảy ra khi upload file");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra khi upload file");
     }
   };
 
   const handleDownloadTemplate = async () => {
-    setDownloadingTemplate(true);
     setError(null);
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        router.push("/admin/login");
-        return;
-      }
-
-      const response = await fetch("/api/admin/download-attendance-template", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        setError(data.error || "Không thể tải file mẫu");
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "template-import-cham-cong.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch {
-      setError("Có lỗi xảy ra khi tải file mẫu");
-    } finally {
-      setDownloadingTemplate(false);
+      await templateMutation.mutateAsync(undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra khi tải file mẫu");
     }
   };
 

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiClient, clearAuthStorage } from "@/lib/api/client";
 import { ENDPOINTS } from "@/lib/api/endpoints";
 
-export function useLogout() {
+export function useLogout(redirectPath = "/admin/login") {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -19,6 +19,6 @@ export function useLogout() {
     await queryClient.cancelQueries();
     queryClient.clear();
     clearAuthStorage();
-    router.push("/admin/login");
+    router.push(redirectPath);
   };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -37,59 +37,24 @@ import {
   Download,
 } from "lucide-react";
 import { DepartmentDetailModalRefactored } from "./department";
-import { getPreviousMonth } from "@/utils/dateUtils";
+import {
+  formatVietnamMonthLabel,
+  getPayrollMonthOptionsWithT13,
+  getPreviousMonth,
+} from "@/utils/dateUtils";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
 import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
 import {
   transformPayrollRecordToResult,
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
-import DashboardCache from "@/utils/dashboardCache";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
-
-const formatMonthLabel = (value: string) => {
-  const [year, month] = value.split("-");
-
-  if (month === "13") {
-    return `Lương Tháng 13 - ${year}`;
-  }
-
-  const date = new Date(Number(year), Number(month) - 1, 1);
-  return date.toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "long",
-  });
-};
-
-const generateMonthOptions = (years = 2) => {
-  const options: { value: string; label: string }[] = [];
-  const currentYear = new Date().getFullYear();
-
-  for (let i = 0; i < years; i++) {
-    const year = currentYear - i;
-    const month13Value = `${year}-13`;
-    options.push({
-      value: month13Value,
-      label: formatMonthLabel(month13Value),
-    });
-
-    for (let month = 12; month >= 1; month--) {
-      const monthValue = `${year}-${String(month).padStart(2, "0")}`;
-      options.push({ value: monthValue, label: formatMonthLabel(monthValue) });
-    }
-  }
-
-  return options;
-};
-
-const getPayrollQueryParams = (selectedMonth: string) => {
-  if (selectedMonth.endsWith("-13")) {
-    const year = selectedMonth.split("-")[0];
-    return `payroll_type=t13&year=${year}`;
-  }
-
-  return `month=${selectedMonth}`;
-};
+import {
+  payrollExportFilenamePrefix,
+  useManagerDepartmentsQuery,
+  useManagerPayrollQuery,
+  usePayrollExportMutation,
+} from "@/lib/hooks/use-role-payroll";
 
 const ManagerDashboardCharts = dynamic(
   () => import("./charts/ManagerDashboardCharts"),
@@ -108,55 +73,34 @@ interface User {
   permissions: string[];
 }
 
-interface DepartmentStats {
-  name: string;
-  employeeCount: number;
-  payrollCount: number;
-  signedCount: number;
-  signedPercentage: string;
-  totalSalary: number;
-  averageSalary: number;
-}
-
 interface ManagerDashboardProps {
   user: User;
 }
 
-interface PayrollRecord {
-  id: number;
-  employee_id: string;
-  salary_month: string;
-  tien_luong_thuc_nhan_cuoi_ky: number;
-  tien_khen_thuong_chuyen_can?: number;
-  he_so_lam_viec?: number;
-  is_signed: boolean;
-  signed_at: string | null;
-  employees?: {
-    employee_id: string;
-    full_name: string;
-    department: string;
-    chuc_vu: string;
-  };
-}
-
 export default function ManagerDashboard({ user }: ManagerDashboardProps) {
-  const [departments, setDepartments] = useState<DepartmentStats[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] =
     useState<string>(getPreviousMonth());
-  const [loading, setLoading] = useState(true);
-  const [payrollData, setPayrollData] = useState<PayrollRecord[]>([]);
+  const departmentsQuery = useManagerDepartmentsQuery(selectedMonth);
+  const payrollQuery = useManagerPayrollQuery(
+    selectedMonth,
+    selectedDepartment,
+  );
+  const exportMutation = usePayrollExportMutation();
+  const departments = departmentsQuery.data?.departments ?? [];
+  const payrollData = payrollQuery.data?.data ?? [];
+  const loading = departmentsQuery.isLoading;
+  const exportingData =
+    exportMutation.isPending && !exportMutation.variables?.department;
+  const exportingDepartment =
+    exportMutation.isPending && exportMutation.variables?.department
+      ? exportMutation.variables.department
+      : null;
 
   // Department Detail Modal state
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDepartmentForDetail, setSelectedDepartmentForDetail] =
     useState<string>("");
-
-  // Export state
-  const [exportingData, setExportingData] = useState(false);
-  const [exportingDepartment, setExportingDepartment] = useState<string | null>(
-    null,
-  );
 
   // Payroll Detail Modal state (from payroll tab)
   const [showPayrollModal, setShowPayrollModal] = useState(false);
@@ -172,112 +116,6 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
   const [selectedDepartmentPayrollData, setSelectedDepartmentPayrollData] =
     useState<PayrollResult | null>(null);
 
-  useEffect(() => {
-    loadDepartmentStats();
-  }, [selectedMonth]);
-
-  useEffect(() => {
-    // Auto-detect latest available month on component mount
-    detectLatestMonth();
-  }, []);
-
-  const detectLatestMonth = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/debug/payroll-data", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.availableMonths && data.availableMonths.length > 0) {
-          const latestMonth = data.availableMonths[0]; // Already sorted desc
-          if (latestMonth !== selectedMonth) {
-            setSelectedMonth(latestMonth);
-          }
-        }
-      }
-    } catch {
-      console.log("Could not detect latest month, using default");
-    }
-  };
-
-  useEffect(() => {
-    if (selectedDepartment !== "all") {
-      loadPayrollData();
-    }
-  }, [selectedDepartment, selectedMonth]);
-
-  const loadDepartmentStats = async () => {
-    setLoading(true);
-    const cachedData = DashboardCache.getCacheData<DepartmentStats[]>(
-      "manager",
-      selectedMonth,
-      "departments",
-    );
-
-    if (cachedData) {
-      setDepartments(cachedData);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-      const response = await fetch(
-        `/api/admin/departments?include_stats=true&${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const depts = data.departments || [];
-        setDepartments(depts);
-        DashboardCache.setCacheData(
-          "manager",
-          selectedMonth,
-          "departments",
-          depts,
-        );
-      }
-    } catch (error) {
-      console.error("Error loading department stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadPayrollData = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-      const url =
-        selectedDepartment === "all"
-          ? `/api/payroll/my-departments?${queryParams}&limit=50`
-          : `/api/payroll/my-departments?${queryParams}&department=${selectedDepartment}&limit=50`;
-
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPayrollData(data.data || []);
-      }
-    } catch (error) {
-      console.error("Error loading payroll data:", error);
-    }
-  };
-
   const handleViewPayroll = (department: string) => {
     setSelectedDepartmentForDetail(department);
     setIsDetailModalOpen(true);
@@ -289,104 +127,34 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
   };
 
   const handleExportDepartment = async (departmentName: string) => {
-    setExportingDepartment(departmentName);
     try {
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-      const response = await fetch(
-        `/api/admin/payroll-export?${queryParams}&department=${encodeURIComponent(departmentName)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `payroll-${departmentName}-${selectedMonth}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        const errorData = await response.json();
-        console.error(
-          "Export error:",
-          errorData.error || "Lỗi khi xuất dữ liệu",
-        );
-
-        // Show user-friendly error message
-        if (errorData.message) {
-          alert(
-            `Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? "\n\n" + errorData.suggestion : ""}`,
-          );
-        } else {
-          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.");
-        }
-      }
+      await exportMutation.mutateAsync({
+        selectedMonth,
+        department: departmentName,
+        filenamePrefix: payrollExportFilenamePrefix({
+          selectedMonth,
+          department: departmentName,
+        }),
+      });
     } catch (error) {
       console.error("Error exporting department data:", error);
-    } finally {
-      setExportingDepartment(null);
     }
   };
 
   const handleExportData = async () => {
-    setExportingData(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      const queryParams = getPayrollQueryParams(selectedMonth);
-
-      let url = `/api/admin/payroll-export?${queryParams}`;
-      let filename = `payroll-${selectedMonth}`;
-
-      if (selectedDepartment !== "all") {
-        url += `&department=${encodeURIComponent(selectedDepartment)}`;
-        filename = `payroll-${selectedDepartment}-${selectedMonth}`;
-      } else {
-        filename = `payroll-all-departments-${selectedMonth}`;
-      }
-
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const department =
+        selectedDepartment !== "all" ? selectedDepartment : undefined;
+      await exportMutation.mutateAsync({
+        selectedMonth,
+        department,
+        filenamePrefix: payrollExportFilenamePrefix({
+          selectedMonth,
+          department,
+        }),
       });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = `${filename}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(downloadUrl);
-        document.body.removeChild(a);
-      } else {
-        const errorData = await response.json();
-        console.error(
-          "Export error:",
-          errorData.error || "Lỗi khi xuất dữ liệu",
-        );
-
-        // Show user-friendly error message
-        if (errorData.message) {
-          alert(
-            `Lỗi xuất Excel: ${errorData.message}${errorData.suggestion ? "\n\n" + errorData.suggestion : ""}`,
-          );
-        } else {
-          alert("Lỗi khi xuất dữ liệu Excel. Vui lòng thử lại.");
-        }
-      }
     } catch (error) {
       console.error("Error exporting data:", error);
-    } finally {
-      setExportingData(false);
     }
   };
 
@@ -489,7 +257,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {generateMonthOptions(2).map((option) => (
+              {getPayrollMonthOptionsWithT13(2).map((option) => (
                 <SelectItem
                   key={option.value}
                   value={option.value}
@@ -554,7 +322,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
               {(totalStats.totalSalary / 1000000).toFixed(1)}M
             </div>
             <p className="text-xs text-muted-foreground truncate">
-              VND {formatMonthLabel(selectedMonth)}
+              VND {formatVietnamMonthLabel(selectedMonth)}
             </p>
           </CardContent>
         </Card>
@@ -765,7 +533,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                   - {selectedDepartment}
                 </CardTitle>
                 <CardDescription className="text-sm">
-                  {formatMonthLabel(selectedMonth)}
+                  {formatVietnamMonthLabel(selectedMonth)}
                 </CardDescription>
               </CardHeader>
               <CardContent>

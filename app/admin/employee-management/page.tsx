@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,14 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -30,6 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { DeleteAlertDialog } from "@/components/ui/alert-dialogs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Plus,
   Search,
@@ -50,6 +43,14 @@ import EmployeeForm from "./components/EmployeeForm";
 import EmployeeAuditLogs from "./components/EmployeeAuditLogs";
 import SecurityNotice from "./components/SecurityNotice";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  useEmployeeMutation,
+  useEmployeesQuery,
+} from "@/lib/hooks/use-employees";
+import {
+  VirtualizedTable,
+  type VirtualColumn,
+} from "@/components/ui/virtualized-table";
 
 interface Employee {
   employee_id: string;
@@ -60,17 +61,6 @@ interface Employee {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-}
-
-interface EmployeeResponse {
-  employees: Employee[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  departments: string[];
 }
 
 const roleLabels = {
@@ -85,15 +75,8 @@ const roleLabels = {
 };
 
 export default function EmployeeManagementPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState<string[]>([]);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState("");
   const [selectedDepartment, setSelectedDepartment] =
     useState("all_departments");
@@ -108,60 +91,27 @@ export default function EmployeeManagementPage() {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
     null,
   );
-
-  const fetchEmployees = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...(search && { search }),
-        ...(selectedDepartment &&
-          selectedDepartment !== "all_departments" && {
-            department: selectedDepartment,
-          }),
-        ...(selectedRole &&
-          selectedRole !== "all_roles" && { role: selectedRole }),
-      });
-
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/employees?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch employees");
-      }
-
-      const data: EmployeeResponse = await response.json();
-      setEmployees(data.employees);
-      setPagination(data.pagination);
-      setDepartments(data.departments);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      showErrorToast("Lỗi khi tải danh sách nhân viên");
-    } finally {
-      setLoading(false);
-    }
+  const employeesQuery = useEmployeesQuery({
+    page,
+    limit,
+    search,
+    department: selectedDepartment,
+    role: selectedRole,
+  });
+  const employeeMutation = useEmployeeMutation();
+  const employees = employeesQuery.data?.employees ?? [];
+  const departments = employeesQuery.data?.departments ?? [];
+  const pagination = employeesQuery.data?.pagination ?? {
+    page,
+    limit,
+    total: 0,
+    totalPages: 0,
   };
-
-  useEffect(() => {
-    const timeoutId = setTimeout(
-      () => {
-        fetchEmployees();
-      },
-      search ? 500 : 0,
-    );
-
-    return () => clearTimeout(timeoutId);
-  }, [pagination.page, search, selectedDepartment, selectedRole]);
+  const loading = employeesQuery.isLoading;
 
   const handleSearch = (value: string) => {
     setSearch(value);
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setPage(1);
   };
 
   const handleFilterChange = (type: "department" | "role", value: string) => {
@@ -170,7 +120,7 @@ export default function EmployeeManagementPage() {
     } else {
       setSelectedRole(value);
     }
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setPage(1);
   };
 
   const handleDeleteDialogChange = (open: boolean) => {
@@ -189,23 +139,12 @@ export default function EmployeeManagementPage() {
   const handleDelete = async (employeeId: string) => {
     try {
       setDeletingId(employeeId);
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/admin/employees/${employeeId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      await employeeMutation.mutateAsync({
+        action: "delete",
+        employee: { employee_id: employeeId },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete employee");
-      }
-
-      await response.json();
       const employee = employees.find((e) => e.employee_id === employeeId);
       showDeleteSuccessToast(employee?.full_name || employeeId, "nhân viên");
-      fetchEmployees();
     } catch (error) {
       console.error("Error deleting employee:", error);
       showErrorToast("Lỗi khi xóa nhân viên");
@@ -216,18 +155,140 @@ export default function EmployeeManagementPage() {
 
   const handleEmployeeCreated = () => {
     setIsCreateDialogOpen(false);
-    fetchEmployees();
     showSuccessToast("Tạo nhân viên thành công");
   };
 
   const handleEmployeeUpdated = () => {
     setEditingEmployee(null);
-    fetchEmployees();
     showUpdateSuccessToast("Thông tin nhân viên");
   };
 
   const activeEmployees = employees.filter((emp) => emp.is_active).length;
   const inactiveEmployees = employees.filter((emp) => !emp.is_active).length;
+  const employeeColumns: VirtualColumn<Employee>[] = [
+    {
+      key: "employee_id",
+      header: "Mã NV",
+      width: "110px",
+      cell: (employee) => (
+        <span className="font-medium">{employee.employee_id}</span>
+      ),
+    },
+    {
+      key: "full_name",
+      header: "Họ và Tên",
+      width: "minmax(180px, 1.4fr)",
+      cell: (employee) => employee.full_name,
+    },
+    {
+      key: "chuc_vu",
+      header: "Chức Vụ",
+      width: "150px",
+      cell: (employee) => (
+        <Badge variant="outline">
+          {roleLabels[employee.chuc_vu as keyof typeof roleLabels]}
+        </Badge>
+      ),
+    },
+    {
+      key: "department",
+      header: "Phòng Ban",
+      width: "minmax(140px, 1fr)",
+      cell: (employee) => employee.department || "-",
+    },
+    {
+      key: "phone_number",
+      header: "SĐT",
+      width: "130px",
+      cell: (employee) => employee.phone_number || "-",
+    },
+    {
+      key: "is_active",
+      header: "Trạng Thái",
+      width: "130px",
+      cell: (employee) => (
+        <Badge variant={employee.is_active ? "default" : "secondary"}>
+          {employee.is_active ? "Hoạt động" : "Không hoạt động"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Thao Tác",
+      width: "220px",
+      cell: (employee) => (
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingEmployee(employee)}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+              <DialogHeader>
+                <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
+                <DialogDescription>
+                  Cập nhật thông tin nhân viên {employee.full_name}
+                </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="max-h-[65vh] p-1 pr-4">
+                {editingEmployee && (
+                  <EmployeeForm
+                    employee={editingEmployee}
+                    onSuccess={handleEmployeeUpdated}
+                  />
+                )}
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAuditLogsEmployee(employee)}
+              >
+                <FileText className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Lịch Sử Thay Đổi</DialogTitle>
+                <DialogDescription>
+                  Audit logs cho nhân viên {employee.full_name}
+                </DialogDescription>
+              </DialogHeader>
+              {auditLogsEmployee && (
+                <EmployeeAuditLogs
+                  employeeId={auditLogsEmployee.employee_id}
+                  employeeName={auditLogsEmployee.full_name}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={deletingId === employee.employee_id}
+            onClick={() => {
+              setEmployeeToDelete(employee);
+              setShowDeleteDialog(true);
+            }}
+          >
+            {deletingId === employee.employee_id ? (
+              <Spinner size="sm" variant="destructive" />
+            ) : (
+              <Trash2 className="w-4 h-4 text-red-600" />
+            )}
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
@@ -361,9 +422,28 @@ export default function EmployeeManagementPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={String(limit)}
+              onValueChange={(value) => {
+                setLimit(Number(value));
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <SelectValue placeholder="Hiển thị" />
+              </SelectTrigger>
+              <SelectContent>
+                {[20, 50, 100, 200].map((value) => (
+                  <SelectItem key={value} value={String(value)}>
+                    Hiển thị {value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               variant="outline"
-              onClick={fetchEmployees}
+              onClick={() => employeesQuery.refetch()}
+              disabled={employeesQuery.isFetching}
               className="w-full sm:w-auto"
             >
               Làm mới
@@ -371,6 +451,20 @@ export default function EmployeeManagementPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {employeesQuery.error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>
+                {employeesQuery.error instanceof Error
+                  ? employeesQuery.error.message
+                  : "Lỗi khi tải danh sách nhân viên"}
+              </AlertDescription>
+            </Alert>
+          )}
+          {employeesQuery.isFetching && !loading && (
+            <div className="mb-3 text-sm text-muted-foreground">
+              Đang cập nhật...
+            </div>
+          )}
           {loading ? (
             <div className="flex justify-center py-8">
               <Spinner size="lg" />
@@ -503,143 +597,15 @@ export default function EmployeeManagementPage() {
                 )}
               </div>
 
-              {/* Desktop Table Layout */}
               <div className="hidden md:block border rounded-lg overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[100px]">Mã NV</TableHead>
-                      <TableHead className="min-w-[150px]">Họ và Tên</TableHead>
-                      <TableHead className="min-w-[120px]">Chức Vụ</TableHead>
-                      <TableHead className="min-w-[120px]">Phòng Ban</TableHead>
-                      <TableHead className="min-w-[100px]">SĐT</TableHead>
-                      <TableHead className="min-w-[120px]">
-                        Trạng Thái
-                      </TableHead>
-                      <TableHead className="min-w-[200px]">Thao Tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {employees.length > 0 ? (
-                      employees.map((employee) => (
-                        <TableRow key={employee.employee_id}>
-                          <TableCell className="font-medium">
-                            {employee.employee_id}
-                          </TableCell>
-                          <TableCell>{employee.full_name}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {
-                                roleLabels[
-                                  employee.chuc_vu as keyof typeof roleLabels
-                                ]
-                              }
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{employee.department || "-"}</TableCell>
-                          <TableCell>{employee.phone_number || "-"}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                employee.is_active ? "default" : "secondary"
-                              }
-                            >
-                              {employee.is_active
-                                ? "Hoạt động"
-                                : "Không hoạt động"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setEditingEmployee(employee)}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-                                  <DialogHeader>
-                                    <DialogTitle>
-                                      Chỉnh Sửa Nhân Viên
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                      Cập nhật thông tin nhân viên{" "}
-                                      {employee.full_name}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <ScrollArea className="max-h-[65vh] p-1 pr-4">
-                                    {editingEmployee && (
-                                      <EmployeeForm
-                                        employee={editingEmployee}
-                                        onSuccess={handleEmployeeUpdated}
-                                      />
-                                    )}
-                                  </ScrollArea>
-                                </DialogContent>
-                              </Dialog>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                      setAuditLogsEmployee(employee)
-                                    }
-                                  >
-                                    <FileText className="w-4 h-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-4xl">
-                                  <DialogHeader>
-                                    <DialogTitle>Lịch Sử Thay Đổi</DialogTitle>
-                                    <DialogDescription>
-                                      Audit logs cho nhân viên{" "}
-                                      {employee.full_name}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  {auditLogsEmployee && (
-                                    <EmployeeAuditLogs
-                                      employeeId={auditLogsEmployee.employee_id}
-                                      employeeName={auditLogsEmployee.full_name}
-                                    />
-                                  )}
-                                </DialogContent>
-                              </Dialog>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={deletingId === employee.employee_id}
-                                onClick={() => {
-                                  setEmployeeToDelete(employee);
-                                  setShowDeleteDialog(true);
-                                }}
-                              >
-                                {deletingId === employee.employee_id ? (
-                                  <Spinner size="sm" variant="destructive" />
-                                ) : (
-                                  <Trash2 className="w-4 h-4 text-red-600" />
-                                )}
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={7}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          Không có dữ liệu
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                <VirtualizedTable
+                  data={employees}
+                  columns={employeeColumns}
+                  rowKey={(employee) => employee.employee_id}
+                  containerHeight={600}
+                  caption="Danh sách nhân viên"
+                  emptyState="Không có dữ liệu"
+                />
               </div>
 
               {pagination.totalPages > 1 && (
@@ -647,10 +613,7 @@ export default function EmployeeManagementPage() {
                   <Button
                     variant="outline"
                     onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: prev.page - 1,
-                      }))
+                      setPage((prev) => Math.max(1, prev - 1))
                     }
                     disabled={pagination.page === 1}
                     className="touch-manipulation"
@@ -663,10 +626,7 @@ export default function EmployeeManagementPage() {
                   <Button
                     variant="outline"
                     onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: prev.page + 1,
-                      }))
+                      setPage((prev) => Math.min(pagination.totalPages, prev + 1))
                     }
                     disabled={pagination.page === pagination.totalPages}
                     className="touch-manipulation"

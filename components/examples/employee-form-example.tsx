@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/form";
 import { showSuccessToast, showErrorToast } from "@/lib/toast-utils";
 import { Loader2, Eye, EyeOff, Search } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 interface Employee {
   employee_id: string;
@@ -134,18 +136,12 @@ export default function EmployeeFormExample({
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const token = localStorage.getItem("admin_token");
-        const response = await fetch("/api/admin/employees?limit=1", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setDepartments(data.departments || []);
-        }
+        const params = new URLSearchParams();
+        params.set(QUERY_PARAMS.LIMIT, "1");
+        const data = await apiClient.get(
+          `${ENDPOINTS.employees.list}?${params}`,
+        );
+        setDepartments(data.departments || []);
       } catch (error) {
         console.error("Error fetching departments:", error);
       }
@@ -246,12 +242,6 @@ export default function EmployeeFormExample({
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("admin_token");
-      const url = employee
-        ? `/api/admin/employees/${employee.employee_id}`
-        : "/api/admin/employees";
-      const method = employee ? "PUT" : "POST";
-
       const submitData: Record<string, unknown> = {
         ...formData,
         department:
@@ -270,21 +260,12 @@ export default function EmployeeFormExample({
         submitData.password = formData.password || undefined;
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submitData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Có lỗi xảy ra");
-      }
-
-      const result = await response.json();
+      const result = employee
+        ? await apiClient.put(
+            ENDPOINTS.employees.update(employee.employee_id),
+            submitData,
+          )
+        : await apiClient.post(ENDPOINTS.employees.create, submitData);
       showSuccessToast(result.message);
       form.reset();
       onSuccess?.();

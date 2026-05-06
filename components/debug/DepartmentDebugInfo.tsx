@@ -15,6 +15,8 @@ import {
   EyeOff,
   RefreshCw,
 } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 interface DebugInfo {
   userInfo: Record<string, unknown>;
@@ -47,44 +49,14 @@ export default function DepartmentDebugInfo() {
 
       const userInfo = JSON.parse(userStr);
 
-      // Call departments API (only active employees)
-      const deptResponse = await fetch(
-        "/api/admin/departments?include_stats=true",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      const apiResponse = await deptResponse.json();
-
-      // Call permissions API
-      const permResponse = await fetch("/api/admin/department-permissions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const permData = await permResponse.json();
-
-      // Call debug API
-      const debugResponse = await fetch("/api/debug/departments", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const debugData = await debugResponse.json();
-
-      // Call count API
-      const countResponse = await fetch("/api/debug/count-departments", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const countData = await countResponse.json();
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.INCLUDE_STATS, "true");
+      const [apiResponse, permData, debugData, countData] = await Promise.all([
+        apiClient.get(`${ENDPOINTS.departments.list}?${params}`),
+        apiClient.get(ENDPOINTS.departments.permissions),
+        apiClient.get(ENDPOINTS.debug.departments),
+        apiClient.get(ENDPOINTS.debug.countDepartments),
+      ]);
 
       setDebugInfo({
         userInfo,

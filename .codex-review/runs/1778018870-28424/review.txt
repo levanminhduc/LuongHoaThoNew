@@ -1,0 +1,10 @@
+### ISSUE-1: R14 signature-history fix not fully applied to accountant/reporter tasks
+- Category: correctness
+- Severity: medium
+- Problem: The round summary says W5.2 and W5.5 now use `useSignatureHistoryQuery({ signature_type: ..., limit: 10 })`, but the plan still says `useSignatureHistoryQuery({ signature_type: 'ke_toan', months, ... })` and `useSignatureHistoryQuery({ signature_type: 'nguoi_lap_bieu', months, ... })`.
+- Why it matters: Existing accountant/reporter pages use only `signature_type` + `limit=10`. The remaining `months, ...` placeholder is not bite-sized and may accidentally introduce a month filter or undefined variable.
+- Suggested fix: Replace those two calls with the exact existing behavior: `useSignatureHistoryQuery({ signature_type: 'ke_toan', limit: 10 })` and `useSignatureHistoryQuery({ signature_type: 'nguoi_lap_bieu', limit: 10 })`.
+
+### VERDICT
+- Status: REVISE
+- Reason: R14 fixed the director path, but the accountant/reporter task text still contains the old placeholder form.

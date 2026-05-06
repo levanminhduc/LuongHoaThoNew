@@ -244,6 +244,40 @@ async function requestBlob(
   };
 }
 
+async function requestStream(
+  path: string,
+  body: unknown | undefined,
+  opts: RequestOpts = {},
+): Promise<Response> {
+  let response: Response;
+
+  try {
+    response = await fetch(path, {
+      method: "POST",
+      headers: makeHeaders(body, opts),
+      body: makeBody(body),
+      signal: opts.signal,
+      credentials: "include",
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
+    throw new ApiError(ApiErrorCodes.NETWORK_ERROR, "Lỗi kết nối mạng");
+  }
+
+  if (response.status === 401) {
+    handleAuthExpired();
+  }
+
+  if (!response.ok) {
+    const parsed = await parseJsonOrText(response);
+    throw errorFromParsedBody(response, parsed);
+  }
+
+  return response;
+}
+
 export const apiClient = {
   get: <T = unknown>(path: string, opts?: RequestOpts) =>
     request<T>("GET", path, undefined, opts),
@@ -257,6 +291,8 @@ export const apiClient = {
     request<T>("DELETE", path, undefined, opts),
   blob: (path: string, body?: unknown, opts?: RequestOpts) =>
     requestBlob(path, body, opts, body !== undefined ? "POST" : "GET"),
+  stream: (path: string, body?: unknown, opts?: RequestOpts) =>
+    requestStream(path, body, opts),
 };
 
 export function downloadBlob(blob: Blob, filename: string) {

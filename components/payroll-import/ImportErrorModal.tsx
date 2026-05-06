@@ -21,13 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  VirtualizedTable,
+  type VirtualColumn,
+} from "@/components/ui/virtualized-table";
 import { Progress } from "@/components/ui/progress";
 import {
   AlertTriangle,
@@ -44,11 +40,10 @@ import {
   Filter,
 } from "lucide-react";
 import {
-  showSuccessToast,
   showErrorToast,
   showInfoToast,
 } from "@/lib/toast-utils";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { useExportImportErrorsMutation } from "@/lib/hooks/use-payroll-import";
 
 interface ImportError {
   row: number;
@@ -267,6 +262,7 @@ export default function ImportErrorModal({
   const [filterType, setFilterType] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const exportImportErrorsMutation = useExportImportErrorsMutation();
 
   const enhancedErrors = useMemo(
     () => errors.map(transformToEnhancedError),
@@ -310,18 +306,81 @@ export default function ImportErrorModal({
       duration: 2000,
     });
   };
+  const errorColumns: VirtualColumn<EnhancedImportError>[] = [
+    {
+      key: "row",
+      header: "Row",
+      width: "70px",
+      cell: (error) => <span className="font-medium">{error.row}</span>,
+    },
+    {
+      key: "employee_id",
+      header: "Mã NV",
+      width: "110px",
+      cell: (error) => error.employee_id || "N/A",
+    },
+    {
+      key: "salary_month",
+      header: "Tháng",
+      width: "110px",
+      cell: (error) => error.salary_month || "N/A",
+    },
+    {
+      key: "field",
+      header: "Field",
+      width: "130px",
+      cell: (error) => (
+        <span className="font-mono text-xs">{error.field || "N/A"}</span>
+      ),
+    },
+    {
+      key: "error_type",
+      header: "Loại Lỗi",
+      width: "140px",
+      cell: (error) => (
+        <Badge className={`${getErrorTypeBadgeColor(error.errorType)} text-white`}>
+          {error.errorType}
+        </Badge>
+      ),
+    },
+    {
+      key: "severity",
+      header: "Severity",
+      width: "90px",
+      cell: (error) => getSeverityIcon(error.severity),
+    },
+    {
+      key: "message",
+      header: "Lỗi",
+      width: "minmax(260px, 2fr)",
+      cell: (error) => (
+        <div className="space-y-1">
+          <div className="text-sm font-medium">{error.message}</div>
+          {error.suggestion && (
+            <div className="text-xs text-gray-600">{error.suggestion}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "action",
+      header: "Action",
+      width: "90px",
+      cell: (error) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleCopyError(error.message)}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
 
   const handleExportErrors = async () => {
     setIsExporting(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        showErrorToast("Lỗi", {
-          description: "Không có quyền truy cập",
-        });
-        return;
-      }
-
       const exportErrors = errors.map((err) => ({
         row: err.row,
         employee_id: err.employee_id,
@@ -338,40 +397,12 @@ export default function ImportErrorModal({
         originalData: err.originalData,
       }));
 
-      const response = await fetch("/api/admin/export-import-errors", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          errors: exportErrors,
-          format: "excel",
-          fileName: "bao_cao_loi_import",
-          includeOriginalData: true,
-          originalHeaders,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Export failed");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      // Use Vietnam timezone for filename timestamp
-      const timestamp = getVietnamTimestamp().split(" ")[0]; // Get YYYY-MM-DD
-      a.download = `bao_cao_loi_import_${timestamp}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      showSuccessToast("Thành công", {
-        description: "Đã tải xuống báo cáo lỗi Excel",
-        duration: 3000,
+      await exportImportErrorsMutation.mutateAsync({
+        errors: exportErrors,
+        format: "excel",
+        fileName: "bao_cao_loi_import",
+        includeOriginalData: true,
+        originalHeaders,
       });
     } catch (error) {
       console.error("Export error:", error);
@@ -462,70 +493,21 @@ export default function ImportErrorModal({
               Hiển thị {filteredErrors.length} / {errors.length} lỗi
             </div>
 
-            <ScrollArea className="h-[400px] rounded-md border">
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[60px]">Row</TableHead>
-                      <TableHead className="w-[100px]">Mã NV</TableHead>
-                      <TableHead className="w-[100px]">Tháng</TableHead>
-                      <TableHead className="w-[120px]">Field</TableHead>
-                      <TableHead className="w-[120px]">Loại Lỗi</TableHead>
-                      <TableHead className="w-[80px]">Severity</TableHead>
-                      <TableHead>Lỗi</TableHead>
-                      <TableHead className="w-[80px]">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedErrors.map((error, index) => (
-                      <TableRow
-                        key={index}
-                        className={getErrorTypeColor(error.errorType)}
-                      >
-                        <TableCell className="font-medium">
-                          {error.row}
-                        </TableCell>
-                        <TableCell>{error.employee_id || "N/A"}</TableCell>
-                        <TableCell>{error.salary_month || "N/A"}</TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {error.field || "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`${getErrorTypeBadgeColor(error.errorType)} text-white`}
-                          >
-                            {error.errorType}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{getSeverityIcon(error.severity)}</TableCell>
-                        <TableCell className="max-w-[300px]">
-                          <div className="space-y-1">
-                            <div className="text-sm font-medium">
-                              {error.message}
-                            </div>
-                            {error.suggestion && (
-                              <div className="text-xs text-gray-600">
-                                💡 {error.suggestion}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCopyError(error.message)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+            <div className="hidden md:block">
+              <VirtualizedTable
+                data={filteredErrors}
+                columns={errorColumns}
+                rowKey={(error, index) =>
+                  `${error.row}-${error.employee_id ?? "none"}-${error.field ?? "none"}-${index}`
+                }
+                containerHeight={420}
+                estimateRowHeight={76}
+                caption="Danh sách lỗi import"
+                emptyState="Không có lỗi phù hợp"
+              />
+            </div>
 
+            <ScrollArea className="h-[400px] rounded-md border md:hidden">
               <div className="md:hidden space-y-3 p-4">
                 {paginatedErrors.map((error, index) => (
                   <Card
@@ -593,7 +575,7 @@ export default function ImportErrorModal({
             </ScrollArea>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between md:hidden">
                 <div className="text-sm text-gray-600">
                   Trang {currentPage} / {totalPages}
                 </div>

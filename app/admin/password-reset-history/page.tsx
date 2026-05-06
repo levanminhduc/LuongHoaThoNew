@@ -40,6 +40,9 @@ import {
   Loader2,
   Network,
 } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
+import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
 interface SecurityLog {
   id: number;
@@ -110,49 +113,39 @@ export default function PasswordResetHistoryPage() {
       setLoading(true);
       setError("");
 
-      const token = localStorage.getItem("admin_token");
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-      });
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.PAGE, pagination.page.toString());
+      params.set(QUERY_PARAMS.LIMIT, pagination.limit.toString());
 
       if (filters.employeeCode) {
-        params.append("employee_code", filters.employeeCode);
+        params.append(QUERY_PARAMS.EMPLOYEE_CODE, filters.employeeCode);
       }
       if (filters.status !== "all") {
-        params.append("status", filters.status);
+        params.append(QUERY_PARAMS.STATUS, filters.status);
       }
       if (filters.startDate) {
-        params.append("start_date", filters.startDate);
+        params.append(QUERY_PARAMS.START_DATE, filters.startDate);
       }
       if (filters.endDate) {
-        params.append("end_date", filters.endDate);
+        params.append(QUERY_PARAMS.END_DATE, filters.endDate);
       }
       if (filters.ipAddress) {
-        params.append("ip_address", filters.ipAddress.trim());
+        params.append(QUERY_PARAMS.IP_ADDRESS, filters.ipAddress.trim());
       }
 
-      const response = await fetch(
-        `/api/admin/password-reset-history?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const data = await apiClient.get<{
+        logs: SecurityLog[];
+        pagination: Pagination;
+        error?: string;
+      }>(`${ENDPOINTS.passwordResetHistory.list}?${params.toString()}`);
 
-      if (response.ok) {
-        const data = await response.json();
-        setLogs(data.logs);
-        setPagination(data.pagination);
-      } else if (response.status === 401) {
-        localStorage.removeItem("admin_token");
-        localStorage.removeItem("user_info");
-        router.push("/admin/login");
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Lỗi khi tải dữ liệu");
+      if (data.error) {
+        setError(data.error || "Lỗi khi tải dữ liệu");
+        return;
       }
+
+      setLogs(data.logs);
+      setPagination(data.pagination);
     } catch (err) {
       console.error("Load data error:", err);
       setError("Lỗi kết nối. Vui lòng thử lại.");
@@ -211,16 +204,7 @@ export default function PasswordResetHistoryPage() {
   };
 
   const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    return formatTimestampFromDBRaw(dateString);
   };
 
   const parseDetails = (details: string | null) => {

@@ -1,0 +1,17 @@
+## Issues Accepted & Fixed (Round 13)
+
+### ISSUE-1 (R13): Signature hooks don't match route schemas → FIXED
+- Verified `app/api/signature-history/route.ts` query params: `months`, `signature_type`, `limit`, `offset`, `payroll_type`. Verified `app/api/management-signature/route.ts` body: `salary_month`, `signature_type`, `notes`, `device_info`, optional `is_t13`.
+- `useSignatureHistoryQuery` rewritten with new `SignatureHistoryFilters` interface: `months` (comma-sep YYYY-MM), `signature_type`, `payroll_type`, `limit`, `offset`. Old `salary_month`/`employee_id`/`page` removed.
+- `useManagementSignatureMutation` input now requires `notes: string` and `device_info: string`. Added `is_t13?: boolean` (server derives; passing wrong value 400s).
+- W5.1 (director), 5.2 (accountant), 5.5 (reporter) instructions updated: must pass `notes` from UI text field + `device_info: navigator.userAgent`. Hooks parameterized with `signature_type` matching role. Tests must invoke mutation with all 4 required fields.
+
+### ISSUE-2 (R13): Attendance import invalidates wrong key → FIXED
+- `useAttendanceImportMutation` now invalidates `['attendance-employees']` (matches `useAttendanceEmployeesQuery` key), was incorrectly `['attendance']`.
+- Task 5.8.3 integration test assertion updated: success invalidates `['attendance-employees']` not `['attendance']`.
+
+## Issues Disputed
+None — both round-13 issues accepted and addressed.
+
+## Your Turn
+Re-review.

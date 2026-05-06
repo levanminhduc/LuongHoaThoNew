@@ -1,0 +1,11 @@
+Reading prompt from stdin...
+ERROR: The process "30436" not found.
+2026-05-05T21:15:08.725813Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1 seconds
+Output:
+[31;1mParserError: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m … th\??\s*:|audit-fetch|Final Validation|Task 3\.9|Hiển thị|[36;1m150[0m rows|ge …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m                                                             ~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mExpressions are only allowed as the first element of a pipeline.[0m
+

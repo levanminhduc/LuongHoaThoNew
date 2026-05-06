@@ -41,6 +41,8 @@ import {
 } from "lucide-react";
 import { useMappingConfig } from "@/lib/hooks/use-mapping-config";
 import { useHeaderMapping as useHeaderMappingUtils } from "@/lib/hooks/use-header-mapping";
+import { useGenerateImportTemplateMutation } from "@/lib/hooks/use-column-mapping";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface ExportConfigurationDialogProps {
   open: boolean;
@@ -77,6 +79,7 @@ export function ExportConfigurationDialog({
   // Hooks
   const { configurations, defaultConfig } = useMappingConfig();
   const { generatePreview } = useHeaderMappingUtils();
+  const generateImportTemplateMutation = useGenerateImportTemplateMutation();
 
   // Auto-select default config
   useEffect(() => {
@@ -126,35 +129,11 @@ export function ExportConfigurationDialog({
     if (!selectedConfigId) return;
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) return;
-
-      const response = await fetch(
-        `/api/admin/generate-import-template?configId=${selectedConfigId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) return;
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      const configName = response.headers.get("X-Config-Name") || "template";
-      const timestamp = new Date().toISOString().slice(0, 10);
-      a.download = `import-template-${configName.replace(/\s+/g, "-")}-${timestamp}.xlsx`;
-
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
+      const config = configurations.find((item) => item.id === selectedConfigId);
+      await generateImportTemplateMutation.mutateAsync({
+        configId: selectedConfigId,
+        configName: config?.config_name,
+      });
       onOpenChange(false);
     } catch (error) {
       console.error("Generate template error:", error);
@@ -190,7 +169,7 @@ export function ExportConfigurationDialog({
       return customFilename.trim();
     }
 
-    const timestamp = new Date().toISOString().slice(0, 10);
+    const timestamp = getVietnamTimestamp().slice(0, 10);
     const configSuffix = selectedConfig
       ? `-${selectedConfig.config_name.replace(/\s+/g, "-")}`
       : "";

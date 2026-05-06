@@ -1,0 +1,24 @@
+### ISSUE-1: Final naming gate still uses old blanket `month` ban
+- Category: correctness
+- Severity: high
+- Problem: Step 3.0.5b is now scoped correctly, but Final Validation still runs `rg ... lib/hooks/ lib/api/endpoints.ts | grep -v "salary_month\|//"` and expects 0 hits.
+- Why it matters: The plan now intentionally creates `useDataValidationQuery({ month: string; ... })`, so final validation will fail a correct implementation or pressure the implementer back into wrong param names.
+- Suggested fix: Replace the final checklist command with the scoped payroll/signature-only gate from Step 3.0.5b, or explicitly exclude/allow `use-data-validation.ts` and attendance hooks.
+
+### ISSUE-2: Attendance-list migration is still not concrete
+- Category: correctness
+- Severity: high
+- Problem: Task 5.8 still says to “audit during Step 3.0.2” to find the attendance list endpoint, while the existing page uses `GET /api/admin/attendance-employees` with `period_year`, `period_month`, filters, pagination, and search. `ENDPOINTS.attendance` also lacks that endpoint.
+- Why it matters: `attendance-list/page.tsx` has a real fetch and must be migrated. As written, the task is not bite-sized and the integration test acceptance cannot be implemented from the plan alone.
+- Suggested fix: Add `ENDPOINTS.attendance.employees = '/api/admin/attendance-employees'`, define `useAttendanceEmployeesQuery({ period_year, period_month, department, search, page, limit })`, and wire Task 5.8 to use it. Include export args needed by the page: `employee_ids`, `export_type`, and `include_daily`.
+
+### ISSUE-3: Role dashboard signature endpoints are still wrong or missing
+- Category: correctness
+- Severity: high
+- Problem: `ENDPOINTS.payroll.signatureStatus/signatureProgress` point to `/api/admin/...`, but the actual routes are `/api/signature-status/[month]` and `/api/signature-progress/[month]`. The role dashboards also use `/api/signature-history` and `POST /api/management-signature`, but the plan does not define hooks for those flows.
+- Why it matters: W5 dashboard migration can pass against mocked wrong endpoints while real director/accountant/reporter signing/status flows break.
+- Suggested fix: Add verified signature/management endpoints and hooks: status, progress, history, and management-signature mutation. Update W5.1/5.2/5.5 to use those hooks and test mutation invalidates status/history.
+
+### VERDICT
+- Status: REVISE
+- Reason: The latest fixes improved payroll and naming scope, but final validation and W5 endpoint contracts still contradict existing routes.

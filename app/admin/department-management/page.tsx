@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import DepartmentDebugInfo from "@/components/debug/DepartmentDebugInfo";
 import {
   Building2,
   Users,
@@ -24,44 +23,32 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-
-interface Department {
-  name: string;
-  employeeCount: number;
-  payrollCount: number;
-  signedCount: number;
-  signedPercentage: string;
-  totalSalary: number;
-  averageSalary: number;
-  managers: Array<{ employee_id: string; full_name: string }>;
-  supervisors: Array<{ employee_id: string; full_name: string }>;
-}
-
-interface DepartmentPermission {
-  id: number;
-  employee_id: string;
-  department: string;
-  granted_by: string;
-  granted_at: string;
-  is_active: boolean;
-  employees?: {
-    employee_id: string;
-    full_name: string;
-    chuc_vu: string;
-  };
-}
+import {
+  useDepartmentPermissionsQuery,
+  useDepartmentStatsQuery,
+} from "@/lib/hooks/use-departments";
 
 export default function DepartmentManagementPage() {
   const router = useRouter();
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [permissions, setPermissions] = useState<DepartmentPermission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const departmentsQuery = useDepartmentStatsQuery();
+  const permissionsQuery = useDepartmentPermissionsQuery();
+  const departments = [...(departmentsQuery.data?.departments ?? [])].sort(
+    (a, b) => a.name.localeCompare(b.name, "vi", { sensitivity: "base" }),
+  );
+  const permissions = permissionsQuery.data?.permissions ?? [];
+  const refreshDepartments = departmentsQuery.refetch;
+  const refreshPermissions = permissionsQuery.refetch;
+  const loading = departmentsQuery.isLoading || permissionsQuery.isLoading;
+  const error =
+    departmentsQuery.error instanceof Error
+      ? departmentsQuery.error.message
+      : permissionsQuery.error instanceof Error
+        ? permissionsQuery.error.message
+        : null;
 
   useEffect(() => {
     checkAuthentication();
-    loadData();
   }, []);
 
   const checkAuthentication = () => {
@@ -82,50 +69,6 @@ export default function DepartmentManagementPage() {
     } catch (error) {
       console.error("Error parsing user info:", error);
       router.push("/admin/login");
-    }
-  };
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("admin_token");
-
-      // Load departments with statistics (only active employees)
-      const deptResponse = await fetch(
-        "/api/admin/departments?include_stats=true",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (deptResponse.ok) {
-        const deptData = await deptResponse.json();
-        // Sắp xếp departments theo chữ cái A-Z
-        const sortedDepartments = (deptData.departments || []).sort(
-          (a: Department, b: Department) =>
-            a.name.localeCompare(b.name, "vi", { sensitivity: "base" }),
-        );
-        setDepartments(sortedDepartments);
-      }
-
-      // Load department permissions
-      const permResponse = await fetch("/api/admin/department-permissions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (permResponse.ok) {
-        const permData = await permResponse.json();
-        setPermissions(permData.permissions || []);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setError("Có lỗi xảy ra khi tải dữ liệu");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -281,7 +224,10 @@ export default function DepartmentManagementPage() {
         />
         <Button
           variant="outline"
-          onClick={loadData}
+          onClick={() => {
+            refreshDepartments();
+            refreshPermissions();
+          }}
           className="w-full sm:w-auto"
         >
           Làm mới
@@ -451,9 +397,6 @@ export default function DepartmentManagementPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Debug Component */}
-      <DepartmentDebugInfo />
     </div>
   );
 }

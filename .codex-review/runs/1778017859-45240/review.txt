@@ -1,0 +1,31 @@
+### ISSUE-1: Payroll detail contract still targets a non-existent route
+- Category: correctness
+- Severity: high
+- Problem: Step 3.0.2, Step 3.0.5, and Task 3.3 still define payroll detail as `/api/admin/payroll/[employee_id]/[month]` with `usePayrollDetailQuery(employeeId, salaryMonth)`.
+- Why it matters: The current app uses `app/api/admin/payroll/[id]/route.ts`; `payroll-management` selects by `payroll_id` and updates with `PUT /api/admin/payroll/{id}`. Following the plan will migrate W3 to a route shape that does not exist.
+- Suggested fix: Update the endpoint audit table, `ENDPOINTS.payroll.detail`, hook signatures, and W3 payroll-management migration to use `payrollId`. Add `useUpdatePayrollMutation(id)` for the existing PUT flow and test that selection uses `selectedEmployee.payroll_id`.
+
+### ISSUE-2: `salary_month` rule is over-applied to non-payroll endpoints
+- Category: correctness
+- Severity: high
+- Problem: Step 3.0.5b says “NEVER use `month`”, and Task 5.8 uses `useAttendanceListQuery({ salary_month, ... })`. But attendance list/export use `period_year` + `period_month`, and data-validation uses `month` + `force_refresh`.
+- Why it matters: Implementers must either violate the final naming gate or call backend routes with wrong params. The T13 `salary_month` rule is valid for payroll/signature flows, not every endpoint.
+- Suggested fix: Scope the `salary_month` rule to payroll/signature hooks only. Define attendance hooks with `period_year`/`period_month`, and data-validation hooks with the actual `month` query param, then narrow or exception-list the final grep accordingly.
+
+### ISSUE-3: W5.8b still has non-concrete migration rows
+- Category: risk
+- Severity: medium
+- Problem: `data-validation` still says “Add hooks per audit”, and `employee-check` says “MIGRATE if fetches present”, even though these are known admin pages with concrete fetch behavior.
+- Why it matters: This reintroduces the “similar to / figure it out later” gap and weakens the guarantee that each migrated screen gets a verifiable hook + integration test.
+- Suggested fix: Add explicit hook names, endpoint constants, params, and test assertions for both pages before W5.8b starts.
+
+### ISSUE-4: Final audit command still has duplicate args
+- Category: risk
+- Severity: low
+- Problem: Final Validation still runs `./tests/scripts/audit-fetch.sh app components lib/hooks lib/stores lib/sync lib/stores lib/sync`.
+- Why it matters: Harmless at runtime, but it leaves the final checklist noisy and contradicts the R10 cleanup intent.
+- Suggested fix: Dedupe it to `app components lib/hooks lib/stores lib/sync`.
+
+### VERDICT
+- Status: REVISE
+- Reason: The R10 gate fix is good, but concrete hook contracts still conflict with existing backend routes.

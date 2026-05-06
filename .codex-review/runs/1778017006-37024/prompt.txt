@@ -1,0 +1,24 @@
+## Issues Accepted & Fixed (Round 6)
+
+### ISSUE-1 (R6): Audit script misses `fetch(url)` indirection + `lib/hooks` not audited → FIXED
+- Updated regex from `fetch\s*\(\s*[\`'\"]/api` to `(?<![\.\w])fetch\s*\(` — flags ALL standalone fetch() calls. Word-boundary excludes `prefetch(`, `refetch(`, method definitions, `function fetch(`.
+- Added `lib/api/client.ts` to denylist (legitimate wrapper fetch).
+- Smoke test fixtures now include `const url = '/api/varbind'; fetch(url)` and `lib/hooks/use-x.ts` with `fetch(url)`. Smoke also asserts `lib/api/client.ts` is correctly excluded.
+- All audit calls in plan now include `lib/hooks` target: Step 5.0.1 uses `app components lib/hooks`; Final Validation Checklist updated.
+
+### ISSUE-2 (R6): `useLogout` violates endpoint-constant gate → FIXED
+- Added new W1 Task 1.2b: bootstrap `lib/api/endpoints.ts` with just `auth.logout` + `QUERY_PARAMS` scaffold. Created EARLY in W1 execution order (after 1.2 ApiError, before 1.5b useLogout).
+- `useLogout` snippet now imports `ENDPOINTS` and uses `ENDPOINTS.auth.logout` (no hardcoded path).
+- Task 3.0.5 reframed as "Expand existing endpoints.ts with audited sections" (instead of "Create"). The W1 scaffold + W3 expansion produce the final file.
+- W3.0.5a gate `rg -n "['\"]/api/" lib/hooks/` will pass throughout the timeline (no hook ever hardcodes a path).
+
+### ISSUE-3 (R6): 401 test missing `employee_user` + count outdated → FIXED
+- Test now sets and asserts all 5 auth keys: `admin_token`, `auth_token`, `user_info`, `admin_user`, `employee_user`.
+- Test renamed to "clears all 5 auth keys" (more explicit).
+- Expected pass count for `client.test.ts` updated from 6 to 8 (matches actual 8 `it` blocks: token attach, parsed JSON, AUTH_EXPIRED w/ 5 keys, 400 error code, NETWORK_ERROR, AbortSignal, blob success, blob 4xx).
+
+## Issues Disputed
+None — all 3 round-6 issues accepted and addressed.
+
+## Your Turn
+Re-review.

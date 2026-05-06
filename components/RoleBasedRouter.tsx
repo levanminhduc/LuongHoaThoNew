@@ -10,6 +10,7 @@ import ManagerDashboard from "@/components/ManagerDashboard";
 import SupervisorDashboard from "@/components/SupervisorDashboard";
 import EmployeeDashboard from "@/components/EmployeeDashboard";
 import LoginPage from "@/app/admin/login/page";
+import { useLogout } from "@/lib/hooks/use-logout";
 
 interface User {
   employee_id: string;
@@ -36,6 +37,7 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const logout = useLogout("/");
 
   useEffect(() => {
     checkAuthentication();
@@ -149,18 +151,6 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    setUser(null);
-    router.push("/");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -194,7 +184,7 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
       return <SupervisorDashboard user={user} />;
 
     case "nhan_vien":
-      return <EmployeeDashboard user={user} onLogout={handleLogout} />;
+      return <EmployeeDashboard user={user} onLogout={logout} />;
 
     default:
       return <LoginPage />;

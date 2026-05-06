@@ -1,0 +1,31 @@
+### ISSUE-1: MSW smoke test instructions conflict
+- Category: sequencing
+- Severity: high
+- Problem: Step 1.8.3a says to add fetch/localStorage/MSW proof tests, but Step 1.8.5 later defines the full `msw-smoke.test.ts` with only one intercept test and `Expected: 1 passed`.
+- Why it matters: A worker can overwrite the stronger smoke tests and lose the proof that real fetch and stateful storage are installed.
+- Suggested fix: Collapse 1.8.3a and 1.8.5 into one final `msw-smoke.test.ts` snippet containing all smoke tests, with expected count updated.
+
+### ISSUE-2: `tests/scripts` helper files are never committed
+- Category: sequencing
+- Severity: medium
+- Problem: Step 0.4 creates `tests/scripts/audit-fetch.sh`, `scope-denylist.txt`, and the smoke script, but no later `git add` includes `tests/scripts/`.
+- Why it matters: Later waves depend on scripts that may remain uncommitted and absent for reviewers/CI/future agents.
+- Suggested fix: Add an explicit early commit for `tests/scripts/` after the smoke test passes, or include it in the W1 infrastructure commit.
+
+### ISSUE-3: Raw fetch greps remain in migration steps
+- Category: correctness
+- Severity: medium
+- Problem: Several W3/W5 per-task verification steps still use raw `grep -n "fetch(['\"]?/api"` instead of the corrected `audit-fetch.sh`.
+- Why it matters: Those local gates still miss backtick/spaced/multiline fetches, even though the final audit is stronger.
+- Suggested fix: Replace every direct-fetch verification grep in W3/W5 with `./tests/scripts/audit-fetch.sh <target>`.
+
+### ISSUE-4: New code snippets violate repo no-comment rule
+- Category: risk
+- Severity: medium
+- Problem: The plan creates TS files with many comments (`enable-msw.ts`, `endpoints.ts`, hook snippets), while AGENTS.md says `KHÔNG tạo comments trong code`.
+- Why it matters: Workers following the plan literally will violate repository style rules.
+- Suggested fix: Move explanations into plan prose and make generated code blocks comment-free, except where explicitly justified.
+
+### VERDICT
+- Status: REVISE
+- Reason: The technical direction is now solid, but the plan still has concrete sequencing and verification inconsistencies that can cause workers to skip required infrastructure or miss direct fetches.

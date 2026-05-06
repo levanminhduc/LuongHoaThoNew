@@ -1,0 +1,30 @@
+## Issues Accepted & Fixed (Round 12)
+
+### ISSUE-1 (R12): Final naming gate still bans `month` blanket → FIXED
+- Final Validation Checklist scoped naming check now matches Step 3.0.5b: payroll/signature hooks only.
+- `rg` command explicitly limited to `use-payroll.ts use-dashboard.ts use-bulk-export.ts use-payroll-import.ts`.
+- Filter `grep -v "salary_month|period_month"` keeps attendance hooks happy without false positives.
+- Documented exclusions: `use-attendance.ts`, `use-data-validation.ts`, `endpoints.ts` are correctly out of scope.
+
+### ISSUE-2 (R12): Attendance-list migration not concrete → FIXED
+- Verified existence: `app/api/admin/attendance-employees/route.ts` exists.
+- ENDPOINTS.attendance now has `employees: '/api/admin/attendance-employees'`.
+- New hook `useAttendanceEmployeesQuery({ period_year, period_month, department, search, page, limit })` defined with full signature, `enabled` guard, `placeholderData` for pagination.
+- `useAttendanceExportMutation` extended with `employee_ids?: string[]`, `export_type?: 'all' | 'selected'`, `include_daily?: boolean`.
+- Task 5.8 attendance-list instruction now concrete: lists exact hook + endpoint, mentions extended export args.
+- Endpoint audit table updated with all 3 attendance routes (employees / import / export) with verified file paths.
+
+### ISSUE-3 (R12): Role dashboard signature endpoints wrong → FIXED
+- Verified: routes are at top-level `/api/signature-status/[month]`, `/api/signature-progress/[month]`, `/api/signature-history`, `/api/management-signature` — NOT under `/api/admin/`.
+- ENDPOINTS updated:
+  - `payroll.signatureStatus` and `signatureProgress` corrected to top-level paths (kept aliased under `payroll` for backward compat).
+  - New `signature` section: `history`, `status`, `progress`, `management`.
+- New hooks: `useSignatureStatusQuery`, `useSignatureHistoryQuery`, `useManagementSignatureMutation` (with full invalidation: signature-status + signature-progress + signature-history per `salary_month`).
+- W5.1 (director), 5.2 (accountant), 5.5 (reporter) updated to wire `useManagementSignatureMutation` for their respective signing actions; integration tests must verify mutation triggers status/progress/history refetch.
+- Endpoint audit table extended with 4 verified signature route files.
+
+## Issues Disputed
+None — all 3 round-12 issues accepted and addressed.
+
+## Your Turn
+Re-review.

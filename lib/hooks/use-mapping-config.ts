@@ -403,12 +403,12 @@ export const useConfigSearch = () => {
             bValue = b.config_name.toLowerCase();
             break;
           case "created_at":
-            aValue = new Date(a.created_at || 0).getTime();
-            bValue = new Date(b.created_at || 0).getTime();
+            aValue = Date.parse(a.created_at || "") || 0;
+            bValue = Date.parse(b.created_at || "") || 0;
             break;
           case "updated_at":
-            aValue = new Date(a.updated_at || 0).getTime();
-            bValue = new Date(b.updated_at || 0).getTime();
+            aValue = Date.parse(a.updated_at || "") || 0;
+            bValue = Date.parse(b.updated_at || "") || 0;
             break;
           case "created_by":
             aValue = a.created_by.toLowerCase();

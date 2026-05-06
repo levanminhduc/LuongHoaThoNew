@@ -1,0 +1,24 @@
+### ISSUE-1: Client fetch audit still excludes some client data layers
+- Category: scope
+- Severity: high
+- Problem: Final audit covers `app components lib/hooks`, but the repo also has direct frontend fetches in `lib/stores/*` and `lib/sync/*`.
+- Why it matters: Data fetching can remain outside `apiClient`/React Query while the final audit still passes.
+- Suggested fix: Audit all browser-side data roots, at least `lib/stores` and `lib/sync`, or explicitly document and denylist them with proof they are out of scope/server-only.
+
+### ISSUE-2: W5 backlog is not concrete for all admin pages
+- Category: scope
+- Severity: high
+- Problem: The widened audit will surface remaining admin pages like `data-validation`, `column-mapping-config`, `password-reset-history`, `test-column-mapping`, and `employee-check`, but Task 5.9’s table only maps components.
+- Why it matters: The plan still leaves in-scope admin pages to be designed during execution, including hook choice and integration test path.
+- Suggested fix: Add an explicit W5 table for every known remaining admin page/file: file → endpoint(s) → hook(s) → test path → migrate/defer decision.
+
+### ISSUE-3: Hook hardcoded-path gate misses backticks
+- Category: correctness
+- Severity: medium
+- Problem: `rg -n "['\"]/api/" lib/hooks/` catches single/double quotes but not template literals like ``apiClient.get(`/api/x`)``.
+- Why it matters: A hook can violate the `ENDPOINTS` rule while passing the gate and the fetch audit.
+- Suggested fix: Expand the gate to include backticks, e.g. `rg -n "['\"\`]/api/" lib/hooks/`, and handle any existing hits explicitly.
+
+### VERDICT
+- Status: REVISE
+- Reason: Round 7 fixes landed, but final scope/gating can still miss direct client fetches and unmapped in-scope admin pages.

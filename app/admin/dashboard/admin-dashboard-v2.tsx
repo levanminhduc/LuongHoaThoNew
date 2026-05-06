@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +44,8 @@ import {
   DataTableToolbar,
   PayrollListItem,
 } from "@/components/admin";
+import { useDashboardStatsQuery } from "@/lib/hooks/use-dashboard";
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface PayrollRecord {
   id: number;
@@ -56,15 +58,6 @@ interface PayrollRecord {
   import_status: string;
 }
 
-interface DashboardStats {
-  totalRecords: number;
-  totalEmployees: number;
-  totalSalary: number;
-  currentMonth: string;
-  lastImportBatch: string;
-  signatureRate: number;
-}
-
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -74,25 +67,28 @@ const formatCurrency = (value: number): string => {
 };
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString("vi-VN");
+  return formatVietnamTimestamp(dateString);
 };
 
 export function AdminDashboardV2() {
-  const [loading, setLoading] = useState(true);
-  const [payrolls, setPayrolls] = useState<PayrollRecord[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
+  const [message, setMessage] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+  const dashboardQuery = useDashboardStatsQuery();
+  const loading = dashboardQuery.isLoading;
+  const payrolls = useMemo(
+    () => (dashboardQuery.data?.payrolls ?? []) as unknown as PayrollRecord[],
+    [dashboardQuery.data?.payrolls]
+  );
+  const stats = dashboardQuery.data?.stats ?? {
     totalRecords: 0,
     totalEmployees: 0,
     totalSalary: 0,
     currentMonth: "",
     lastImportBatch: "",
     signatureRate: 0,
-  });
-  const [message, setMessage] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [filteredPayrolls, setFilteredPayrolls] = useState<PayrollRecord[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -127,11 +123,15 @@ export function AdminDashboardV2() {
       router.push("/admin/login");
       return;
     }
-
-    fetchDashboardData();
   }, [router]);
 
   useEffect(() => {
+    if (!dashboardQuery.error) return;
+
+    setMessage("Lỗi khi tải dữ liệu dashboard");
+  }, [dashboardQuery.error]);
+
+  const filteredPayrolls = useMemo(() => {
     let filtered = payrolls;
     if (selectedMonth) {
       filtered = filtered.filter((p) => p.salary_month === selectedMonth);
@@ -141,31 +141,8 @@ export function AdminDashboardV2() {
         p.employee_id.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
-    setFilteredPayrolls(filtered);
+    return filtered;
   }, [selectedMonth, payrolls, searchQuery]);
-
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/admin/dashboard-stats", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPayrolls(data.payrolls || []);
-        setStats(data.stats || {});
-      } else if (response.status === 401) {
-        localStorage.removeItem("admin_token");
-        router.push("/admin/login");
-      }
-    } catch {
-      setMessage("Lỗi khi tải dữ liệu dashboard");
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
 
   if (loading) {
     return (
@@ -266,7 +243,7 @@ export function AdminDashboardV2() {
             searchPlaceholder="Tìm mã NV..."
             searchValue={searchQuery}
             onSearchChange={setSearchQuery}
-            onRefresh={fetchDashboardData}
+            onRefresh={() => dashboardQuery.refetch()}
             isLoading={loading}
             actions={
               <Button

@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
       q: query,
       salary_month: salaryMonth,
       payroll_type: payrollType,
+      limit,
     } = parsed.data;
 
     if (!query || query.length < 2) {
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     // Test basic database connectivity first
     try {
-      const { data: testData, error: testError } = await supabase
+      const { error: testError } = await supabase
         .from("employees")
         .select("employee_id")
         .limit(1);
@@ -222,7 +223,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: payrollData, error: payrollError } =
-      await payrollQuery.limit(20);
+      await payrollQuery.limit(limit);
 
     // If main query fails, try alternative approach
     if (payrollError) {
@@ -233,7 +234,7 @@ export async function GET(request: NextRequest) {
           "id, employee_id, salary_month, tien_luong_thuc_nhan_cuoi_ky, source_file, created_at",
         )
         .ilike("employee_id", `%${sanitizePostgrestValue(query)}%`)
-        .limit(20);
+        .limit(limit);
 
       if (simpleError) {
         console.error("Simple query also failed:", simpleError?.message);

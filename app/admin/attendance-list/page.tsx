@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,16 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  VirtualizedTable,
+  type VirtualColumn,
+} from "@/components/ui/virtualized-table";
 import {
   ArrowLeft,
   Download,
@@ -35,60 +31,44 @@ import {
   Search,
   FileSpreadsheet,
 } from "lucide-react";
-
-interface AttendanceEmployee {
-  employee_id: string;
-  full_name: string;
-  department: string;
-  chuc_vu: string;
-  attendance: {
-    total_hours: number;
-    total_days: number;
-    total_meal_ot_hours: number;
-    total_ot_hours: number;
-    sick_days: number;
-  } | null;
-}
-
-interface Period {
-  year: number;
-  month: number;
-}
-
-interface ApiResponse {
-  success: boolean;
-  employees: AttendanceEmployee[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  periods: Period[];
-  departments: string[];
-  totalEmployees: number;
-  currentPeriod: { year: number; month: number };
-}
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { useAttendanceEmployeesQuery } from "@/lib/hooks/use-attendance";
+import { useAttendanceExportMutation } from "@/lib/hooks/use-bulk-export";
+import type { AttendanceEmployee } from "@/lib/hooks/use-attendance";
 
 export default function AttendanceListPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [employees, setEmployees] = useState<AttendanceEmployee[]>([]);
-  const [periods, setPeriods] = useState<Period[]>([]);
-  const [departments, setDepartments] = useState<string[]>([]);
-  const [totalEmployees, setTotalEmployees] = useState(0);
-
-  const currentDate = new Date();
-  const [periodYear, setPeriodYear] = useState(currentDate.getFullYear());
-  const [periodMonth, setPeriodMonth] = useState(currentDate.getMonth() + 1);
+  const [{ year: currentYear, month: currentMonth }] = useState(() => {
+    const [datePart] = getVietnamTimestamp().split(" ");
+    const [year, month] = datePart.split("-").map(Number);
+    return { year, month };
+  });
+  const [periodYear, setPeriodYear] = useState(currentYear);
+  const [periodMonth, setPeriodMonth] = useState(currentMonth);
   const [department, setDepartment] = useState("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [includeDaily, setIncludeDaily] = useState(false);
+  const [limit, setLimit] = useState(50);
+  const attendanceQuery = useAttendanceEmployeesQuery({
+    periodYear,
+    periodMonth,
+    limit,
+    department: department !== "all" ? department : undefined,
+    search: debouncedSearch || undefined,
+  });
+  const exportMutation = useAttendanceExportMutation();
+  const employees = attendanceQuery.data?.employees ?? [];
+  const periods = attendanceQuery.data?.periods ?? [];
+  const departments = attendanceQuery.data?.departments ?? [];
+  const totalEmployees = attendanceQuery.data?.totalEmployees ?? 0;
+  const loading = attendanceQuery.isLoading || attendanceQuery.isFetching;
+  const exporting = exportMutation.isPending;
+  const queryError =
+    attendanceQuery.error instanceof Error ? attendanceQuery.error.message : null;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -98,46 +78,9 @@ export default function AttendanceListPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const fetchEmployees = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        router.push("/admin/login");
-        return;
-      }
-
-      const params = new URLSearchParams({
-        period_year: periodYear.toString(),
-        period_month: periodMonth.toString(),
-        ...(department !== "all" && { department }),
-        ...(debouncedSearch && { search: debouncedSearch }),
-      });
-
-      const res = await fetch(`/api/admin/attendance-employees?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data: ApiResponse = await res.json();
-      if (!res.ok)
-        throw new Error(data.success === false ? "API error" : "Lỗi");
-
-      setEmployees(data.employees || []);
-      setPeriods(data.periods || []);
-      setDepartments(data.departments || []);
-      setTotalEmployees(data.totalEmployees || 0);
-      setSelectedIds(new Set());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
-    } finally {
-      setLoading(false);
-    }
-  }, [periodYear, periodMonth, department, debouncedSearch, router]);
-
   useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+    setSelectedIds(new Set());
+  }, [periodYear, periodMonth, department, debouncedSearch, limit]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -153,50 +96,85 @@ export default function AttendanceListPage() {
     else newSet.delete(id);
     setSelectedIds(newSet);
   };
+  const attendanceColumns: VirtualColumn<AttendanceEmployee>[] = [
+    {
+      key: "select",
+      header: (
+        <Checkbox
+          checked={employees.length > 0 && selectedIds.size === employees.length}
+          onCheckedChange={handleSelectAll}
+        />
+      ),
+      width: "56px",
+      cell: (emp) => (
+        <Checkbox
+          checked={selectedIds.has(emp.employee_id)}
+          onCheckedChange={(checked) =>
+            handleSelectOne(emp.employee_id, checked === true)
+          }
+        />
+      ),
+    },
+    {
+      key: "employee_id",
+      header: "Mã NV",
+      width: "120px",
+      cell: (emp) => <span className="font-mono">{emp.employee_id}</span>,
+    },
+    {
+      key: "full_name",
+      header: "Họ Tên",
+      width: "minmax(180px, 1.4fr)",
+      cell: (emp) => emp.full_name,
+    },
+    {
+      key: "department",
+      header: "Phòng Ban",
+      width: "minmax(160px, 1fr)",
+      cell: (emp) => emp.department,
+    },
+    {
+      key: "total_days",
+      header: "Ngày Công",
+      width: "120px",
+      className: "text-right",
+      cell: (emp) => emp.attendance?.total_days ?? "-",
+    },
+    {
+      key: "total_hours",
+      header: "Giờ Công",
+      width: "120px",
+      className: "text-right",
+      cell: (emp) => emp.attendance?.total_hours ?? "-",
+    },
+    {
+      key: "total_ot_hours",
+      header: "Giờ TC",
+      width: "110px",
+      className: "text-right",
+      cell: (emp) => emp.attendance?.total_ot_hours ?? "-",
+    },
+    {
+      key: "sick_days",
+      header: "Nghỉ Ốm",
+      width: "110px",
+      className: "text-right",
+      cell: (emp) => emp.attendance?.sick_days ?? "-",
+    },
+  ];
 
   const handleExport = async (exportAll: boolean) => {
-    setExporting(true);
     setError(null);
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        router.push("/admin/login");
-        return;
-      }
-
-      const body = {
+      await exportMutation.mutateAsync({
         period_year: periodYear,
         period_month: periodMonth,
-        employee_ids: exportAll ? null : Array.from(selectedIds),
+        employee_ids: exportAll ? undefined : Array.from(selectedIds),
         export_type: exportAll ? "all" : "selected",
         include_daily: includeDaily,
-      };
-
-      const res = await fetch("/api/admin/attendance-export", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
       });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Lỗi xuất file");
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `BangCong_${periodYear}-${String(periodMonth).padStart(2, "0")}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Lỗi xuất file");
-    } finally {
-      setExporting(false);
     }
   };
 
@@ -282,6 +260,28 @@ export default function AttendanceListPage() {
               </div>
             </div>
 
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Hiển thị</label>
+              <Select
+                value={String(limit)}
+                onValueChange={(value) => {
+                  setLimit(Number(value));
+                  setSelectedIds(new Set());
+                }}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[20, 50, 100, 200].map((value) => (
+                    <SelectItem key={value} value={String(value)}>
+                      {value} dòng
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-center gap-2">
               <Checkbox
                 id="includeDaily"
@@ -320,9 +320,9 @@ export default function AttendanceListPage() {
             </div>
           </div>
 
-          {error && (
+          {(error || queryError) && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{error || queryError}</AlertDescription>
             </Alert>
           )}
 
@@ -331,71 +331,15 @@ export default function AttendanceListPage() {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : (
-            <div className="border rounded-lg overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={
-                          employees.length > 0 &&
-                          selectedIds.size === employees.length
-                        }
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead>Mã NV</TableHead>
-                    <TableHead>Họ Tên</TableHead>
-                    <TableHead>Phòng Ban</TableHead>
-                    <TableHead className="text-right">Ngày Công</TableHead>
-                    <TableHead className="text-right">Giờ Công</TableHead>
-                    <TableHead className="text-right">Giờ TC</TableHead>
-                    <TableHead className="text-right">Nghỉ Ốm</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {employees.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={8}
-                        className="text-center py-8 text-muted-foreground"
-                      >
-                        Không có dữ liệu bảng công cho kỳ này
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    employees.map((emp) => (
-                      <TableRow key={emp.employee_id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedIds.has(emp.employee_id)}
-                            onCheckedChange={(c) =>
-                              handleSelectOne(emp.employee_id, c === true)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="font-mono">
-                          {emp.employee_id}
-                        </TableCell>
-                        <TableCell>{emp.full_name}</TableCell>
-                        <TableCell>{emp.department}</TableCell>
-                        <TableCell className="text-right">
-                          {emp.attendance?.total_days ?? "-"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {emp.attendance?.total_hours ?? "-"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {emp.attendance?.total_ot_hours ?? "-"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {emp.attendance?.sick_days ?? "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+            <div className="overflow-x-auto">
+              <VirtualizedTable
+                data={employees}
+                columns={attendanceColumns}
+                rowKey={(employee) => employee.employee_id}
+                containerHeight={600}
+                caption="Danh sách bảng công nhân viên"
+                emptyState="Không có dữ liệu bảng công cho kỳ này"
+              />
             </div>
           )}
         </CardContent>

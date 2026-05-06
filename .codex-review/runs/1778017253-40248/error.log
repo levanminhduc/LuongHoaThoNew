@@ -1,0 +1,11 @@
+Reading prompt from stdin...
+ERROR: The process "26768" not found.
+2026-05-05T21:41:11.451028Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.9 seconds
+Output:
+rg: unrecognized flag --pcre2|PCRE|fetch\\s|prefetch|refetch|Step 5\.9|w5-final-audit|onError\?\.|onSuccess\?\.|pushState|Object\.defineProperty\(window, 'location'|audit-fetch\.sh app
+
+2026-05-05T21:41:11.473000Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.9 seconds
+Output:
+

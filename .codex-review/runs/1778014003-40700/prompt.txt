@@ -1,0 +1,56 @@
+## Your Role
+You are Codex acting as a strict implementation-plan reviewer.
+
+## Plan Location
+docs/superpowers/plans/2026-05-06-giai-doan-3-4-frontend-data-fetching-render-tuning.md
+
+## Spec Location (parent design doc)
+docs/superpowers/specs/2026-05-06-giai-doan-3-4-frontend-data-fetching-render-tuning-design.md
+
+## User's Original Request
+"Cải thiện 3,4" — implement Giai Đoạn 3 (frontend data fetching) + Giai Đoạn 4 (render & bundle) from the parent doc `docs/2026-05-05-cai-thien-hieu-nang-he-thong.md`.
+
+User decisions during brainstorming:
+- Skip baseline measurement (GĐ2), trust intuition.
+- Toàn diện scope (all admin + role dashboards, not just top-pain).
+- 401 → auto redirect to login (admin → /admin/login, others → /login).
+- Acceptance bar B: First Load JS giảm ≥30% trên ≥1 admin route.
+- Library: TanStack Query v5 + TanStack Virtual v3.
+- Out of scope: app/employee/lookup/*, auth login/forgot-password, refresh token, server components migration.
+- Wave-based delivery: W1 foundation → W2 lazy load → W3 top-pain admin → W4 virtualize → W5 remaining.
+
+## Session Context
+- Project: Next.js 16 App Router payroll system (Vietnamese MAY HÒA THỌ ĐIỆN BÀN).
+- Current state: ~89 direct fetch() calls across 51 files; xlsx static import in 3 admin pages; recharts in 6 dashboard components; no virtualization library.
+- Existing tests: 22/22 pass after Giai Đoạn 5.
+- Branch: chore/giai-doan-3-4-frontend-perf (will be created at implementation start).
+- Dev tools: Jest + RTL + jsdom; ESLint 9 flat; TypeScript strict.
+
+## Instructions
+1. Read the plan file directly using your tools.
+2. Identify gaps, risks, missing edge cases, and sequencing flaws.
+3. Pay special attention to:
+   - Whether each task is bite-sized with concrete code (not "similar to Task N").
+   - Whether the acceptance criteria can actually be verified by the tasks given.
+   - Sequencing — does Task X really only depend on what Tasks 1..X-1 produce?
+   - Type/API consistency between tasks (e.g. hook signatures, error shapes).
+   - Out-of-scope guards — does any task accidentally touch employee/lookup, login flow, or backend routes?
+   - Cache key correctness — would any task introduce a cache-leak risk between roles?
+   - 401 redirect logic — does the implementation handle the case where pathname is null on first paint?
+   - MSW setup for jest — does the global onUnhandledRequest:'error' break existing 22 tests that don't expect MSW?
+   - Bundle measurement steps — does the plan have a fallback if W2 doesn't reach 30% reduction?
+   - Test coverage — does each migrated screen really get an integration test as the spec demands?
+4. Do not propose code changes; review only the plan quality.
+5. Use the required output format exactly.
+
+## Required Output Format
+### ISSUE-{N}: {Short title}
+- Category: correctness | architecture | sequencing | risk | scope
+- Severity: low | medium | high | critical
+- Problem: {clear statement}
+- Why it matters: {impact}
+- Suggested fix: {plan-level change}
+
+### VERDICT
+- Status: APPROVE | REVISE
+- Reason: {short reason}

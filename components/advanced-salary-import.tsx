@@ -45,7 +45,13 @@ import {
   useAutoLoadConfigurations,
   useCurrentMappingConfig,
 } from "@/lib/hooks/use-mapping-config";
+import {
+  useAdvancedUploadMutation,
+  useCreateAliasesForConfigurationMutation,
+  useGenerateImportTemplateMutation,
+} from "@/lib/hooks/use-column-mapping";
 import { useMappingConfigSync } from "@/lib/sync/mapping-config-sync";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface AdvancedSalaryImportProps {
   onImportComplete?: (result: ImportResult) => void;
@@ -85,6 +91,10 @@ export function AdvancedSalaryImport({
   const { currentConfig, applyDefaultConfig, hasCurrentConfig } =
     useCurrentMappingConfig();
   const { isConnected: syncConnected } = useMappingConfigSync();
+  const advancedUploadMutation = useAdvancedUploadMutation();
+  const createAliasesForConfigurationMutation =
+    useCreateAliasesForConfigurationMutation();
+  const generateImportTemplateMutation = useGenerateImportTemplateMutation();
 
   // Auto-load configurations on mount
   useAutoLoadConfigurations();
@@ -231,23 +241,13 @@ export function AdvancedSalaryImport({
       const result = parseAdvancedExcelFiles(fileData, [mapping]);
 
       if (result.successCount > 0) {
-        // Send to backend
-        const response = await fetch("/api/admin/advanced-upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
-          },
-          body: JSON.stringify({
-            payrollData: result.data,
-            columnMappings: result.columnMappings,
-            summary: result.summary,
-          }),
+        const backendResult = await advancedUploadMutation.mutateAsync({
+          payrollData: result.data,
+          columnMappings: result.columnMappings,
+          summary: result.summary,
         });
 
-        const backendResult = await response.json();
-
-        if (response.ok) {
+        if (backendResult.success !== false && !backendResult.error) {
           setMessage(
             `Import hoàn tất! Đã xử lý ${result.successCount} bản ghi thành công`,
           );
@@ -264,7 +264,9 @@ export function AdvancedSalaryImport({
 
           onImportComplete?.(result);
         } else {
-          setMessage(`Lỗi backend: ${backendResult.error}`);
+          setMessage(
+            `Lỗi backend: ${backendResult.error || backendResult.message || "Không xác định"}`,
+          );
         }
       } else {
         setMessage("Không có dữ liệu hợp lệ để import");
@@ -303,10 +305,10 @@ export function AdvancedSalaryImport({
 
       const finalConfigName =
         configName ||
-        `Import Success ${new Date().toLocaleDateString("vi-VN")}`;
+        `Import Success ${getVietnamTimestamp().slice(0, 10)}`;
       const finalDescription =
         description ||
-        `Successful mapping configuration from import on ${new Date().toLocaleString("vi-VN")}`;
+        `Successful mapping configuration from import on ${getVietnamTimestamp()}`;
 
       // Save configuration first
       const savedConfig = await saveConfiguration({
@@ -346,32 +348,18 @@ export function AdvancedSalaryImport({
     configId: number,
   ) => {
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) throw new Error("No admin token");
-
-      for (const alias of aliases) {
-        const response = await fetch("/api/admin/column-aliases", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            database_field: alias.database_field,
-            alias_name: alias.alias_name,
-            confidence_score: alias.confidence_score,
-            config_id: configId, // Link alias to configuration
-          }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
+      const results = await createAliasesForConfigurationMutation.mutateAsync({
+        aliases,
+        configId,
+      });
+      results
+        .filter((result) => !result.success)
+        .forEach((result) => {
           console.warn(
-            `Failed to save alias "${alias.alias_name}":`,
-            error.message,
+            `Failed to save alias "${result.alias.alias_name}":`,
+            result.message,
           );
-        }
-      }
+        });
     } catch (error) {
       console.error("Failed to save aliases:", error);
     }
@@ -413,44 +401,13 @@ export function AdvancedSalaryImport({
     try {
       setMessage("Đang tạo template...");
 
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        setMessage("Không tìm thấy token xác thực");
-        return;
-      }
-
-      const response = await fetch(
-        `/api/admin/generate-import-template?configId=${currentConfig.id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Lỗi khi tạo template");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      const configName =
-        response.headers.get("X-Config-Name") || currentConfig.config_name;
-      const timestamp = new Date().toISOString().slice(0, 10);
-      a.download = `import-template-${configName.replace(/\s+/g, "-")}-${timestamp}.xlsx`;
-
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await generateImportTemplateMutation.mutateAsync({
+        configId: currentConfig.id,
+        configName: currentConfig.config_name,
+      });
 
       setMessage(
-        `Đã tải template cho configuration "${configName}" thành công!`,
+        `Đã tải template cho configuration "${currentConfig.config_name}" thành công!`,
       );
     } catch (error) {
       console.error("Download template error:", error);

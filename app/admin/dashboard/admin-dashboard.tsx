@@ -39,6 +39,12 @@ import {
 import { EmployeeImportSection } from "@/components/employee-import-section";
 import { MonthSelector } from "../payroll-management/components/MonthSelector";
 import { AdminSystemMenu } from "@/components/admin-system-menu";
+import {
+  useDashboardStatsQuery,
+  useSyncTemplateMutation,
+} from "@/lib/hooks/use-dashboard";
+import { useLogout } from "@/lib/hooks/use-logout";
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface PayrollRecord {
   id: number;
@@ -51,31 +57,25 @@ interface PayrollRecord {
   import_status: string;
 }
 
-interface DashboardStats {
-  totalRecords: number;
-  totalEmployees: number;
-  totalSalary: number;
-  currentMonth: string;
-  lastImportBatch: string;
-  signatureRate: number;
-}
-
 export function AdminDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [payrolls, setPayrolls] = useState<PayrollRecord[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
+  const [message, setMessage] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [filteredPayrolls, setFilteredPayrolls] = useState<PayrollRecord[]>([]);
+  const router = useRouter();
+  const dashboardQuery = useDashboardStatsQuery();
+  const syncTemplateMutation = useSyncTemplateMutation();
+  const logout = useLogout();
+  const loading = dashboardQuery.isLoading;
+  const downloadingSyncTemplate = syncTemplateMutation.isPending;
+  const payrolls = (dashboardQuery.data?.payrolls ?? []) as unknown as PayrollRecord[];
+  const stats = dashboardQuery.data?.stats ?? {
     totalRecords: 0,
     totalEmployees: 0,
     totalSalary: 0,
     currentMonth: "",
     lastImportBatch: "",
     signatureRate: 0,
-  });
-  const [downloadingSyncTemplate, setDownloadingSyncTemplate] = useState(false);
-  const [message, setMessage] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [filteredPayrolls, setFilteredPayrolls] = useState<PayrollRecord[]>([]);
-  const router = useRouter();
+  };
 
   useEffect(() => {
     // Check authentication and role
@@ -115,9 +115,13 @@ export function AdminDashboard() {
       router.push("/admin/login");
       return;
     }
-
-    fetchDashboardData();
   }, [router]);
+
+  useEffect(() => {
+    if (!dashboardQuery.error) return;
+
+    setMessage("Lỗi khi tải dữ liệu dashboard");
+  }, [dashboardQuery.error]);
 
   // Filter payrolls when selectedMonth changes
   useEffect(() => {
@@ -131,71 +135,17 @@ export function AdminDashboard() {
     }
   }, [selectedMonth, payrolls]);
 
-  const fetchDashboardData = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/admin/dashboard-stats", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPayrolls(data.payrolls || []);
-        setStats(data.stats || {});
-      } else if (response.status === 401) {
-        localStorage.removeItem("admin_token");
-        router.push("/admin/login");
-      }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setMessage("Lỗi khi tải dữ liệu dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDownloadSyncTemplate = async () => {
-    setDownloadingSyncTemplate(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/admin/sync-template", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `template-luong-dong-bo-${new Date().toISOString().substr(0, 10)}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        setMessage("Đã tải template đồng bộ thành công!");
-      } else {
-        setMessage("Lỗi khi tải template đồng bộ");
-      }
+      await syncTemplateMutation.mutateAsync(undefined);
+      setMessage("Đã tải template đồng bộ thành công!");
     } catch {
       setMessage("Có lỗi xảy ra khi tải template đồng bộ");
-    } finally {
-      setDownloadingSyncTemplate(false);
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {
-      // Ignore error
-    }
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("user_info");
-    router.push("/");
+    await logout();
   };
 
   const handleMonthChange = (month: string) => {
@@ -214,7 +164,7 @@ export function AdminDashboard() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("vi-VN");
+    return formatVietnamTimestamp(dateString);
   };
 
   if (loading) {
@@ -468,7 +418,7 @@ export function AdminDashboard() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={fetchDashboardData}
+                    onClick={() => dashboardQuery.refetch()}
                     className="w-full sm:w-auto"
                     size="sm"
                   >

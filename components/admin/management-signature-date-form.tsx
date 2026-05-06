@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Loader2, AlertCircle, Pencil, PenTool } from "lucide-react";
 import {
   showSuccessToast,
-  showErrorToast,
   showNetworkErrorToast,
 } from "@/lib/toast-utils";
+import { useManagementSignatureDateMutation } from "@/lib/hooks/use-dashboard";
 
 interface ManagementSigInfo {
   id: string;
@@ -23,9 +23,7 @@ interface ManagementSignatureDateFormProps {
   isT13: boolean;
   mgmtSigs: Record<string, ManagementSigInfo | null>;
   loadingMgmt: boolean;
-  authHeader: Record<string, string>;
   onSuccess?: () => void;
-  onRefresh: () => void;
 }
 
 function formatVietnamTimestamp(isoString: string): string {
@@ -48,13 +46,12 @@ export function ManagementSignatureDateForm({
   isT13,
   mgmtSigs,
   loadingMgmt,
-  authHeader,
   onSuccess,
-  onRefresh,
 }: ManagementSignatureDateFormProps) {
   const [mgmtLoading, setMgmtLoading] = useState<Record<string, boolean>>({});
   const [mgmtDates, setMgmtDates] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const updateMutation = useManagementSignatureDateMutation();
 
   const handleAction = async (sigType: string, action: "update" | "create") => {
     const dateVal = mgmtDates[sigType];
@@ -65,28 +62,18 @@ export function ManagementSignatureDateForm({
     setMgmtLoading((prev) => ({ ...prev, [sigType]: true }));
     setError(null);
     try {
-      const res = await fetch("/api/admin/update-management-signature-date", {
-        method: "POST",
-        headers: authHeader,
-        body: JSON.stringify({
-          salary_month: effectiveMonth,
-          signature_type: sigType,
-          new_signed_at: dateVal,
-          action,
-          is_t13: isT13,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        showSuccessToast(data.message);
-        onRefresh();
-        onSuccess?.();
-      } else {
-        setError(data.error || "Có lỗi xảy ra");
-        showErrorToast(data.error || "Có lỗi xảy ra");
-      }
-    } catch {
-      setError("Lỗi kết nối server");
+      const data = (await updateMutation.mutateAsync({
+        salary_month: effectiveMonth,
+        signature_type: sigType as "giam_doc" | "ke_toan" | "nguoi_lap_bieu",
+        new_signed_at: dateVal,
+        action,
+        is_t13: isT13,
+      })) as { message?: string };
+      showSuccessToast(data.message || "Đã cập nhật ngày ký");
+      onSuccess?.();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Lỗi kết nối server";
+      setError(message);
       showNetworkErrorToast();
     } finally {
       setMgmtLoading((prev) => ({ ...prev, [sigType]: false }));

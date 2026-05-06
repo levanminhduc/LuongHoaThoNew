@@ -5,6 +5,8 @@ import type {
   PreviewRecord,
   UseImportPreviewReturn,
 } from "@/lib/types/payroll-preview";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 export function useImportPreview(): UseImportPreviewReturn {
   const [previewData, setPreviewData] = useState<PreviewRecord[]>([]);
@@ -16,19 +18,14 @@ export function useImportPreview(): UseImportPreviewReturn {
     setError("");
 
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(
-        `/api/admin/payroll-preview?batch_id=${batchId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.BATCH_ID, batchId);
+      const result = await apiClient.get<{
+        data?: PreviewRecord[];
+        error?: string;
+      }>(`${ENDPOINTS.payroll.preview}?${params}`);
 
-      const result = await response.json();
-
-      if (response.ok) {
+      if (!result.error) {
         setPreviewData(result.data || []);
       } else {
         setError(result.error || "Lỗi khi tải dữ liệu preview");

@@ -30,6 +30,9 @@ import {
   Trash2,
   RefreshCw,
 } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
+import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 
 interface ImportHistoryRecord {
   id: string;
@@ -89,30 +92,22 @@ export function ImportHistoryViewer({
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) return;
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.PAGE, page.toString());
+      params.set(QUERY_PARAMS.LIMIT, "20");
 
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "20",
-      });
+      if (statusFilter) params.append(QUERY_PARAMS.STATUS, statusFilter);
+      if (typeFilter) params.append(QUERY_PARAMS.IMPORT_TYPE, typeFilter);
+      if (dateFromFilter) params.append(QUERY_PARAMS.DATE_FROM, dateFromFilter);
+      if (dateToFilter) params.append(QUERY_PARAMS.DATE_TO, dateToFilter);
 
-      if (statusFilter) params.append("status", statusFilter);
-      if (typeFilter) params.append("import_type", typeFilter);
-      if (dateFromFilter) params.append("date_from", dateFromFilter);
-      if (dateToFilter) params.append("date_to", dateToFilter);
+      const data = await apiClient.get<{
+        data?: ImportHistoryRecord[];
+        summary?: typeof summary;
+      }>(`${ENDPOINTS.importHistory.list}?${params}`);
 
-      const response = await fetch(`/api/admin/import-history?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setHistory(data.data || []);
-        setSummary(data.summary || summary);
-      }
+      setHistory(data.data || []);
+      setSummary(data.summary || summary);
     } catch (error) {
       console.error("Error fetching import history:", error);
     } finally {
@@ -126,19 +121,10 @@ export function ImportHistoryViewer({
 
   const deleteHistoryRecord = async (id: string) => {
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) return;
-
-      const response = await fetch(`/api/admin/import-history?id=${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        fetchHistory(); // Refresh the list
-      }
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.ID, id);
+      await apiClient.delete(`${ENDPOINTS.importHistory.list}?${params}`);
+      fetchHistory();
     } catch (error) {
       console.error("Error deleting history record:", error);
     }
@@ -180,15 +166,7 @@ export function ImportHistoryViewer({
     if (!dateString) return "";
 
     try {
-      const date = new Date(dateString);
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-
-      // Format: "HH:MM DD/MM/YYYY" (time first, then date)
-      return `${hours}:${minutes} ${day}/${month}/${year}`;
+      return formatTimestampFromDBRaw(dateString);
     } catch (error) {
       console.error("Error formatting date:", error);
       return dateString;
@@ -217,7 +195,7 @@ export function ImportHistoryViewer({
       auto_fixes: [],
       detailed_errors: [],
       user_id: "admin",
-      created_at: new Date(Date.now() - 86400000).toISOString(),
+      created_at: "2026-05-05 08:00:00",
       status: "completed",
     },
     {
@@ -240,7 +218,7 @@ export function ImportHistoryViewer({
       auto_fixes: [],
       detailed_errors: [],
       user_id: "admin",
-      created_at: new Date(Date.now() - 172800000).toISOString(),
+      created_at: "2026-05-04 08:00:00",
       status: "partial",
     },
   ];

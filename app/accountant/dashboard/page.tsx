@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +16,8 @@ import {
 import EmployeeListModal from "@/components/EmployeeListModal";
 import OverviewModal from "@/components/OverviewModal";
 import UnsignedEmployeesModal from "@/components/UnsignedEmployeesModal";
-import { getPreviousMonth } from "@/utils/dateUtils";
+import { getPreviousMonth, getRecentMonthOptions } from "@/utils/dateUtils";
 import { type JWTPayload } from "@/lib/auth";
-import {
-  type MonthStatus,
-  type SignatureRecord,
-} from "@/lib/management-signature-utils";
 import {
   Calculator,
   DollarSign,
@@ -36,27 +31,33 @@ import {
   UserX,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
-import DashboardCache from "@/utils/dashboardCache";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
+import {
+  useManagementSignatureMutation,
+  useSignatureHistoryQuery,
+  useSignatureStatusQuery,
+} from "@/lib/hooks/use-dashboard";
 
 export default function AccountantDashboard() {
-  const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] =
     useState<string>(getPreviousMonth());
-  const [monthStatus, setMonthStatus] = useState<MonthStatus | null>(null);
-  const [signatureHistory, setSignatureHistory] = useState<SignatureRecord[]>(
-    [],
-  );
   const [message, setMessage] = useState("");
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showOverviewModal, setShowOverviewModal] = useState(false);
   const [showUnsignedModal, setShowUnsignedModal] = useState(false);
   const [user, setUser] = useState<JWTPayload | null>(null);
-  const [isSigning, setIsSigning] = useState(false);
-  const router = useRouter();
+  const statusQuery = useSignatureStatusQuery(selectedMonth);
+  const historyQuery = useSignatureHistoryQuery({
+    signature_type: "ke_toan",
+    limit: 10,
+  });
+  const signatureMutation = useManagementSignatureMutation();
+  const monthStatus = statusQuery.data ?? null;
+  const signatureHistory = historyQuery.data?.signatures ?? [];
+  const loading = statusQuery.isLoading || historyQuery.isLoading;
+  const isSigning = signatureMutation.isPending;
 
   useEffect(() => {
-    // Load user info from localStorage
     const userStr = localStorage.getItem("user_info");
     if (userStr) {
       try {
@@ -66,109 +67,33 @@ export default function AccountantDashboard() {
         console.error("Error parsing user info:", error);
       }
     }
+  }, []);
 
-    fetchDashboardData();
-  }, [selectedMonth]);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-
-      const cachedStatus = DashboardCache.getCacheData<MonthStatus>(
-        "accountant",
-        selectedMonth,
-        "signature-status",
-      );
-      const cachedHistory = DashboardCache.getCacheData<SignatureRecord[]>(
-        "accountant",
-        selectedMonth,
-        "signature-history",
-      );
-
-      if (cachedStatus && cachedHistory) {
-        setMonthStatus(cachedStatus);
-        setSignatureHistory(cachedHistory);
-        setLoading(false);
-        return;
-      }
-
-      const token = localStorage.getItem("admin_token");
-
-      const [statusResponse, historyResponse] = await Promise.all([
-        fetch(`/api/signature-status/${selectedMonth}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`/api/signature-history?signature_type=ke_toan&limit=10`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      if (statusResponse.ok) {
-        const statusData = await statusResponse.json();
-        setMonthStatus(statusData);
-        DashboardCache.setCacheData(
-          "accountant",
-          selectedMonth,
-          "signature-status",
-          statusData,
-        );
-      }
-
-      if (historyResponse.ok) {
-        const historyData = await historyResponse.json();
-        const signatures = historyData.signatures || [];
-        setSignatureHistory(signatures);
-        DashboardCache.setCacheData(
-          "accountant",
-          selectedMonth,
-          "signature-history",
-          signatures,
-        );
-      }
-
-      if (statusResponse.status === 401 || historyResponse.status === 401) {
-        localStorage.removeItem("admin_token");
-        router.push("/admin/login");
-      }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+  useEffect(() => {
+    if (statusQuery.error || historyQuery.error) {
       setMessage("Lỗi khi tải dữ liệu dashboard");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [historyQuery.error, statusQuery.error]);
 
   const handleSignature = async () => {
     if (isSigning) return;
 
-    setIsSigning(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch("/api/management-signature", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const data = await signatureMutation.mutateAsync({
           salary_month: selectedMonth,
           signature_type: "ke_toan",
           notes: "Xác nhận tính chính xác lương tháng",
           device_info: navigator.userAgent,
-        }),
       });
 
-      const data = await response.json();
-      if (data.success) {
-        setMessage("Ký xác nhận kế toán thành công!");
-        fetchDashboardData();
+      const result = data as { success?: boolean; error?: string };
+      if (result.success === false) {
+        setMessage(result.error || "Có lỗi xảy ra khi ký");
       } else {
-        setMessage(data.error || "Có lỗi xảy ra khi ký");
+        setMessage("Ký xác nhận kế toán thành công!");
       }
     } catch {
       setMessage("Lỗi kết nối khi ký xác nhận");
-    } finally {
-      setIsSigning(false);
     }
   };
 
@@ -219,23 +144,15 @@ export default function AccountantDashboard() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => {
-                const date = new Date();
-                date.setMonth(date.getMonth() - i);
-                const value = date.toISOString().slice(0, 7);
-                return (
-                  <SelectItem
-                    key={value}
-                    value={value}
-                    className="min-h-[44px] sm:min-h-0"
-                  >
-                    {date.toLocaleDateString("vi-VN", {
-                      year: "numeric",
-                      month: "long",
-                    })}
-                  </SelectItem>
-                );
-              })}
+              {getRecentMonthOptions().map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="min-h-[44px] sm:min-h-0"
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

@@ -1,0 +1,68 @@
+## Issues Accepted & Fixed
+
+### ISSUE-1: Auth-scoped cache keys missing → FIXED
+- Added `lib/api/auth-redirect.ts` resolver + tests.
+- `QueryProvider` now calls `clientRef.current.cancelQueries()` and `.clear()` on auth-expired, fully purging cache before redirect.
+- New Task 1.5b: `useLogout` hook centralizes logout to clear QueryClient cache + tokens. Migrates existing logout call sites in admin/role headers/sidebars.
+- Combined with 401 cache-clear, this provides full role-boundary isolation without threading auth into every query key (less error-prone).
+
+### ISSUE-2: 401 redirect logic unsafe → FIXED
+- New `resolveLoginPath(pathname)` handles `null`, empty string, and falls back to `window.location.pathname`. 4 unit tests cover edge cases.
+- Step 0.5 verifies `/login` route status and policy: all roles redirect to `/admin/login` (single verified endpoint). Documented in plan.
+
+### ISSUE-3: MSW conflicts with existing Jest globals → FIXED
+- Task 1.8 rewritten: MSW is now opt-in via `tests/mocks/enable-msw.ts` import (not global setup).
+- `onUnhandledRequest: 'bypass'` so existing fetch mocks still work.
+- New Step 0.6 audits existing `jest.setup.js` before deciding setup pattern.
+- Smoke test added (`tests/mocks/__tests__/msw-smoke.test.ts`) to verify MSW infrastructure works.
+
+### ISSUE-4: Tasks not bite-sized → FIXED
+- Tasks 2.7-2.11 (chart splits): now have explicit recipe + per-file steps with concrete prop interfaces and verification grep commands.
+- Tasks 4.3-4.7 (virtualize): each has concrete column definitions tailored to that screen.
+- W5 dashboards 5.1-5.6: each has 5 explicit subtasks (grep, replace, verify, test, commit) with role-specific hook params.
+- Task 5.9 (mass migration): replaced "batch" with explicit per-component table mapping each file → hook → test path.
+
+### ISSUE-5: Integration test coverage contradicts spec → FIXED
+- W5 pass bar updated: "≥1 integration test cho MỖI màn hình migrated" (was: 3 dashboards only).
+- Each W5 task (5.1-5.9) now has explicit integration test step with concrete test path.
+- Task 5.9 mapping table includes test path per component.
+
+### ISSUE-6: Hook endpoint contracts inaccurate → FIXED
+- New mandatory Task 3.0 (Endpoint Contract Audit) before any hook implementation.
+- Includes endpoint inventory, contract documentation per endpoint (path, method, body, response, role), blob detection step, role-specific endpoint detection.
+- Lists 17 hooks needing audit with corresponding route files to read.
+- Includes failure path: if endpoint missing, document and decide (skip/request BE/reroute).
+
+### ISSUE-7: Download/export not supported by apiClient → FIXED
+- Task 1.3 expanded: `apiClient.blob` method + `downloadBlob` helper. 2 new tests cover happy path and 4xx with JSON error body.
+- Task 3.7 (`use-bulk-export`) rewritten: all export hooks now use `apiClient.blob(...)` + `downloadBlob(...)`, NOT `apiClient.post(...)`.
+- Added `useDownloadTemplateMutation` for template downloads.
+
+### ISSUE-8: Bundle acceptance not verifiable → FIXED
+- Step 0.3 captures **pre-flight** baseline BEFORE any change (deps install incl.).
+- Task 2.1 captures after-W1 to isolate dep cost.
+- Task 2.12 explicitly compares against pre-flight baseline.
+- Task 2.12.3 is now a HARD GATE — if 30% not hit, must execute fallbacks A-D in order:
+  - Fallback A: lazy load 5 heavy modals
+  - Fallback B: audit lucide-react tree-shaking + add `optimizePackageImports`
+  - Fallback C: audit `xlsx-js-style` and other heavy deps
+  - Fallback D: server components migration (last resort)
+- Cannot proceed to W3 without pass or documented escalation.
+
+### ISSUE-9: VirtualizedTable underspecified → FIXED
+- Task 4.1 rewritten: implementation uses div-grid layout in virtualized mode (not absolute-positioned `<TableRow>` inside `<table>`). Real `<table>` semantics retained for non-virtualized fallback.
+- Adds full ARIA: `role="grid"`, `aria-rowcount`, `aria-rowindex`, `aria-selected`, `role="row"`, `role="columnheader"`, `role="gridcell"`.
+- Adds keyboard navigation: ArrowUp/Down/Home/End, focus tracking, scrollToIndex on focus.
+- Tests expanded: 5 cases covering both modes, ARIA roles, keyboard nav, empty state.
+
+### ISSUE-10: Out-of-scope guards too weak → FIXED
+- Step 0.4 creates `tests/scripts/scope-denylist.txt` and `tests/scripts/audit-fetch.sh` helper.
+- Denylist applied from start, not just at final grep.
+- Task 5.0 (new): pre-W5 scope guard runs denylist-aware audit, classifies every file (MIGRATE/AUTH-FLOW/NON-DATA/OUT-OF-SCOPE-MISSED), verifies no out-of-scope sneaks through.
+- All audit greps in W3-W5 now use the script, not raw greps.
+
+## Issues Disputed
+None — all 10 issues accepted and addressed.
+
+## Your Turn
+Re-review the updated plan (same path: docs/superpowers/plans/2026-05-06-giai-doan-3-4-frontend-data-fetching-render-tuning.md) using the same output format. Keep prior accepted points closed unless regression exists.

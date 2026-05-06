@@ -1,0 +1,490 @@
+Reading prompt from stdin...
+ERROR: The process "21448" not found.
+2026-05-05T20:47:14.066861Z ERROR codex_core::tools::router: error=`"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '(Get-Content "docs/superpowers/plans/2026-05-06-giai-doan-3-4-frontend-data-fetching-render-tuning.md").Count'` rejected: blocked by policy
+2026-05-05T20:47:57.450434Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1.4 seconds
+Output:
+jest.setup.js:52:// Mock localStorage
+jest.setup.js:53:const localStorageMock = {
+jest.setup.js:59:global.localStorage = localStorageMock;
+app\debug\browser\page.tsx:36:        localStorage: checkLocalStorage(),
+app\debug\browser\page.tsx:62:      localStorage.setItem(test, test);
+app\debug\browser\page.tsx:63:      localStorage.removeItem(test);
+app\debug\browser\page.tsx:224:            {!features.localStorage && (
+app\debug\browser\page.tsx:226:                ⚠️ localStorage is not available. Some features may not work
+app\accountant\dashboard\page.tsx:59:    // Load user info from localStorage
+app\accountant\dashboard\page.tsx:60:    const userStr = localStorage.getItem("user_info");
+app\accountant\dashboard\page.tsx:95:      const token = localStorage.getItem("admin_token");
+app\accountant\dashboard\page.tsx:99:          headers: { Authorization: `Bearer ${token}` },
+app\accountant\dashboard\page.tsx:102:          headers: { Authorization: `Bearer ${token}` },
+app\accountant\dashboard\page.tsx:130:        localStorage.removeItem("admin_token");
+app\accountant\dashboard\page.tsx:146:      const token = localStorage.getItem("admin_token");
+app\accountant\dashboard\page.tsx:150:          Authorization: `Bearer ${token}`,
+app\api\signature-status\[month]\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app\api\signature-status\[month]\route.ts:13:    const auth = verifyToken(request);
+app\admin\column-mapping-config\page.tsx:83:    const token = localStorage.getItem("admin_token");
+app\admin\column-mapping-config\page.tsx:106:      const token = localStorage.getItem("admin_token");
+app\admin\column-mapping-config\page.tsx:119:          Authorization: `Bearer ${token}`,
+app\admin\column-mapping-config\page.tsx:137:      const token = localStorage.getItem("admin_token");
+app\admin\column-mapping-config\page.tsx:140:          Authorization: `Bearer ${token}`,
+app\admin\column-mapping-config\page.tsx:164:      const token = localStorage.getItem("admin_token");
+app\admin\column-mapping-config\page.tsx:169:          Authorization: `Bearer ${token}`,
+app\admin\column-mapping-config\page.tsx:199:      const token = localStorage.getItem("admin_token");
+app\admin\column-mapping-config\page.tsx:206:            Authorization: `Bearer ${token}`,
+app\admin\column-mapping-config\page.tsx:241:      const token = localStorage.getItem("admin_token");
+app\admin\column-mapping-config\page.tsx:245:          Authorization: `Bearer ${token}`,
+app\api-docs\page.tsx:70:        const token = document.cookie
+app\api-docs\page.tsx:72:          .find((row) => row.startsWith("auth_token="));
+app\api-docs\page.tsx:192:          const token = document.cookie
+app\api-docs\page.tsx:194:            .find((row) => row.startsWith("auth_token="));
+app\api-docs\page.tsx:196:            req.headers["Authorization"] = `Bearer ${token.split("=")[1]}`;
+lib\api-error-handler.ts:134:    // Authentication & Authorization
+app\director\dashboard\page.tsx:59:    // Load user info from localStorage
+app\director\dashboard\page.tsx:60:    const userStr = localStorage.getItem("user_info");
+app\director\dashboard\page.tsx:95:      const token = localStorage.getItem("admin_token");
+app\director\dashboard\page.tsx:99:          headers: { Authorization: `Bearer ${token}` },
+app\director\dashboard\page.tsx:102:          headers: { Authorization: `Bearer ${token}` },
+app\director\dashboard\page.tsx:130:        localStorage.removeItem("admin_token");
+app\director\dashboard\page.tsx:145:      const token = localStorage.getItem("admin_token");
+app\director\dashboard\page.tsx:149:          Authorization: `Bearer ${token}`,
+components\advanced-salary-import.tsx:239:            Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+components\advanced-salary-import.tsx:349:      const token = localStorage.getItem("admin_token");
+components\advanced-salary-import.tsx:357:            Authorization: `Bearer ${token}`,
+components\advanced-salary-import.tsx:416:      const token = localStorage.getItem("admin_token");
+components\advanced-salary-import.tsx:427:            Authorization: `Bearer ${token}`,
+app\api\signature-progress\[month]\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app\api\signature-progress\[month]\route.ts:13:    const auth = verifyToken(request);
+app\admin\test-column-mapping\page.tsx:75:    const token = localStorage.getItem("admin_token");
+app\admin\test-column-mapping\page.tsx:86:      const token = localStorage.getItem("admin_token");
+app\admin\test-column-mapping\page.tsx:91:            Authorization: `Bearer ${token}`,
+app\employee\dashboard\page.tsx:26:      const token = localStorage.getItem("admin_token");
+app\employee\dashboard\page.tsx:27:      const userStr = localStorage.getItem("user_info");
+app\employee\dashboard\page.tsx:58:      localStorage.removeItem("admin_token");
+app\employee\dashboard\page.tsx:59:      localStorage.removeItem("user_info");
+app\employee\dashboard\page.tsx:72:    localStorage.removeItem("admin_token");
+app\employee\dashboard\page.tsx:73:    localStorage.removeItem("user_info");
+app\test-roles\page.tsx:130:        localStorage.setItem("admin_token", data.token);
+app\test-roles\page.tsx:131:        localStorage.setItem("user_info", JSON.stringify(data.user));
+app\admin\bulk-signature\page.tsx:19:    const token = localStorage.getItem("admin_token");
+app\admin\bulk-signature\page.tsx:20:    const userStr = localStorage.getItem("user_info");
+app\admin\bulk-signature\page.tsx:48:      localStorage.removeItem("admin_token");
+app\admin\bulk-signature\page.tsx:49:      localStorage.removeItem("user_info");
+app\api\signature-history\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app\api\signature-history\route.ts:8:    const auth = verifyToken(request);
+app\admin\department-management\permissions\page.tsx:122:    const token = localStorage.getItem("admin_token");
+app\admin\department-management\permissions\page.tsx:123:    const userStr = localStorage.getItem("user_info");
+app\admin\department-management\permissions\page.tsx:145:      const token = localStorage.getItem("admin_token");
+app\admin\department-management\permissions\page.tsx:149:          Authorization: `Bearer ${token}`,
+app\admin\department-management\permissions\page.tsx:202:      const token = localStorage.getItem("admin_token");
+app\admin\department-management\permissions\page.tsx:209:            Authorization: `Bearer ${token}`,
+app\admin\department-management\page.tsx:68:    const token = localStorage.getItem("admin_token");
+app\admin\department-management\page.tsx:69:    const userStr = localStorage.getItem("user_info");
+app\admin\department-management\page.tsx:91:      const token = localStorage.getItem("admin_token");
+app\admin\department-management\page.tsx:98:            Authorization: `Bearer ${token}`,
+app\admin\department-management\page.tsx:116:          Authorization: `Bearer ${token}`,
+app\admin\data-validation\README.md:51:- Sử dụng JWT token với key "admin_token"
+app\admin\data-validation\page.tsx:95:    const token = localStorage.getItem("admin_token");
+app\admin\data-validation\page.tsx:96:    const userStr = localStorage.getItem("user_info");
+app\admin\data-validation\page.tsx:143:      const token = localStorage.getItem("admin_token");
+app\admin\data-validation\page.tsx:148:          Authorization: `Bearer ${token}`,
+app\admin\data-validation\page.tsx:156:        localStorage.removeItem("admin_token");
+app\admin\data-validation\page.tsx:157:        localStorage.removeItem("user_info");
+lib\auth-middleware.ts:14:export function verifyToken(request: NextRequest): AuthContext | null {
+lib\auth-middleware.ts:55:    const auth = verifyToken(request);
+lib\auth-middleware.ts:66:    const auth = verifyToken(request);
+lib\auth-middleware.ts:77:    const auth = verifyToken(request);
+lib\auth-middleware.ts:90:  const auth = verifyToken(request);
+lib\auth-middleware.ts:101:  const auth = verifyToken(request);
+lib\auth-middleware.ts:111:  const auth = verifyToken(request);
+lib\auth-middleware.ts:119:export function authorizeRoles(
+lib\auth-middleware.ts:123:  const auth = verifyToken(request);
+app\manager\dashboard\page.tsx:28:      const token = localStorage.getItem("admin_token");
+app\manager\dashboard\page.tsx:29:      const userStr = localStorage.getItem("user_info");
+app\manager\dashboard\page.tsx:58:      localStorage.removeItem("admin_token");
+app\manager\dashboard\page.tsx:59:      localStorage.removeItem("user_info");
+app\api\payroll\my-departments\route.ts:4:import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+app\api\payroll\my-departments\route.ts:13:    const auth = verifyToken(request);
+app\api\payroll\my-departments\route.ts:161:    const auth = verifyToken(request);
+app\admin\bulk-export\page.tsx:44:    const token = localStorage.getItem("admin_token");
+app\admin\bulk-export\page.tsx:45:    const userStr = localStorage.getItem("user_info");
+app\admin\bulk-export\page.tsx:59:      localStorage.removeItem("admin_token");
+app\admin\bulk-export\page.tsx:60:      localStorage.removeItem("user_info");
+app\admin\bulk-export\page.tsx:72:        headers: { Authorization: `Bearer ${token}` },
+app\admin\bulk-export\page.tsx:128:    const token = localStorage.getItem("admin_token");
+app\admin\bulk-export\page.tsx:139:          Authorization: `Bearer ${token}`,
+app\supervisor\dashboard\page.tsx:27:      const token = localStorage.getItem("admin_token");
+app\supervisor\dashboard\page.tsx:28:      const userStr = localStorage.getItem("user_info");
+app\supervisor\dashboard\page.tsx:57:      localStorage.removeItem("admin_token");
+app\supervisor\dashboard\page.tsx:58:      localStorage.removeItem("user_info");
+app\admin\payroll-management\page.tsx:30:    const token = localStorage.getItem("admin_token");
+app\admin\payroll-management\page.tsx:49:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-management\page.tsx:57:          Authorization: `Bearer ${token}`,
+app\admin\payroll-management\page.tsx:85:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-management\page.tsx:94:          Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:101:    const token = localStorage.getItem("admin_token");
+app\admin\department-management\assign-permissions\page.tsx:102:    const userStr = localStorage.getItem("user_info");
+app\admin\department-management\assign-permissions\page.tsx:124:      const token = localStorage.getItem("admin_token");
+app\admin\department-management\assign-permissions\page.tsx:131:            Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:161:            Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:166:            Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:171:            Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:176:            Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:181:            Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:222:          Authorization: `Bearer ${token}`,
+app\admin\department-management\assign-permissions\page.tsx:270:      const token = localStorage.getItem("admin_token");
+app\admin\department-management\assign-permissions\page.tsx:304:            Authorization: `Bearer ${token}`,
+app\api\payroll\my-department\route.ts:4:import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+app\api\payroll\my-department\route.ts:13:    const auth = verifyToken(request);
+app\api\payroll\my-department\route.ts:145:    const auth = verifyToken(request);
+app\admin\attendance-list\page.tsx:105:      const token = localStorage.getItem("admin_token");
+app\admin\attendance-list\page.tsx:119:        headers: { Authorization: `Bearer ${token}` },
+app\admin\attendance-list\page.tsx:161:      const token = localStorage.getItem("admin_token");
+app\admin\attendance-list\page.tsx:178:          Authorization: `Bearer ${token}`,
+components\admin\admin-sidebar.tsx:163:    localStorage.removeItem("admin_token");
+components\admin\admin-sidebar.tsx:164:    localStorage.removeItem("user_info");
+components\admin\admin-header.tsx:52:    localStorage.removeItem("admin_token");
+components\admin\admin-header.tsx:53:    localStorage.removeItem("user_info");
+components\admin\BulkSignatureDialog.tsx:77:          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+components\admin\BulkSignatureDialog.tsx:110:          Authorization: `Bearer ${localStorage.getItem("admin_token")}`,
+app\admin\dashboard\admin-dashboard-v2.tsx:98:    const token = localStorage.getItem("admin_token");
+app\admin\dashboard\admin-dashboard-v2.tsx:99:    const userStr = localStorage.getItem("user_info");
+app\admin\dashboard\admin-dashboard-v2.tsx:125:      localStorage.removeItem("admin_token");
+app\admin\dashboard\admin-dashboard-v2.tsx:126:      localStorage.removeItem("user_info");
+app\admin\dashboard\admin-dashboard-v2.tsx:150:      const token = localStorage.getItem("admin_token");
+app\admin\dashboard\admin-dashboard-v2.tsx:152:        headers: { Authorization: `Bearer ${token}` },
+app\admin\dashboard\admin-dashboard-v2.tsx:160:        localStorage.removeItem("admin_token");
+lib\cache\mapping-config-cache.ts:265:    if (typeof window === "undefined" || typeof localStorage === "undefined")
+lib\cache\mapping-config-cache.ts:275:      localStorage.setItem(
+lib\cache\mapping-config-cache.ts:288:    if (typeof window === "undefined" || typeof localStorage === "undefined")
+lib\cache\mapping-config-cache.ts:292:      const stored = localStorage.getItem(this.config.storageKey);
+app\admin\attendance-import\page.tsx:134:      const token = localStorage.getItem("admin_token");
+app\admin\attendance-import\page.tsx:145:        headers: { Authorization: `Bearer ${token}` },
+app\admin\attendance-import\page.tsx:169:      const token = localStorage.getItem("admin_token");
+app\admin\attendance-import\page.tsx:178:          Authorization: `Bearer ${token}`,
+app\api\payroll\my-data\route.ts:4:import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+app\api\payroll\my-data\route.ts:12:    const auth = verifyToken(request);
+app\api\payroll\my-data\route.ts:140:    const auth = verifyToken(request);
+app\reporter\dashboard\page.tsx:63:    // Load user info from localStorage
+app\reporter\dashboard\page.tsx:64:    const userStr = localStorage.getItem("user_info");
+app\reporter\dashboard\page.tsx:99:      const token = localStorage.getItem("admin_token");
+app\reporter\dashboard\page.tsx:103:          headers: { Authorization: `Bearer ${token}` },
+app\reporter\dashboard\page.tsx:106:          headers: { Authorization: `Bearer ${token}` },
+app\reporter\dashboard\page.tsx:134:        localStorage.removeItem("admin_token");
+app\reporter\dashboard\page.tsx:149:      const token = localStorage.getItem("admin_token");
+app\reporter\dashboard\page.tsx:153:          Authorization: `Bearer ${token}`,
+app\admin\employee-check\page.tsx:100:  const token = localStorage.getItem("admin_token");
+app\admin\employee-check\page.tsx:102:    headers: { Authorization: `Bearer ${token}` },
+app\admin\password-reset-history\page.tsx:85:    const token = localStorage.getItem("admin_token");
+app\admin\password-reset-history\page.tsx:86:    const userStr = localStorage.getItem("user_info");
+app\admin\password-reset-history\page.tsx:113:      const token = localStorage.getItem("admin_token");
+app\admin\password-reset-history\page.tsx:139:            Authorization: `Bearer ${token}`,
+app\admin\password-reset-history\page.tsx:149:        localStorage.removeItem("admin_token");
+app\admin\password-reset-history\page.tsx:150:        localStorage.removeItem("user_info");
+app\admin\employee-management\page.tsx:127:      const token = localStorage.getItem("admin_token");
+app\admin\employee-management\page.tsx:130:          Authorization: `Bearer ${token}`,
+app\admin\employee-management\page.tsx:192:      const token = localStorage.getItem("admin_token");
+app\admin\employee-management\page.tsx:196:          Authorization: `Bearer ${token}`,
+app\admin\payroll-management\components\AuditTrail.tsx:53:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-management\components\AuditTrail.tsx:61:          Authorization: `Bearer ${token}`,
+app\api\management-signature\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\management-signature\route.ts:17:    const auth = verifyToken(request);
+app\api\management-signature\route.ts:210:            Authorization: request.headers.get("Authorization") || "",
+app\admin\payroll-management\components\EmployeeSearch.tsx:50:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-management\components\EmployeeSearch.tsx:56:          Authorization: `Bearer ${token}`,
+app\admin\payroll-management\components\EmployeeSearch.tsx:90:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-management\components\EmployeeSearch.tsx:118:          Authorization: `Bearer ${token}`,
+app\admin\login\admin-login-form.tsx:31:    const encoded = localStorage.getItem(ADMIN_CREDENTIALS_KEY);
+app\admin\login\admin-login-form.tsx:42:  localStorage.setItem(ADMIN_CREDENTIALS_KEY, encoded);
+app\admin\login\admin-login-form.tsx:46:  localStorage.removeItem(ADMIN_CREDENTIALS_KEY);
+app\admin\login\admin-login-form.tsx:143:        localStorage.setItem("admin_token", data.token);
+app\admin\login\admin-login-form.tsx:144:        localStorage.setItem("user_info", JSON.stringify(data.user));
+components\column-mapping-dialog.tsx:118:      const token = localStorage.getItem("admin_token");
+components\column-mapping-dialog.tsx:125:            Authorization: `Bearer ${token}`,
+components\column-mapping-dialog.tsx:245:      const token = localStorage.getItem("admin_token");
+components\column-mapping-dialog.tsx:252:          Authorization: `Bearer ${token}`,
+app\admin\payroll-import-export\page.tsx:127:    const token = localStorage.getItem("admin_token");
+app\admin\payroll-import-export\page.tsx:155:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-import-export\page.tsx:177:            Authorization: `Bearer ${token}`,
+app\admin\payroll-import-export\page.tsx:233:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-import-export\page.tsx:241:          Authorization: `Bearer ${token}`,
+app\admin\payroll-import-export\page.tsx:298:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-import-export\page.tsx:314:          Authorization: `Bearer ${token}`,
+app\admin\payroll-import-export\page.tsx:407:        typeof localStorage === "undefined"
+app\admin\payroll-import-export\page.tsx:412:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-import-export\page.tsx:422:            Authorization: `Bearer ${token}`,
+app\admin\payroll-import-export\page.tsx:1058:                          const token = localStorage.getItem("admin_token");
+app\admin\payroll-import-export\page.tsx:1067:                                Authorization: `Bearer ${token}`,
+app\admin\payroll-management\components\MonthSelector.tsx:46:      const token = localStorage.getItem("admin_token");
+app\admin\payroll-management\components\MonthSelector.tsx:55:          Authorization: `Bearer ${token}`,
+components\debug\DepartmentDebugInfo.tsx:40:      const token = localStorage.getItem("admin_token");
+components\debug\DepartmentDebugInfo.tsx:41:      const userStr = localStorage.getItem("user_info");
+components\debug\DepartmentDebugInfo.tsx:55:            Authorization: `Bearer ${token}`,
+components\debug\DepartmentDebugInfo.tsx:65:          Authorization: `Bearer ${token}`,
+components\debug\DepartmentDebugInfo.tsx:74:          Authorization: `Bearer ${token}`,
+components\debug\DepartmentDebugInfo.tsx:83:          Authorization: `Bearer ${token}`,
+app\admin\dashboard\update-cccd\update-cccd-management.tsx:55:    const token = localStorage.getItem("admin_token");
+app\admin\dashboard\update-cccd\update-cccd-management.tsx:80:      const token = localStorage.getItem("admin_token");
+app\admin\dashboard\update-cccd\update-cccd-management.tsx:85:          Authorization: `Bearer ${token}`,
+app\employee\lookup\salary-history-modal.tsx:92:        headers["Authorization"] = `Bearer ${sessionToken}`;
+app\employee\lookup\salary-history-modal.tsx:141:        headers["Authorization"] = `Bearer ${sessionToken}`;
+app\admin\employee-management\components\EmployeeForm.tsx:86:        const token = localStorage.getItem("admin_token");
+app\admin\employee-management\components\EmployeeForm.tsx:89:            Authorization: `Bearer ${token}`,
+app\admin\employee-management\components\EmployeeForm.tsx:159:      const token = localStorage.getItem("admin_token");
+app\admin\employee-management\components\EmployeeForm.tsx:185:          Authorization: `Bearer ${token}`,
+app\admin\employee-management\components\EmployeeAuditLogs.tsx:114:      const token = localStorage.getItem("admin_token");
+app\admin\employee-management\components\EmployeeAuditLogs.tsx:123:            Authorization: `Bearer ${token}`,
+app\employee\lookup\use-employee-lookup.ts:24:    const stored = localStorage.getItem(STORAGE_KEY);
+app\employee\lookup\use-employee-lookup.ts:38:  localStorage.setItem(STORAGE_KEY, encodeCredentials(employeeId, password));
+app\employee\lookup\use-employee-lookup.ts:42:  localStorage.removeItem(STORAGE_KEY);
+app\employee\lookup\use-employee-lookup.ts:287:      headers["Authorization"] = `Bearer ${state.sessionToken}`;
+app\employee\lookup\use-employee-lookup.ts:585:              Authorization: `Bearer ${state.sessionToken}`,
+app\admin\dashboard\admin-dashboard.tsx:82:    const token = localStorage.getItem("admin_token");
+app\admin\dashboard\admin-dashboard.tsx:83:    const userStr = localStorage.getItem("user_info");
+app\admin\dashboard\admin-dashboard.tsx:113:      localStorage.removeItem("admin_token");
+app\admin\dashboard\admin-dashboard.tsx:114:      localStorage.removeItem("user_info");
+app\admin\dashboard\admin-dashboard.tsx:136:      const token = localStorage.getItem("admin_token");
+app\admin\dashboard\admin-dashboard.tsx:139:          Authorization: `Bearer ${token}`,
+app\admin\dashboard\admin-dashboard.tsx:148:        localStorage.removeItem("admin_token");
+app\admin\dashboard\admin-dashboard.tsx:162:      const token = localStorage.getItem("admin_token");
+app\admin\dashboard\admin-dashboard.tsx:165:          Authorization: `Bearer ${token}`,
+app\admin\dashboard\admin-dashboard.tsx:196:    localStorage.removeItem("admin_token");
+app\admin\dashboard\admin-dashboard.tsx:197:    localStorage.removeItem("user_info");
+components\DepartmentDetailModal.tsx:176:      const token = localStorage.getItem("admin_token");
+components\DepartmentDetailModal.tsx:181:            Authorization: `Bearer ${token}`,
+components\DepartmentDetailModal.tsx:206:      const token = localStorage.getItem("admin_token");
+components\DepartmentDetailModal.tsx:211:            Authorization: `Bearer ${token}`,
+components\employee-import-section.tsx:65:      const token = localStorage.getItem("admin_token");
+components\employee-import-section.tsx:73:          Authorization: `Bearer ${token}`,
+components\employee-import-section.tsx:110:      const token = localStorage.getItem("admin_token");
+components\employee-import-section.tsx:122:          Authorization: `Bearer ${token}`,
+app\api\api-docs\openapi\route.ts:11:  const cookieToken = request.cookies.get("auth_token")?.value;
+app\admin\dashboard\update-cccd\components\employee-search-form.tsx:42:      const token = localStorage.getItem("admin_token");
+app\admin\dashboard\update-cccd\components\employee-search-form.tsx:47:            Authorization: `Bearer ${token}`,
+app\api\employees\all-employees\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app\api\employees\all-employees\route.ts:12:    const auth = verifyToken(request);
+app\api\admin\data-validation\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\data-validation\route.ts:40:    const auth = verifyToken(request);
+app\api\admin\data-validation\route.ts:194:    const auth = verifyToken(request);
+components\admin\UpdateSignatureDateDialog.tsx:70:    Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("admin_token") : ""}`,
+components\admin\UpdateSignatureDateDialog.tsx:122:      const token = localStorage.getItem("admin_token");
+components\admin\UpdateSignatureDateDialog.tsx:128:            Authorization: `Bearer ${token}`,
+app\api\admin\update-signature-date\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\update-signature-date\route.ts:24:    const auth = verifyToken(request);
+app\api\admin\update-signature-date\route.ts:237:    const auth = verifyToken(request);
+app\api\admin\bulk-signature-history\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\bulk-signature-history\route.ts:13:    const auth = verifyToken(request);
+components\department\DepartmentDetailModalRefactored.tsx:237:      const token = localStorage.getItem("admin_token");
+components\department\DepartmentDetailModalRefactored.tsx:246:          Authorization: `Bearer ${token}`,
+components\department\DepartmentDetailModalRefactored.tsx:279:      const token = localStorage.getItem("admin_token");
+components\department\DepartmentDetailModalRefactored.tsx:296:          Authorization: `Bearer ${token}`,
+app\api\admin\bulk-payroll-export\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\bulk-payroll-export\route.ts:221:    const auth = verifyToken(request);
+app\api\admin\bulk-sign-salary\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\bulk-sign-salary\route.ts:17:    const auth = verifyToken(request);
+app\api\admin\update-management-signature-date\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\update-management-signature-date\route.ts:18:    const auth = verifyToken(request);
+app\api\admin\attendance-import\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\attendance-import\route.ts:13:    const auth = verifyToken(request);
+app\api\admin\unsigned-employees-export\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\unsigned-employees-export\route.ts:10:    const auth = verifyToken(request);
+app\api\admin\download-attendance-template\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\download-attendance-template\route.ts:7:    const auth = verifyToken(request);
+app\api\admin\department-permissions\route.ts:3:import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+app\api\admin\department-permissions\route.ts:19:    const auth = verifyToken(request);
+app\api\admin\department-permissions\route.ts:106:    const auth = verifyToken(request);
+app\api\admin\department-permissions\route.ts:301:    const auth = verifyToken(request);
+app\api\admin\departments\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\departments\route.ts:11:    const auth = verifyToken(request);
+app\api\admin\departments\route.ts:304:    const auth = verifyToken(request);
+app\api\admin\departments\route.ts:364:    const auth = verifyToken(request);
+lib\management-signature-auth.ts:2:import { verifyToken } from "@/lib/auth-middleware";
+lib\management-signature-auth.ts:30:  const auth = verifyToken(request);
+components\EmployeeManagementModal.tsx:141:      const token = localStorage.getItem("admin_token");
+components\EmployeeManagementModal.tsx:144:          Authorization: `Bearer ${token}`,
+components\EmployeeManagementModal.tsx:195:      const token = localStorage.getItem("admin_token");
+components\EmployeeManagementModal.tsx:199:          Authorization: `Bearer ${token}`,
+components\EmployeeListModal.tsx:160:        const token = localStorage.getItem("admin_token");
+components\EmployeeListModal.tsx:183:            Authorization: `Bearer ${token}`,
+components\EmployeeDashboard.tsx:118:      const token = localStorage.getItem("admin_token");
+components\EmployeeDashboard.tsx:123:          Authorization: `Bearer ${token}`,
+components\EmployeeDashboard.tsx:140:      const token = localStorage.getItem("admin_token");
+components\EmployeeDashboard.tsx:145:          Authorization: `Bearer ${token}`,
+components\EmployeeDashboard.tsx:163:      const token = localStorage.getItem("admin_token");
+components\EmployeeDashboard.tsx:166:          Authorization: `Bearer ${token}`,
+app\api\admin\departments\[departmentName]\route.ts:4:import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+app\api\admin\departments\[departmentName]\route.ts:19:    const auth = verifyToken(request);
+app\api\admin\attendance-export\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\attendance-export\route.ts:26:    const auth = verifyToken(request);
+components\export-configuration-dialog.tsx:129:      const token = localStorage.getItem("admin_token");
+components\export-configuration-dialog.tsx:137:            Authorization: `Bearer ${token}`,
+app\api\admin\overtime-registration-export\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\overtime-registration-export\route.ts:301:    const auth = verifyToken(request);
+app\api\admin\signature-stats\[month]\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\signature-stats\[month]\route.ts:12:    const auth = verifyToken(request);
+app\api\admin\attendance-employees\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\attendance-employees\route.ts:8:    const auth = verifyToken(request);
+app\api\admin\logout\route.ts:9:  response.cookies.delete("auth_token");
+app\api\admin\payroll\[id]\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\payroll\[id]\route.ts:29:    const auth = verifyToken(request);
+app\api\admin\payroll\[id]\route.ts:121:    const auth = verifyToken(request);
+lib\openapi-spec.ts:51:          name: "auth_token",
+lib\openapi-spec.ts:52:          description: "Cookie auth_token chứa JWT",
+components\examples\employee-form-example.tsx:137:        const token = localStorage.getItem("admin_token");
+components\examples\employee-form-example.tsx:140:            Authorization: `Bearer ${token}`,
+components\examples\employee-form-example.tsx:249:      const token = localStorage.getItem("admin_token");
+components\examples\employee-form-example.tsx:276:          Authorization: `Bearer ${token}`,
+components\ImportHistoryViewer.tsx:92:      const token = localStorage.getItem("admin_token");
+components\ImportHistoryViewer.tsx:107:          Authorization: `Bearer ${token}`,
+components\ImportHistoryViewer.tsx:129:      const token = localStorage.getItem("admin_token");
+components\ImportHistoryViewer.tsx:135:          Authorization: `Bearer ${token}`,
+app\api\admin\login\route.ts:95:    response.cookies.set("auth_token", token, {
+app\api\admin\password-reset-history\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\password-reset-history\route.ts:31:    const auth = verifyToken(request);
+lib\hooks\useImportPreview.ts:19:      const token = localStorage.getItem("admin_token");
+lib\hooks\useImportPreview.ts:24:            Authorization: `Bearer ${token}`,
+components\ManagerDashboard.tsx:188:      const token = localStorage.getItem("admin_token");
+components\ManagerDashboard.tsx:191:          Authorization: `Bearer ${token}`,
+components\ManagerDashboard.tsx:230:      const token = localStorage.getItem("admin_token");
+components\ManagerDashboard.tsx:236:            Authorization: `Bearer ${token}`,
+components\ManagerDashboard.tsx:261:      const token = localStorage.getItem("admin_token");
+components\ManagerDashboard.tsx:270:          Authorization: `Bearer ${token}`,
+components\ManagerDashboard.tsx:296:      const token = localStorage.getItem("admin_token");
+components\ManagerDashboard.tsx:302:            Authorization: `Bearer ${token}`,
+components\ManagerDashboard.tsx:343:      const token = localStorage.getItem("admin_token");
+components\ManagerDashboard.tsx:358:          Authorization: `Bearer ${token}`,
+app\api\admin\payroll-export\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app\api\admin\payroll-export\route.ts:20:    const auth = verifyToken(request);
+components\OverviewModal.tsx:171:      const token = localStorage.getItem("admin_token");
+components\OverviewModal.tsx:177:            Authorization: `Bearer ${token}`,
+components\OverviewModal.tsx:215:      const token = localStorage.getItem("admin_token");
+components\OverviewModal.tsx:221:            Authorization: `Bearer ${token}`,
+components\RoleBasedRouter.tsx:46:      const token = localStorage.getItem("admin_token");
+components\RoleBasedRouter.tsx:47:      const userStr = localStorage.getItem("user_info");
+components\RoleBasedRouter.tsx:63:      localStorage.removeItem("admin_token");
+components\RoleBasedRouter.tsx:64:      localStorage.removeItem("user_info");
+components\RoleBasedRouter.tsx:158:    localStorage.removeItem("admin_token");
+components\RoleBasedRouter.tsx:159:    localStorage.removeItem("user_info");
+components\RoleBasedRouter.tsx:209:    const userStr = localStorage.getItem("user_info");
+components\safe-client-component.tsx:60:    const hasLocalStorage = "localStorage" in window;
+components\payroll-import\ImportErrorModal.tsx:317:      const token = localStorage.getItem("admin_token");
+components\payroll-import\ImportErrorModal.tsx:345:          Authorization: `Bearer ${token}`,
+components\shared\role-header.tsx:52:    localStorage.removeItem("admin_token");
+components\shared\role-header.tsx:53:    localStorage.removeItem("user_info");
+lib\sync\mapping-config-sync.ts:209:    // Broadcast via localStorage for broader compatibility
+lib\sync\mapping-config-sync.ts:211:      localStorage.setItem(
+lib\sync\mapping-config-sync.ts:216:      localStorage.removeItem("mapping-config-sync-event");
+lib\sync\mapping-config-sync.ts:218:      console.warn("Failed to broadcast via localStorage:", error);
+lib\sync\mapping-config-sync.ts:272:      if (typeof window === "undefined" || typeof localStorage === "undefined")
+lib\sync\mapping-config-sync.ts:276:      const token = localStorage.getItem("admin_token");
+lib\sync\mapping-config-sync.ts:284:            Authorization: `Bearer ${token}`,
+lib\stores\mapping-config-store.ts:111:  if (typeof window === "undefined" || typeof localStorage === "undefined")
+lib\stores\mapping-config-store.ts:113:  const token = localStorage.getItem("admin_token");
+lib\stores\mapping-config-store.ts:118:  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+lib\stores\mapping-config-store.ts:121:  const token = localStorage.getItem("admin_token");
+lib\stores\mapping-config-store.ts:127:    Authorization: `Bearer ${token}`,
+components\SupervisorDashboard.tsx:269:      const token = localStorage.getItem("admin_token");
+components\SupervisorDashboard.tsx:276:            Authorization: `Bearer ${token}`,
+components\SupervisorDashboard.tsx:296:          Authorization: `Bearer ${token}`,
+components\SupervisorDashboard.tsx:332:      const token = localStorage.getItem("admin_token");
+components\SupervisorDashboard.tsx:346:              Authorization: `Bearer ${token}`,
+components\SupervisorDashboard.tsx:410:      const token = localStorage.getItem("admin_token");
+components\SupervisorDashboard.tsx:424:          Authorization: `Bearer ${token}`,
+components\shared\role-sidebar.tsx:79:    localStorage.removeItem("admin_token");
+components\shared\role-sidebar.tsx:80:    localStorage.removeItem("user_info");
+lib\stores\ticker-store.ts:13:// Simple store without persistence to avoid localStorage issues
+lib\utils\browser-detection.ts:13:    const testKey = "__localStorage_test__";
+lib\utils\browser-detection.ts:14:    window.localStorage.setItem(testKey, "test");
+lib\utils\browser-detection.ts:15:    window.localStorage.removeItem(testKey);
+components\UnsignedEmployeesModal.tsx:152:        const token = localStorage.getItem("admin_token");
+components\UnsignedEmployeesModal.tsx:176:            Authorization: `Bearer ${token}`,
+components\UnsignedEmployeesModal.tsx:264:      const token = localStorage.getItem("admin_token");
+components\UnsignedEmployeesModal.tsx:286:            Authorization: `Bearer ${token}`,
+components\ui\sidebar.tsx:93:        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+[31;1mMicrosoft.PowerShell_profile.ps1: [31;1mCannot dot-source this command because it was defined in a different language mode. To invoke this command without importing its contents, omit the '.' operator.[0m
+[31;1mInvalidOperation: [31;1mCannot set property. Property setting is supported only on core types in this language mode.[0m
+rg: middleware.ts: The system cannot find the file specified. (os error 2)
+
+2026-05-05T20:47:57.550950Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1.4 seconds
+Output:
+[31;1mMicrosoft.PowerShell_profile.ps1: [31;1mCannot dot-source this command because it was defined in a different language mode. To invoke this command without importing its contents, omit the '.' operator.[0m
+[31;1mInvalidOperation: [31;1mCannot set property. Property setting is supported only on core types in this language mode.[0m
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Raw "middleware.ts"[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'D:\HoaThoDienBan\LuongHoaThoNew\middleware.ts' because it does not exist.[0m
+
+2026-05-05T20:48:11.301324Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 1 seconds
+Output:
+app/api/signature-status\[month]\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app/api/signature-status\[month]\route.ts:8:export async function GET(
+app/api/signature-status\[month]\route.ts:10:  { params }: { params: Promise<{ month: string }> },
+app/api/signature-status\[month]\route.ts:13:    const auth = verifyToken(request);
+app/api/signature-status\[month]\route.ts:26:    const { month } = await params;
+app/api/signature-status\[month]\route.ts:41:    const { searchParams } = new URL(request.url);
+app/api/signature-status\[month]\route.ts:42:    const clientIsT13 = searchParams.get("is_t13");
+app/api/admin/bulk-payroll-export\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app/api/admin/bulk-payroll-export\route.ts:217:export async function POST(request: NextRequest) {
+app/api/admin/bulk-payroll-export\route.ts:221:    const auth = verifyToken(request);
+app/api/admin/dashboard-stats\route.ts:28:export async function GET(request: NextRequest) {
+app/api/admin/dashboard-stats\route.ts:39:    const { searchParams } = new URL(request.url);
+app/api/admin/dashboard-stats\route.ts:42:      Object.fromEntries(searchParams),
+app/api/admin/employees\route.ts:80:export async function GET(request: NextRequest) {
+app/api/admin/employees\route.ts:90:    const { searchParams } = new URL(request.url);
+app/api/admin/employees\route.ts:93:      Object.fromEntries(searchParams),
+app/api/admin/employees\route.ts:254:export async function POST(request: NextRequest) {
+app/api/admin/import-dual-files\route.ts:79:export async function POST(request: NextRequest) {
+app/api/signature-progress\[month]\route.ts:4:import { verifyToken } from "@/lib/auth-middleware";
+app/api/signature-progress\[month]\route.ts:8:export async function GET(
+app/api/signature-progress\[month]\route.ts:10:  { params }: { params: Promise<{ month: string }> },
+app/api/signature-progress\[month]\route.ts:13:    const auth = verifyToken(request);
+app/api/signature-progress\[month]\route.ts:26:    const { month } = await params;
+app/api/signature-progress\[month]\route.ts:41:    const { searchParams } = new URL(request.url);
+app/api/signature-progress\[month]\route.ts:42:    const clientIsT13 = searchParams.get("is_t13");
+app/api/admin/payroll-import\route.ts:126:export async function POST(request: NextRequest) {
+app/api/admin/employees\[id]\route.ts:17:export async function PUT(
+app/api/admin/employees\[id]\route.ts:19:  { params }: { params: Promise<{ id: string }> },
+app/api/admin/employees\[id]\route.ts:32:    const resolvedParams = await params;
+app/api/admin/employees\[id]\route.ts:334:export async function DELETE(
+app/api/admin/employees\[id]\route.ts:336:  { params }: { params: Promise<{ id: string }> },
+app/api/admin/employees\[id]\route.ts:359:    const resolvedParams = await params;
+app/api/admin/employees\[id]\route.ts:493:export async function GET(
+app/api/admin/employees\[id]\route.ts:495:  { params }: { params: Promise<{ id: string }> },
+app/api/admin/employees\[id]\route.ts:506:    const resolvedParams = await params;
+app/api/admin/employees\[id]\audit-logs\route.txt:5:export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+app/api/admin/employees\[id]\audit-logs\route.txt:12:    const { id } = params
+app/api/admin/employees\[id]\audit-logs\route.txt:13:    const { searchParams } = new URL(request.url)
+app/api/admin/employees\[id]\audit-logs\route.txt:14:    const limit = parseInt(searchParams.get('limit') || '50')
+app/api/admin/employees\[id]\audit-logs\route.txt:15:    const offset = parseInt(searchParams.get('offset') || '0')
+app/api/admin/employees\[id]\audit-logs\route.ts:7:export async function GET(
+app/api/admin/employees\[id]\audit-logs\route.ts:9:  { params }: { params: Promise<{ id: string }> },
+app/api/admin/employees\[id]\audit-logs\route.ts:20:    const resolvedParams = await params;
+app/api/admin/employees\[id]\audit-logs\route.ts:22:    const { searchParams } = new URL(request.url);
+app/api/admin/employees\[id]\audit-logs\route.ts:23:    const limit = parseInt(searchParams.get("limit") || "50");
+app/api/admin/employees\[id]\audit-logs\route.ts:24:    const offset = parseInt(searchParams.get("offset") || "0");
+app/api/admin/payroll\audit\[id]\route.ts:49:export async function GET(
+app/api/admin/payroll\audit\[id]\route.ts:51:  { params }: { params: Promise<{ id: string }> },
+app/api/admin/payroll\audit\[id]\route.ts:63:    const resolvedParams = await params;
+app/api/admin/payroll\audit\[id]\route.ts:234:export async function POST(request: NextRequest) {
+app/api/admin/payroll\search\route.ts:37:export async function GET(request: NextRequest) {
+app/api/admin/payroll\search\route.ts:48:    const { searchParams } = new URL(request.url);
+app/api/admin/payroll\search\route.ts:51:      Object.fromEntries(searchParams),
+app/api/admin/payroll\search\route.ts:385:export async function POST(request: NextRequest) {
+app/api/admin/payroll\[id]\route.ts:3:import { verifyToken } from "@/lib/auth-middleware";
+app/api/admin/payroll\[id]\route.ts:23:export async function GET(
+app/api/admin/payroll\[id]\route.ts:25:  { params }: { params: Promise<{ id: string }> },
+app/api/admin/payroll\[id]\route.ts:29:    const auth = verifyToken(request);
+app/api/admin/payroll\[id]\route.ts:37:    const resolvedParams = await params;
+app/api/admin/payroll\[id]\route.ts:113:export async function PUT(
+app/api/admin/payroll\[id]\route.ts:115:  { params }: { params: Promise<{ id: string }> },
+app/api/admin/payroll\[id]\route.ts:121:    const auth = verifyToken(request);
+app/api/admin/payroll\[id]\route.ts:137:    const resolvedParams = await params;
+[31;1mMicrosoft.PowerShell_profile.ps1: [31;1mCannot dot-source this command because it was defined in a different language mode. To invoke this command without importing its contents, omit the '.' operator.[0m
+[31;1mInvalidOperation: [31;1mCannot set property. Property setting is supported only on core types in this language mode.[0m
+rg: app/api/admin/signature-progress: The system cannot find the file specified. (os error 2)
+
+2026-05-05T20:48:56.598751Z ERROR codex_core::tools::router: error=`"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"export default function|router.push\\(\\\"/login|/admin/login|app/login\" app components | Select-Object -First 80"` rejected: blocked by policy
+2026-05-05T20:49:00.708478Z ERROR codex_core::tools::router: error=`"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-ChildItem -Recurse -Directory app | Where-Object { $_.Name -eq '"'login' } | Select-Object -ExpandProperty FullName"` rejected: blocked by policy
+2026-05-05T20:49:19.970610Z ERROR codex_core::tools::router: error=`"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"from ['\\\"]recharts|import .*recharts|xlsx|xlsx-js-style\" app components lib"` rejected: blocked by policy

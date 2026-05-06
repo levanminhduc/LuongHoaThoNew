@@ -75,7 +75,7 @@ export const EmployeeListQuerySchema = z.object({
     .number()
     .int()
     .min(1, { message: "Limit phải >= 1" })
-    .max(100, { message: "Limit không được quá 100" })
+    .max(200, { message: "Limit không được quá 200" })
     .default(20),
 });
 
@@ -128,6 +128,7 @@ export const PayrollSearchQuerySchema = z.object({
   q: z.string().max(100).optional(),
   salary_month: SalaryMonthSchema.optional(),
   payroll_type: z.enum(["monthly", "t13"]).default("monthly"),
+  limit: z.coerce.number().int().min(1).max(200).default(20),
 });
 export type PayrollSearchQuery = z.infer<typeof PayrollSearchQuerySchema>;
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import type { FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -30,26 +31,12 @@ import {
   Building2,
   Info,
 } from "lucide-react";
-
-interface Employee {
-  employee_id: string;
-  full_name: string;
-  department: string;
-  chuc_vu: string;
-}
-
-interface Department {
-  name: string;
-  employeeCount: number;
-  payrollCount: number;
-}
-
-interface ExistingPermission {
-  id: number;
-  employee_id: string;
-  department: string;
-  is_active: boolean;
-}
+import {
+  useDepartmentPermissionsQuery,
+  useDepartmentStatsQuery,
+  useGrantDepartmentPermissionMutation,
+  useManagementEmployeesQuery,
+} from "@/lib/hooks/use-departments";
 
 // Loading component cho Suspense fallback
 function AssignPermissionsLoading() {
@@ -75,15 +62,25 @@ function AssignPermissionsContent() {
   const searchParams = useSearchParams();
   const preselectedDepartment = searchParams.get("department");
 
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [existingPermissions, setExistingPermissions] = useState<
-    ExistingPermission[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const departmentsQuery = useDepartmentStatsQuery();
+  const employeesQuery = useManagementEmployeesQuery();
+  const permissionsQuery = useDepartmentPermissionsQuery();
+  const grantMutation = useGrantDepartmentPermissionMutation();
+  const employees = employeesQuery.data ?? [];
+  const departments = [...(departmentsQuery.data?.departments ?? [])].sort(
+    (a, b) => a.name.localeCompare(b.name, "vi", { sensitivity: "base" }),
+  );
+  const existingPermissions = permissionsQuery.data?.permissions ?? [];
+  const refreshDepartments = departmentsQuery.refetch;
+  const refreshEmployees = employeesQuery.refetch;
+  const refreshPermissions = permissionsQuery.refetch;
+  const loading =
+    departmentsQuery.isLoading ||
+    employeesQuery.isLoading ||
+    permissionsQuery.isLoading;
+  const submitting = grantMutation.isPending;
 
   // Form state
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -94,7 +91,6 @@ function AssignPermissionsContent() {
 
   useEffect(() => {
     checkAuthentication();
-    loadData();
   }, []);
 
   const checkAuthentication = () => {
@@ -118,123 +114,6 @@ function AssignPermissionsContent() {
     }
   };
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("admin_token");
-
-      // Load departments
-      const deptResponse = await fetch(
-        "/api/admin/departments?include_stats=true",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (deptResponse.ok) {
-        interface Department {
-          name: string;
-        }
-
-        const deptData = await deptResponse.json();
-        // Sắp xếp departments theo chữ cái A-Z
-        const sortedDepartments = (deptData.departments || []).sort(
-          (a: Department, b: Department) =>
-            a.name.localeCompare(b.name, "vi", { sensitivity: "base" }),
-        );
-        setDepartments(sortedDepartments);
-      }
-
-      // Load employees (all management roles)
-      // API chỉ hỗ trợ single role, nên cần gọi 5 lần cho tất cả management roles
-      const [
-        giamDocResponse,
-        keToanResponse,
-        nguoiLapBieuResponse,
-        truongPhongResponse,
-        toTruongResponse,
-      ] = await Promise.all([
-        fetch("/api/admin/employees?role=giam_doc&limit=1000", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        fetch("/api/admin/employees?role=ke_toan&limit=1000", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        fetch("/api/admin/employees?role=nguoi_lap_bieu&limit=1000", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        fetch("/api/admin/employees?role=truong_phong&limit=1000", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        fetch("/api/admin/employees?role=to_truong&limit=1000", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      ]);
-
-      let allEmployees: Employee[] = [];
-
-      if (giamDocResponse.ok) {
-        const giamDocData = await giamDocResponse.json();
-        allEmployees = [...allEmployees, ...(giamDocData.employees || [])];
-      }
-
-      if (keToanResponse.ok) {
-        const keToanData = await keToanResponse.json();
-        allEmployees = [...allEmployees, ...(keToanData.employees || [])];
-      }
-
-      if (nguoiLapBieuResponse.ok) {
-        const nguoiLapBieuData = await nguoiLapBieuResponse.json();
-        allEmployees = [...allEmployees, ...(nguoiLapBieuData.employees || [])];
-      }
-
-      if (truongPhongResponse.ok) {
-        const truongPhongData = await truongPhongResponse.json();
-        allEmployees = [...allEmployees, ...(truongPhongData.employees || [])];
-      }
-
-      if (toTruongResponse.ok) {
-        const toTruongData = await toTruongResponse.json();
-        allEmployees = [...allEmployees, ...(toTruongData.employees || [])];
-      }
-
-      if (allEmployees.length === 0) {
-        console.error("Failed to load management employees");
-      }
-
-      setEmployees(allEmployees);
-
-      // Load existing permissions
-      const permResponse = await fetch("/api/admin/department-permissions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (permResponse.ok) {
-        const permData = await permResponse.json();
-        setExistingPermissions(permData.permissions || []);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setError("Có lỗi xảy ra khi tải dữ liệu");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDepartmentToggle = (department: string, checked: boolean) => {
     if (checked) {
       setSelectedDepartments((prev) => [...prev, department]);
@@ -249,7 +128,7 @@ function AssignPermissionsContent() {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!selectedEmployee) {
@@ -262,15 +141,12 @@ function AssignPermissionsContent() {
       return;
     }
 
-    setSubmitting(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const token = localStorage.getItem("admin_token");
       const results = [];
 
-      // Create permissions for each selected department
       for (const department of selectedDepartments) {
         const existingPerm = getExistingPermission(
           selectedEmployee,
@@ -288,51 +164,29 @@ function AssignPermissionsContent() {
           notes: notes || `Cấp quyền truy cập department ${department}`,
         };
 
-        // Debug logging
-        console.log("=== DEBUG FRONTEND REQUEST ===");
-        console.log("Request data:", requestData);
-        console.log(
-          "Token:",
-          token ? `${token.substring(0, 20)}...` : "NO TOKEN",
-        );
-        console.log("Department:", department);
-        console.log("Selected employee:", selectedEmployee);
-
-        const response = await fetch("/api/admin/department-permissions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestData),
-        });
-
-        if (response.ok) {
-          const successData = await response.json();
-          console.log("Success response:", successData);
+        try {
+          await grantMutation.mutateAsync(requestData);
           results.push(`${department}: Thành công`);
-        } else {
-          const errorData = await response.json();
-          console.log("Error response:", errorData);
-          console.log("Response status:", response.status);
-          results.push(`${department}: Lỗi - ${errorData.error}`);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Có lỗi xảy ra";
+          results.push(`${department}: Lỗi - ${message}`);
         }
       }
 
       setSuccess(`Kết quả cấp quyền:\n${results.join("\n")}`);
 
-      // Reset form
       setSelectedEmployee("");
       setSelectedDepartments([]);
       setNotes("");
 
-      // Reload data
-      await loadData();
+      await Promise.all([
+        refreshDepartments(),
+        refreshEmployees(),
+        refreshPermissions(),
+      ]);
     } catch (error) {
       console.error("Error assigning permissions:", error);
       setError("Có lỗi xảy ra khi cấp quyền");
-    } finally {
-      setSubmitting(false);
     }
   };
 

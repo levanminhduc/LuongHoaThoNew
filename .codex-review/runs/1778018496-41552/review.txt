@@ -1,0 +1,17 @@
+### ISSUE-1: Signature hooks still do not match route schemas
+- Category: correctness
+- Severity: high
+- Problem: `useSignatureHistoryQuery` uses `{ salary_month, employee_id, page, limit }`, but `/api/signature-history` reads `months`, `signature_type`, `limit`, `offset`, and `payroll_type`. `useManagementSignatureMutation` also omits required body fields `notes` and `device_info`.
+- Why it matters: Director/accountant/reporter dashboard migrations can call the right URL but still send ignored or invalid params. The management-signature mutation can 400 because the validation schema requires fields the hook does not accept.
+- Suggested fix: Rewrite `useSignatureHistoryQuery` to match the route contract: `months`, `signature_type`, `limit`, `offset`, `payroll_type`. Rewrite `useManagementSignatureMutation` input to include `notes`, `device_info`, and optional `is_t13`, and update W5.1/5.2/5.5 instructions/tests accordingly.
+
+### ISSUE-2: Attendance import invalidates the wrong query key
+- Category: correctness
+- Severity: medium
+- Problem: `useAttendanceImportMutation` invalidates `['attendance']`, but the list hook key is `['attendance-employees', filters]`. The integration test text also expects invalidation of `['attendance']`.
+- Why it matters: After importing attendance, the attendance list can remain stale even though the mutation succeeds.
+- Suggested fix: Invalidate `['attendance-employees']` after import, and update the attendance-import integration test to assert the list query/refetch behavior against that key.
+
+### VERDICT
+- Status: REVISE
+- Reason: R12 fixed the endpoint paths, but two hook contracts still do not match the backend behavior closely enough to execute safely.

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -36,6 +36,20 @@ import {
   Calendar,
   TrendingUp,
 } from "lucide-react";
+import {
+  getCurrentVietnamYear,
+  getRecentYearOptions,
+} from "@/utils/dateUtils";
+import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
+import {
+  useEmployeePayrollDataQuery,
+  useEmployeeYearlySummaryQuery,
+  usePayslipDownloadMutation,
+} from "@/lib/hooks/use-role-payroll";
+import type {
+  EmployeePayrollRecord as PayrollRecord,
+  YearlySummary,
+} from "@/lib/hooks/use-role-payroll";
 
 interface User {
   employee_id: string;
@@ -43,35 +57,6 @@ interface User {
   role: string;
   department: string;
   permissions: string[];
-}
-
-interface PayrollRecord {
-  id: number;
-  employee_id: string;
-  salary_month: string;
-  tien_luong_thuc_nhan_cuoi_ky: number;
-  tong_cong_tien_luong: number;
-  thue_tncn: number;
-  bhxh_bhtn_bhyt_total: number;
-  is_signed: boolean;
-  signed_at: string | null;
-  employees: {
-    full_name: string;
-    department: string;
-  };
-}
-
-interface YearlySummary {
-  year: number;
-  employee_id: string;
-  totalMonths: number;
-  signedMonths: number;
-  signedPercentage: string;
-  totalGrossSalary: number;
-  totalNetSalary: number;
-  totalTax: number;
-  totalInsurance: number;
-  averageNetSalary: number;
 }
 
 interface EmployeeDashboardProps {
@@ -91,94 +76,25 @@ export default function EmployeeDashboard({
   user,
   onLogout,
 }: EmployeeDashboardProps) {
-  const [payrollData, setPayrollData] = useState<PayrollRecord[]>([]);
-  const [yearlySummary, setYearlySummary] = useState<YearlySummary | null>(
-    null,
-  );
   const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear(),
+    getCurrentVietnamYear(),
   );
-  const [loading, setLoading] = useState(true);
-  const [monthlyBreakdown, setMonthlyBreakdown] = useState<
-    Array<{
-      month: string;
-      grossSalary: number;
-      netSalary: number;
-      tax: number;
-      insurance: number;
-    }>
-  >([]);
-
-  useEffect(() => {
-    loadPersonalData();
-    loadYearlySummary();
-  }, [selectedYear]);
-
-  const loadPersonalData = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-
-      // Load personal payroll data
-      const response = await fetch(`/api/payroll/my-data?limit=12`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPayrollData(data.data || []);
-      }
-    } catch (error) {
-      console.error("Error loading personal data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadYearlySummary = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-
-      const response = await fetch(`/api/payroll/my-data`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ year: selectedYear }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setYearlySummary(data.summary);
-        setMonthlyBreakdown(data.monthlyBreakdown || []);
-      }
-    } catch (error) {
-      console.error("Error loading yearly summary:", error);
-    }
-  };
+  const payrollQuery = useEmployeePayrollDataQuery(12);
+  const yearlySummaryQuery = useEmployeeYearlySummaryQuery(selectedYear);
+  const payslipMutation = usePayslipDownloadMutation();
+  const payrollData: PayrollRecord[] = payrollQuery.data?.data ?? [];
+  const yearlySummary: YearlySummary | null =
+    yearlySummaryQuery.data?.summary ?? null;
+  const monthlyBreakdown = yearlySummaryQuery.data?.monthlyBreakdown ?? [];
+  const loading = payrollQuery.isLoading || yearlySummaryQuery.isLoading;
 
   const handleDownloadPayslip = async (payrollId: number, month: string) => {
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(`/api/payroll/payslip/${payrollId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await payslipMutation.mutateAsync({
+        payrollId,
+        employeeId: user.employee_id,
+        month,
       });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `payslip-${user.employee_id}-${month}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
     } catch (error) {
       console.error("Error downloading payslip:", error);
     }
@@ -241,17 +157,14 @@ export default function EmployeeDashboard({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 5 }, (_, i) => {
-                    const year = new Date().getFullYear() - i;
-                    return (
-                      <SelectItem
-                        key={`employee-year-${i}-${year}`}
-                        value={year.toString()}
-                      >
-                        {year}
-                      </SelectItem>
-                    );
-                  })}
+                  {getRecentYearOptions(5).map((year) => (
+                    <SelectItem
+                      key={`employee-year-${year}`}
+                      value={year.toString()}
+                    >
+                      {year}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Button
@@ -475,9 +388,7 @@ export default function EmployeeDashboard({
                             <span>Ngày ký</span>
                             <span>
                               {payroll.signed_at
-                                ? new Date(
-                                    payroll.signed_at,
-                                  ).toLocaleDateString("vi-VN")
+                                ? formatTimestampFromDBRaw(payroll.signed_at)
                                 : "-"}
                             </span>
                           </div>

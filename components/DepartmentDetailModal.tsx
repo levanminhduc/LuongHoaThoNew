@@ -57,6 +57,8 @@ import {
   ArrowUpDown,
   Filter,
 } from "lucide-react";
+import { apiClient, downloadBlob } from "@/lib/api/client";
+import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
 interface Employee {
   employee_id: string;
@@ -168,22 +170,17 @@ export default function DepartmentDetailModal({
     setError("");
 
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(
-        `/api/admin/departments/${encodeURIComponent(departmentName)}?month=${month}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.MONTH, month);
+      const data = await apiClient.get<{
+        department?: DepartmentDetail;
+        error?: string;
+      }>(`${ENDPOINTS.departments.detail(departmentName)}?${params}`);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (data.department) {
         setDepartmentData(data.department);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Lỗi khi tải dữ liệu department");
+        setError(data.error || "Lỗi khi tải dữ liệu department");
       }
     } catch (error) {
       console.error("Error loading department detail:", error);
@@ -198,29 +195,13 @@ export default function DepartmentDetailModal({
   const handleExport = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem("admin_token");
-      const response = await fetch(
-        `/api/admin/payroll-export?month=${month}&department=${departmentName}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const params = new URLSearchParams();
+      params.set(QUERY_PARAMS.MONTH, month);
+      params.set(QUERY_PARAMS.DEPARTMENT, departmentName);
+      const { blob, filename } = await apiClient.blob(
+        `${ENDPOINTS.payroll.export}?${params}`,
       );
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `department-${departmentName}-${month}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        setError("Lỗi khi xuất dữ liệu");
-      }
+      downloadBlob(blob, filename ?? `department-${departmentName}-${month}.xlsx`);
     } catch (error) {
       console.error("Error exporting data:", error);
       setError("Có lỗi xảy ra khi xuất dữ liệu");

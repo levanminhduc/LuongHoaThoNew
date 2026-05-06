@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -14,20 +14,16 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  VirtualizedTable,
+  type VirtualColumn,
+} from "@/components/ui/virtualized-table";
 import {
   Search,
   Filter,
@@ -42,26 +38,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { DeleteAlertDialog } from "@/components/ui/alert-dialogs";
-
-interface DepartmentPermission {
-  id: number;
-  employee_id: string;
-  department: string;
-  granted_by: string;
-  granted_at: string;
-  is_active: boolean;
-  notes?: string;
-  employees?: {
-    employee_id: string;
-    full_name: string;
-    department: string;
-    chuc_vu: string;
-  };
-  granted_by_employee?: {
-    employee_id: string;
-    full_name: string;
-  };
-}
+import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import {
+  useDepartmentPermissionsQuery,
+  useRevokeDepartmentPermissionMutation,
+} from "@/lib/hooks/use-departments";
+import type { DepartmentPermission } from "@/lib/hooks/use-departments";
 
 // Loading component cho Suspense fallback
 function PermissionsLoading() {
@@ -93,30 +75,32 @@ function PermissionsContent() {
   const searchParams = useSearchParams();
   const departmentFilter = searchParams.get("department");
 
-  const [permissions, setPermissions] = useState<DepartmentPermission[]>([]);
-  const [filteredPermissions, setFilteredPermissions] = useState<
-    DepartmentPermission[]
-  >([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [departmentFilterState, setDepartmentFilterState] = useState<string>(
     departmentFilter || "all",
   );
+  const [visibleLimit, setVisibleLimit] = useState("all");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [permissionToDelete, setPermissionToDelete] =
     useState<DepartmentPermission | null>(null);
-  const [revokingId, setRevokingId] = useState<number | null>(null);
+  const permissionsQuery = useDepartmentPermissionsQuery();
+  const revokeMutation = useRevokeDepartmentPermissionMutation();
+  const permissions = permissionsQuery.data?.permissions ?? [];
+  const refreshPermissions = permissionsQuery.refetch;
+  const loading = permissionsQuery.isLoading;
+  const queryError =
+    permissionsQuery.error instanceof Error
+      ? permissionsQuery.error.message
+      : null;
+  const revokingId = revokeMutation.isPending
+    ? revokeMutation.variables ?? null
+    : null;
 
   useEffect(() => {
     checkAuthentication();
-    loadPermissions();
   }, []);
-
-  useEffect(() => {
-    filterPermissions();
-  }, [permissions, searchTerm, statusFilter, departmentFilterState]);
 
   const checkAuthentication = () => {
     const token = localStorage.getItem("admin_token");
@@ -139,35 +123,9 @@ function PermissionsContent() {
     }
   };
 
-  const loadPermissions = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("admin_token");
-
-      const response = await fetch("/api/admin/department-permissions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPermissions(data.permissions || []);
-      } else {
-        setError("Không thể tải danh sách permissions");
-      }
-    } catch (error) {
-      console.error("Error loading permissions:", error);
-      setError("Có lỗi xảy ra khi tải dữ liệu");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterPermissions = () => {
+  const filteredPermissions = useMemo(() => {
     let filtered = permissions;
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
         (perm) =>
@@ -179,50 +137,29 @@ function PermissionsContent() {
       );
     }
 
-    // Filter by status
     if (statusFilter !== "all") {
       filtered = filtered.filter((perm) =>
         statusFilter === "active" ? perm.is_active : !perm.is_active,
       );
     }
 
-    // Filter by department
     if (departmentFilterState !== "all") {
       filtered = filtered.filter(
         (perm) => perm.department === departmentFilterState,
       );
     }
 
-    setFilteredPermissions(filtered);
-  };
+    return filtered;
+  }, [departmentFilterState, permissions, searchTerm, statusFilter]);
 
   const revokePermission = async (permissionId: number) => {
     try {
-      setRevokingId(permissionId);
-      const token = localStorage.getItem("admin_token");
-
-      const response = await fetch(
-        `/api/admin/department-permissions?id=${permissionId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.ok) {
-        await loadPermissions(); // Reload data
-        alert("Thu hồi quyền thành công!");
-      } else {
-        const errorData = await response.json();
-        alert(`Lỗi: ${errorData.error}`);
-      }
+      await revokeMutation.mutateAsync(permissionId);
+      await refreshPermissions();
+      alert("Thu hồi quyền thành công!");
     } catch (error) {
       console.error("Error revoking permission:", error);
-      alert("Có lỗi xảy ra khi thu hồi quyền");
-    } finally {
-      setRevokingId(null);
+      setError(error instanceof Error ? error.message : "Có lỗi xảy ra khi thu hồi quyền");
     }
   };
 
@@ -239,21 +176,109 @@ function PermissionsContent() {
     handleDeleteDialogChange(false);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const getUniqueValues = (key: keyof DepartmentPermission) => {
     return [
       ...new Set(permissions.map((p) => p[key] as string).filter(Boolean)),
     ];
   };
+  const displayedPermissions =
+    visibleLimit === "all"
+      ? filteredPermissions
+      : filteredPermissions.slice(0, Number(visibleLimit));
+  const permissionColumns: VirtualColumn<DepartmentPermission>[] = [
+    {
+      key: "employee",
+      header: "Nhân Viên",
+      width: "minmax(180px, 1.4fr)",
+      cell: (permission) => (
+        <div>
+          <p className="font-medium">
+            {permission.employees?.full_name || "N/A"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {permission.employee_id}
+          </p>
+          <Badge variant="outline" className="text-xs mt-1">
+            {permission.employees?.chuc_vu || "N/A"}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      key: "department",
+      header: "Department",
+      width: "minmax(150px, 1fr)",
+      cell: (permission) => (
+        <Badge variant="secondary">{permission.department}</Badge>
+      ),
+    },
+    {
+      key: "status",
+      header: "Trạng Thái",
+      width: "130px",
+      cell: (permission) => (
+        <Badge variant={permission.is_active ? "default" : "destructive"}>
+          {permission.is_active ? "Hoạt động" : "Đã thu hồi"}
+        </Badge>
+      ),
+    },
+    {
+      key: "granted_by",
+      header: "Cấp Bởi",
+      width: "minmax(150px, 1fr)",
+      cell: (permission) => (
+        <p className="text-sm">
+          {permission.granted_by_employee?.full_name || permission.granted_by}
+        </p>
+      ),
+    },
+    {
+      key: "granted_at",
+      header: "Ngày Cấp",
+      width: "170px",
+      cell: (permission) => (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Calendar className="h-3 w-3" />
+          {formatVietnamTimestamp(permission.granted_at)}
+        </div>
+      ),
+    },
+    {
+      key: "notes",
+      header: "Ghi Chú",
+      width: "minmax(120px, 1fr)",
+      cell: (permission) => (
+        <p className="text-xs text-muted-foreground max-w-32 truncate">
+          {permission.notes || "-"}
+        </p>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Thao Tác",
+      width: "110px",
+      className: "text-center",
+      cell: (permission) =>
+        permission.is_active ? (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={revokingId === permission.id}
+            onClick={() => {
+              setPermissionToDelete(permission);
+              setShowDeleteDialog(true);
+            }}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            {revokingId === permission.id ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
+        ) : null,
+    },
+  ];
 
   if (loading) {
     return (
@@ -286,10 +311,10 @@ function PermissionsContent() {
         </Button>
       </div>
 
-      {error && (
+      {(error || queryError) && (
         <Alert className="mb-6">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error || queryError}</AlertDescription>
         </Alert>
       )}
 
@@ -448,115 +473,55 @@ function PermissionsContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nhân Viên</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Trạng Thái</TableHead>
-                  <TableHead>Cấp Bởi</TableHead>
-                  <TableHead>Ngày Cấp</TableHead>
-                  <TableHead>Ghi Chú</TableHead>
-                  <TableHead className="text-center">Thao Tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPermissions.map((permission) => (
-                  <TableRow key={permission.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {permission.employees?.full_name || "N/A"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {permission.employee_id}
-                        </p>
-                        <Badge variant="outline" className="text-xs mt-1">
-                          {permission.employees?.chuc_vu || "N/A"}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{permission.department}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          permission.is_active ? "default" : "destructive"
-                        }
-                      >
-                        {permission.is_active ? "Hoạt động" : "Đã thu hồi"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm">
-                          {permission.granted_by_employee?.full_name ||
-                            permission.granted_by}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {formatDate(permission.granted_at)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-xs text-muted-foreground max-w-32 truncate">
-                        {permission.notes || "-"}
-                      </p>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {permission.is_active && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={revokingId === permission.id}
-                          onClick={() => {
-                            setPermissionToDelete(permission);
-                            setShowDeleteDialog(true);
-                          }}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          {revokingId === permission.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
+          <div className="mb-4 flex justify-end">
+            <Select value={visibleLimit} onValueChange={setVisibleLimit}>
+              <SelectTrigger className="w-full sm:w-[170px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Hiển thị tất cả</SelectItem>
+                {[100, 200].map((value) => (
+                  <SelectItem key={value} value={String(value)}>
+                    Hiển thị {value}
+                  </SelectItem>
                 ))}
-              </TableBody>
-            </Table>
+              </SelectContent>
+            </Select>
+          </div>
 
-            {filteredPermissions.length === 0 && (
-              <div className="text-center py-12">
-                <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  Không tìm thấy permissions
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  {permissions.length === 0
-                    ? "Chưa có permissions nào được cấp."
-                    : "Không có permissions nào phù hợp với bộ lọc hiện tại."}
-                </p>
-                <Button
-                  onClick={() =>
-                    router.push(
-                      "/admin/department-management/assign-permissions",
-                    )
-                  }
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Cấp Quyền Đầu Tiên
-                </Button>
-              </div>
-            )}
+          <div className="overflow-x-auto">
+            <VirtualizedTable
+              data={displayedPermissions}
+              columns={permissionColumns}
+              rowKey={(permission) => String(permission.id)}
+              containerHeight={600}
+              estimateRowHeight={76}
+              caption="Danh sách department permissions"
+              emptyState={
+                <div className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    Không tìm thấy permissions
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    {permissions.length === 0
+                      ? "Chưa có permissions nào được cấp."
+                      : "Không có permissions nào phù hợp với bộ lọc hiện tại."}
+                  </p>
+                  <Button
+                    onClick={() =>
+                      router.push(
+                        "/admin/department-management/assign-permissions",
+                      )
+                    }
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Cấp Quyền Đầu Tiên
+                  </Button>
+                </div>
+              }
+            />
           </div>
         </CardContent>
       </Card>

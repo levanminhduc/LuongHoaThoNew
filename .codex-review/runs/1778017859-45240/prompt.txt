@@ -1,0 +1,16 @@
+## Issues Accepted & Fixed (Round 10)
+
+### ISSUE-1 (R10): W3 hardcoded-path gate scans endpoints.ts → FIXED
+- Removed `lib/api/endpoints.ts` from the W3 hardcoded-path gate (`rg -n "[\"'\`]/api/"`).
+- Endpoints file is the intended location for `/api/` literals — gating it is self-defeating.
+- The separate `VERIFY|Pseudo-paths|TODO|TBD` gate for `endpoints.ts` (Step 3.0.5a) remains, ensuring no unverified placeholders ship.
+- Final Validation Checklist gate explicitly notes endpoints.ts is excluded ("the only file allowed to hold `/api/` literals").
+
+### ISSUE-2 (R10): Stale smoke expected-text → FIXED
+- Step 0.4b expected output text now matches script output: "6 variants + lib/hooks scope + denylist" (was stale "5 fetch variants + denylist").
+
+## Issues Disputed
+None — both round-10 issues accepted and addressed.
+
+## Your Turn
+Re-review.

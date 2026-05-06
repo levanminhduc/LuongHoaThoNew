@@ -1,0 +1,66 @@
+### ISSUE-1: Opt-in MSW is not wired into new tests
+- Category: sequencing
+- Severity: high
+- Problem: W3 examples still import `server` from `tests/mocks/server`, not `tests/mocks/enable-msw`, and existing `jest.setup.js` keeps `global.fetch = jest.fn()`.
+- Why it matters: MSW handlers will not listen, and tests can fail or bypass the mocked endpoints.
+- Suggested fix: Update every W3/W5 test template to import `server` from `tests/mocks/enable-msw`, and make the enabler replace/restore the global fetch mock safely for MSW tests.
+
+### ISSUE-2: Fetch audit script does not audit all requested targets
+- Category: scope
+- Severity: high
+- Problem: `audit-fetch.sh` only reads `$1`, but calls pass `app/ components/`; `components/` is ignored. Its `--exclude-dir=app/employee/lookup/` style excludes also likely do not match path prefixes.
+- Why it matters: Final “0 direct fetch” can pass while component fetches remain, including out-of-scope leaks.
+- Suggested fix: Rewrite the helper to iterate all `"$@"` targets and use `rg` with explicit `--glob '!path/**'` exclusions; add a smoke test proving it catches `components/*` and excludes denylisted paths.
+
+### ISSUE-3: Endpoint audit is not propagated into hook tasks
+- Category: correctness
+- Severity: high
+- Problem: Task 3.0 adds an audit, but later snippets still contain known-speculative endpoints like `/api/admin/payroll`, `/api/admin/signature-progress`, and `month` instead of `salary_month`.
+- Why it matters: Workers can implement the wrong concrete snippets despite doing the audit.
+- Suggested fix: Make Task 3.0 produce committed or copied endpoint constants/contracts, then require each hook task to replace its snippet with audited paths before implementation.
+
+### ISSUE-4: “Skip hook and keep direct fetch” contradicts acceptance
+- Category: correctness
+- Severity: high
+- Problem: Task 3.0 says if an endpoint is missing, one option is to skip the hook and leave a page partially migrated using direct fetch.
+- Why it matters: This violates the stated 0-direct-fetch pass bar for W3/W5.
+- Suggested fix: Remove that option. Missing endpoints should block the wave, reroute through an existing endpoint, or explicitly change scope/acceptance before proceeding.
+
+### ISSUE-5: Logout no longer clears `user_info`
+- Category: correctness
+- Severity: high
+- Problem: `useLogout` and `apiClient` clear `admin_token`/`auth_token` but not `user_info`, while existing logout sites currently remove `user_info`.
+- Why it matters: Role/user metadata can remain stale after logout or 401, causing wrong routing or UI state after re-login.
+- Suggested fix: Add `user_info` to all auth-boundary clearing paths and test logout plus 401 cache/token/user-info purge.
+
+### ISSUE-6: W5 test coverage is still incomplete
+- Category: correctness
+- Severity: high
+- Problem: Tasks 5.7 and 5.8 migrate department and attendance screens but do not include explicit integration test steps.
+- Why it matters: The “integration test for every migrated screen” acceptance criterion still cannot be verified.
+- Suggested fix: Add concrete test paths and required assertions for every page in 5.7 and 5.8.
+
+### ISSUE-7: Final bundle validation regressed
+- Category: risk
+- Severity: medium
+- Problem: Task 5.10 compares against `bundle-baseline.txt`, but the new true baseline is `bundle-baseline-preflight.txt`.
+- Why it matters: Final acceptance can compare against the wrong or missing file.
+- Suggested fix: Update all final bundle commands and PR requirements to use `bundle-baseline-preflight.txt` and the W2/W5 route snapshots.
+
+### ISSUE-8: Fallback D violates out-of-scope
+- Category: scope
+- Severity: medium
+- Problem: W2 fallback D proposes Server Components migration, explicitly listed as out of scope in the original decisions.
+- Why it matters: A bundle miss can push the implementation into excluded architectural work.
+- Suggested fix: Remove fallback D or make it an escalation-only proposal requiring user approval, not an executable plan step.
+
+### ISSUE-9: Mutation toast helper still loses success callbacks
+- Category: correctness
+- Severity: medium
+- Problem: Hooks spread `...withToast()` and then define `onSuccess`, which overwrites the success toast callback.
+- Why it matters: Mutations with invalidation silently drop success toasts.
+- Suggested fix: Change the plan to compose callbacks, e.g. a helper that accepts `onSuccess`/`onError`, or manually call toast inside each final `onSuccess`.
+
+### VERDICT
+- Status: REVISE
+- Reason: The major prior issues are mostly addressed, but test infrastructure, audit verification, endpoint propagation, and acceptance consistency still have blockers.

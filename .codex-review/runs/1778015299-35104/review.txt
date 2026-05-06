@@ -1,0 +1,59 @@
+### ISSUE-1: MSW fetch replacement still won’t work
+- Category: correctness
+- Severity: high
+- Problem: `import 'whatwg-fetch'` will not reliably override `global.fetch = jest.fn()` because the mock already exists before the test imports `enable-msw`.
+- Why it matters: MSW-enabled tests can still run against a Jest mock instead of MSW, so handlers may never intercept.
+- Suggested fix: In `enable-msw.ts`, explicitly replace `globalThis.fetch` with a real fetch implementation and restore the saved mock after the file; prove in the smoke test that `fetch` is not a Jest mock.
+
+### ISSUE-2: Jest setup instructions contradict themselves
+- Category: sequencing
+- Severity: medium
+- Problem: Task 1.8 says “Do NOT modify `jest.setup.js` globally,” then instructs editing it, but the commit command omits `jest.setup.js`.
+- Why it matters: A worker can either skip the required edit or make an uncommitted setup change.
+- Suggested fix: Update the file list and commit command to include `jest.setup.js`, or move all fetch save/restore logic into `enable-msw.ts` and remove the setup edit.
+
+### ISSUE-3: API client tests still depend on non-stateful localStorage
+- Category: correctness
+- Severity: high
+- Problem: `client.test.ts` uses `localStorage.setItem()` then expects `getItem()` to return values, but current `jest.setup.js` defines `getItem/setItem/removeItem` as plain `jest.fn()`.
+- Why it matters: Token attach and 401-clear tests will fail or give false results.
+- Suggested fix: Add a stateful localStorage mock in the test or make `jest.setup.js`’s storage mock stateful before Task 1.3.
+
+### ISSUE-4: Endpoint constants are still allowed to ship as pseudo-contracts
+- Category: correctness
+- Severity: high
+- Problem: `ENDPOINTS` contains `VERIFY` comments and pseudo paths, while Task 3.7 still hardcodes `/api/...` strings instead of using `ENDPOINTS`.
+- Why it matters: The plan can still implement wrong endpoints despite the audit.
+- Suggested fix: Add a hard gate before committing `endpoints.ts`: `rg "VERIFY|Pseudo-paths|/api/" lib/hooks docs task snippets` must show no unverified constants or hardcoded hook paths.
+
+### ISSUE-5: `salary_month` rename is incomplete
+- Category: correctness
+- Severity: high
+- Problem: Several snippets still use `month` in hook inputs or request bodies (`usePayrollSearchQuery`, W5 dashboards, attendance migration call, export hooks).
+- Why it matters: Backend rules and T13 detection depend on `salary_month`; using `month` can break filters/import/export flows.
+- Suggested fix: Standardize all hook filters and mutation bodies on `salary_month`, use `QUERY_PARAMS.SALARY_MONTH`, and add a T13 query/body test.
+
+### ISSUE-6: Audit smoke script is likely broken
+- Category: sequencing
+- Severity: medium
+- Problem: The smoke test’s `sed` replacement creates a copied script referencing `$TMP`, but that variable is not exported into the child script.
+- Why it matters: The smoke test can fail before the helper is usable, or be “fixed” ad hoc by workers.
+- Suggested fix: Remove the sed rewrite; copy `scope-denylist.txt` beside the copied script and let `SCRIPT_DIR` resolve naturally.
+
+### ISSUE-7: Final fetch audit still uses raw grep
+- Category: risk
+- Severity: medium
+- Problem: Task 3.9 and the final checklist still use raw `grep`, and the final checklist omits role dashboard paths.
+- Why it matters: Direct fetches can remain in `app/director`, `app/accountant`, `app/manager`, `app/reporter`, or components while final validation appears clean.
+- Suggested fix: Replace final grep checks with `./tests/scripts/audit-fetch.sh app components` and require `w5-final-audit.txt` to be empty or justified.
+
+### ISSUE-8: Virtualization may never exercise the virtual path
+- Category: risk
+- Severity: medium
+- Problem: Earlier migration snippets hardcode `limit: 20`, while W4 manual verification expects setting `limit=200`.
+- Why it matters: The virtualized branch may not activate, so scroll performance acceptance is not actually tested.
+- Suggested fix: Add a task ensuring each virtualized screen can load ≥100 rows, plus a page-level smoke/test that confirms `role="grid"` renders for large datasets.
+
+### VERDICT
+- Status: REVISE
+- Reason: The plan is much closer, but MSW/test setup, endpoint-contract enforcement, query parameter consistency, and final verification still have blocking gaps.

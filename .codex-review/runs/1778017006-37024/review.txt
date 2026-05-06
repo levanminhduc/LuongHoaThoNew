@@ -1,0 +1,31 @@
+### ISSUE-1: Audit regex will fail under default `rg`
+- Category: correctness
+- Severity: critical
+- Problem: `audit-fetch.sh` uses `(?<![\.\w])fetch\s*\(`, but ripgrep’s default regex engine does not support lookbehind.
+- Why it matters: The audit helper will error instead of producing reliable results, so every fetch gate depending on it is broken.
+- Suggested fix: Either add `--pcre2` and verify it in smoke, or avoid lookbehind, e.g. use a default-compatible pattern such as `\bfetch\s*\(` plus explicit filtering. Also update the stale smoke expected text from “5 variants” to “6 variants + lib/hooks”.
+
+### ISSUE-2: W5 audits still omit `lib/hooks`
+- Category: sequencing
+- Severity: high
+- Problem: Step 5.0.1 and final checklist include `lib/hooks`, but Step 5.9.1 and Step 5.9.3 still run `audit-fetch.sh app/ components/` only.
+- Why it matters: Hooks added or migrated during 5.9 can retain direct `fetch()` until the final checklist, and `w5-final-audit.txt` will not match the final validation command.
+- Suggested fix: Change both 5.9 audit commands to `./tests/scripts/audit-fetch.sh app components lib/hooks`.
+
+### ISSUE-3: `withToast` tests are not typecheck-clean
+- Category: correctness
+- Severity: medium
+- Problem: Task 1.7 tests call `opts.onError?.(err)` with one argument, but the inferred callback signature requires `(error, vars, ctx)`.
+- Why it matters: Jest may run, but `npm run typecheck` can fail because tests are included by `tsconfig.json`.
+- Suggested fix: Call `opts.onError?.(err, undefined, undefined)` in the initial tests, or make the helper’s returned callback params optional.
+
+### ISSUE-4: `auth-redirect` test redefines `window.location`
+- Category: correctness
+- Severity: medium
+- Problem: The null-pathname test uses `Object.defineProperty(window, 'location', ...)`, which jsdom does not allow.
+- Why it matters: The resolver test can fail before proving the first-paint fallback behavior.
+- Suggested fix: Use `window.history.pushState({}, '', '/admin/dashboard')` before calling `resolveLoginPath(null)`.
+
+### VERDICT
+- Status: REVISE
+- Reason: Round 6 fixed the intended design, but the audit script and two W1 tests still have concrete execution blockers.

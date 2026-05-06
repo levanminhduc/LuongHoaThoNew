@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,10 +43,13 @@ import {
 } from "@/lib/advanced-excel-parser";
 import {
   type EnhancedColumnMapping,
-  type ColumnAlias,
   type ImportMappingResult,
   type MappingConfiguration,
 } from "@/lib/column-alias-config";
+import {
+  useColumnAliasesQuery,
+  useSaveMappingConfigurationMutation,
+} from "@/lib/hooks/use-column-mapping";
 
 interface ColumnMappingDialogProps {
   detectedColumns: string[];
@@ -83,7 +86,6 @@ export function ColumnMappingDialog({
   const [enhancedMapping, setEnhancedMapping] = useState<EnhancedColumnMapping>(
     {},
   );
-  const [aliases, setAliases] = useState<ColumnAlias[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [mappingResult, setMappingResult] =
@@ -105,38 +107,18 @@ export function ColumnMappingDialog({
   const [selectedConfigId, setSelectedConfigId] = useState<number | null>(
     currentConfig?.id || null,
   );
+  const aliasesQuery = useColumnAliasesQuery(
+    { limit: 200, isActive: true },
+    enableAliasMapping,
+  );
+  const saveMappingConfigurationMutation = useSaveMappingConfigurationMutation();
+  const aliases = aliasesQuery.data?.data || [];
+  const isBusy =
+    loading ||
+    aliasesQuery.isLoading ||
+    saveMappingConfigurationMutation.isPending;
 
-  useEffect(() => {
-    if (enableAliasMapping) {
-      loadAliases();
-    }
-    validateMapping();
-  }, [mapping, enableAliasMapping]);
-
-  const loadAliases = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) return;
-
-      const response = await fetch(
-        "/api/admin/column-aliases?limit=200&is_active=true",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      const result = await response.json();
-      if (result.success) {
-        setAliases(result.data || []);
-      }
-    } catch (error) {
-      console.error("Error loading aliases:", error);
-    }
-  };
-
-  const validateMapping = () => {
+  const validateMapping = useCallback(() => {
     const newErrors: string[] = [];
 
     // Check for required field mappings
@@ -170,7 +152,11 @@ export function ColumnMappingDialog({
     });
 
     setErrors(newErrors);
-  };
+  }, [mapping]);
+
+  useEffect(() => {
+    validateMapping();
+  }, [validateMapping]);
 
   const handleMappingChange = (excelColumn: string, dbField: string) => {
     setMapping((prev) => ({
@@ -242,27 +228,12 @@ export function ColumnMappingDialog({
     if (!mappingResult || !fileName) return;
 
     try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) return;
-
-      const response = await fetch("/api/admin/mapping-configurations", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          mapping: mappingResult.mapping,
-          file_name: fileName,
-          auto_generate_name: true,
-        }),
+      const result = await saveMappingConfigurationMutation.mutateAsync({
+        mapping: mappingResult.mapping,
+        file_name: fileName,
+        auto_generate_name: true,
       });
-
-      const result = await response.json();
-      if (result.success) {
-        // Show success message or notification
-        console.log("Mapping saved successfully:", result.message);
-      }
+      console.log("Mapping saved successfully:", result.message);
     } catch (error) {
       console.error("Error saving mapping:", error);
     }
@@ -448,10 +419,10 @@ export function ColumnMappingDialog({
                 variant="outline"
                 onClick={handleAutoMap}
                 className="flex items-center gap-2 bg-transparent"
-                disabled={loading}
+                disabled={isBusy}
               >
                 <RefreshCw
-                  className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 ${isBusy ? "animate-spin" : ""}`}
                 />
                 {enableAliasMapping ? "Smart Auto-Map" : "Tự Động Ánh Xạ"}
               </Button>

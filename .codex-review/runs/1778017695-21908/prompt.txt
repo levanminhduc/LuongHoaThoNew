@@ -1,0 +1,27 @@
+## Issues Accepted & Fixed (Round 9)
+
+### ISSUE-1 (R9): W3 hardcoded-path gate blocks on legacy files → FIXED
+- Step 3.0.5a gate scope narrowed to W3-touched files: explicitly lists `lib/hooks/use-employees.ts use-payroll.ts use-dashboard.ts use-bulk-export.ts use-payroll-import.ts lib/api/endpoints.ts`.
+- Comment explicitly notes legacy `lib/stores/*` and `lib/hooks/useImport*` still hardcode paths until W5.8b — those are scoped out of W3 gate.
+- Final Validation Checklist (after W5.8b completes) runs the full-scope gate `lib/hooks lib/stores lib/sync` with backtick coverage.
+
+### ISSUE-2 (R9): 5.8b depends on hook from later W5.9 → FIXED
+- Task 5.8b table updated: `useUnsignedEmployeesQuery` annotated "create in this task — see below" instead of pointing to W5.9.
+- Added explicit "Hooks to create in 5.8b before any page migration" sub-list before the per-page recipe — `useUnsignedEmployeesQuery`, `useMappingConfigsQuery`, `useMappingConfigMutation`, `usePasswordResetHistoryQuery`, data-validation hook all created at top of 5.8b with their own unit tests.
+- W5.9 then consumes `useUnsignedEmployeesQuery` (already exists) for `UnsignedEmployeesModal`.
+
+### ISSUE-3 (R9): "Store delegates to hooks" violates Rules of Hooks → FIXED
+- Task 5.8b recipe step 3 rewritten: "Stores cannot call hooks. Remove async fetch/data methods from store; create React Query hooks; consumers (React components) call hooks for data and read from the slimmer store ONLY for local UI state. The component bridges hooks ↔ store, not the store itself."
+- `lib/stores/mapping-config-store.ts` special-handling section rewritten with the same correct pattern (4 explicit numbered steps).
+- Removed all "delegate to hooks" wording.
+
+### ISSUE-4 (R9): Endpoint audit table missing 5.8b endpoints → FIXED
+- Task 3.0.2 audit table extended with 5 new rows: `useUnsignedEmployeesQuery`, `useMappingConfigsQuery + useMappingConfigMutation`, `usePasswordResetHistoryQuery`, data-validation hooks, `useImportPreviewMigration`.
+- ENDPOINTS object (Step 3.0.5) extended with `mappingConfigs` section (list/detail/create/update/delete with proper encodeURIComponent), `unsignedEmployees` (with VERIFY), `passwordResetHistory` (with VERIFY).
+- All 5.8b endpoints now flow through the same audit gate as W3 endpoints.
+
+## Issues Disputed
+None — all 4 round-9 issues accepted and addressed.
+
+## Your Turn
+Re-review.
