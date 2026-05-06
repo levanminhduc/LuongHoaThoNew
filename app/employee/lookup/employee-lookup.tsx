@@ -78,7 +78,7 @@ export function EmployeeLookup() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="p-[14px] xs:p-[18px] sm:p-[22px]">
           <CardTitle className="flex items-center gap-2">
             <Search className="w-5 h-5" />
             Thông Tin Tra Cứu
@@ -123,7 +123,7 @@ export function EmployeeLookup() {
             </Popover>
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-[14px] pt-0 xs:p-[18px] xs:pt-0 sm:p-[22px] sm:pt-0">
           <form
             method="post"
             action="/api/employee/lookup"

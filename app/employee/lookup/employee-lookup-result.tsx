@@ -21,7 +21,6 @@ import {
   Building2,
   CalendarDays,
   Calendar,
-  FileText,
   Lock,
   MoreHorizontal,
 } from "lucide-react";
@@ -69,7 +68,7 @@ export function EmployeeLookupResult({
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-6">
+      <CardContent className="space-y-5 p-[14px] pt-[14px] xs:p-[18px] xs:pt-[18px] sm:space-y-6 sm:p-[22px] sm:pt-[22px]">
         <div className="relative isolate overflow-hidden rounded-lg border border-primary/40 bg-[linear-gradient(135deg,hsl(var(--primary))_0%,#1656d6_48%,#0a2c7d_100%)] p-3 text-primary-foreground shadow-[0_18px_42px_-24px_rgba(37,99,235,0.9)] before:absolute before:inset-y-[-40%] before:left-[-55%] before:z-0 before:w-[46%] before:skew-x-[-18deg] before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.16),rgba(255,255,255,0.56),rgba(255,255,255,0.16),transparent)] before:content-[''] before:animate-employee-card-shine motion-reduce:before:animate-none xs:p-4 sm:p-5">
           <div className="relative z-10 grid gap-3 sm:gap-4">
             <p className="text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-white/70 xs:text-[0.7rem]">
@@ -126,7 +125,6 @@ export function EmployeeLookupResult({
                 onClick={onShowDetail}
                 className="relative isolate min-h-9 overflow-hidden border border-sky-200/70 bg-[linear-gradient(135deg,#0ea5e9_0%,#2563eb_42%,#0a2c7d_100%)] px-3 font-bold text-white shadow-[0_14px_30px_-14px_rgba(37,99,235,0.95),inset_0_1px_0_rgba(255,255,255,0.34)] transition-[transform,filter] [transition-duration:200ms] before:absolute before:inset-y-[-55%] before:left-[-76%] before:z-0 before:w-1/2 before:skew-x-[-18deg] before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.18),rgba(255,255,255,0.72),rgba(255,255,255,0.18),transparent)] before:content-[''] before:animate-employee-detail-shine after:absolute after:inset-0 after:z-0 after:rounded-md after:border after:border-white/45 after:content-[''] after:animate-employee-detail-flash animate-employee-detail-pulse hover:scale-[1.03] hover:bg-[linear-gradient(135deg,#0ea5e9_0%,#2563eb_42%,#0a2c7d_100%)] hover:text-white hover:brightness-110 active:scale-[0.96] motion-reduce:animate-none motion-reduce:before:animate-none motion-reduce:after:animate-none"
               >
-                <FileText className="relative z-10 h-4 w-4" />
                 <span className="relative z-10">Xem Chi Tiết</span>
               </Button>
 
@@ -214,7 +212,7 @@ export function EmployeeLookupResult({
           </div>
 
           <Card className="mt-4 border-primary bg-primary text-primary-foreground">
-            <CardContent className="pt-6">
+            <CardContent className="px-4 py-4 xs:px-5 xs:py-4 sm:px-6 sm:py-4">
               <div className="text-center">
                 <p className="text-sm font-medium text-primary-foreground/80">
                   Lương Thực Nhận Cuối Kỳ
