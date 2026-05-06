@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { FocusScope } from "@radix-ui/react-focus-scope";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -80,75 +79,52 @@ export function DepartmentCombobox({
           </Button>
         </FormControl>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-[300px] p-0"
-        align="start"
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-        }}
-      >
-        <FocusScope
-          trapped={true}
-          loop={true}
-          onMountAutoFocus={(e) => {
-            e.preventDefault();
-            const input = document.querySelector(
-              "[cmdk-input]",
-            ) as HTMLInputElement;
-            if (input) {
-              input.focus();
-            }
-          }}
-          onUnmountAutoFocus={(e) => {
-            e.preventDefault();
-          }}
-        >
-          <Command shouldFilter={false}>
-            <CommandInput
-              placeholder="Tìm kiếm phòng ban..."
-              value={search}
-              onValueChange={setSearch}
-            />
-            <CommandList>
-              <CommandEmpty>Không tìm thấy phòng ban.</CommandEmpty>
-              <CommandGroup>
+      <PopoverContent className="w-[300px] p-0" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Tìm kiếm phòng ban..."
+            value={search}
+            onValueChange={setSearch}
+          />
+          <CommandList>
+            <CommandEmpty>Không tìm thấy phòng ban.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="none_selected"
+                onSelect={() => {
+                  onSelect("");
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    !value ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                Không chọn
+              </CommandItem>
+              {filteredDepartments.map((dept) => (
                 <CommandItem
-                  value="none_selected"
+                  key={dept}
+                  value={dept}
                   onSelect={() => {
-                    onSelect("");
+                    onSelect(dept);
                     setOpen(false);
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      !value ? "opacity-100" : "opacity-0",
+                      value === dept ? "opacity-100" : "opacity-0",
                     )}
                   />
-                  Không chọn
+                  {dept}
                 </CommandItem>
-                {filteredDepartments.map((dept) => (
-                  <CommandItem
-                    key={dept}
-                    value={dept}
-                    onSelect={() => {
-                      onSelect(dept);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === dept ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                    {dept}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </FocusScope>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
       </PopoverContent>
     </Popover>
   );
