@@ -58,6 +58,7 @@ interface LookupState {
   t13SignSuccess: boolean;
   detailData: PayrollResult | null;
   detailLoading: boolean;
+  detailError: string;
   t13DetailData: PayrollResult | null;
   showDetailModal: boolean;
   showT13Modal: boolean;
@@ -117,8 +118,10 @@ type LookupAction =
     }
   | { type: "SET_REMEMBER"; payload: boolean }
   | { type: "SET_DETAIL_LOADING"; payload: boolean }
+  | { type: "SET_DETAIL_ERROR"; payload: string }
   | { type: "SET_DETAIL_DATA"; payload: PayrollResult | null }
   | { type: "SET_T13_DETAIL_DATA"; payload: PayrollResult | null }
+  | { type: "CLEAR_DETAIL_DATA"; payload: "monthly" | "t13" }
   | {
       type: "RESTORE_CREDENTIALS";
       payload: { employeeId: string; password: string };
@@ -145,6 +148,7 @@ const initialState: LookupState = {
   showT13DetailModal: false,
   detailData: null,
   detailLoading: false,
+  detailError: "",
   t13DetailData: null,
   showPasswordModal: false,
   showHistoryModal: false,
@@ -175,6 +179,8 @@ function lookupReducer(state: LookupState, action: LookupAction): LookupState {
         sessionToken: action.payload.sessionToken,
         error: "",
         loading: false,
+        detailData: null,
+        detailError: "",
       };
     case "T13_LOOKUP_SUCCESS":
       return {
@@ -183,6 +189,8 @@ function lookupReducer(state: LookupState, action: LookupAction): LookupState {
         showT13Modal: true,
         error: "",
         t13Loading: false,
+        t13DetailData: null,
+        detailError: "",
       };
     case "SET_RESULT":
       return { ...state, result: action.payload };
@@ -218,10 +226,26 @@ function lookupReducer(state: LookupState, action: LookupAction): LookupState {
       return { ...state, rememberPassword: action.payload };
     case "SET_DETAIL_LOADING":
       return { ...state, detailLoading: action.payload };
+    case "SET_DETAIL_ERROR":
+      return { ...state, detailError: action.payload };
     case "SET_DETAIL_DATA":
-      return { ...state, detailData: action.payload, detailLoading: false };
+      return {
+        ...state,
+        detailData: action.payload,
+        detailLoading: false,
+        detailError: "",
+      };
     case "SET_T13_DETAIL_DATA":
-      return { ...state, t13DetailData: action.payload };
+      return {
+        ...state,
+        t13DetailData: action.payload,
+        detailLoading: false,
+        detailError: "",
+      };
+    case "CLEAR_DETAIL_DATA":
+      return action.payload === "t13"
+        ? { ...state, t13DetailData: null, detailError: "" }
+        : { ...state, detailData: null, detailError: "" };
     case "RESTORE_CREDENTIALS":
       return {
         ...state,
@@ -572,7 +596,16 @@ export function useEmployeeLookup() {
     async (isT13 = false) => {
       if (!state.sessionToken) return;
 
+      dispatch({
+        type: "CLEAR_DETAIL_DATA",
+        payload: isT13 ? "t13" : "monthly",
+      });
       dispatch({ type: "SET_DETAIL_LOADING", payload: true });
+      dispatch({ type: "SET_DETAIL_ERROR", payload: "" });
+      dispatch({
+        type: "SHOW_MODAL",
+        payload: isT13 ? "showT13DetailModal" : "showDetailModal",
+      });
 
       try {
         const params = new URLSearchParams();
@@ -592,14 +625,16 @@ export function useEmployeeLookup() {
         if (response.ok) {
           if (isT13) {
             dispatch({ type: "SET_T13_DETAIL_DATA", payload: data.payroll });
-            dispatch({ type: "SHOW_MODAL", payload: "showT13DetailModal" });
           } else {
             dispatch({ type: "SET_DETAIL_DATA", payload: data.payroll });
-            dispatch({ type: "SHOW_MODAL", payload: "showDetailModal" });
           }
         } else {
           dispatch({
             type: "SET_ERROR",
+            payload: data.error || "Không thể tải chi tiết lương",
+          });
+          dispatch({
+            type: "SET_DETAIL_ERROR",
             payload: data.error || "Không thể tải chi tiết lương",
           });
           dispatch({ type: "SET_DETAIL_LOADING", payload: false });
@@ -607,6 +642,10 @@ export function useEmployeeLookup() {
       } catch {
         dispatch({
           type: "SET_ERROR",
+          payload: "Có lỗi xảy ra khi tải chi tiết lương",
+        });
+        dispatch({
+          type: "SET_DETAIL_ERROR",
           payload: "Có lỗi xảy ra khi tải chi tiết lương",
         });
         dispatch({ type: "SET_DETAIL_LOADING", payload: false });

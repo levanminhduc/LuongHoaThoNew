@@ -64,7 +64,7 @@ export function EmployeeLookupResult({
     }
 
     const [, year, month] = match;
-    return `Bảng Lương Tháng ${month.padStart(2, "0")} - ${year}`;
+    return `Tháng ${month.padStart(2, "0")} - ${year}`;
   })();
 
   return (
@@ -245,17 +245,17 @@ export function EmployeeLookupResult({
           )}
 
           {result.is_signed ? (
-            <Card className="border-primary bg-primary text-primary-foreground">
+            <Card className="border-primary/50 bg-background text-primary shadow-sm">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-6 h-6" />
                   <div>
                     <p className="font-medium">Đã ký nhận lương</p>
-                    <p className="text-sm text-primary-foreground/80">
+                    <p className="text-sm text-primary/80">
                       Người ký: {result.signed_by_name}
                     </p>
                     {result.signed_at && (
-                      <p className="text-sm text-primary-foreground/80">
+                      <p className="text-sm text-primary/80">
                         Thời gian: {result.signed_at_display}
                       </p>
                     )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import type { ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,34 +25,55 @@ import { useEmployeeLookup } from "./use-employee-lookup";
 import { EmployeeLookupResult } from "./employee-lookup-result";
 import { T13_ENABLED } from "@/lib/feature-flags";
 
-const PayrollDetailModal = lazy(() =>
+const loadPayrollDetailModal = () =>
   import("./payroll-detail-modal").then((m) => ({
     default: m.PayrollDetailModal,
-  })),
-);
-const PayrollDetailModalT13 = lazy(() =>
+  }));
+const loadPayrollDetailModalT13 = () =>
   import("./payroll-detail-modal-t13").then((m) => ({
     default: m.PayrollDetailModalT13,
-  })),
-);
-const SalaryHistoryModal = lazy(() =>
+  }));
+const loadSalaryHistoryModal = () =>
   import("./salary-history-modal").then((m) => ({
     default: m.SalaryHistoryModal,
-  })),
-);
-const ResetPasswordModal = lazy(() =>
+  }));
+const loadResetPasswordModal = () =>
   import("./reset-password-modal").then((m) => ({
     default: m.ResetPasswordModal,
-  })),
-);
-const ForgotPasswordModal = lazy(() =>
+  }));
+const loadForgotPasswordModal = () =>
   import("./forgot-password-modal").then((m) => ({
     default: m.ForgotPasswordModal,
-  })),
-);
+  }));
+
+const PayrollDetailModal = lazy(loadPayrollDetailModal);
+const PayrollDetailModalT13 = lazy(loadPayrollDetailModalT13);
+const SalaryHistoryModal = lazy(loadSalaryHistoryModal);
+const ResetPasswordModal = lazy(loadResetPasswordModal);
+const ForgotPasswordModal = lazy(loadForgotPasswordModal);
 
 export function EmployeeLookup() {
   const { state, dispatch, refs, handlers } = useEmployeeLookup();
+
+  useEffect(() => {
+    void loadForgotPasswordModal();
+  }, []);
+
+  useEffect(() => {
+    if (!state.result) return;
+
+    void Promise.all([
+      loadPayrollDetailModal(),
+      loadSalaryHistoryModal(),
+      loadResetPasswordModal(),
+    ]);
+  }, [state.result]);
+
+  useEffect(() => {
+    if (!state.t13Result) return;
+
+    void Promise.all([loadPayrollDetailModalT13(), loadSalaryHistoryModal()]);
+  }, [state.t13Result]);
 
   return (
     <div className="space-y-6">
@@ -242,7 +263,10 @@ export function EmployeeLookup() {
       )}
 
       <div className="text-center text-sm text-muted-foreground">
-        <Link href="/" className="text-primary underline-offset-4 hover:underline">
+        <Link
+          href="/"
+          className="text-primary underline-offset-4 hover:underline"
+        >
           ← Quay về trang chủ
         </Link>
       </div>
@@ -255,6 +279,8 @@ export function EmployeeLookup() {
               dispatch({ type: "HIDE_MODAL", payload: "showDetailModal" })
             }
             payrollData={state.detailData || state.result}
+            isLoading={state.detailLoading}
+            error={state.detailError}
           />
         )}
 
@@ -265,6 +291,8 @@ export function EmployeeLookup() {
               dispatch({ type: "HIDE_MODAL", payload: "showT13DetailModal" })
             }
             payrollData={state.t13DetailData || state.t13Result}
+            isLoading={state.detailLoading}
+            error={state.detailError}
           />
         )}
 
