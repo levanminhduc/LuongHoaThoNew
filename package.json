@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "build": "next build",
+    "build": "next build --webpack",
     "dev": "next dev --turbopack",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

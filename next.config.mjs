@@ -27,6 +27,7 @@ const nextConfig = {
   reactCompiler: false,
   experimental: {
     viewTransition: true,
+    cpus: 2,
   },
 };
 

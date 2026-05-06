@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -18,7 +19,6 @@ import { Building2, Calendar, X, RefreshCw } from "lucide-react";
 import DepartmentSummaryCards from "./DepartmentSummaryCards";
 import EmployeeTable from "./EmployeeTable";
 import SalaryAnalysisTab from "./SalaryAnalysisTab";
-import DepartmentChartsTab from "./DepartmentChartsTab";
 import ExportTab from "./ExportTab";
 
 // Import cache utility
@@ -29,6 +29,11 @@ import {
   transformPayrollRecordToResult,
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
+
+const DepartmentChartsTab = dynamic(() => import("./DepartmentChartsTab"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[400px] w-full" />,
+});
 
 interface Employee {
   employee_id: string;

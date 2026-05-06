@@ -35,7 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import * as XLSX from "xlsx";
+import { exportAOAToExcel, getXLSX } from "@/lib/lazy/xlsx";
 
 const EMPLOYEE_ID_ALIASES = [
   "mã nhân viên",
@@ -51,7 +51,8 @@ interface CheckResult {
   exists: boolean;
 }
 
-function parseEmployeeIdsFromExcel(buffer: ArrayBuffer): string[] {
+async function parseEmployeeIdsFromExcel(buffer: ArrayBuffer): Promise<string[]> {
+  const XLSX = await getXLSX();
   const workbook = XLSX.read(buffer, { type: "array" });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
   const jsonData = XLSX.utils.sheet_to_json(worksheet, {
@@ -112,15 +113,11 @@ async function fetchAllEmployeeIds(): Promise<Set<string>> {
   );
 }
 
-function exportMissingToExcel(missingIds: string[]) {
+async function exportMissingToExcel(missingIds: string[]) {
   const wsData = [["STT", "Mã Nhân Viên"]];
   missingIds.forEach((id, i) => wsData.push([String(i + 1), id]));
 
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws["!cols"] = [{ wch: 6 }, { wch: 20 }];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "NV Thiếu");
-  XLSX.writeFile(wb, "danh-sach-nv-thieu.xlsx");
+  await exportAOAToExcel(wsData, "danh-sach-nv-thieu.xlsx", "NV Thiếu");
 }
 
 export default function EmployeeCheckPage() {
@@ -161,7 +158,7 @@ export default function EmployeeCheckPage() {
 
     try {
       const buffer = await file.arrayBuffer();
-      const excelIds = parseEmployeeIdsFromExcel(buffer);
+      const excelIds = await parseEmployeeIdsFromExcel(buffer);
       const dbIds = await fetchAllEmployeeIds();
 
       const checkResults: CheckResult[] = excelIds
@@ -333,7 +330,7 @@ export default function EmployeeCheckPage() {
                   </Select>
                   <Button
                     variant="outline"
-                    onClick={() => exportMissingToExcel(missingIds)}
+                    onClick={() => void exportMissingToExcel(missingIds)}
                     disabled={missingCount === 0}
                   >
                     <Download className="mr-2 h-4 w-4" />

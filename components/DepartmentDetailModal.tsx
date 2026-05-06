@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -52,24 +53,10 @@ import {
   Download,
   Building2,
   Calendar,
-  BarChart3,
-  PieChart,
   X,
   ArrowUpDown,
   Filter,
 } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-} from "recharts";
 
 interface Employee {
   employee_id: string;
@@ -135,6 +122,14 @@ interface DepartmentDetailModalProps {
   departmentName: string;
   month: string;
 }
+
+const DepartmentDetailCharts = dynamic(
+  () => import("./charts/DepartmentDetailCharts"),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[300px] w-full" />,
+  },
+);
 
 export default function DepartmentDetailModal({
   isOpen,
@@ -327,8 +322,6 @@ export default function DepartmentDetailModal({
       currency: "VND",
     }).format(amount);
   };
-
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -736,117 +729,7 @@ export default function DepartmentDetailModal({
                   </TabsContent>
 
                   <TabsContent value="charts" className="space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <BarChart3 className="w-4 h-4" />
-                            Phân Bố Lương
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={departmentData.salaryDistribution}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="range" />
-                              <YAxis />
-                              <Tooltip />
-                              <Bar dataKey="count" fill="#8884d8" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <PieChart className="w-4 h-4" />
-                            Tỷ Lệ Ký Lương
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={250}>
-                            <RechartsPieChart>
-                              <Tooltip />
-                              <Pie
-                                data={[
-                                  {
-                                    name: "Đã ký",
-                                    value: departmentData.stats.signedCount,
-                                  },
-                                  {
-                                    name: "Chưa ký",
-                                    value:
-                                      departmentData.stats.payrollCount -
-                                      departmentData.stats.signedCount,
-                                  },
-                                ]}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="value"
-                              >
-                                {[
-                                  {
-                                    name: "Đã ký",
-                                    value: departmentData.stats.signedCount,
-                                  },
-                                  {
-                                    name: "Chưa ký",
-                                    value:
-                                      departmentData.stats.payrollCount -
-                                      departmentData.stats.signedCount,
-                                  },
-                                ].map((entry, index) => (
-                                  <Cell
-                                    key={`cell-${index}`}
-                                    fill={COLORS[index % COLORS.length]}
-                                  />
-                                ))}
-                              </Pie>
-                            </RechartsPieChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {departmentData.monthlyTrends.length > 0 && (
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Xu Hướng Lương Theo Tháng</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={departmentData.monthlyTrends}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="month" />
-                              <YAxis />
-                              <Tooltip
-                                formatter={(value, name) => [
-                                  name === "averageSalary"
-                                    ? formatCurrency(value as number)
-                                    : value,
-                                  name === "averageSalary"
-                                    ? "Lương TB"
-                                    : "Số NV",
-                                ]}
-                              />
-                              <Bar
-                                dataKey="averageSalary"
-                                fill="#8884d8"
-                                name="Lương TB"
-                              />
-                              <Bar
-                                dataKey="employeeCount"
-                                fill="#82ca9d"
-                                name="Số NV"
-                              />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </CardContent>
-                      </Card>
-                    )}
+                    <DepartmentDetailCharts departmentData={departmentData} />
                   </TabsContent>
 
                   <TabsContent value="export" className="space-y-4">

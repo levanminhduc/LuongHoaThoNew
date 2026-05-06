@@ -43,20 +43,16 @@ import {
   type ColumnAnalysis,
 } from "@/components/column-mapping-analysis";
 import {
-  detectColumns,
-  autoMapColumnsWithAliases,
-} from "@/lib/advanced-excel-parser";
-import {
   useMappingConfig,
   useAutoLoadConfigurations,
 } from "@/lib/hooks/use-mapping-config";
+import { getXLSX } from "@/lib/lazy/xlsx";
 import { ImportPreviewSection } from "./components/ImportPreviewSection";
 import ImportErrorModal from "@/components/payroll-import/ImportErrorModal";
 import {
   ImportProgress,
   ImportResultSummary,
 } from "@/components/admin/import-export-widgets";
-import * as XLSX from "xlsx";
 
 type ImportStatus =
   | "idle"
@@ -453,30 +449,31 @@ export default function PayrollImportExportPage() {
     setAnalysisResults(null);
 
     try {
-      // Read Excel file
+      const [{ detectColumns, autoMapColumnsWithAliases }, XLSX] =
+        await Promise.all([
+          import("@/lib/advanced-excel-parser"),
+          getXLSX(),
+        ]);
+
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
 
-      // Detect columns
       const detectedColumns = detectColumns(worksheet);
 
       if (detectedColumns.length === 0) {
         throw new Error("Không tìm thấy cột nào trong file Excel");
       }
 
-      // Load Column Aliases from API
       const aliases = await loadColumnAliasesFromAPI();
 
-      // Get current mapping configuration
       const currentConfig =
         defaultConfig || configurations.find((c) => c.is_default);
 
-      // Auto-map columns with loaded aliases
       const mappingResult = await autoMapColumnsWithAliases(
         detectedColumns,
-        aliases, // Use loaded aliases instead of empty array
+        aliases,
         currentConfig,
       );
 

@@ -29,7 +29,7 @@ import {
   XCircle,
   Download,
 } from "lucide-react";
-import * as XLSX from "xlsx";
+import { exportJSONToExcel } from "@/lib/lazy/xlsx";
 
 interface ImportError {
   row: number;
@@ -67,7 +67,7 @@ export default function AttendanceImportPage() {
     }
   };
 
-  const handleExportErrors = () => {
+  const handleExportErrors = async () => {
     if (!result) return;
 
     setExporting(true);
@@ -100,23 +100,9 @@ export default function AttendanceImportPage() {
         });
       });
 
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(errorData);
-
-      worksheet["!cols"] = [
-        { wch: 6 },
-        { wch: 15 },
-        { wch: 8 },
-        { wch: 30 },
-        { wch: 50 },
-      ];
-
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Danh Sách Lỗi");
-
       const timestamp = new Date().toISOString().slice(0, 10);
       const filename = `Loi_Import_ChamCong_${timestamp}.xlsx`;
-
-      XLSX.writeFile(workbook, filename);
+      await exportJSONToExcel(errorData, filename, "Danh Sách Lỗi");
     } finally {
       setExporting(false);
     }

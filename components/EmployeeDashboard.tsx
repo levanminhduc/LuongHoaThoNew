@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -26,15 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign,
   FileCheck,
@@ -85,6 +78,14 @@ interface EmployeeDashboardProps {
   user: User;
   onLogout: () => void;
 }
+
+const EmployeeDashboardCharts = dynamic(
+  () => import("./charts/EmployeeDashboardCharts"),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[400px] w-full" />,
+  },
+);
 
 export default function EmployeeDashboard({
   user,
@@ -606,41 +607,7 @@ export default function EmployeeDashboard({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value: number) => [
-                        `${value.toFixed(1)}M VND`,
-                        "",
-                      ]}
-                      labelFormatter={(label) => `Tháng ${label}`}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="grossSalary"
-                      stroke="#8884d8"
-                      strokeWidth={2}
-                      name="Lương gốc"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="netSalary"
-                      stroke="#82ca9d"
-                      strokeWidth={2}
-                      name="Lương thực nhận"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="tax"
-                      stroke="#ff7300"
-                      strokeWidth={2}
-                      name="Thuế TNCN"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <EmployeeDashboardCharts data={chartData} />
               </CardContent>
             </Card>
           </TabsContent>
