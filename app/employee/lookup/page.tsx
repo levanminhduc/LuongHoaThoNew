@@ -6,7 +6,7 @@ export default function EmployeeLookupPage() {
       <div className="max-w-2xl mx-auto w-full">
         <div className="text-center mb-6 sm:mb-8 px-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Tra Cứu Lương & Ký Xác Nhận Lương
+            Tra Cứu & Ký Xác Nhận Lương
           </h1>
           <h2 className="text-lg sm:text-xl font-bold text-muted-foreground mt-2">
             CÔNG TY MAY HÒA THỌ ĐIỆN BÀN

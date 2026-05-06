@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Loader2, Search, Eye, EyeOff, Trash2, Info } from "lucide-react";
+import { Loader2, Search, Eye, EyeOff, Info } from "lucide-react";
 import Link from "next/link";
 import { useEmployeeLookup } from "./use-employee-lookup";
 import { EmployeeLookupResult } from "./employee-lookup-result";
@@ -89,7 +89,7 @@ export function EmployeeLookup() {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border bg-background text-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="relative isolate inline-flex h-5 w-5 items-center justify-center rounded-full border border-primary/45 bg-primary/10 text-primary shadow-[0_0_0_2px_rgba(37,99,235,0.08)] transition-[transform,background-color,color,box-shadow] [transition-duration:200ms] before:absolute before:inset-[-7px] before:-z-10 before:rounded-full before:border before:border-primary/40 before:content-[''] before:animate-lookup-guide-signal after:absolute after:inset-[-3px] after:-z-10 after:rounded-full after:bg-primary/15 after:content-[''] after:animate-lookup-guide-glow animate-lookup-guide-pop hover:scale-[1.05] hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 active:scale-[0.96] motion-reduce:animate-none motion-reduce:before:animate-none motion-reduce:after:animate-none"
                   aria-label="Hướng dẫn nhập mã nhân viên"
                 >
                   <Info className="w-4 h-4" />
@@ -190,16 +190,18 @@ export function EmployeeLookup() {
                   Ghi nhớ đăng nhập
                 </label>
               </div>
-              {state.hasSavedCredentials && (
-                <button
-                  type="button"
-                  onClick={handlers.handleClearSavedCredentials}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Xóa lưu
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() =>
+                  dispatch({
+                    type: "SHOW_MODAL",
+                    payload: "showForgotPasswordModal",
+                  })
+                }
+                className="shrink-0 text-sm text-primary underline-offset-4 hover:underline"
+              >
+                Quên mật khẩu?
+              </button>
             </div>
 
             {state.error && (
@@ -222,21 +224,6 @@ export function EmployeeLookup() {
                   </>
                 )}
               </Button>
-            </div>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() =>
-                  dispatch({
-                    type: "SHOW_MODAL",
-                    payload: "showForgotPasswordModal",
-                  })
-                }
-                className="text-sm text-primary underline-offset-4 hover:underline"
-              >
-                Quên mật khẩu?
-              </button>
             </div>
           </form>
         </CardContent>

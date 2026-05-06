@@ -125,6 +125,38 @@ const config: Config = {
             opacity: "0.5",
           },
         },
+        "lookup-guide-signal": {
+          "0%": {
+            opacity: "0.78",
+            transform: "scale(0.7)",
+          },
+          "55%, 100%": {
+            opacity: "0",
+            transform: "scale(1.45)",
+          },
+        },
+        "lookup-guide-glow": {
+          "0%, 100%": {
+            opacity: "0.18",
+            transform: "scale(0.9)",
+          },
+          "28%": {
+            opacity: "0.52",
+            transform: "scale(1.1)",
+          },
+        },
+        "lookup-guide-pop": {
+          "0%, 100%": {
+            boxShadow:
+              "0 0 0 2px rgba(37,99,235,0.08), 0 0 0 0 rgba(37,99,235,0)",
+            filter: "brightness(1)",
+          },
+          "28%": {
+            boxShadow:
+              "0 0 0 2px rgba(37,99,235,0.16), 0 0 18px 0 rgba(37,99,235,0.32)",
+            filter: "brightness(1.12)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -136,6 +168,9 @@ const config: Config = {
           "employee-detail-pulse 2.35s ease-in-out infinite",
         "employee-detail-shine":
           "employee-card-shine 2.35s cubic-bezier(0.22,1,0.36,1) infinite",
+        "lookup-guide-glow": "lookup-guide-glow 1.8s ease-out infinite",
+        "lookup-guide-pop": "lookup-guide-pop 1.8s ease-out infinite",
+        "lookup-guide-signal": "lookup-guide-signal 1.8s ease-out infinite",
       },
     },
   },
