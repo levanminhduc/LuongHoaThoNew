@@ -89,10 +89,19 @@ const config: Config = {
             height: "0",
           },
         },
+        "employee-card-shine": {
+          "0%": {
+            transform: "translateX(0) skewX(-18deg)",
+          },
+          "42%, 100%": {
+            transform: "translateX(360%) skewX(-18deg)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "employee-card-shine": "employee-card-shine 4.2s ease-in-out infinite",
       },
     },
   },
