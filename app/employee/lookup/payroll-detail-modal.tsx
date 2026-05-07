@@ -123,10 +123,7 @@ export function PayrollDetailModal({
               </span>
             </DialogTitle>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant="outline"
-                className="h-7 gap-1.5 rounded-full px-3 text-xs font-semibold sm:text-sm"
-              >
+              <Badge className="h-7 gap-1.5 rounded-full px-3 text-xs font-semibold sm:text-sm">
                 <Calendar className="h-3.5 w-3.5" />
                 {payrollData.salary_month_display ||
                   formatSalaryMonth(payrollData.salary_month)}
@@ -452,8 +449,7 @@ export function PayrollDetailModal({
                 </CardContent>
               </Card>
 
-              {/* Lương thực nhận */}
-              <Card className="bg-muted/50">
+              <Card className="border-primary bg-primary text-primary-foreground">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Banknote className="w-4 h-4" />
@@ -461,11 +457,11 @@ export function PayrollDetailModal({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center p-4 bg-background rounded-lg border">
-                    <p className="text-sm text-muted-foreground font-medium mb-2">
+                  <div className="text-center p-4 bg-primary-foreground/10 rounded-lg border border-primary-foreground/20">
+                    <p className="text-sm text-primary-foreground/80 font-medium mb-2">
                       Tiền Lương Thực Nhận Cuối Kỳ
                     </p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-2xl font-bold">
                       {formatCurrencyLocal(
                         payrollData.tien_luong_thuc_nhan_cuoi_ky,
                       )}
