@@ -157,6 +157,59 @@ const config: Config = {
             filter: "brightness(1.12)",
           },
         },
+        "maintenance-ledger-tilt": {
+          "0%, 100%": {
+            transform:
+              "translate3d(-50%, -50%, 0) rotateX(58deg) rotateZ(-11deg)",
+          },
+          "50%": {
+            transform:
+              "translate3d(-50%, calc(-50% - 10px), 28px) rotateX(64deg) rotateZ(-7deg)",
+          },
+        },
+        "maintenance-digit-roll": {
+          "0%": {
+            transform: "translateY(0)",
+          },
+          "100%": {
+            transform: "translateY(-50%)",
+          },
+        },
+        "maintenance-coin-spin": {
+          "0%": {
+            transform:
+              "translate3d(-50%, -50%, 56px) rotateX(12deg) rotateY(0deg)",
+          },
+          "100%": {
+            transform:
+              "translate3d(-50%, -50%, 56px) rotateX(12deg) rotateY(360deg)",
+          },
+        },
+        "maintenance-money-rise": {
+          "0%": {
+            opacity: "0",
+            transform:
+              "translate3d(0, 28px, 0) rotateX(64deg) rotateZ(-18deg) scale(0.72)",
+          },
+          "18%": {
+            opacity: "1",
+          },
+          "100%": {
+            opacity: "0",
+            transform:
+              "translate3d(0, -88px, 70px) rotateX(64deg) rotateZ(240deg) scale(1.05)",
+          },
+        },
+        "maintenance-orbit": {
+          "0%": {
+            transform:
+              "translate3d(-50%, -50%, 0) rotateX(68deg) rotateZ(0deg)",
+          },
+          "100%": {
+            transform:
+              "translate3d(-50%, -50%, 0) rotateX(68deg) rotateZ(360deg)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -171,6 +224,14 @@ const config: Config = {
         "lookup-guide-glow": "lookup-guide-glow 1.8s ease-out infinite",
         "lookup-guide-pop": "lookup-guide-pop 1.8s ease-out infinite",
         "lookup-guide-signal": "lookup-guide-signal 1.8s ease-out infinite",
+        "maintenance-coin-spin": "maintenance-coin-spin 4.8s linear infinite",
+        "maintenance-digit-roll":
+          "maintenance-digit-roll 4.8s steps(10) infinite",
+        "maintenance-ledger-tilt":
+          "maintenance-ledger-tilt 5.8s cubic-bezier(0.45,0,0.2,1) infinite",
+        "maintenance-money-rise":
+          "maintenance-money-rise 5.6s cubic-bezier(0.22,1,0.36,1) infinite",
+        "maintenance-orbit": "maintenance-orbit 13s linear infinite",
       },
     },
   },
