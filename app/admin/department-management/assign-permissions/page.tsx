@@ -64,7 +64,11 @@ function AssignPermissionsContent() {
   const grantMutation = useGrantDepartmentPermissionMutation();
   const employees = employeesQuery.data ?? [];
   const departments = [...(departmentsQuery.data?.departments ?? [])].sort(
-    (a, b) => a.name.localeCompare(b.name, "vi", { sensitivity: "base" }),
+    (a, b) =>
+      a.name.localeCompare(b.name, "vi", {
+        numeric: true,
+        sensitivity: "base",
+      }),
   );
   const existingPermissions = permissionsQuery.data?.permissions ?? [];
   const refreshDepartments = departmentsQuery.refetch;

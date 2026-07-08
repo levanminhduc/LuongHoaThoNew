@@ -51,6 +51,14 @@ export function EmployeeCombobox({
       [...employees].sort((a, b) => {
         const rankDiff = getRoleRank(a.chuc_vu) - getRoleRank(b.chuc_vu);
         if (rankDiff !== 0) return rankDiff;
+
+        const deptDiff = (a.department ?? "").localeCompare(
+          b.department ?? "",
+          "vi",
+          { numeric: true, sensitivity: "base" },
+        );
+        if (deptDiff !== 0) return deptDiff;
+
         return a.full_name.localeCompare(b.full_name, "vi", {
           sensitivity: "base",
         });

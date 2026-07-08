@@ -144,16 +144,26 @@ describe("EmployeeCombobox", () => {
     expect(onValueChange).toHaveBeenCalledWith("TP001");
   });
 
-  test("orders by role rank then name A-Z", () => {
+  test("orders by role rank, then department, then name A-Z", () => {
+    const make = (
+      id: string,
+      name: string,
+      chuc_vu: string,
+      department: string,
+    ): Employee => ({
+      ...mockEmployees[0],
+      employee_id: id,
+      full_name: name,
+      chuc_vu,
+      department,
+    });
+
     const unordered: Employee[] = [
-      { ...mockEmployees[1] }, // to_truong - Trần Thị Bình
-      {
-        ...mockEmployees[0],
-        employee_id: "GD001",
-        full_name: "Phạm Văn Zũng",
-        chuc_vu: "giam_doc",
-      }, // giam_doc
-      { ...mockEmployees[0] }, // truong_phong - Nguyễn Văn An
+      make("TT-b", "Nguyễn Văn B", "to_truong", "DK01"),
+      make("TT-dk10", "Người DK10", "to_truong", "DK10"),
+      make("TT-a", "Nguyễn Văn A", "to_truong", "DK01"),
+      make("TT-dk2", "Người DK02", "to_truong", "DK02"),
+      make("GD", "Giám Đốc X", "giam_doc", ""),
     ];
     render(
       <EmployeeCombobox
@@ -164,14 +174,18 @@ describe("EmployeeCombobox", () => {
     );
     openDropdown();
 
-    const names = screen
-      .getAllByText(/Phạm Văn Zũng|Nguyễn Văn An|Trần Thị Bình/)
+    const order = screen
+      .getAllByText(
+        /Giám Đốc X|Nguyễn Văn A|Nguyễn Văn B|Người DK02|Người DK10/,
+      )
       .map((el) => el.textContent);
 
-    expect(names).toEqual([
-      "Phạm Văn Zũng", // giam_doc (rank cao nhất)
-      "Nguyễn Văn An", // truong_phong
-      "Trần Thị Bình", // to_truong
+    expect(order).toEqual([
+      "Giám Đốc X", // giam_doc trước (rank cao nhất)
+      "Nguyễn Văn A", // to_truong · DK01 · tên A
+      "Nguyễn Văn B", // to_truong · DK01 · tên B
+      "Người DK02", // DK02 (numeric: trước DK10)
+      "Người DK10", // DK10
     ]);
   });
 
