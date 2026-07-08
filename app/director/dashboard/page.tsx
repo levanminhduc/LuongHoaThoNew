@@ -29,6 +29,7 @@ import {
   BarChart3,
   Eye,
   UserX,
+  Gift,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
@@ -37,6 +38,7 @@ import {
   useSignatureHistoryQuery,
   useSignatureStatusQuery,
 } from "@/lib/hooks/use-dashboard";
+import BonusManagementSignatureForm from "@/components/signature/bonus-management-signature-form";
 
 export default function DirectorDashboard() {
   const [selectedMonth, setSelectedMonth] =
@@ -77,10 +79,10 @@ export default function DirectorDashboard() {
 
     try {
       const data = await signatureMutation.mutateAsync({
-          salary_month: selectedMonth,
-          signature_type: "giam_doc",
-          notes: "Xác nhận lương tháng từ Giám Đốc",
-          device_info: navigator.userAgent,
+        salary_month: selectedMonth,
+        signature_type: "giam_doc",
+        notes: "Xác nhận lương tháng từ Giám Đốc",
+        device_info: navigator.userAgent,
       });
 
       const result = data as { success?: boolean; error?: string };
@@ -238,13 +240,20 @@ export default function DirectorDashboard() {
       )}
 
       <Tabs defaultValue="signature" className="space-y-4 sm:space-y-6">
-        <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-3 sm:bg-muted sm:p-1">
+        <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-4 sm:bg-muted sm:p-1">
           <TabsTrigger
             value="signature"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <PenTool className="mr-2 h-4 w-4" />
             Ký Xác Nhận
+          </TabsTrigger>
+          <TabsTrigger
+            value="bonus-signature"
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <Gift className="mr-2 h-4 w-4" />
+            Ký Duyệt Tiền Thưởng
           </TabsTrigger>
           <TabsTrigger
             value="progress"
@@ -341,6 +350,10 @@ export default function DirectorDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="bonus-signature" className="space-y-4 sm:space-y-6">
+          <BonusManagementSignatureForm signatureType="giam_doc" />
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-4 sm:space-y-6">

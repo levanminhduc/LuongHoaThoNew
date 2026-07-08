@@ -20,6 +20,7 @@ import {
   CalendarDays,
   FileDown,
   UserSearch,
+  Gift,
 } from "lucide-react";
 import {
   Sidebar,
@@ -85,6 +86,11 @@ const dataManagementItems: NavItem[] = [
     title: "Import/Export Lương",
     icon: ArrowUpDown,
     href: "/admin/payroll-import-export",
+  },
+  {
+    title: "Import Tiền Thưởng",
+    icon: Gift,
+    href: "/admin/bonus-import",
   },
   {
     title: "Kiểm Tra Dữ Liệu",
@@ -196,17 +202,15 @@ export function AdminSidebar() {
 
   const filterByRole = useCallback(
     (items: NavItem[]) =>
-      items.filter(
-        (item) =>
-          item.allowedRoles ? item.allowedRoles.includes(currentRole) : currentRole === "admin",
+      items.filter((item) =>
+        item.allowedRoles
+          ? item.allowedRoles.includes(currentRole)
+          : currentRole === "admin",
       ),
     [currentRole],
   );
 
-  const mainItems = useMemo(
-    () => filterByRole(mainNavItems),
-    [filterByRole],
-  );
+  const mainItems = useMemo(() => filterByRole(mainNavItems), [filterByRole]);
   const dataItems = useMemo(
     () => filterByRole(dataManagementItems),
     [filterByRole],

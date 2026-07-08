@@ -35,6 +35,7 @@ const pathTitleMap: Record<string, string> = {
   "/admin/employee-management": "Quản Lý Nhân Viên",
   "/admin/payroll-management": "Quản Lý Lương",
   "/admin/payroll-import-export": "Import/Export Lương",
+  "/admin/bonus-import": "Import Tiền Thưởng",
   "/admin/data-validation": "Kiểm Tra Dữ Liệu",
   "/admin/bulk-signature": "Ký Hàng Loạt",
   "/admin/attendance-import": "Import Chấm Công",
@@ -132,10 +133,7 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
               Cài đặt
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={logout}
-              className="text-destructive"
-            >
+            <DropdownMenuItem onClick={logout} className="text-destructive">
               Đăng Xuất
             </DropdownMenuItem>
           </DropdownMenuContent>

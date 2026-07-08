@@ -1,106 +1,190 @@
-import { render, screen } from "@testing-library/react";
-import { Badge } from "@/components/ui/badge";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { EmployeeCombobox } from "../employee-combobox";
+import type { Employee } from "@/lib/hooks/use-employees";
 
-const mockEmployees = [
+const mockEmployees: Employee[] = [
   {
     employee_id: "TP001",
     full_name: "Nguyễn Văn An",
     department: "Sản Xuất",
     chuc_vu: "truong_phong",
+    phone_number: null,
+    is_active: true,
+    created_at: "2025-01-01",
+    updated_at: "2025-01-01",
   },
   {
     employee_id: "TT002",
     full_name: "Trần Thị Bình",
     department: "Kiểm Tra Chất Lượng",
     chuc_vu: "to_truong",
+    phone_number: null,
+    is_active: true,
+    created_at: "2025-01-01",
+    updated_at: "2025-01-01",
   },
   {
     employee_id: "TP003",
     full_name: "Lê Văn Cường Với Tên Rất Dài",
     department: "Phòng Ban Có Tên Rất Dài",
     chuc_vu: "truong_phong",
+    phone_number: null,
+    is_active: true,
+    created_at: "2025-01-01",
+    updated_at: "2025-01-01",
   },
 ];
 
-type Employee = (typeof mockEmployees)[number];
+beforeAll(() => {
+  Element.prototype.scrollIntoView = jest.fn();
+  Element.prototype.hasPointerCapture = jest.fn();
+  Element.prototype.setPointerCapture = jest.fn();
+  Element.prototype.releasePointerCapture = jest.fn();
+});
 
-function EmployeeItem({ employee }: { employee: Employee }) {
-  return (
-    <div data-testid={`employee-item-${employee.employee_id}`}>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="font-medium truncate">{employee.full_name}</span>
-          <Badge variant="outline" className="text-xs shrink-0">
-            {employee.chuc_vu}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground sm:ml-auto">
-          <span className="shrink-0">({employee.employee_id})</span>
-          <span className="text-blue-600 truncate">{employee.department}</span>
-        </div>
-      </div>
-    </div>
-  );
+function openDropdown() {
+  fireEvent.click(screen.getByRole("combobox"));
 }
 
-function EmployeeList({
-  employees = mockEmployees,
-}: {
-  employees?: Employee[];
-}) {
-  if (employees.length === 0) {
-    return <div data-testid="empty-list">Chọn nhân viên...</div>;
-  }
-  return (
-    <div>
-      {employees.map((employee) => (
-        <EmployeeItem key={employee.employee_id} employee={employee} />
-      ))}
-    </div>
-  );
-}
+describe("EmployeeCombobox", () => {
+  test("shows placeholder when nothing selected", () => {
+    render(
+      <EmployeeCombobox
+        employees={mockEmployees}
+        value=""
+        onValueChange={jest.fn()}
+      />,
+    );
 
-describe("Employee Dropdown Item Layout", () => {
-  test("should display employee name, role, ID, and department", () => {
-    render(<EmployeeList />);
+    expect(screen.getByText("Chọn nhân viên...")).toBeInTheDocument();
+  });
+
+  test("lists all employees with Vietnamese role labels, not raw slug", () => {
+    render(
+      <EmployeeCombobox
+        employees={mockEmployees}
+        value=""
+        onValueChange={jest.fn()}
+      />,
+    );
+    openDropdown();
 
     expect(screen.getByText("Nguyễn Văn An")).toBeInTheDocument();
-    expect(screen.getAllByText("truong_phong").length).toBe(2);
-    expect(screen.getByText("to_truong")).toBeInTheDocument();
-    expect(screen.getByText("(TP001)")).toBeInTheDocument();
-    expect(screen.getByText("Sản Xuất")).toBeInTheDocument();
+    expect(screen.getAllByText("Trưởng Phòng").length).toBe(2);
+    expect(screen.getByText("Tổ Trưởng")).toBeInTheDocument();
+    expect(screen.queryByText("truong_phong")).not.toBeInTheDocument();
+    expect(screen.queryByText("to_truong")).not.toBeInTheDocument();
   });
 
-  test("should apply truncation classes to long names and departments", () => {
-    render(<EmployeeList />);
-
-    const longNameElement = screen.getByText("Lê Văn Cường Với Tên Rất Dài");
-    const longDeptElement = screen.getByText("Phòng Ban Có Tên Rất Dài");
-
-    expect(longNameElement).toHaveClass("truncate");
-    expect(longDeptElement).toHaveClass("truncate");
-  });
-
-  test("should have responsive layout classes", () => {
-    render(<EmployeeList />);
-
-    const containers = document.querySelectorAll(
-      ".flex.flex-col.sm\\:flex-row",
+  test("shows full department text without truncation classes", () => {
+    render(
+      <EmployeeCombobox
+        employees={mockEmployees}
+        value=""
+        onValueChange={jest.fn()}
+      />,
     );
-    expect(containers.length).toBe(mockEmployees.length);
+    openDropdown();
+
+    const longDept = screen.getByText("Phòng Ban Có Tên Rất Dài");
+    expect(longDept).toBeInTheDocument();
+    expect(longDept).not.toHaveClass("truncate");
   });
 
-  test("should display department in blue color", () => {
-    render(<EmployeeList />);
+  test("filters by search across name, id, department", () => {
+    render(
+      <EmployeeCombobox
+        employees={mockEmployees}
+        value=""
+        onValueChange={jest.fn()}
+      />,
+    );
+    openDropdown();
 
-    const departmentElements = document.querySelectorAll(".text-blue-600");
-    expect(departmentElements.length).toBe(mockEmployees.length);
+    fireEvent.change(
+      screen.getByPlaceholderText("Tìm theo tên, mã NV, phòng ban..."),
+      { target: { value: "Bình" } },
+    );
+
+    expect(screen.getByText("Trần Thị Bình")).toBeInTheDocument();
+    expect(screen.queryByText("Nguyễn Văn An")).not.toBeInTheDocument();
   });
 
-  test("should handle empty employee list", () => {
-    render(<EmployeeList employees={[]} />);
+  test("shows empty state when no match", () => {
+    render(
+      <EmployeeCombobox
+        employees={mockEmployees}
+        value=""
+        onValueChange={jest.fn()}
+      />,
+    );
+    openDropdown();
 
-    expect(screen.getByTestId("empty-list")).toBeInTheDocument();
-    expect(screen.getByText("Chọn nhân viên...")).toBeInTheDocument();
+    fireEvent.change(
+      screen.getByPlaceholderText("Tìm theo tên, mã NV, phòng ban..."),
+      { target: { value: "khong-ton-tai-xyz" } },
+    );
+
+    expect(screen.getByText("Không tìm thấy nhân viên.")).toBeInTheDocument();
+  });
+
+  test("calls onValueChange with employee_id on select", () => {
+    const onValueChange = jest.fn();
+    render(
+      <EmployeeCombobox
+        employees={mockEmployees}
+        value=""
+        onValueChange={onValueChange}
+      />,
+    );
+    openDropdown();
+
+    fireEvent.click(screen.getByText("Nguyễn Văn An"));
+
+    expect(onValueChange).toHaveBeenCalledWith("TP001");
+  });
+
+  test("orders by role rank then name A-Z", () => {
+    const unordered: Employee[] = [
+      { ...mockEmployees[1] }, // to_truong - Trần Thị Bình
+      {
+        ...mockEmployees[0],
+        employee_id: "GD001",
+        full_name: "Phạm Văn Zũng",
+        chuc_vu: "giam_doc",
+      }, // giam_doc
+      { ...mockEmployees[0] }, // truong_phong - Nguyễn Văn An
+    ];
+    render(
+      <EmployeeCombobox
+        employees={unordered}
+        value=""
+        onValueChange={jest.fn()}
+      />,
+    );
+    openDropdown();
+
+    const names = screen
+      .getAllByText(/Phạm Văn Zũng|Nguyễn Văn An|Trần Thị Bình/)
+      .map((el) => el.textContent);
+
+    expect(names).toEqual([
+      "Phạm Văn Zũng", // giam_doc (rank cao nhất)
+      "Nguyễn Văn An", // truong_phong
+      "Trần Thị Bình", // to_truong
+    ]);
+  });
+
+  test("renders selected employee summary in trigger", () => {
+    render(
+      <EmployeeCombobox
+        employees={mockEmployees}
+        value="TT002"
+        onValueChange={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Trần Thị Bình")).toBeInTheDocument();
+    expect(screen.getByText("(TT002)")).toBeInTheDocument();
   });
 });

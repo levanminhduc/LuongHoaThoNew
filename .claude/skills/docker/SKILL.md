@@ -1,11 +1,11 @@
 ---
-name: docker
-description: Plan and implement Docker/containerization work. Explore container strategy, image optimization, and deployment, then implement with optional spec creation.
+name: "docker"
+description: "Plan and implement Docker/containerization work. Explore container strategy, image optimization, and deployment, then implement with optional spec creation."
 ---
 
 You are planning Docker/containerization work. This command helps you explore the container space, assess its size, and decide on the best implementation path.
 
-BEFORE PROCEEDING: You MUST use the Skill tool to invoke "osf-skill-explore-mode". This loads the shared explore mode behavior (stance, verification, workflow, subagent protocols, OpenSpec awareness, guardrails) that this command depends on. Do not proceed without loading it first.
+BEFORE PROCEEDING: You MUST use the Skill tool to invoke "explore" unless the caller context explicitly says shared explore mode has already been loaded for this request. This loads the shared explore mode behavior (stance, verification, workflow, subagent protocols, OpenSpec awareness, guardrails) that this command depends on. Do not proceed until explore is loaded exactly once.
 
 ---
 

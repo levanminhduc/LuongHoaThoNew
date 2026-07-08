@@ -1,13 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, Lock, Loader2 } from "lucide-react";
+import { Calendar, FileText, Lock, Loader2, Gift } from "lucide-react";
 import { T13_ENABLED } from "@/lib/feature-flags";
 
 interface EmployeeLookupActionsProps {
   onShowDetail: () => void;
   onShowHistory: () => void;
   onShowT13: () => void;
+  onShowBonus: () => void;
   onShowPassword: () => void;
   t13Loading: boolean;
 }
@@ -16,12 +17,13 @@ export function EmployeeLookupActions({
   onShowDetail,
   onShowHistory,
   onShowT13,
+  onShowBonus,
   onShowPassword,
   t13Loading,
 }: EmployeeLookupActionsProps) {
   return (
     <div
-      className={`grid grid-cols-2 ${T13_ENABLED ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-2`}
+      className={`grid grid-cols-2 ${T13_ENABLED ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2`}
     >
       <Button
         variant="default"
@@ -61,6 +63,16 @@ export function EmployeeLookupActions({
           )}
         </Button>
       )}
+
+      <Button
+        variant="default"
+        size="sm"
+        onClick={onShowBonus}
+        className="w-full min-h-[44px]"
+      >
+        <Gift className="w-4 h-4 flex-shrink-0" />
+        <span>Tiền Thưởng</span>
+      </Button>
 
       <Button
         variant="default"

@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Loader2, Search, Eye, EyeOff, Info } from "lucide-react";
+import { Loader2, Search, Eye, EyeOff, Info, Gift } from "lucide-react";
 import Link from "next/link";
 import { useEmployeeLookup } from "./use-employee-lookup";
 import { EmployeeLookupResult } from "./employee-lookup-result";
@@ -45,12 +45,22 @@ const loadForgotPasswordModal = () =>
   import("./forgot-password-modal").then((m) => ({
     default: m.ForgotPasswordModal,
   }));
+const loadBonusListModal = () =>
+  import("./bonus-list-modal").then((m) => ({
+    default: m.BonusListModal,
+  }));
+const loadBonusDetailModal = () =>
+  import("./bonus-detail-modal").then((m) => ({
+    default: m.BonusDetailModal,
+  }));
 
 const PayrollDetailModal = lazy(loadPayrollDetailModal);
 const PayrollDetailModalT13 = lazy(loadPayrollDetailModalT13);
 const SalaryHistoryModal = lazy(loadSalaryHistoryModal);
 const ResetPasswordModal = lazy(loadResetPasswordModal);
 const ForgotPasswordModal = lazy(loadForgotPasswordModal);
+const BonusListModal = lazy(loadBonusListModal);
+const BonusDetailModal = lazy(loadBonusDetailModal);
 
 export function EmployeeLookup() {
   const { state, dispatch, refs, handlers } = useEmployeeLookup();
@@ -246,6 +256,15 @@ export function EmployeeLookup() {
             }
             t13Loading={state.t13Loading}
           />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlers.handleShowBonusList}
+            className="mt-4 w-full min-h-[44px]"
+          >
+            <Gift className="mr-2 h-4 w-4" />
+            Tiền Thưởng
+          </Button>
         </div>
       )}
 
@@ -344,6 +363,33 @@ export function EmployeeLookup() {
           }
           onSuccess={() => dispatch({ type: "SET_ERROR", payload: "" })}
         />
+
+        {state.showBonusListModal && (
+          <BonusListModal
+            isOpen={state.showBonusListModal}
+            onClose={() =>
+              dispatch({ type: "HIDE_MODAL", payload: "showBonusListModal" })
+            }
+            bonuses={state.bonusList}
+            isLoading={state.bonusListLoading}
+            error={state.bonusError}
+            onSelectBonus={handlers.handleOpenBonusDetail}
+          />
+        )}
+
+        {state.selectedBonus && state.showBonusDetailModal && (
+          <BonusDetailModal
+            isOpen={state.showBonusDetailModal}
+            onClose={() =>
+              dispatch({ type: "HIDE_MODAL", payload: "showBonusDetailModal" })
+            }
+            bonus={state.selectedBonus}
+            employeeId={state.employeeId}
+            signingLoading={state.bonusSigningLoading}
+            signError={state.bonusError}
+            onSign={handlers.handleSignBonus}
+          />
+        )}
       </Suspense>
     </div>
   );

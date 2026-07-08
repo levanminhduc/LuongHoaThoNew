@@ -129,7 +129,7 @@ export function useManagementEmployeesQuery() {
         MANAGEMENT_ROLES.map((role) => {
           const params = new URLSearchParams();
           params.set(QUERY_PARAMS.ROLE, role);
-          params.set(QUERY_PARAMS.LIMIT, "1000");
+          params.set(QUERY_PARAMS.LIMIT, "200");
 
           return apiClient.get<EmployeesResponse>(
             appendParams(ENDPOINTS.employees.list, params),

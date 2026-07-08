@@ -29,6 +29,7 @@ import {
   BarChart3,
   Eye,
   UserX,
+  Gift,
 } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
@@ -37,6 +38,7 @@ import {
   useSignatureHistoryQuery,
   useSignatureStatusQuery,
 } from "@/lib/hooks/use-dashboard";
+import BonusManagementSignatureForm from "@/components/signature/bonus-management-signature-form";
 
 export default function AccountantDashboard() {
   const [selectedMonth, setSelectedMonth] =
@@ -80,10 +82,10 @@ export default function AccountantDashboard() {
 
     try {
       const data = await signatureMutation.mutateAsync({
-          salary_month: selectedMonth,
-          signature_type: "ke_toan",
-          notes: "Xác nhận tính chính xác lương tháng",
-          device_info: navigator.userAgent,
+        salary_month: selectedMonth,
+        signature_type: "ke_toan",
+        notes: "Xác nhận tính chính xác lương tháng",
+        device_info: navigator.userAgent,
       });
 
       const result = data as { success?: boolean; error?: string };
@@ -241,13 +243,20 @@ export default function AccountantDashboard() {
       )}
 
       <Tabs defaultValue="financial" className="space-y-4 sm:space-y-6">
-        <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-3 sm:bg-muted sm:p-1">
+        <TabsList className="flex h-auto w-full flex-wrap gap-2 bg-transparent p-0 sm:grid sm:grid-cols-4 sm:bg-muted sm:p-1">
           <TabsTrigger
             value="financial"
             className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
           >
             <DollarSign className="mr-2 h-4 w-4" />
             Xác Nhận TC
+          </TabsTrigger>
+          <TabsTrigger
+            value="bonus-signature"
+            className="flex-1 min-h-[44px] border data-[state=active]:border-primary data-[state=active]:bg-primary/5 sm:border-none sm:data-[state=active]:bg-background"
+          >
+            <Gift className="mr-2 h-4 w-4" />
+            Ký Duyệt Tiền Thưởng
           </TabsTrigger>
           <TabsTrigger
             value="verification"
@@ -367,6 +376,10 @@ export default function AccountantDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="bonus-signature" className="space-y-4 sm:space-y-6">
+          <BonusManagementSignatureForm signatureType="ke_toan" />
         </TabsContent>
 
         <TabsContent value="verification" className="space-y-4 sm:space-y-6">

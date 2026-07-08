@@ -36,6 +36,15 @@ export const ENDPOINTS = {
     payslip: (payrollId: string | number) =>
       `/api/payroll/payslip/${encodeURIComponent(String(payrollId))}`,
   },
+  bonus: {
+    import: "/api/admin/bonus-import",
+    list: "/api/bonuses",
+    periods: "/api/bonuses/periods",
+    adminDelete: "/api/admin/bonuses",
+    employeeList: "/api/employee/bonuses",
+    employeeSign: "/api/employee/sign-bonus",
+    managementSignature: "/api/bonus-management-signature",
+  },
   signature: {
     history: "/api/signature-history",
     status: (salaryMonth: string) =>
@@ -70,6 +79,7 @@ export const ENDPOINTS = {
     payroll: "/api/admin/payroll-export-template",
     alias: "/api/admin/generate-alias-template",
     importGenerated: "/api/admin/generate-import-template",
+    bonus: "/api/admin/download-bonus-template",
   },
   mappingConfigs: {
     list: "/api/admin/mapping-configurations",

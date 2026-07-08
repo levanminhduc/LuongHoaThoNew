@@ -35,6 +35,7 @@ import {
   Filter,
   LayoutDashboard,
   ArrowUpDown,
+  Gift,
 } from "lucide-react";
 import { EmployeeImportSection } from "@/components/employee-import-section";
 import { MonthSelector } from "../payroll-management/components/MonthSelector";
@@ -79,7 +80,7 @@ export function AdminDashboardV2() {
   const loading = dashboardQuery.isLoading;
   const payrolls = useMemo(
     () => (dashboardQuery.data?.payrolls ?? []) as unknown as PayrollRecord[],
-    [dashboardQuery.data?.payrolls]
+    [dashboardQuery.data?.payrolls],
   );
   const stats = dashboardQuery.data?.stats ?? {
     totalRecords: 0,
@@ -389,6 +390,14 @@ export function AdminDashboardV2() {
               >
                 <ArrowUpDown className="h-4 w-4 mr-2" />
                 Import/Export Lương
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => router.push("/admin/bonus-import")}
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                Import Tiền Thưởng
               </Button>
               <Button
                 variant="outline"

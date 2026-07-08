@@ -15,14 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EmployeeCombobox } from "./employee-combobox";
 import {
   Save,
   AlertCircle,
@@ -248,46 +242,13 @@ function AssignPermissionsContent() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="employee">Nhân viên *</Label>
-                <Select
+                <EmployeeCombobox
+                  employees={employees}
                   value={selectedEmployee}
                   onValueChange={setSelectedEmployee}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn nhân viên..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-w-[90vw] sm:max-w-md">
-                    {employees.map((employee) => (
-                      <SelectItem
-                        key={employee.employee_id}
-                        value={employee.employee_id}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 w-full min-w-0">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-medium truncate">
-                              {employee.full_name}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className="text-xs shrink-0"
-                            >
-                              {employee.chuc_vu}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground sm:ml-auto">
-                            <span className="shrink-0">
-                              ({employee.employee_id})
-                            </span>
-                            <span className="text-blue-600 truncate">
-                              {employee.department}
-                            </span>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
 
               {selectedEmployeeData && (

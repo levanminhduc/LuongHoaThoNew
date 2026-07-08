@@ -38,3 +38,7 @@ next-env.d.ts
 .claude/skills/algorithmic-art/LICENSE.txt
 auggie_shell.ps1
 auggie_shell.sh
+.codex-review/
+.zed/
+tests/
+.codex-review/runs/

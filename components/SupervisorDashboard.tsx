@@ -52,6 +52,7 @@ import {
   type PayrollResult,
 } from "@/lib/utils/payroll-transformer";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
+import { BonusListSection } from "@/components/bonus/bonus-list-section";
 import {
   payrollExportFilenamePrefix,
   usePayrollExportMutation,
@@ -315,6 +316,13 @@ export default function SupervisorDashboard({
           >
             <span className="hidden sm:inline">Xu Hướng</span>
             <span className="sm:hidden">Xu Hướng</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="bonus"
+            className="flex-1 min-w-[100px] text-xs sm:text-sm px-2 py-2.5 touch-manipulation data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
+            <span className="hidden sm:inline">Tiền Thưởng</span>
+            <span className="sm:hidden">Thưởng</span>
           </TabsTrigger>
         </TabsList>
 
@@ -758,6 +766,10 @@ export default function SupervisorDashboard({
           </div>
 
           <SupervisorDashboardCharts type="trend" monthlyTrend={monthlyTrend} />
+        </TabsContent>
+
+        <TabsContent value="bonus" className="space-y-4 sm:space-y-6">
+          <BonusListSection department={user.department} />
         </TabsContent>
       </Tabs>
       {selectedPayrollData && (

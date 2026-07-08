@@ -85,14 +85,16 @@ export function useAttendanceExportMutation() {
 }
 
 export function useDownloadTemplateMutation(
-  template: "employee" | "attendance" | "payroll",
+  template: "employee" | "attendance" | "payroll" | "bonus",
 ) {
   const path =
     template === "employee"
       ? ENDPOINTS.templates.employee
       : template === "attendance"
         ? ENDPOINTS.templates.attendance
-        : ENDPOINTS.templates.payroll;
+        : template === "bonus"
+          ? ENDPOINTS.templates.bonus
+          : ENDPOINTS.templates.payroll;
 
   return useMutation({
     mutationFn: async () => {

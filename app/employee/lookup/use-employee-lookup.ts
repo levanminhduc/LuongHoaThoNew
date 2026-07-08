@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 import type { PayrollResult } from "@/lib/types/payroll";
+import type { EmployeeBonusItem } from "@/lib/bonus/bonus-types";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 const STORAGE_KEY = "salary_lookup_credentials";
@@ -69,6 +70,13 @@ interface LookupState {
   showForgotPasswordModal: boolean;
   rememberPassword: boolean;
   hasSavedCredentials: boolean;
+  bonusList: EmployeeBonusItem[] | null;
+  bonusListLoading: boolean;
+  bonusError: string;
+  selectedBonus: EmployeeBonusItem | null;
+  bonusSigningLoading: boolean;
+  showBonusListModal: boolean;
+  showBonusDetailModal: boolean;
 }
 
 type LookupAction =
@@ -101,6 +109,8 @@ type LookupAction =
         | "showHistoryModal"
         | "showT13HistoryModal"
         | "showForgotPasswordModal"
+        | "showBonusListModal"
+        | "showBonusDetailModal"
       >;
     }
   | {
@@ -114,6 +124,8 @@ type LookupAction =
         | "showHistoryModal"
         | "showT13HistoryModal"
         | "showForgotPasswordModal"
+        | "showBonusListModal"
+        | "showBonusDetailModal"
       >;
     }
   | { type: "SET_REMEMBER"; payload: boolean }
@@ -127,7 +139,22 @@ type LookupAction =
       payload: { employeeId: string; password: string };
     }
   | { type: "CLEAR_CREDENTIALS" }
-  | { type: "CLEAR_MUST_CHANGE_PASSWORD" };
+  | { type: "CLEAR_MUST_CHANGE_PASSWORD" }
+  | { type: "BONUS_LIST_START" }
+  | { type: "BONUS_LIST_SUCCESS"; payload: EmployeeBonusItem[] }
+  | { type: "BONUS_LIST_ERROR"; payload: string }
+  | { type: "OPEN_BONUS_DETAIL"; payload: EmployeeBonusItem }
+  | { type: "BONUS_SIGN_START" }
+  | {
+      type: "BONUS_SIGN_SUCCESS";
+      payload: {
+        bonus_type: EmployeeBonusItem["bonus_type"];
+        bonus_period: string;
+        signed_at: string;
+        signed_at_display: string;
+      };
+    }
+  | { type: "BONUS_SIGN_END" };
 
 const initialState: LookupState = {
   employeeId: "",
@@ -156,6 +183,13 @@ const initialState: LookupState = {
   showForgotPasswordModal: false,
   rememberPassword: false,
   hasSavedCredentials: false,
+  bonusList: null,
+  bonusListLoading: false,
+  bonusError: "",
+  selectedBonus: null,
+  bonusSigningLoading: false,
+  showBonusListModal: false,
+  showBonusDetailModal: false,
 };
 
 function lookupReducer(state: LookupState, action: LookupAction): LookupState {
@@ -268,6 +302,52 @@ function lookupReducer(state: LookupState, action: LookupAction): LookupState {
       };
     case "CLEAR_MUST_CHANGE_PASSWORD":
       return { ...state, error: "" };
+    case "BONUS_LIST_START":
+      return { ...state, bonusListLoading: true, bonusError: "" };
+    case "BONUS_LIST_SUCCESS":
+      return {
+        ...state,
+        bonusList: action.payload,
+        bonusListLoading: false,
+        bonusError: "",
+      };
+    case "BONUS_LIST_ERROR":
+      return {
+        ...state,
+        bonusListLoading: false,
+        bonusError: action.payload,
+      };
+    case "OPEN_BONUS_DETAIL":
+      return {
+        ...state,
+        selectedBonus: action.payload,
+        showBonusDetailModal: true,
+        bonusError: "",
+      };
+    case "BONUS_SIGN_START":
+      return { ...state, bonusSigningLoading: true, bonusError: "" };
+    case "BONUS_SIGN_SUCCESS": {
+      const applySignature = (bonus: EmployeeBonusItem): EmployeeBonusItem =>
+        bonus.bonus_type === action.payload.bonus_type &&
+        bonus.bonus_period === action.payload.bonus_period
+          ? {
+              ...bonus,
+              is_signed: true,
+              signed_at: action.payload.signed_at,
+              signed_at_display: action.payload.signed_at_display,
+            }
+          : bonus;
+      return {
+        ...state,
+        bonusSigningLoading: false,
+        selectedBonus: state.selectedBonus
+          ? applySignature(state.selectedBonus)
+          : null,
+        bonusList: state.bonusList ? state.bonusList.map(applySignature) : null,
+      };
+    }
+    case "BONUS_SIGN_END":
+      return { ...state, bonusSigningLoading: false };
     default:
       return state;
   }
@@ -654,6 +734,88 @@ export function useEmployeeLookup() {
     [state.sessionToken],
   );
 
+  const handleShowBonusList = useCallback(async () => {
+    if (!state.sessionToken) return;
+
+    dispatch({ type: "SHOW_MODAL", payload: "showBonusListModal" });
+    dispatch({ type: "BONUS_LIST_START" });
+
+    try {
+      const response = await fetch("/api/employee/bonuses", {
+        headers: { Authorization: `Bearer ${state.sessionToken}` },
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        dispatch({ type: "BONUS_LIST_SUCCESS", payload: data.bonuses });
+      } else {
+        dispatch({
+          type: "BONUS_LIST_ERROR",
+          payload: data.error || "Không thể tải danh sách tiền thưởng",
+        });
+      }
+    } catch {
+      dispatch({
+        type: "BONUS_LIST_ERROR",
+        payload: "Có lỗi xảy ra khi tải danh sách tiền thưởng",
+      });
+    }
+  }, [state.sessionToken]);
+
+  const handleOpenBonusDetail = useCallback((bonus: EmployeeBonusItem) => {
+    dispatch({ type: "OPEN_BONUS_DETAIL", payload: bonus });
+  }, []);
+
+  const handleSignBonus = useCallback(async () => {
+    if (!state.selectedBonus) return;
+
+    dispatch({ type: "BONUS_SIGN_START" });
+
+    try {
+      const response = await fetch("/api/employee/sign-bonus", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          bonus_type: state.selectedBonus.bonus_type,
+          bonus_period: state.selectedBonus.bonus_period,
+          employee_id: state.sessionToken ? undefined : state.employeeId.trim(),
+          cccd: state.sessionToken ? undefined : state.cccd.trim(),
+        }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        dispatch({
+          type: "BONUS_SIGN_SUCCESS",
+          payload: {
+            bonus_type: data.bonus_type,
+            bonus_period: data.bonus_period,
+            signed_at: data.signed_at,
+            signed_at_display: data.signed_at_display,
+          },
+        });
+      } else {
+        dispatch({
+          type: "BONUS_LIST_ERROR",
+          payload: data.error || "Không thể ký nhận tiền thưởng",
+        });
+        dispatch({ type: "BONUS_SIGN_END" });
+      }
+    } catch {
+      dispatch({
+        type: "BONUS_LIST_ERROR",
+        payload: "Lỗi kết nối mạng. Vui lòng thử lại.",
+      });
+      dispatch({ type: "BONUS_SIGN_END" });
+    }
+  }, [
+    state.selectedBonus,
+    state.sessionToken,
+    state.employeeId,
+    state.cccd,
+    getAuthHeaders,
+  ]);
+
   return {
     state,
     dispatch,
@@ -666,6 +828,9 @@ export function useEmployeeLookup() {
       handleSignSalary,
       handleSignT13,
       handleShowDetail,
+      handleShowBonusList,
+      handleOpenBonusDetail,
+      handleSignBonus,
     },
   };
 }
