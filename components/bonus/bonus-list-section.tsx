@@ -8,13 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,6 +79,14 @@ export function BonusListSection({ department }: BonusListSectionProps) {
   const periods = periodsQuery.data?.periods ?? [];
   const rows = listQuery.data?.rows ?? [];
   const detailLabels = useMemo(() => collectDetailLabels(rows), [rows]);
+  const periodOptions = useMemo(
+    () =>
+      periods.map((period) => ({
+        value: encodePeriodKey(period.bonus_type, period.bonus_period),
+        label: `${period.bonus_type_label} • ${period.bonus_period}${period.bonus_title ? ` — ${period.bonus_title}` : ""}`,
+      })),
+    [periods],
+  );
 
   const handleSelectPeriod = (key: string) => {
     const period = periods.find(
@@ -108,7 +110,8 @@ export function BonusListSection({ department }: BonusListSectionProps) {
         <CardDescription>
           Chọn đợt thưởng để xem danh sách nhân viên và trạng thái ký nhận
         </CardDescription>
-        <Select
+        <Combobox
+          options={periodOptions}
           value={
             selected
               ? encodePeriodKey(selected.bonusType, selected.bonusPeriod)
@@ -116,22 +119,11 @@ export function BonusListSection({ department }: BonusListSectionProps) {
           }
           onValueChange={handleSelectPeriod}
           disabled={periodsQuery.isLoading || periods.length === 0}
-        >
-          <SelectTrigger className="w-full sm:w-96">
-            <SelectValue placeholder="Chọn đợt thưởng" />
-          </SelectTrigger>
-          <SelectContent>
-            {periods.map((period) => (
-              <SelectItem
-                key={encodePeriodKey(period.bonus_type, period.bonus_period)}
-                value={encodePeriodKey(period.bonus_type, period.bonus_period)}
-              >
-                {period.bonus_type_label} • {period.bonus_period}
-                {period.bonus_title ? ` — ${period.bonus_title}` : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Chọn đợt thưởng"
+          searchPlaceholder="Tìm đợt thưởng..."
+          emptyText="Không tìm thấy đợt thưởng."
+          className="w-full sm:w-96"
+        />
       </CardHeader>
 
       <CardContent>

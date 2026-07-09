@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -101,6 +102,14 @@ export default function EmployeeManagementPage() {
   const employeeMutation = useEmployeeMutation();
   const employees = employeesQuery.data?.employees ?? [];
   const departments = employeesQuery.data?.departments ?? [];
+  const departmentOptions = [
+    { value: "all_departments", label: "Tất cả phòng ban" },
+    ...[...departments]
+      .sort((a, b) =>
+        a.localeCompare(b, "vi", { numeric: true, sensitivity: "base" }),
+      )
+      .map((dept) => ({ value: dept, label: dept })),
+  ];
   const pagination = employeesQuery.data?.pagination ?? {
     page,
     limit,
@@ -388,24 +397,17 @@ export default function EmployeeManagementPage() {
                 className="pl-10 w-full sm:w-auto flex-1"
               />
             </div>
-            <Select
+            <Combobox
+              options={departmentOptions}
               value={selectedDepartment}
-              onValueChange={(value) => handleFilterChange("department", value)}
-            >
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Chọn phòng ban" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all_departments">
-                  Tất cả phòng ban
-                </SelectItem>
-                {departments.map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(value) =>
+                handleFilterChange("department", value || "all_departments")
+              }
+              placeholder="Chọn phòng ban"
+              searchPlaceholder="Tìm phòng ban..."
+              emptyText="Không tìm thấy phòng ban."
+              className="w-full sm:w-[200px]"
+            />
             <Select
               value={selectedRole}
               onValueChange={(value) => handleFilterChange("role", value)}
@@ -612,9 +614,7 @@ export default function EmployeeManagementPage() {
                 <div className="flex justify-center gap-2 mt-4">
                   <Button
                     variant="outline"
-                    onClick={() =>
-                      setPage((prev) => Math.max(1, prev - 1))
-                    }
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                     disabled={pagination.page === 1}
                     className="touch-manipulation"
                   >
@@ -626,7 +626,9 @@ export default function EmployeeManagementPage() {
                   <Button
                     variant="outline"
                     onClick={() =>
-                      setPage((prev) => Math.min(pagination.totalPages, prev + 1))
+                      setPage((prev) =>
+                        Math.min(pagination.totalPages, prev + 1),
+                      )
                     }
                     disabled={pagination.page === pagination.totalPages}
                     className="touch-manipulation"

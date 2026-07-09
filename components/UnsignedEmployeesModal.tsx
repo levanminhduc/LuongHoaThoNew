@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -340,6 +341,18 @@ export default function UnsignedEmployeesModal({
     }
   };
 
+  const departmentOptions = [
+    { value: "all", label: "Tất cả phòng ban" },
+    ...[...departments]
+      .sort((a, b) =>
+        a.localeCompare(b, "vi", { numeric: true, sensitivity: "base" }),
+      )
+      .map((dept) => ({
+        value: dept,
+        label: `${dept} (${departmentCounts[dept] || 0})`,
+      })),
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
@@ -373,22 +386,15 @@ export default function UnsignedEmployeesModal({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Phòng ban</label>
-              <Select
+              <Combobox
+                options={departmentOptions}
                 value={selectedDepartment}
-                onValueChange={handleDepartmentChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả phòng ban</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept} ({departmentCounts[dept] || 0})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onValueChange={(v) => handleDepartmentChange(v || "all")}
+                placeholder="Chọn phòng ban"
+                searchPlaceholder="Tìm phòng ban..."
+                emptyText="Không tìm thấy phòng ban."
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-2">

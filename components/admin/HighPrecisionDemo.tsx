@@ -14,13 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   parseHighPrecisionNumber,
   smartFormatNumber,
@@ -213,21 +207,19 @@ export default function HighPrecisionDemo() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="field-select">Field Type</Label>
-                  <Select
+                  <Combobox
+                    options={Object.keys(FIELD_PRECISION_CONFIG).map(
+                      (field) => ({
+                        value: field,
+                        label: `${field} (${FIELD_PRECISION_CONFIG[field].fieldType})`,
+                      }),
+                    )}
                     value={selectedField}
                     onValueChange={setSelectedField}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select field" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(FIELD_PRECISION_CONFIG).map((field) => (
-                        <SelectItem key={field} value={field}>
-                          {field} ({FIELD_PRECISION_CONFIG[field].fieldType})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Chọn trường"
+                    searchPlaceholder="Tìm trường..."
+                    emptyText="Không tìm thấy trường."
+                  />
                 </div>
               </div>
 

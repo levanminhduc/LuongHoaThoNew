@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import {
   Calendar,
@@ -174,6 +168,20 @@ export default function MonthSelector({
   const nextMonth = getNextMonth();
   const previousMonth = getPreviousMonth();
 
+  const monthOptions: ComboboxOption[] = availableMonths.map((month) => {
+    const tags = [
+      month.isCurrent && "Hiện tại",
+      month.isFuture && "Tương lai",
+      showStatus && month.status && getStatusLabel(month.status),
+    ].filter(Boolean);
+
+    return {
+      value: month.value,
+      label: tags.length ? `${month.label} (${tags.join(", ")})` : month.label,
+      disabled: month.status === "unavailable",
+    };
+  });
+
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center gap-4">
@@ -193,41 +201,16 @@ export default function MonthSelector({
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          <Select
+          <Combobox
+            options={monthOptions}
             value={selectedMonth}
             onValueChange={onMonthChange}
+            placeholder="Chọn tháng lương"
+            searchPlaceholder="Tìm tháng..."
+            emptyText="Không tìm thấy tháng."
             disabled={disabled}
-          >
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {availableMonths.map((month) => (
-                <SelectItem
-                  key={month.value}
-                  value={month.value}
-                  disabled={month.status === "unavailable"}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span>{month.label}</span>
-                    <div className="flex items-center gap-2 ml-4">
-                      {month.isCurrent && (
-                        <Badge variant="outline" className="text-xs">
-                          Hiện tại
-                        </Badge>
-                      )}
-                      {month.isFuture && (
-                        <Badge variant="secondary" className="text-xs">
-                          Tương lai
-                        </Badge>
-                      )}
-                      {showStatus && getStatusIcon(month.status)}
-                    </div>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-48"
+          />
 
           <Button
             variant="outline"

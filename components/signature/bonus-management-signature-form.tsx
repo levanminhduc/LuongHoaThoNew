@@ -4,13 +4,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { CheckCircle, Clock, PenTool } from "lucide-react";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 import { useBonusPeriodsQuery } from "@/lib/hooks/use-bonus-list";
@@ -92,22 +86,18 @@ export default function BonusManagementSignatureForm({
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <Label>Chọn đợt thưởng</Label>
-          <Select value={selectedKey} onValueChange={setSelectedKey}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Chọn đợt thưởng để ký duyệt" />
-            </SelectTrigger>
-            <SelectContent>
-              {periods.map((period) => (
-                <SelectItem
-                  key={toPeriodKey(period.bonus_type, period.bonus_period)}
-                  value={toPeriodKey(period.bonus_type, period.bonus_period)}
-                >
-                  {period.bonus_type_label} • {period.bonus_period}
-                  {period.bonus_title ? ` • ${period.bonus_title}` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            options={periods.map((period) => ({
+              value: toPeriodKey(period.bonus_type, period.bonus_period),
+              label: `${period.bonus_type_label} • ${period.bonus_period}${period.bonus_title ? ` • ${period.bonus_title}` : ""}`,
+            }))}
+            value={selectedKey}
+            onValueChange={setSelectedKey}
+            placeholder="Chọn đợt thưởng để ký duyệt"
+            searchPlaceholder="Tìm đợt thưởng..."
+            emptyText="Không tìm thấy đợt thưởng."
+            className="w-full"
+          />
         </div>
 
         {status && progress && (

@@ -4,6 +4,7 @@ import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 import { withToast } from "@/lib/api/mutation-helpers";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { formatVietnamMonthLabel } from "@/utils/dateUtils";
+import type { PayrollMonthsResponse } from "@/lib/hooks/use-payroll";
 
 export interface RolePayrollRecord {
   id: number;
@@ -181,6 +182,20 @@ export function useManagerDepartmentsQuery(selectedMonth: string) {
   });
 }
 
+export function useManagerAvailableMonthsQuery() {
+  return useQuery({
+    queryKey: ["manager-available-months"],
+    queryFn: ({ signal }) =>
+      apiClient.get<PayrollMonthsResponse>(
+        ENDPOINTS.payroll.myDepartmentsMonths,
+        {
+          signal,
+        },
+      ),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useManagerPayrollQuery(
   selectedMonth: string,
   selectedDepartment: string,
@@ -203,6 +218,20 @@ export function useManagerPayrollQuery(
     enabled: selectedDepartment !== "all",
     staleTime: 30_000,
     placeholderData: (previous) => previous,
+  });
+}
+
+export function useSupervisorAvailableMonthsQuery() {
+  return useQuery({
+    queryKey: ["supervisor-available-months"],
+    queryFn: ({ signal }) =>
+      apiClient.get<PayrollMonthsResponse>(
+        ENDPOINTS.payroll.myDepartmentMonths,
+        {
+          signal,
+        },
+      ),
+    staleTime: 5 * 60_000,
   });
 }
 

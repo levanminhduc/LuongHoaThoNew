@@ -2,7 +2,7 @@
 // @ts-nocheck
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Switch } from "@/components/ui/switch";
 import {
   Form,
@@ -26,7 +27,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { showSuccessToast, showErrorToast } from "@/lib/toast-utils";
-import { Loader2, Eye, EyeOff, Search } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
@@ -108,10 +109,6 @@ export default function EmployeeFormExample({
   const [departments, setDepartments] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [departmentSearch, setDepartmentSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filteredRoleOptions = useMemo(
     () => roleOptions.filter((role) => !restrictedRoles.includes(role.value)),
@@ -150,93 +147,17 @@ export default function EmployeeFormExample({
     fetchDepartments();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    searchTimeoutRef.current = setTimeout(() => {
-      setDebouncedSearch(departmentSearch);
-
-      requestAnimationFrame(() => {
-        if (
-          searchInputRef.current &&
-          document.activeElement !== searchInputRef.current
-        ) {
-          const wasActive = document.activeElement === searchInputRef.current;
-          if (wasActive || departmentSearch) {
-            searchInputRef.current.focus();
-          }
-        }
-      });
-    }, 150);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [departmentSearch]);
-
-  const filteredDepartments = useMemo(() => {
-    if (!debouncedSearch.trim()) return departments;
-
-    const searchTerm = debouncedSearch.toLowerCase().trim();
-    return departments.filter((dept) => {
-      const deptLower = dept.toLowerCase();
-      return deptLower.includes(searchTerm);
-    });
-  }, [departments, debouncedSearch]);
-
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      const cursorPosition = e.target.selectionStart;
-
-      setDepartmentSearch(value);
-
-      requestAnimationFrame(() => {
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-          if (cursorPosition !== null) {
-            searchInputRef.current.setSelectionRange(
-              cursorPosition,
-              cursorPosition,
-            );
-          }
-        }
-      });
-    },
-    [],
+  const departmentOptions = useMemo(
+    () => [
+      { value: "none_selected", label: "Không chọn" },
+      ...[...departments]
+        .sort((a, b) =>
+          a.localeCompare(b, "vi", { numeric: true, sensitivity: "base" }),
+        )
+        .map((dept) => ({ value: dept, label: dept })),
+    ],
+    [departments],
   );
-
-  const handleClearSearch = useCallback(() => {
-    setDepartmentSearch("");
-    setDebouncedSearch("");
-    requestAnimationFrame(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    });
-  }, []);
-
-  const handleSelectOpenChange = useCallback((open: boolean) => {
-    if (open) {
-      requestAnimationFrame(() => {
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-        }
-      });
-    }
-  }, []);
 
   const onSubmit = async (formData: EmployeeFormValues) => {
     setIsSubmitting(true);
@@ -420,66 +341,18 @@ export default function EmployeeFormExample({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Phòng Ban *</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    handleClearSearch();
-                  }}
-                  onOpenChange={handleSelectOpenChange}
-                  disabled={isSubmitting}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn phòng ban" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px]">
-                    <div className="sticky top-0 z-10 bg-background border-b px-3 pb-2">
-                      <div className="flex items-center">
-                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                        <Input
-                          ref={searchInputRef}
-                          placeholder="Tìm phòng ban..."
-                          value={departmentSearch}
-                          onChange={handleSearchChange}
-                          className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                          autoComplete="off"
-                          spellCheck={false}
-                          onBlur={(e) => {
-                            const relatedTarget =
-                              e.relatedTarget as HTMLElement;
-                            if (
-                              relatedTarget &&
-                              relatedTarget.closest('[role="option"]')
-                            ) {
-                              e.preventDefault();
-                              searchInputRef.current?.focus();
-                            }
-                          }}
-                        />
-                      </div>
-                      {departmentSearch && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {filteredDepartments.length} kết quả
-                        </div>
-                      )}
-                    </div>
-                    <div className="overflow-auto">
-                      <SelectItem value="none_selected">Không chọn</SelectItem>
-                      {filteredDepartments.map((dept) => (
-                        <SelectItem key={dept} value={dept}>
-                          {dept}
-                        </SelectItem>
-                      ))}
-                      {filteredDepartments.length === 0 && debouncedSearch && (
-                        <div className="py-6 text-center text-sm text-muted-foreground">
-                          {`Không tìm thấy "${debouncedSearch}"`}
-                        </div>
-                      )}
-                    </div>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Combobox
+                    options={departmentOptions}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Chọn phòng ban"
+                    searchPlaceholder="Tìm phòng ban..."
+                    emptyText="Không tìm thấy phòng ban."
+                    disabled={isSubmitting}
+                    className="w-full"
+                  />
+                </FormControl>
                 {departments.length === 0 && (
                   <FormDescription>
                     Đang tải danh sách phòng ban...

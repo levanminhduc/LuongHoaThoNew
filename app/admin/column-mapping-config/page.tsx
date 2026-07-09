@@ -31,13 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Plus,
   Edit,
@@ -49,9 +43,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { PAYROLL_FIELD_CONFIG } from "@/lib/advanced-excel-parser";
-import {
-  type ColumnAlias,
-} from "@/lib/column-alias-config";
+import { type ColumnAlias } from "@/lib/column-alias-config";
 import {
   useColumnAliasesQuery,
   useCreateColumnAliasMutation,
@@ -66,6 +58,16 @@ interface AliasFormData {
   alias_name: string;
   confidence_score: number;
 }
+
+const fieldOptions = PAYROLL_FIELD_CONFIG.map((field) => ({
+  value: field.field,
+  label: `${field.label} (${field.field})`,
+}));
+
+const fieldFilterOptions = [
+  { value: "all", label: "Tất cả fields" },
+  ...fieldOptions,
+];
 
 export default function ColumnMappingConfigPage() {
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -294,22 +296,15 @@ export default function ColumnMappingConfigPage() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                 <div className="flex-1">
                   <Label htmlFor="field-filter">Lọc theo Database Field</Label>
-                  <Select
+                  <Combobox
+                    options={fieldFilterOptions}
                     value={selectedField}
                     onValueChange={setSelectedField}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tất cả fields" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tất cả fields</SelectItem>
-                      {PAYROLL_FIELD_CONFIG.map((field) => (
-                        <SelectItem key={field.field} value={field.field}>
-                          {field.label} ({field.field})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Tất cả fields"
+                    searchPlaceholder="Tìm trường..."
+                    emptyText="Không tìm thấy trường."
+                    className="w-full"
+                  />
                 </div>
                 <Button
                   variant="outline"
@@ -583,24 +578,18 @@ export default function ColumnMappingConfigPage() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="database_field">Database Field</Label>
-              <Select
+              <Combobox
+                options={fieldOptions}
                 value={aliasForm.database_field}
                 onValueChange={(value) =>
                   setAliasForm((prev) => ({ ...prev, database_field: value }))
                 }
                 disabled={!!editingAlias}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn database field" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYROLL_FIELD_CONFIG.map((field) => (
-                    <SelectItem key={field.field} value={field.field}>
-                      {field.label} ({field.field})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Chọn database field"
+                searchPlaceholder="Tìm trường..."
+                emptyText="Không tìm thấy trường."
+                className="w-full"
+              />
             </div>
 
             <div>

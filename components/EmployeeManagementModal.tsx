@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -235,6 +236,15 @@ export default function EmployeeManagementModal({
   const activeEmployees = employees.filter((emp) => emp.is_active).length;
   const inactiveEmployees = employees.filter((emp) => !emp.is_active).length;
 
+  const departmentOptions = [
+    { value: "all_departments", label: "Tất cả phòng ban" },
+    ...[...departments]
+      .sort((a, b) =>
+        a.localeCompare(b, "vi", { numeric: true, sensitivity: "base" }),
+      )
+      .map((dept) => ({ value: dept, label: dept })),
+  ];
+
   if (!isOpen) return null;
 
   return (
@@ -339,26 +349,17 @@ export default function EmployeeManagementModal({
                       className="pl-10"
                     />
                   </div>
-                  <Select
+                  <Combobox
+                    options={departmentOptions}
                     value={selectedDepartment}
                     onValueChange={(value) =>
                       handleFilterChange("department", value)
                     }
-                  >
-                    <SelectTrigger className="w-full sm:w-48">
-                      <SelectValue placeholder="Chọn phòng ban" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_departments">
-                        Tất cả phòng ban
-                      </SelectItem>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept} value={dept}>
-                          {dept}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Chọn phòng ban"
+                    searchPlaceholder="Tìm phòng ban..."
+                    emptyText="Không tìm thấy phòng ban."
+                    className="w-full sm:w-48"
+                  />
                   <Select
                     value={selectedRole}
                     onValueChange={(value) => handleFilterChange("role", value)}

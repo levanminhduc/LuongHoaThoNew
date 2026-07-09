@@ -1,14 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -55,48 +50,40 @@ export function BonusColumnPicker({
   disabled,
 }: BonusColumnPickerProps) {
   const selectableHeaders = headers.filter((header) => header !== "");
+  const headerOptions: ComboboxOption[] = useMemo(
+    () => selectableHeaders.map((header) => ({ value: header, label: header })),
+    [selectableHeaders],
+  );
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="employee-id-column">Cột Mã Nhân Viên</Label>
-          <Select
+          <Label>Cột Mã Nhân Viên</Label>
+          <Combobox
+            options={headerOptions}
             value={employeeIdColumn}
             onValueChange={onEmployeeIdColumnChange}
             disabled={disabled}
-          >
-            <SelectTrigger id="employee-id-column">
-              <SelectValue placeholder="Chọn cột Mã Nhân Viên" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectableHeaders.map((header) => (
-                <SelectItem key={header} value={header}>
-                  {header}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Chọn cột Mã Nhân Viên"
+            searchPlaceholder="Tìm cột..."
+            emptyText="Không tìm thấy cột."
+            className="w-full"
+          />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="amount-column">Cột Số Tiền Thưởng</Label>
-          <Select
+          <Label>Cột Số Tiền Thưởng</Label>
+          <Combobox
+            options={headerOptions}
             value={amountColumn}
             onValueChange={onAmountColumnChange}
             disabled={disabled}
-          >
-            <SelectTrigger id="amount-column">
-              <SelectValue placeholder="Chọn cột Số Tiền Thưởng" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectableHeaders.map((header) => (
-                <SelectItem key={header} value={header}>
-                  {header}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Chọn cột Số Tiền Thưởng"
+            searchPlaceholder="Tìm cột..."
+            emptyText="Không tìm thấy cột."
+            className="w-full"
+          />
         </div>
       </div>
 

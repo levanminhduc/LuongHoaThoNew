@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -68,7 +69,9 @@ export default function AttendanceListPage() {
   const loading = attendanceQuery.isLoading || attendanceQuery.isFetching;
   const exporting = exportMutation.isPending;
   const queryError =
-    attendanceQuery.error instanceof Error ? attendanceQuery.error.message : null;
+    attendanceQuery.error instanceof Error
+      ? attendanceQuery.error.message
+      : null;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -101,7 +104,9 @@ export default function AttendanceListPage() {
       key: "select",
       header: (
         <Checkbox
-          checked={employees.length > 0 && selectedIds.size === employees.length}
+          checked={
+            employees.length > 0 && selectedIds.size === employees.length
+          }
           onCheckedChange={handleSelectAll}
         />
       ),
@@ -206,45 +211,45 @@ export default function AttendanceListPage() {
           <div className="flex flex-wrap gap-4 items-end">
             <div className="space-y-1">
               <label className="text-sm font-medium">Kỳ công</label>
-              <Select
+              <Combobox
+                options={periods.map((p) => ({
+                  value: `${p.year}-${p.month}`,
+                  label: `${String(p.month).padStart(2, "0")}/${p.year}`,
+                }))}
                 value={`${periodYear}-${periodMonth}`}
                 onValueChange={(val) => {
                   const [y, m] = val.split("-").map(Number);
                   setPeriodYear(y);
                   setPeriodMonth(m);
                 }}
-              >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {periods.map((p) => (
-                    <SelectItem
-                      key={`${p.year}-${p.month}`}
-                      value={`${p.year}-${p.month}`}
-                    >
-                      {`${String(p.month).padStart(2, "0")}/${p.year}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Chọn kỳ"
+                searchPlaceholder="Tìm kỳ..."
+                emptyText="Không tìm thấy kỳ."
+                className="w-[150px]"
+              />
             </div>
 
             <div className="space-y-1">
               <label className="text-sm font-medium">Phòng ban</label>
-              <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Tất cả" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  {departments.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={[
+                  { value: "all", label: "Tất cả" },
+                  ...[...departments]
+                    .sort((a, b) =>
+                      a.localeCompare(b, "vi", {
+                        numeric: true,
+                        sensitivity: "base",
+                      }),
+                    )
+                    .map((d) => ({ value: d, label: d })),
+                ]}
+                value={department}
+                onValueChange={setDepartment}
+                placeholder="Tất cả"
+                searchPlaceholder="Tìm phòng ban..."
+                emptyText="Không tìm thấy phòng ban."
+                className="w-[180px]"
+              />
             </div>
 
             <div className="space-y-1">

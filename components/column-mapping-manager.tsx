@@ -12,13 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -30,7 +24,6 @@ import {
   CheckCircle,
   AlertTriangle,
   FileSpreadsheet,
-  Database,
   ArrowRight,
 } from "lucide-react";
 import {
@@ -244,6 +237,14 @@ export function ColumnMappingManager({
     return getFieldsByCategory(selectedCategory);
   };
 
+  const categoryOptions = [
+    { value: "all", label: "Tất cả danh mục" },
+    ...PAYROLL_FIELD_CATEGORIES.map((category) => ({
+      value: category,
+      label: category,
+    })),
+  ];
+
   const getMappingStatus = (mapping: ColumnMapping) => {
     if (!mapping.database_field) return "unmapped";
     const fieldDef = PAYROLL_FIELD_DEFINITIONS.find(
@@ -270,22 +271,15 @@ export function ColumnMappingManager({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Label>Filter by category:</Label>
-            <Select
+            <Combobox
+              options={categoryOptions}
               value={selectedCategory}
               onValueChange={setSelectedCategory}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {PAYROLL_FIELD_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Chọn danh mục"
+              searchPlaceholder="Tìm danh mục..."
+              emptyText="Không tìm thấy danh mục."
+              className="w-48"
+            />
           </div>
 
           <div className="flex gap-2">
@@ -353,37 +347,28 @@ export function ColumnMappingManager({
 
                     {/* Database Field Selection */}
                     <div className="md:col-span-4">
-                      <Select
+                      <Combobox
+                        options={[
+                          {
+                            value: "__no_mapping__",
+                            label: "-- No mapping --",
+                          },
+                          ...getFilteredFields().map((field) => ({
+                            value: field.field,
+                            label: field.is_required
+                              ? `${field.label} (Required)`
+                              : field.label,
+                          })),
+                        ]}
                         value={mapping.database_field || "__no_mapping__"}
                         onValueChange={(value) =>
                           updateMapping(index, "database_field", value)
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select database field" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__no_mapping__">
-                            -- No mapping --
-                          </SelectItem>
-                          {getFilteredFields().map((field) => (
-                            <SelectItem key={field.field} value={field.field}>
-                              <div className="flex items-center gap-2">
-                                <Database className="w-3 h-3" />
-                                <span>{field.label}</span>
-                                {field.is_required && (
-                                  <Badge
-                                    variant="destructive"
-                                    className="text-xs"
-                                  >
-                                    Required
-                                  </Badge>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="Chọn trường"
+                        searchPlaceholder="Tìm trường..."
+                        emptyText="Không tìm thấy trường."
+                        className="w-full"
+                      />
                     </div>
 
                     {/* Field Info */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,12 +12,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -38,7 +44,11 @@ import {
   Eye,
   AlertTriangle,
   Database,
+  Check,
+  ChevronsUpDown,
+  Loader2,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useMappingConfig } from "@/lib/hooks/use-mapping-config";
 import { useHeaderMapping as useHeaderMappingUtils } from "@/lib/hooks/use-header-mapping";
 import { useGenerateImportTemplateMutation } from "@/lib/hooks/use-column-mapping";
@@ -77,7 +87,13 @@ export function ExportConfigurationDialog({
     useState<string[]>(availableFields);
 
   // Hooks
-  const { configurations, defaultConfig } = useMappingConfig();
+  const {
+    configurations,
+    defaultConfig,
+    isLoading: isConfigsLoading,
+  } = useMappingConfig();
+  const [configSearch, setConfigSearch] = useState("");
+  const [configPopoverOpen, setConfigPopoverOpen] = useState(false);
   const { generatePreview } = useHeaderMappingUtils();
   const generateImportTemplateMutation = useGenerateImportTemplateMutation();
 
@@ -129,7 +145,9 @@ export function ExportConfigurationDialog({
     if (!selectedConfigId) return;
 
     try {
-      const config = configurations.find((item) => item.id === selectedConfigId);
+      const config = configurations.find(
+        (item) => item.id === selectedConfigId,
+      );
       await generateImportTemplateMutation.mutateAsync({
         configId: selectedConfigId,
         configName: config?.config_name,
@@ -162,6 +180,26 @@ export function ExportConfigurationDialog({
   const selectedConfig = selectedConfigId
     ? configurations.find((c) => c.id === selectedConfigId)
     : null;
+
+  const sortedConfigurations = useMemo(
+    () =>
+      [...configurations].sort((a, b) => {
+        if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
+        return a.config_name.localeCompare(b.config_name, "vi", {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }),
+    [configurations],
+  );
+
+  const filteredConfigurations = useMemo(() => {
+    const query = configSearch.trim().toLowerCase();
+    if (!query) return sortedConfigurations;
+    return sortedConfigurations.filter((config) =>
+      config.config_name.toLowerCase().includes(query),
+    );
+  }, [sortedConfigurations, configSearch]);
 
   // Generate filename preview
   const generateFilenamePreview = () => {
@@ -238,40 +276,109 @@ export function ExportConfigurationDialog({
                   {/* Mapping Configuration */}
                   <div className="space-y-2">
                     <Label className="text-sm">Mapping Configuration</Label>
-                    <Select
-                      value={selectedConfigId?.toString() || ""}
-                      onValueChange={(value) =>
-                        setSelectedConfigId(
-                          value && value !== "none" ? parseInt(value) : null,
-                        )
-                      }
+                    <Popover
+                      open={configPopoverOpen}
+                      onOpenChange={setConfigPopoverOpen}
                     >
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Select configuration..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">
-                          No configuration (use defaults)
-                        </SelectItem>
-                        {configurations.map((config) => (
-                          <SelectItem
-                            key={config.id}
-                            value={config.id!.toString()}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="truncate">
-                                {config.config_name}
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={configPopoverOpen}
+                          disabled={isConfigsLoading}
+                          className={cn(
+                            "h-auto min-h-10 w-full justify-between font-normal",
+                            !selectedConfig && "text-muted-foreground",
+                          )}
+                        >
+                          {selectedConfig ? (
+                            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className="font-medium">
+                                {selectedConfig.config_name}
                               </span>
-                              {config.is_default && (
+                              {selectedConfig.is_default && (
                                 <Badge variant="secondary" className="text-xs">
                                   Default
                                 </Badge>
                               )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                            </span>
+                          ) : (
+                            "Chọn cấu hình..."
+                          )}
+                          {isConfigsLoading ? (
+                            <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+                          ) : (
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="start"
+                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                      >
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Tìm cấu hình..."
+                            value={configSearch}
+                            onValueChange={setConfigSearch}
+                          />
+                          <CommandList>
+                            <CommandEmpty>
+                              Không tìm thấy cấu hình.
+                            </CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem
+                                value="none"
+                                onSelect={() => {
+                                  setSelectedConfigId(null);
+                                  setConfigPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4 shrink-0",
+                                    selectedConfigId === null
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                No configuration (use defaults)
+                              </CommandItem>
+                              {filteredConfigurations.map((config) => (
+                                <CommandItem
+                                  key={config.id}
+                                  value={config.id!.toString()}
+                                  onSelect={() => {
+                                    setSelectedConfigId(config.id!);
+                                    setConfigPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4 shrink-0",
+                                      selectedConfigId === config.id
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                  <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span>{config.config_name}</span>
+                                    {config.is_default && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs"
+                                      >
+                                        Default
+                                      </Badge>
+                                    )}
+                                  </span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
 
                     {selectedConfig && (
                       <div className="text-xs text-gray-600 space-y-1">

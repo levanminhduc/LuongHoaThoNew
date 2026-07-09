@@ -16,13 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -256,18 +250,15 @@ export default function OverviewModal({
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-52">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {generateMonthOptions(2).map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={generateMonthOptions(2)}
+              value={selectedMonth}
+              onValueChange={setSelectedMonth}
+              placeholder="Chọn tháng lương"
+              searchPlaceholder="Tìm tháng..."
+              emptyText="Không tìm thấy tháng."
+              className="w-52"
+            />
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>

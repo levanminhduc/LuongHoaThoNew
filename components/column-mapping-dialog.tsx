@@ -4,13 +4,7 @@ import { useCallback, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -111,7 +105,8 @@ export function ColumnMappingDialog({
     { limit: 200, isActive: true },
     enableAliasMapping,
   );
-  const saveMappingConfigurationMutation = useSaveMappingConfigurationMutation();
+  const saveMappingConfigurationMutation =
+    useSaveMappingConfigurationMutation();
   const aliases = aliasesQuery.data?.data || [];
   const isBusy =
     loading ||
@@ -327,39 +322,27 @@ export function ColumnMappingDialog({
                         <Label htmlFor="config-select" className="text-xs">
                           Load Configuration
                         </Label>
-                        <Select
+                        <Combobox
+                          options={[
+                            { value: "", label: "No configuration" },
+                            ...availableConfigs.map((config) => ({
+                              value: config.id!.toString(),
+                              label: config.is_default
+                                ? `${config.config_name} (Default)`
+                                : config.config_name,
+                            })),
+                          ]}
                           value={selectedConfigId?.toString() || ""}
                           onValueChange={(value) => {
                             const configId = value ? parseInt(value) : null;
                             setSelectedConfigId(configId);
                             // TODO: Apply selected configuration to mapping
                           }}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Select configuration..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">No configuration</SelectItem>
-                            {availableConfigs.map((config) => (
-                              <SelectItem
-                                key={config.id}
-                                value={config.id!.toString()}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span>{config.config_name}</span>
-                                  {config.is_default && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      Default
-                                    </Badge>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          placeholder="Chọn cấu hình"
+                          searchPlaceholder="Tìm cấu hình..."
+                          emptyText="Không tìm thấy."
+                          className="h-8 w-full"
+                        />
                       </div>
                     )}
 
@@ -580,30 +563,25 @@ export function ColumnMappingDialog({
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Select
+                          <Combobox
+                            options={[
+                              { value: "none", label: "Không ánh xạ" },
+                              ...PAYROLL_FIELD_CONFIG.map((field) => ({
+                                value: field.field,
+                                label: field.required
+                                  ? `${field.label} *`
+                                  : field.label,
+                              })),
+                            ]}
                             value={mapping[column] || "none"}
                             onValueChange={(value) =>
                               handleMappingChange(column, value)
                             }
-                          >
-                            <SelectTrigger className="w-[200px]">
-                              <SelectValue placeholder="Chọn trường" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">Không ánh xạ</SelectItem>
-                              {PAYROLL_FIELD_CONFIG.map((field) => (
-                                <SelectItem
-                                  key={field.field}
-                                  value={field.field}
-                                >
-                                  {field.label}
-                                  {field.required && (
-                                    <span className="text-red-500"> *</span>
-                                  )}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            placeholder="Chọn trường"
+                            searchPlaceholder="Tìm trường..."
+                            emptyText="Không tìm thấy."
+                            className="w-[200px]"
+                          />
 
                           {mapping[column] && (
                             <Button
@@ -790,18 +768,18 @@ export function ColumnMappingDialog({
             </div>
             <div>
               <Label htmlFor="database-field">Database Field</Label>
-              <Select onValueChange={(value) => setCreateAliasField(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn database field..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYROLL_FIELD_CONFIG.map((field) => (
-                    <SelectItem key={field.field} value={field.field}>
-                      {field.label} ({field.field})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={PAYROLL_FIELD_CONFIG.map((field) => ({
+                  value: field.field,
+                  label: `${field.label} (${field.field})`,
+                }))}
+                value={createAliasField}
+                onValueChange={(value) => setCreateAliasField(value)}
+                placeholder="Chọn database field..."
+                searchPlaceholder="Tìm trường..."
+                emptyText="Không tìm thấy."
+                className="w-full"
+              />
             </div>
           </div>
           <DialogFooter>

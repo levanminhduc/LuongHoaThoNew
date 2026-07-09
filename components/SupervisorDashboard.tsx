@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Card,
@@ -11,13 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +34,6 @@ import {
 } from "@/components/ui/table";
 import {
   formatVietnamMonthLabel,
-  getPayrollMonthOptionsWithT13,
   getPreviousMonth,
   getRecentMonthValues,
 } from "@/utils/dateUtils";
@@ -56,6 +49,7 @@ import { BonusListSection } from "@/components/bonus/bonus-list-section";
 import {
   payrollExportFilenamePrefix,
   usePayrollExportMutation,
+  useSupervisorAvailableMonthsQuery,
   useSupervisorPayrollQuery,
   useSupervisorStatsQuery,
   useSupervisorTrendQuery,
@@ -99,6 +93,15 @@ export default function SupervisorDashboard({
   const statsQuery = useSupervisorStatsQuery(selectedMonth);
   const trendQuery = useSupervisorTrendQuery(trendMonths);
   const exportMutation = usePayrollExportMutation();
+  const availableMonthsQuery = useSupervisorAvailableMonthsQuery();
+  const monthOptions = useMemo(
+    () =>
+      (availableMonthsQuery.data?.months ?? []).map((month) => ({
+        value: month,
+        label: formatVietnamMonthLabel(month),
+      })),
+    [availableMonthsQuery.data?.months],
+  );
   const payrollData = payrollQuery.data?.data ?? [];
   const departmentStats = statsQuery.data?.statistics ?? null;
   const monthlyTrend = trendQuery.data ?? [];
@@ -195,26 +198,20 @@ export default function SupervisorDashboard({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-52">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {getPayrollMonthOptionsWithT13(2).map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className={
-                    option.value.endsWith("-13")
-                      ? "text-amber-600 font-semibold"
-                      : ""
-                  }
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            options={monthOptions}
+            value={selectedMonth}
+            onValueChange={setSelectedMonth}
+            placeholder={
+              availableMonthsQuery.isLoading
+                ? "Đang tải..."
+                : "Chọn tháng lương"
+            }
+            searchPlaceholder="Tìm tháng..."
+            emptyText="Không tìm thấy tháng."
+            disabled={availableMonthsQuery.isLoading}
+            className="w-52"
+          />
         </div>
       </div>
 

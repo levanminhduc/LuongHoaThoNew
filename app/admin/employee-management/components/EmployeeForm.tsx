@@ -385,7 +385,11 @@ export default function EmployeeForm({
           >
             Phòng Ban
           </Label>
-          <Popover open={openDepartment} onOpenChange={setOpenDepartment}>
+          <Popover
+            open={openDepartment}
+            onOpenChange={setOpenDepartment}
+            modal={true}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"

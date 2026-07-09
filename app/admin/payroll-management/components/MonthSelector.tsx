@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Calendar } from "lucide-react";
@@ -41,7 +35,7 @@ export function MonthSelector({
       const monthNumber = parseInt(monthNum, 10);
 
       if (isNaN(monthNumber) || monthNumber < 1 || monthNumber > 12) {
-      return month;
+        return month;
       }
 
       return `Tháng ${monthNumber} - ${year}`;
@@ -64,6 +58,20 @@ export function MonthSelector({
       label: formatMonthLabel(month),
     })) ?? [];
 
+  const comboboxOptions: ComboboxOption[] = [
+    ...(allowEmpty ? [{ value: "__EMPTY__", label: "Tất cả tháng" }] : []),
+    ...months,
+    ...(!loading && months.length === 0
+      ? [
+          {
+            value: "__NO_DATA__",
+            label: "Không có dữ liệu tháng",
+            disabled: true,
+          },
+        ]
+      : []),
+  ];
+
   if (error) {
     return (
       <div className="space-y-2">
@@ -84,54 +92,16 @@ export function MonthSelector({
         </Label>
       )}
 
-      <Select
+      <Combobox
+        options={comboboxOptions}
         value={value || "__EMPTY__"}
         onValueChange={handleValueChange}
+        placeholder={loading ? "Đang tải..." : placeholder}
+        searchPlaceholder="Tìm tháng..."
+        emptyText="Không tìm thấy tháng."
         disabled={disabled || loading}
-      >
-        <SelectTrigger className={loading ? "opacity-50" : ""}>
-          <SelectValue
-            placeholder={
-              loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang tải...
-                </div>
-              ) : (
-                placeholder
-              )
-            }
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {allowEmpty && (
-            <SelectItem value="__EMPTY__">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                Tất cả tháng
-              </div>
-            </SelectItem>
-          )}
-
-          {months.map((month) => (
-            <SelectItem key={month.value} value={month.value}>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-500" />
-                {month.label}
-              </div>
-            </SelectItem>
-          ))}
-
-          {!loading && months.length === 0 && (
-            <SelectItem value="__NO_DATA__" disabled>
-              <div className="flex items-center gap-2 text-gray-500">
-                <Calendar className="w-4 h-4" />
-                Không có dữ liệu tháng
-              </div>
-            </SelectItem>
-          )}
-        </SelectContent>
-      </Select>
+        className={loading ? "opacity-50" : ""}
+      />
 
       {loading && (
         <p className="text-xs text-gray-500 flex items-center gap-1">

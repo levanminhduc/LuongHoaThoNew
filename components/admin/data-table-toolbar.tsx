@@ -10,13 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -80,18 +74,15 @@ export function DataTableToolbar({
       <CardContent className="pb-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
           {monthOptions && onMonthChange && (
-            <Select value={selectedMonth} onValueChange={onMonthChange}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Chọn tháng" />
-              </SelectTrigger>
-              <SelectContent>
-                {monthOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={monthOptions}
+              value={selectedMonth}
+              onValueChange={onMonthChange}
+              placeholder="Chọn tháng"
+              searchPlaceholder="Tìm tháng..."
+              emptyText="Không tìm thấy tháng."
+              className="w-full sm:w-[180px]"
+            />
           )}
 
           {onSearchChange && (

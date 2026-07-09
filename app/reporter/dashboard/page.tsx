@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import EmployeeListModal from "@/components/EmployeeListModal";
 import OverviewModal from "@/components/OverviewModal";
 import EmployeeManagementModal from "@/components/EmployeeManagementModal";
@@ -154,22 +148,15 @@ export default function ReporterDashboard() {
               Quản Lý NV
             </Button>
           </div>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-full sm:w-40 min-h-[44px] sm:min-h-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {getRecentMonthOptions().map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className="min-h-[44px] sm:min-h-0"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            options={getRecentMonthOptions()}
+            value={selectedMonth}
+            onValueChange={setSelectedMonth}
+            placeholder="Chọn tháng"
+            searchPlaceholder="Tìm tháng..."
+            emptyText="Không tìm thấy tháng."
+            className="w-full sm:w-40 min-h-[44px] sm:min-h-0"
+          />
         </div>
       </div>
       {message && (

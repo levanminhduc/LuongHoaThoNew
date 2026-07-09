@@ -8,13 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -291,22 +285,27 @@ export default function EmployeeListModal({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Phòng ban</label>
-              <Select
+              <Combobox
+                options={[
+                  { value: "all", label: "Tất cả phòng ban" },
+                  ...[...departments]
+                    .sort((a, b) =>
+                      a.localeCompare(b, "vi", {
+                        numeric: true,
+                        sensitivity: "base",
+                      }),
+                    )
+                    .map((dept) => ({
+                      value: dept,
+                      label: `${dept} (${departmentCounts[dept] || 0})`,
+                    })),
+                ]}
                 value={selectedDepartment}
                 onValueChange={handleDepartmentChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả phòng ban</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept} ({departmentCounts[dept] || 0})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Chọn phòng ban"
+                searchPlaceholder="Tìm phòng ban..."
+                emptyText="Không tìm thấy phòng ban."
+              />
             </div>
 
             <div className="space-y-2">

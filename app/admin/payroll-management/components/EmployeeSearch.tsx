@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Search, User, Calendar, DollarSign } from "lucide-react";
@@ -206,24 +207,19 @@ export function EmployeeSearch({
 
           <div className="space-y-2">
             <Label htmlFor="month">Tháng Lương (Tùy chọn)</Label>
-            <Select
+            <Combobox
+              options={[
+                { value: "__EMPTY__", label: "Tất cả tháng" },
+                ...availableMonths,
+              ]}
               value={selectedMonth || "__EMPTY__"}
               onValueChange={(value) => {
                 setSelectedMonth(value === "__EMPTY__" ? "" : value);
               }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Tất cả tháng" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__EMPTY__">Tất cả tháng</SelectItem>
-                {availableMonths.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Chọn tháng"
+              searchPlaceholder="Tìm tháng..."
+              emptyText="Không tìm thấy tháng."
+            />
           </div>
 
           <div className="space-y-2">

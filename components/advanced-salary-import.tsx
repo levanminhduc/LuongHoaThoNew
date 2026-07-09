@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,13 +16,22 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import {
+  Check,
+  ChevronsUpDown,
   Loader2,
   Settings,
   FileSpreadsheet,
@@ -86,7 +95,11 @@ export function AdvancedSalaryImport({
     applyConfiguration,
     hasConfigurations,
     hasDefaultConfig,
+    isLoading: isLoadingConfigurations,
   } = useMappingConfig();
+
+  const [configComboOpen, setConfigComboOpen] = useState(false);
+  const [configSearch, setConfigSearch] = useState("");
 
   const { currentConfig, applyDefaultConfig, hasCurrentConfig } =
     useCurrentMappingConfig();
@@ -107,6 +120,30 @@ export function AdvancedSalaryImport({
       setSelectedConfigId(defaultConfig.id!);
     }
   }, [hasDefaultConfig, defaultConfig, hasCurrentConfig, applyDefaultConfig]);
+
+  const selectedConfig = configurations.find(
+    (config) => config.id === selectedConfigId,
+  );
+
+  const sortedConfigurations = useMemo(
+    () =>
+      [...configurations].sort((a, b) => {
+        if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
+        return a.config_name.localeCompare(b.config_name, "vi", {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }),
+    [configurations],
+  );
+
+  const filteredConfigurations = useMemo(() => {
+    const query = configSearch.trim().toLowerCase();
+    if (!query) return sortedConfigurations;
+    return sortedConfigurations.filter((config) =>
+      config.config_name.toLowerCase().includes(query),
+    );
+  }, [sortedConfigurations, configSearch]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -304,8 +341,7 @@ export function AdvancedSalaryImport({
       );
 
       const finalConfigName =
-        configName ||
-        `Import Success ${getVietnamTimestamp().slice(0, 10)}`;
+        configName || `Import Success ${getVietnamTimestamp().slice(0, 10)}`;
       const finalDescription =
         description ||
         `Successful mapping configuration from import on ${getVietnamTimestamp()}`;
@@ -502,37 +538,92 @@ export function AdvancedSalaryImport({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="config-select">Chọn Configuration</Label>
-                    <Select
-                      value={selectedConfigId?.toString() || ""}
-                      onValueChange={(value) => {
-                        const configId = parseInt(value);
-                        setSelectedConfigId(configId);
-                        if (configId) {
-                          applyConfiguration(configId);
-                        }
-                      }}
+                    <Popover
+                      open={configComboOpen}
+                      onOpenChange={setConfigComboOpen}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn mapping configuration..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {configurations.map((config) => (
-                          <SelectItem
-                            key={config.id}
-                            value={config.id!.toString()}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>{config.config_name}</span>
-                              {config.is_default && (
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="config-select"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={configComboOpen}
+                          disabled={isLoadingConfigurations}
+                          className={cn(
+                            "h-auto min-h-10 w-full justify-between font-normal",
+                            !selectedConfig && "text-muted-foreground",
+                          )}
+                        >
+                          {selectedConfig ? (
+                            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                              <span>{selectedConfig.config_name}</span>
+                              {selectedConfig.is_default && (
                                 <Badge variant="secondary" className="text-xs">
                                   Default
                                 </Badge>
                               )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                            </span>
+                          ) : (
+                            "Chọn mapping configuration..."
+                          )}
+                          {isLoadingConfigurations ? (
+                            <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+                          ) : (
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="start"
+                        className="w-[var(--radix-popover-trigger-width)] p-0"
+                      >
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Tìm cấu hình..."
+                            value={configSearch}
+                            onValueChange={setConfigSearch}
+                          />
+                          <CommandList>
+                            <CommandEmpty>
+                              Không tìm thấy cấu hình.
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {filteredConfigurations.map((config) => (
+                                <CommandItem
+                                  key={config.id}
+                                  value={config.id!.toString()}
+                                  onSelect={() => {
+                                    setSelectedConfigId(config.id!);
+                                    applyConfiguration(config.id!);
+                                    setConfigComboOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4 shrink-0",
+                                      selectedConfigId === config.id
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                  <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span>{config.config_name}</span>
+                                    {config.is_default && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs"
+                                      >
+                                        Default
+                                      </Badge>
+                                    )}
+                                  </span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {currentConfig && (

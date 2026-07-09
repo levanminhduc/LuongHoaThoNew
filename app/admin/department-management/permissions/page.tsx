@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   VirtualizedTable,
   type VirtualColumn,
@@ -95,7 +96,7 @@ function PermissionsContent() {
       ? permissionsQuery.error.message
       : null;
   const revokingId = revokeMutation.isPending
-    ? revokeMutation.variables ?? null
+    ? (revokeMutation.variables ?? null)
     : null;
 
   useEffect(() => {
@@ -159,7 +160,11 @@ function PermissionsContent() {
       alert("Thu hồi quyền thành công!");
     } catch (error) {
       console.error("Error revoking permission:", error);
-      setError(error instanceof Error ? error.message : "Có lỗi xảy ra khi thu hồi quyền");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Có lỗi xảy ra khi thu hồi quyền",
+      );
     }
   };
 
@@ -181,6 +186,14 @@ function PermissionsContent() {
       ...new Set(permissions.map((p) => p[key] as string).filter(Boolean)),
     ];
   };
+  const departmentOptions = [
+    { value: "all", label: "Tất cả departments" },
+    ...getUniqueValues("department")
+      .sort((a, b) =>
+        a.localeCompare(b, "vi", { numeric: true, sensitivity: "base" }),
+      )
+      .map((dept) => ({ value: dept, label: dept })),
+  ];
   const displayedPermissions =
     visibleLimit === "all"
       ? filteredPermissions
@@ -361,22 +374,15 @@ function PermissionsContent() {
               <label className="text-sm font-medium mb-2 block">
                 Department
               </label>
-              <Select
+              <Combobox
+                options={departmentOptions}
                 value={departmentFilterState}
                 onValueChange={setDepartmentFilterState}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả departments</SelectItem>
-                  {getUniqueValues("department").map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Chọn department"
+                searchPlaceholder="Tìm department..."
+                emptyText="Không tìm thấy department."
+                className="w-full"
+              />
             </div>
 
             <div className="flex items-end">

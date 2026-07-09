@@ -12,13 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -198,19 +192,18 @@ export default function DataValidationPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-full sm:w-[140px]">
-              <Calendar className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Chọn tháng" />
-            </SelectTrigger>
-            <SelectContent>
-              {monthOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 w-full sm:w-[140px]">
+            <Calendar className="h-4 w-4 shrink-0" />
+            <Combobox
+              options={monthOptions}
+              value={selectedMonth}
+              onValueChange={setSelectedMonth}
+              placeholder="Chọn tháng"
+              searchPlaceholder="Tìm tháng..."
+              emptyText="Không tìm thấy tháng."
+              className="w-full"
+            />
+          </div>
 
           <Button
             onClick={handleRefresh}

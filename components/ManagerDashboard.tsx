@@ -10,13 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -37,11 +31,7 @@ import {
   Download,
 } from "lucide-react";
 import { DepartmentDetailModalRefactored } from "./department";
-import {
-  formatVietnamMonthLabel,
-  getPayrollMonthOptionsWithT13,
-  getPreviousMonth,
-} from "@/utils/dateUtils";
+import { formatVietnamMonthLabel, getPreviousMonth } from "@/utils/dateUtils";
 import { PayrollDetailModal } from "@/app/employee/lookup/payroll-detail-modal";
 import { PayrollDetailModalT13 } from "@/app/employee/lookup/payroll-detail-modal-t13";
 import {
@@ -51,6 +41,7 @@ import {
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
 import {
   payrollExportFilenamePrefix,
+  useManagerAvailableMonthsQuery,
   useManagerDepartmentsQuery,
   useManagerPayrollQuery,
   usePayrollExportMutation,
@@ -87,7 +78,30 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
     selectedDepartment,
   );
   const exportMutation = usePayrollExportMutation();
+  const availableMonthsQuery = useManagerAvailableMonthsQuery();
   const departments = departmentsQuery.data?.departments ?? [];
+  const monthOptions = useMemo(
+    () =>
+      (availableMonthsQuery.data?.months ?? []).map((month) => ({
+        value: month,
+        label: formatVietnamMonthLabel(month),
+      })),
+    [availableMonthsQuery.data?.months],
+  );
+  const departmentOptions = useMemo(
+    () => [
+      { value: "all", label: "Tất cả Bộ Phận" },
+      ...[...departments]
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, "vi", {
+            numeric: true,
+            sensitivity: "base",
+          }),
+        )
+        .map((dept) => ({ value: dept.name, label: dept.name })),
+    ],
+    [departments],
+  );
   const payrollData = payrollQuery.data?.data ?? [];
   const loading = departmentsQuery.isLoading;
   const exportingData =
@@ -252,26 +266,20 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {getPayrollMonthOptionsWithT13(2).map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className={
-                    option.value.endsWith("-13")
-                      ? "text-amber-600 font-semibold"
-                      : ""
-                  }
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            options={monthOptions}
+            value={selectedMonth}
+            onValueChange={setSelectedMonth}
+            placeholder={
+              availableMonthsQuery.isLoading
+                ? "Đang tải..."
+                : "Chọn tháng lương"
+            }
+            searchPlaceholder="Tìm tháng lương..."
+            emptyText="Không tìm thấy tháng lương."
+            disabled={availableMonthsQuery.isLoading}
+            className="w-48"
+          />
         </div>
       </div>
       {/* Overview Stats */}
@@ -485,22 +493,15 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
         <TabsContent value="payroll" className="space-y-4 sm:space-y-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div className="flex items-center space-x-4">
-              <Select
+              <Combobox
+                options={departmentOptions}
                 value={selectedDepartment}
                 onValueChange={setSelectedDepartment}
-              >
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Chọn department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả Bộ Phận</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.name} value={dept.name}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Chọn department"
+                searchPlaceholder="Tìm phòng ban..."
+                emptyText="Không tìm thấy phòng ban."
+                className="w-full sm:w-48"
+              />
             </div>
             <Button
               onClick={handleExportData}

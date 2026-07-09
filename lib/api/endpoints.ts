@@ -31,7 +31,9 @@ export const ENDPOINTS = {
     preview: "/api/admin/payroll-preview",
     advancedUpload: "/api/admin/advanced-upload",
     myDepartments: "/api/payroll/my-departments",
+    myDepartmentsMonths: "/api/payroll/my-departments/months",
     myDepartment: "/api/payroll/my-department",
+    myDepartmentMonths: "/api/payroll/my-department/months",
     myData: "/api/payroll/my-data",
     payslip: (payrollId: string | number) =>
       `/api/payroll/payslip/${encodeURIComponent(String(payrollId))}`,

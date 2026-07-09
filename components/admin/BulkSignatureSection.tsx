@@ -10,13 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 
 interface BulkSignatureSectionProps {
   onSuccess?: () => void;
@@ -72,19 +66,16 @@ export function BulkSignatureSection({ onSuccess }: BulkSignatureSectionProps) {
       <CardContent>
         <div className="flex items-end gap-4">
           <div className="flex-1 space-y-2">
-            <Label htmlFor="month-select">Chọn tháng</Label>
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger id="month-select">
-                <SelectValue placeholder="Chọn tháng" />
-              </SelectTrigger>
-              <SelectContent>
-                {monthOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Chọn tháng</Label>
+            <Combobox
+              options={monthOptions}
+              value={selectedMonth}
+              onValueChange={setSelectedMonth}
+              placeholder="Chọn tháng"
+              searchPlaceholder="Tìm tháng..."
+              emptyText="Không tìm thấy tháng."
+              className="w-full"
+            />
           </div>
 
           <BulkSignatureDialog

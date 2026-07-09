@@ -9,13 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -172,6 +166,13 @@ export function SalaryHistoryModal({
     fetchPayrollData(month);
   };
 
+  const monthOptions = months.map((month) => ({
+    value: month,
+    label: isT13
+      ? `Lương Tháng 13 - ${month.split("-")[0]}`
+      : formatSalaryMonth(month),
+  }));
+
   const formatCurrencyLocal = (amount: number | undefined) => {
     if (amount === undefined || amount === null) return "0 ₫";
     return formatCurrency(amount);
@@ -229,38 +230,20 @@ export function SalaryHistoryModal({
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Chọn tháng lương</label>
-            <Select
+            <Combobox
+              options={monthOptions}
               value={selectedMonth}
               onValueChange={handleMonthChange}
               disabled={loadingMonths || months.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    loadingMonths ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Đang tải danh sách tháng...
-                      </div>
-                    ) : (
-                      "Chọn tháng lương"
-                    )
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem key={month} value={month}>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      {isT13
-                        ? `Lương Tháng 13 - ${month.split("-")[0]}`
-                        : formatSalaryMonth(month)}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder={
+                loadingMonths
+                  ? "Đang tải danh sách tháng..."
+                  : "Chọn tháng lương"
+              }
+              searchPlaceholder="Tìm tháng..."
+              emptyText="Không tìm thấy tháng."
+              className="w-full"
+            />
           </div>
 
           {error && (

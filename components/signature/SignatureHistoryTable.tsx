@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { formatVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import {
   FileSpreadsheet,
@@ -166,19 +167,21 @@ export default function SignatureHistoryTable({
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tháng:</label>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tất cả" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Tất cả</SelectItem>
-                    {getUniqueMonths().map((month) => (
-                      <SelectItem key={month} value={month}>
-                        {formatMonth(month)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  options={[
+                    { value: "", label: "Tất cả" },
+                    ...getUniqueMonths().map((month) => ({
+                      value: month,
+                      label: formatMonth(month),
+                    })),
+                  ]}
+                  value={selectedMonth}
+                  onValueChange={setSelectedMonth}
+                  placeholder="Chọn tháng"
+                  searchPlaceholder="Tìm tháng..."
+                  emptyText="Không tìm thấy tháng."
+                  className="w-full"
+                />
               </div>
 
               <div className="space-y-2">
