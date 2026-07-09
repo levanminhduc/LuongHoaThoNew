@@ -57,7 +57,11 @@ export default function OverviewModalCharts({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+          <ResponsiveContainer
+            width="100%"
+            height={250}
+            className="sm:h-[300px]"
+          >
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
@@ -96,7 +100,11 @@ export default function OverviewModalCharts({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
+          <ResponsiveContainer
+            width="100%"
+            height={250}
+            className="sm:h-[300px]"
+          >
             <PieChart>
               <Pie
                 data={pieData}

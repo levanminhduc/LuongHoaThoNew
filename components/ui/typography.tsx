@@ -116,8 +116,7 @@ const Muted = createParagraphComponent(
 );
 
 interface InlineCodeProps
-  extends React.HTMLAttributes<HTMLElement>,
-    TypographyBaseProps {}
+  extends React.HTMLAttributes<HTMLElement>, TypographyBaseProps {}
 
 const InlineCode = React.forwardRef<HTMLElement, InlineCodeProps>(
   ({ asChild = false, className, ...props }, ref) => {
@@ -137,7 +136,8 @@ const InlineCode = React.forwardRef<HTMLElement, InlineCodeProps>(
 InlineCode.displayName = "InlineCode";
 
 interface BlockquoteProps
-  extends React.BlockquoteHTMLAttributes<HTMLQuoteElement>,
+  extends
+    React.BlockquoteHTMLAttributes<HTMLQuoteElement>,
     TypographyBaseProps {}
 
 const Blockquote = React.forwardRef<HTMLQuoteElement, BlockquoteProps>(

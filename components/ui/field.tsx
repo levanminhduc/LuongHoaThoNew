@@ -35,7 +35,8 @@ const useField = () => {
 };
 
 export interface FieldProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof fieldVariants> {
   error?: boolean;
 }
@@ -59,8 +60,9 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
 );
 Field.displayName = "Field";
 
-export interface FieldLabelProps
-  extends React.ComponentPropsWithoutRef<typeof Label> {
+export interface FieldLabelProps extends React.ComponentPropsWithoutRef<
+  typeof Label
+> {
   required?: boolean;
 }
 

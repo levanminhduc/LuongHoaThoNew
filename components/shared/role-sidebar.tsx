@@ -61,11 +61,7 @@ function NavMenuItem({
   );
 }
 
-export function RoleSidebar({
-  title,
-  subtitle,
-  navGroups,
-}: RoleSidebarProps) {
+export function RoleSidebar({ title, subtitle, navGroups }: RoleSidebarProps) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const logout = useLogout();

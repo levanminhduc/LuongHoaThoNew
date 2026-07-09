@@ -17,11 +17,22 @@ const PUBLIC_PATHS = ["/admin/login", "/employee/lookup", "/api", "/_next"];
 
 const MAINTENANCE_ALLOWED_PATHS = ["/maintenance", "/_next", "/favicon.ico"];
 
+const DEV_ONLY_PATHS = [
+  "/test-roles",
+  "/test-forgot-password",
+  "/admin/test-column-mapping",
+  "/debug/browser",
+];
+
 function isProtectedRoute(pathname: string): boolean {
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
     return false;
   }
   return PROTECTED_PATHS.some((path) => pathname.startsWith(path));
+}
+
+function isDevOnlyRoute(pathname: string): boolean {
+  return DEV_ONLY_PATHS.some((path) => pathname.startsWith(path));
 }
 
 function isMaintenanceAllowed(pathname: string): boolean {
@@ -30,6 +41,12 @@ function isMaintenanceAllowed(pathname: string): boolean {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (process.env.NODE_ENV === "production" && isDevOnlyRoute(pathname)) {
+    const response = new NextResponse(null, { status: 404 });
+    applySecurityHeadersTo(response);
+    return response;
+  }
 
   if (MAINTENANCE_MODE) {
     if (isMaintenanceAllowed(pathname)) {
@@ -50,7 +67,9 @@ export async function proxy(request: NextRequest) {
       return response;
     }
 
-    const response = NextResponse.redirect(new URL("/maintenance", request.url));
+    const response = NextResponse.redirect(
+      new URL("/maintenance", request.url),
+    );
     applySecurityHeadersTo(response);
     return response;
   }

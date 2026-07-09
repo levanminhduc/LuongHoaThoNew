@@ -56,10 +56,12 @@ describe("apiClient", () => {
     const handler = jest.fn();
     setOnAuthExpired(handler);
 
-    await expect(apiClient.get("http://localhost/api/x")).rejects.toMatchObject({
-      code: "AUTH_EXPIRED",
-      status: 401,
-    });
+    await expect(apiClient.get("http://localhost/api/x")).rejects.toMatchObject(
+      {
+        code: "AUTH_EXPIRED",
+        status: 401,
+      },
+    );
     expect(localStorage.getItem("admin_token")).toBeNull();
     expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("user_info")).toBeNull();
@@ -94,9 +96,11 @@ describe("apiClient", () => {
   it("throws ApiError(NETWORK_ERROR) on fetch reject", async () => {
     server.use(http.get("*/api/x", () => HttpResponse.error()));
 
-    await expect(apiClient.get("http://localhost/api/x")).rejects.toMatchObject({
-      code: "NETWORK_ERROR",
-    });
+    await expect(apiClient.get("http://localhost/api/x")).rejects.toMatchObject(
+      {
+        code: "NETWORK_ERROR",
+      },
+    );
   });
 
   it("forwards AbortSignal", async () => {
@@ -112,11 +116,15 @@ describe("apiClient", () => {
 
   it("apiClient.blob returns Blob and Content-Disposition filename", async () => {
     server.use(
-      http.get("*/api/admin/export", () =>
-        new HttpResponse(new Blob([new Uint8Array([1, 2, 3])]), {
-          status: 200,
-          headers: { "content-disposition": 'attachment; filename="bao-cao.xlsx"' },
-        }),
+      http.get(
+        "*/api/admin/export",
+        () =>
+          new HttpResponse(new Blob([new Uint8Array([1, 2, 3])]), {
+            status: 200,
+            headers: {
+              "content-disposition": 'attachment; filename="bao-cao.xlsx"',
+            },
+          }),
       ),
     );
 

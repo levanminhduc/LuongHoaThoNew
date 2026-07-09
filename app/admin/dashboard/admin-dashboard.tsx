@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, clearSession } from "@/lib/auth/secure-session";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -67,7 +68,8 @@ export function AdminDashboard() {
   const logout = useLogout();
   const loading = dashboardQuery.isLoading;
   const downloadingSyncTemplate = syncTemplateMutation.isPending;
-  const payrolls = (dashboardQuery.data?.payrolls ?? []) as unknown as PayrollRecord[];
+  const payrolls = (dashboardQuery.data?.payrolls ??
+    []) as unknown as PayrollRecord[];
   const stats = dashboardQuery.data?.stats ?? {
     totalRecords: 0,
     totalEmployees: 0,
@@ -78,22 +80,17 @@ export function AdminDashboard() {
   };
 
   useEffect(() => {
-    // Check authentication and role
-    const token = localStorage.getItem("admin_token");
-    const userStr = localStorage.getItem("user_info");
+    void (async () => {
+      const session = await getSession<{ role?: string }>();
 
-    if (!token || !userStr) {
-      router.push("/admin/login");
-      return;
-    }
+      if (!session?.user) {
+        clearSession();
+        router.push("/admin/login");
+        return;
+      }
 
-    try {
-      const userData = JSON.parse(userStr);
-
-      // Check if user has admin role
-      if (userData.role !== "admin") {
-        // Redirect based on actual role
-        switch (userData.role) {
+      if (session.user.role !== "admin") {
+        switch (session.user.role) {
           case "truong_phong":
             router.push("/manager/dashboard");
             break;
@@ -106,15 +103,8 @@ export function AdminDashboard() {
           default:
             router.push("/admin/login");
         }
-        return;
       }
-    } catch (error) {
-      console.error("Error parsing user info:", error);
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
-      router.push("/admin/login");
-      return;
-    }
+    })();
   }, [router]);
 
   useEffect(() => {

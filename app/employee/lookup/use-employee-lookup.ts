@@ -11,19 +11,27 @@ import type { FormEvent, ChangeEvent } from "react";
 import type { PayrollResult } from "@/lib/types/payroll";
 import type { EmployeeBonusItem } from "@/lib/bonus/bonus-types";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { encryptJson, decryptJson } from "@/lib/utils/client-crypto";
 
 const STORAGE_KEY = "salary_lookup_credentials";
+const KEY_MATERIAL = "hoatho-salary-lookup-remember-v1";
 let autoLookupInFlight = false;
 
-function encodeCredentials(employeeId: string, password: string): string {
-  const data = JSON.stringify({ e: employeeId, p: password, t: Date.now() });
-  return btoa(encodeURIComponent(data));
+async function encodeCredentials(
+  employeeId: string,
+  password: string,
+): Promise<string> {
+  return encryptJson(KEY_MATERIAL, {
+    e: employeeId,
+    p: password,
+    t: Date.now(),
+  });
 }
 
-function decodeCredentials(): { employeeId: string; password: string } | null {
+function decodeLegacyCredentials(
+  stored: string,
+): { employeeId: string; password: string } | null {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return null;
     const decoded = decodeURIComponent(atob(stored));
     const data = JSON.parse(decoded);
     if (data.e && data.p) {
@@ -35,8 +43,41 @@ function decodeCredentials(): { employeeId: string; password: string } | null {
   }
 }
 
-function saveCredentials(employeeId: string, password: string): void {
-  localStorage.setItem(STORAGE_KEY, encodeCredentials(employeeId, password));
+async function saveCredentials(
+  employeeId: string,
+  password: string,
+): Promise<void> {
+  localStorage.setItem(
+    STORAGE_KEY,
+    await encodeCredentials(employeeId, password),
+  );
+}
+
+async function decodeCredentials(): Promise<{
+  employeeId: string;
+  password: string;
+} | null> {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) return null;
+
+  try {
+    const data = await decryptJson<{ e?: string; p?: string }>(
+      KEY_MATERIAL,
+      stored,
+    );
+    if (data.e && data.p) {
+      return { employeeId: data.e, password: data.p };
+    }
+    throw new Error("malformed payload");
+  } catch {
+    const legacy = decodeLegacyCredentials(stored);
+    if (legacy) {
+      await saveCredentials(legacy.employeeId, legacy.password);
+      return legacy;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
 }
 
 function clearCredentials(): void {
@@ -430,7 +471,7 @@ export function useEmployeeLookup() {
           });
 
           if (rememberPassword) {
-            saveCredentials(employeeId.trim(), password.trim());
+            await saveCredentials(employeeId.trim(), password.trim());
           } else {
             clearCredentials();
           }
@@ -463,20 +504,28 @@ export function useEmployeeLookup() {
 
   useEffect(() => {
     if (autoLookupStartedRef.current || autoLookupInFlight) return;
-    const saved = decodeCredentials();
-    if (!saved) return;
+    let cancelled = false;
 
-    autoLookupStartedRef.current = true;
-    autoLookupInFlight = true;
-    dispatch({ type: "RESTORE_CREDENTIALS", payload: saved });
-    void runLookup({
-      employeeId: saved.employeeId,
-      password: saved.password,
-      rememberPassword: true,
-      shouldScroll: true,
-    }).finally(() => {
-      autoLookupInFlight = false;
-    });
+    void (async () => {
+      const saved = await decodeCredentials();
+      if (!saved || cancelled || autoLookupStartedRef.current) return;
+
+      autoLookupStartedRef.current = true;
+      autoLookupInFlight = true;
+      dispatch({ type: "RESTORE_CREDENTIALS", payload: saved });
+      await runLookup({
+        employeeId: saved.employeeId,
+        password: saved.password,
+        rememberPassword: true,
+        shouldScroll: true,
+      }).finally(() => {
+        autoLookupInFlight = false;
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [runLookup]);
 
   const handleSubmit = useCallback(
@@ -524,7 +573,7 @@ export function useEmployeeLookup() {
         });
 
         if (state.rememberPassword) {
-          saveCredentials(state.employeeId.trim(), state.cccd.trim());
+          await saveCredentials(state.employeeId.trim(), state.cccd.trim());
         } else {
           clearCredentials();
         }

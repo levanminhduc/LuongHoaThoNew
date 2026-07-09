@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, clearSession } from "@/lib/auth/secure-session";
 import ManagerDashboard from "@/components/ManagerDashboard";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
 
@@ -23,17 +24,16 @@ export default function ManagerDashboardPage() {
     checkAuthentication();
   }, []);
 
-  const checkAuthentication = () => {
+  const checkAuthentication = async () => {
     try {
-      const token = localStorage.getItem("admin_token");
-      const userStr = localStorage.getItem("user_info");
+      const session = await getSession<User>();
 
-      if (!token || !userStr) {
+      if (!session?.user) {
         router.push("/admin/login");
         return;
       }
 
-      const userData = JSON.parse(userStr);
+      const userData = session.user;
 
       if (userData.role !== "truong_phong") {
         switch (userData.role) {
@@ -55,8 +55,7 @@ export default function ManagerDashboardPage() {
       setUser(userData);
     } catch (error) {
       console.error("Authentication check error:", error);
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
+      clearSession();
       router.push("/admin/login");
     } finally {
       setLoading(false);

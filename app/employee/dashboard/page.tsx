@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, clearSession } from "@/lib/auth/secure-session";
 import EmployeeDashboard from "@/components/EmployeeDashboard";
 import { useLogout } from "@/lib/hooks/use-logout";
 
@@ -23,19 +24,17 @@ export default function EmployeeDashboardPage() {
     checkAuthentication();
   }, []);
 
-  const checkAuthentication = () => {
+  const checkAuthentication = async () => {
     try {
-      const token = localStorage.getItem("admin_token");
-      const userStr = localStorage.getItem("user_info");
+      const session = await getSession<User>();
 
-      if (!token || !userStr) {
+      if (!session?.user) {
         router.push("/admin/login");
         return;
       }
 
-      const userData = JSON.parse(userStr);
+      const userData = session.user;
 
-      // Check if user has employee role
       if (userData.role !== "nhan_vien") {
         // Redirect based on actual role
         switch (userData.role) {
@@ -57,8 +56,7 @@ export default function EmployeeDashboardPage() {
       setUser(userData);
     } catch (error) {
       console.error("Authentication check error:", error);
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
+      clearSession();
       router.push("/admin/login");
     } finally {
       setLoading(false);

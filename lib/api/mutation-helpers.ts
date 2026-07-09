@@ -20,8 +20,13 @@ export function withToast<TData = unknown, TVars = unknown, TCtx = unknown>(
       }
     },
     onError: async (error: unknown, vars: TVars, ctx: TCtx) => {
-      if (!(error instanceof ApiError && error.code === ApiErrorCodes.AUTH_EXPIRED)) {
-        const message = error instanceof Error ? error.message : "Có lỗi xảy ra";
+      if (
+        !(
+          error instanceof ApiError && error.code === ApiErrorCodes.AUTH_EXPIRED
+        )
+      ) {
+        const message =
+          error instanceof Error ? error.message : "Có lỗi xảy ra";
         showErrorToast(message);
       }
       if (opts.onError) {

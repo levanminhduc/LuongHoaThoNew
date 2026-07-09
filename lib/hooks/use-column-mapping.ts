@@ -158,13 +158,9 @@ export function useColumnAliasesQuery(
     queryKey: ["column-aliases", filters],
     queryFn: ({ signal }) =>
       apiClient
-        .get<ApiResponse<ColumnAlias[]>>(
-          appendParams(
-            ENDPOINTS.columnAliases.list,
-            columnAliasesParams(filters),
-          ),
-          { signal },
-        )
+        .get<
+          ApiResponse<ColumnAlias[]>
+        >(appendParams(ENDPOINTS.columnAliases.list, columnAliasesParams(filters)), { signal })
         .then((response) =>
           assertApiSuccess(response, "Lỗi khi tải danh sách aliases"),
         ),
@@ -182,13 +178,9 @@ export function useMappingConfigurationsQuery(
     queryKey: ["mapping-configurations", filters],
     queryFn: ({ signal }) =>
       apiClient
-        .get<ApiResponse<MappingConfigurationWithFields[]>>(
-          appendParams(
-            ENDPOINTS.mappingConfigs.list,
-            mappingConfigurationsParams(filters),
-          ),
-          { signal },
-        )
+        .get<
+          ApiResponse<MappingConfigurationWithFields[]>
+        >(appendParams(ENDPOINTS.mappingConfigs.list, mappingConfigurationsParams(filters)), { signal })
         .then((response) =>
           assertApiSuccess(response, "Lỗi khi tải danh sách cấu hình"),
         ),
@@ -218,7 +210,9 @@ export function useUpdateColumnAliasMutation() {
   return useMutation({
     mutationFn: ({ id, ...input }: UpdateColumnAliasInput) =>
       apiClient
-        .put<ApiResponse<ColumnAlias>>(ENDPOINTS.columnAliases.detail(id), input)
+        .put<
+          ApiResponse<ColumnAlias>
+        >(ENDPOINTS.columnAliases.detail(id), input)
         .then((response) =>
           assertApiSuccess(response, "Lỗi khi cập nhật alias"),
         ),
@@ -248,10 +242,9 @@ export function useSaveMappingConfigurationMutation() {
   return useMutation({
     mutationFn: (input: SaveMappingConfigurationInput) =>
       apiClient
-        .put<ApiResponse<{ config_id: number; config_name: string }>>(
-          ENDPOINTS.mappingConfigs.update,
-          input,
-        )
+        .put<
+          ApiResponse<{ config_id: number; config_name: string }>
+        >(ENDPOINTS.mappingConfigs.update, input)
         .then((response) =>
           assertApiSuccess(response, "Lỗi khi lưu cấu hình mapping"),
         ),
@@ -319,7 +312,8 @@ export function useCreateAliasesForConfigurationMutation() {
           results.push({
             success: false,
             alias,
-            message: error instanceof Error ? error.message : "Lỗi không xác định",
+            message:
+              error instanceof Error ? error.message : "Lỗi không xác định",
           });
         }
       }

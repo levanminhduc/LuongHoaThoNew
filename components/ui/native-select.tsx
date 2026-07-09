@@ -26,7 +26,8 @@ const nativeSelectVariants = cva(
 );
 
 export interface NativeSelectProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "size">,
+  extends
+    Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "size">,
     VariantProps<typeof nativeSelectVariants> {
   wrapperClassName?: string;
 }

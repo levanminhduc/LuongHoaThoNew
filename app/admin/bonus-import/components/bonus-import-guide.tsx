@@ -62,7 +62,8 @@ export function BonusImportGuide({
 
             <div className="flex flex-col gap-3 border-t border-blue-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted-foreground">
-                Tải file mẫu đúng định dạng để tránh lỗi header và cấu trúc dữ liệu.
+                Tải file mẫu đúng định dạng để tránh lỗi header và cấu trúc dữ
+                liệu.
               </p>
               <Button
                 type="button"

@@ -11,6 +11,11 @@ import SupervisorDashboard from "@/components/SupervisorDashboard";
 import EmployeeDashboard from "@/components/EmployeeDashboard";
 import LoginPage from "@/app/admin/login/page";
 import { useLogout } from "@/lib/hooks/use-logout";
+import {
+  getSession,
+  getSessionUser,
+  clearSession,
+} from "@/lib/auth/secure-session";
 
 interface User {
   employee_id: string;
@@ -43,27 +48,24 @@ export default function RoleBasedRouter({ initialPath }: RoleBasedRouterProps) {
     checkAuthentication();
   }, []);
 
-  const checkAuthentication = () => {
+  const checkAuthentication = async () => {
     try {
-      const token = localStorage.getItem("admin_token");
-      const userStr = localStorage.getItem("user_info");
+      const session = await getSession<User>();
 
-      if (!token || !userStr) {
+      if (!session?.user) {
         setLoading(false);
         return;
       }
 
-      const userData = JSON.parse(userStr);
+      const userData = session.user;
       setUser(userData);
 
-      // Redirect based on role and initial path
       if (initialPath) {
         handleRoleBasedRedirect(userData.role, initialPath);
       }
     } catch (error) {
       console.error("Authentication check error:", error);
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
+      clearSession();
     } finally {
       setLoading(false);
     }
@@ -196,14 +198,12 @@ export function useRoleAccess() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user_info");
-    if (userStr) {
-      try {
-        setUser(JSON.parse(userStr));
-      } catch (error) {
-        console.error("Error parsing user info:", error);
+    void (async () => {
+      const userData = await getSessionUser<User>();
+      if (userData) {
+        setUser(userData);
       }
-    }
+    })();
   }, []);
 
   const hasRole = (role: string) => user?.role === role;

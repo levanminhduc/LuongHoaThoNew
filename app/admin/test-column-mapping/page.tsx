@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hasStoredSession, getSessionToken } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -71,9 +72,7 @@ export default function TestColumnMappingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check authentication
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+    if (!hasStoredSession()) {
       router.push("/admin/login");
       return;
     }
@@ -83,7 +82,7 @@ export default function TestColumnMappingPage() {
 
   const loadAliases = async () => {
     try {
-      const token = localStorage.getItem("admin_token");
+      const token = await getSessionToken();
       const response = await fetch(
         "/api/admin/column-aliases?limit=200&is_active=true",
         {

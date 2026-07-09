@@ -139,7 +139,8 @@ export default function EmployeeAuditLogs({
     toast.error(`Lỗi: ${errorMessage}`);
   }, [auditLogsQuery.error]);
 
-  const formatTimestamp = (timestamp: string) => formatVietnamTimestamp(timestamp);
+  const formatTimestamp = (timestamp: string) =>
+    formatVietnamTimestamp(timestamp);
 
   const formatValue = (value: string | undefined) => {
     if (!value) return "-";

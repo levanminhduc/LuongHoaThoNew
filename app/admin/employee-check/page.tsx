@@ -53,7 +53,9 @@ interface CheckResult {
   exists: boolean;
 }
 
-async function parseEmployeeIdsFromExcel(buffer: ArrayBuffer): Promise<string[]> {
+async function parseEmployeeIdsFromExcel(
+  buffer: ArrayBuffer,
+): Promise<string[]> {
   const XLSX = await getXLSX();
   const workbook = XLSX.read(buffer, { type: "array" });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];

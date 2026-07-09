@@ -53,7 +53,8 @@ export function useUnsignedEmployeesExportMutation() {
         ENDPOINTS.payroll.unsignedExport,
         input,
       );
-      const finalName = filename ?? `nhan-vien-chua-ky-${input.salary_month}.xlsx`;
+      const finalName =
+        filename ?? `nhan-vien-chua-ky-${input.salary_month}.xlsx`;
       downloadBlob(blob, finalName);
       return { filename: finalName };
     },
@@ -76,7 +77,8 @@ export function useAttendanceExportMutation() {
         input,
       );
       const month = String(input.period_month).padStart(2, "0");
-      const finalName = filename ?? `cham-cong-${input.period_year}-${month}.xlsx`;
+      const finalName =
+        filename ?? `cham-cong-${input.period_year}-${month}.xlsx`;
       downloadBlob(blob, finalName);
       return { filename: finalName };
     },
@@ -125,5 +127,7 @@ export function payrollTemplatePath(input: {
   }
 
   const query = params.toString();
-  return query ? `${ENDPOINTS.payroll.exportTemplate}?${query}` : ENDPOINTS.payroll.exportTemplate;
+  return query
+    ? `${ENDPOINTS.payroll.exportTemplate}?${query}`
+    : ENDPOINTS.payroll.exportTemplate;
 }

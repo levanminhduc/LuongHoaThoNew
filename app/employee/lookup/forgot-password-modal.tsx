@@ -325,8 +325,7 @@ export function ForgotPasswordModal({
                           <ul className="text-xs text-muted-foreground space-y-1">
                             {passwordStrength.issues.map((issue, idx) => (
                               <li key={idx} className="flex items-center gap-1">
-                                <span>•</span>{" "}
-                                {issue}
+                                <span>•</span> {issue}
                               </li>
                             ))}
                           </ul>
@@ -374,8 +373,7 @@ export function ForgotPasswordModal({
                     {confirmPasswordValue.length > 0 &&
                       newPasswordValue === confirmPasswordValue && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <span>✓</span> Mật khẩu xác
-                          nhận khớp
+                          <span>✓</span> Mật khẩu xác nhận khớp
                         </p>
                       )}
                     <FormMessage />

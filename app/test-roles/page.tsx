@@ -1,5 +1,6 @@
 "use client";
 
+import { saveSession } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -127,10 +128,8 @@ export default function TestRolesPage() {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem("admin_token", data.token);
-        localStorage.setItem("user_info", JSON.stringify(data.user));
+        await saveSession(data.token, data.user);
 
-        // Redirect to appropriate dashboard
         window.location.href = dashboard;
       } else {
         const error = await response.json();

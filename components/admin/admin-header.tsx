@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { getSessionUser } from "@/lib/auth/secure-session";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,14 +53,12 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
   const [currentRole, setCurrentRole] = useState("admin");
 
   useEffect(() => {
-    try {
-      const userStr = localStorage.getItem("user_info");
-      if (!userStr) return;
-      const parsed = JSON.parse(userStr) as { role?: string };
-      setCurrentRole(parsed.role || "admin");
-    } catch {
-      // fall back to admin
-    }
+    void (async () => {
+      const user = await getSessionUser<{ role?: string }>();
+      if (user?.role) {
+        setCurrentRole(user.role);
+      }
+    })();
   }, []);
 
   const adminHref =

@@ -1,4 +1,5 @@
 import { ApiError, ApiErrorCodes } from "./errors";
+import { getSessionToken } from "@/lib/auth/secure-session";
 
 const TOKEN_KEYS = ["admin_token", "auth_token"] as const;
 const USER_INFO_KEYS = ["user_info", "admin_user", "employee_user"] as const;
@@ -11,21 +12,6 @@ export function setOnAuthExpired(handler: (() => void) | null) {
 
 function isFormData(value: unknown): value is FormData {
   return typeof FormData !== "undefined" && value instanceof FormData;
-}
-
-function getToken(): string | null {
-  if (typeof localStorage === "undefined") {
-    return null;
-  }
-
-  for (const key of TOKEN_KEYS) {
-    const value = localStorage.getItem(key);
-    if (value) {
-      return value;
-    }
-  }
-
-  return null;
 }
 
 export function clearAuthStorage() {
@@ -47,9 +33,9 @@ interface RequestOpts {
   headers?: HeadersInit;
 }
 
-function makeHeaders(body: unknown, opts: RequestOpts) {
+async function makeHeaders(body: unknown, opts: RequestOpts) {
   const headers = new Headers(opts.headers);
-  const token = getToken();
+  const token = await getSessionToken();
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
@@ -160,7 +146,7 @@ async function request<T>(
   try {
     response = await fetch(path, {
       method,
-      headers: makeHeaders(body, opts),
+      headers: await makeHeaders(body, opts),
       body: makeBody(body),
       signal: opts.signal,
       credentials: "include",
@@ -204,13 +190,17 @@ async function requestBlob(
   body: unknown | undefined,
   opts: RequestOpts = {},
   method = "POST",
-): Promise<{ blob: Blob; filename: string | null; contentType: string | null }> {
+): Promise<{
+  blob: Blob;
+  filename: string | null;
+  contentType: string | null;
+}> {
   let response: Response;
 
   try {
     response = await fetch(path, {
       method,
-      headers: makeHeaders(body, opts),
+      headers: await makeHeaders(body, opts),
       body: makeBody(body),
       signal: opts.signal,
       credentials: "include",
@@ -254,7 +244,7 @@ async function requestStream(
   try {
     response = await fetch(path, {
       method: "POST",
-      headers: makeHeaders(body, opts),
+      headers: await makeHeaders(body, opts),
       body: makeBody(body),
       signal: opts.signal,
       credentials: "include",

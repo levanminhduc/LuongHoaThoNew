@@ -7,6 +7,7 @@
 import { useMappingConfigStore } from "@/lib/stores/mapping-config-store";
 import { cacheUtils } from "@/lib/cache/mapping-config-cache";
 import { apiClient } from "@/lib/api/client";
+import { hasStoredSession } from "@/lib/auth/secure-session";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 import type { MappingConfiguration } from "@/lib/column-alias-config";
 
@@ -275,13 +276,7 @@ class MappingConfigSyncManager {
 
   private async checkForExternalUpdates(): Promise<void> {
     try {
-      // Check if we're in browser environment
-      if (typeof window === "undefined" || typeof localStorage === "undefined")
-        return;
-
-      // Check if we have admin token
-      const token = localStorage.getItem("admin_token");
-      if (!token) return;
+      if (!hasStoredSession()) return;
 
       const params = new URLSearchParams();
       params.set(QUERY_PARAMS.TIMESTAMP_ONLY, "true");

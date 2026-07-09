@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hasStoredSession } from "@/lib/auth/secure-session";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,10 +55,8 @@ export function UpdateCCCDManagement() {
   const isUpdating = updateCccdMutation.isPending;
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+    if (!hasStoredSession()) {
       router.push("/admin/login");
-      return;
     }
   }, [router]);
 

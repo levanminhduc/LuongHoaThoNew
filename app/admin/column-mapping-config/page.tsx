@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hasStoredSession } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -110,8 +111,7 @@ export default function ColumnMappingConfigPage() {
     deleteAliasMutation.isPending;
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+    if (!hasStoredSession()) {
       router.push("/admin/login");
       return;
     }

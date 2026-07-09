@@ -32,9 +32,7 @@ describe("use-payroll-import hooks", () => {
         if (didRun.current) return;
         didRun.current = true;
 
-        mutation
-          .mutateAsync({ limit: 200, is_active: true })
-          .then(onDone);
+        mutation.mutateAsync({ limit: 200, is_active: true }).then(onDone);
       }, [mutation]);
 
       return null;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getSession } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -71,31 +72,18 @@ export default function DataValidationPage() {
   const monthOptions = getRecentMonthOptions(13);
 
   useEffect(() => {
-    // Check authentication
-    const token = localStorage.getItem("admin_token");
-    const userStr = localStorage.getItem("user_info");
+    void (async () => {
+      const session = await getSession<{ role?: string }>();
 
-    if (!token || !userStr) {
-      router.push("/admin/login");
-      return;
-    }
-
-    try {
-      const userData = JSON.parse(userStr);
-      if (userData.role !== "admin") {
+      if (!session?.user || session.user.role !== "admin") {
         router.push("/admin/login");
         return;
       }
-    } catch (error) {
-      console.error("Error parsing user info:", error);
-      router.push("/admin/login");
-      return;
-    }
 
-    // Set default month to current month
-    if (!selectedMonth) {
-      setSelectedMonth(getCurrentMonth());
-    }
+      if (!selectedMonth) {
+        setSelectedMonth(getCurrentMonth());
+      }
+    })();
   }, [router, selectedMonth]);
 
   useEffect(() => {

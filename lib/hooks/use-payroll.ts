@@ -159,10 +159,9 @@ export function usePayrollAuditQuery(
   return useQuery({
     queryKey: ["payroll-audit", payrollId],
     queryFn: ({ signal }) =>
-      apiClient.get<PayrollAuditResponse>(
-        ENDPOINTS.payroll.audit(payrollId!),
-        { signal },
-      ),
+      apiClient.get<PayrollAuditResponse>(ENDPOINTS.payroll.audit(payrollId!), {
+        signal,
+      }),
     enabled: payrollId !== null && payrollId !== undefined && payrollId !== "",
     staleTime: 30_000,
   });

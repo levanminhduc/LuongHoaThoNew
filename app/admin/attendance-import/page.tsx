@@ -111,7 +111,9 @@ export default function AttendanceImportPage() {
       const data = await importMutation.mutateAsync(formData);
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra khi upload file");
+      setError(
+        err instanceof Error ? err.message : "Có lỗi xảy ra khi upload file",
+      );
     }
   };
 
@@ -121,7 +123,9 @@ export default function AttendanceImportPage() {
     try {
       await templateMutation.mutateAsync(undefined);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra khi tải file mẫu");
+      setError(
+        err instanceof Error ? err.message : "Có lỗi xảy ra khi tải file mẫu",
+      );
     }
   };
 

@@ -26,8 +26,7 @@ const kbdVariants = cva(
 );
 
 export interface KbdProps
-  extends React.HTMLAttributes<HTMLElement>,
-    VariantProps<typeof kbdVariants> {
+  extends React.HTMLAttributes<HTMLElement>, VariantProps<typeof kbdVariants> {
   keys?: string[];
 }
 

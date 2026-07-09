@@ -6,6 +6,7 @@
 
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { hasStoredSession } from "@/lib/auth/secure-session";
 import { immer } from "zustand/middleware/immer";
 import type { MappingConfiguration } from "@/lib/column-alias-config";
 import {
@@ -110,12 +111,7 @@ const initialState: MappingConfigState = {
 const generateNotificationId = () =>
   `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-const isValidToken = () => {
-  if (typeof window === "undefined" || typeof localStorage === "undefined")
-    return false;
-  const token = localStorage.getItem("admin_token");
-  return !!token;
-};
+const isValidToken = () => hasStoredSession();
 
 const isCacheValid = (timestamp: number | null, expiry: number) => {
   if (!timestamp) return false;
@@ -124,7 +120,7 @@ const isCacheValid = (timestamp: number | null, expiry: number) => {
 
 // ===== API FUNCTIONS =====
 
-const assertSuccess = <T,>(response: ApiResponse<T>, fallback: string) => {
+const assertSuccess = <T>(response: ApiResponse<T>, fallback: string) => {
   if (!response.success) {
     throw new Error(response.message || fallback);
   }

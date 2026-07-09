@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getSession } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -51,24 +52,16 @@ export default function DepartmentManagementPage() {
     checkAuthentication();
   }, []);
 
-  const checkAuthentication = () => {
-    const token = localStorage.getItem("admin_token");
-    const userStr = localStorage.getItem("user_info");
+  const checkAuthentication = async () => {
+    const session = await getSession<{ role?: string }>();
 
-    if (!token || !userStr) {
+    if (!session?.user) {
       router.push("/admin/login");
       return;
     }
 
-    try {
-      const userData = JSON.parse(userStr);
-      if (userData.role !== "admin") {
-        router.push("/admin/dashboard");
-        return;
-      }
-    } catch (error) {
-      console.error("Error parsing user info:", error);
-      router.push("/admin/login");
+    if (session.user.role !== "admin") {
+      router.push("/admin/dashboard");
     }
   };
 

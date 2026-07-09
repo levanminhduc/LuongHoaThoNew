@@ -36,9 +36,7 @@ export function AuditTrail({ payrollId }: AuditTrailProps) {
     (auditTrailQuery.data?.auditTrail as AuditLogEntry[] | undefined) ?? [];
   const loading = auditTrailQuery.isLoading;
   const error =
-    auditTrailQuery.error instanceof Error
-      ? auditTrailQuery.error.message
-      : "";
+    auditTrailQuery.error instanceof Error ? auditTrailQuery.error.message : "";
 
   const getFieldDisplayName = (fieldName: string): string => {
     const fieldMap: Record<string, string> = {

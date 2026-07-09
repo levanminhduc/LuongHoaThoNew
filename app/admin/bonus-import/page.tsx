@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { hasStoredSession } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -52,7 +53,7 @@ export default function BonusImportPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem("admin_token")) {
+    if (!hasStoredSession()) {
       router.push("/admin/login");
     }
   }, [router]);

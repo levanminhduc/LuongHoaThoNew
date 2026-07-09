@@ -120,7 +120,10 @@ export function employeesKey(filters: EmployeesFilters) {
   return ["employees", filters] as const;
 }
 
-export function useEmployeesQuery(filters: EmployeesFilters = {}, enabled = true) {
+export function useEmployeesQuery(
+  filters: EmployeesFilters = {},
+  enabled = true,
+) {
   return useQuery({
     queryKey: employeesKey(filters),
     queryFn: ({ signal }) =>
@@ -140,22 +143,24 @@ export function useEmployeeMutation() {
   return useMutation({
     mutationFn: (input: EmployeeMutationInput) => {
       if (input.action === "create") {
-        return apiClient.post<{ success: boolean; message?: string; employee?: Employee }>(
-          ENDPOINTS.employees.create,
-          input.employee,
-        );
+        return apiClient.post<{
+          success: boolean;
+          message?: string;
+          employee?: Employee;
+        }>(ENDPOINTS.employees.create, input.employee);
       }
 
       const id =
         input.action === "update"
-          ? input.originalEmployeeId ?? input.employee.employee_id
+          ? (input.originalEmployeeId ?? input.employee.employee_id)
           : input.employee.employee_id;
 
       if (input.action === "update") {
-        return apiClient.put<{ success: boolean; message?: string; employee?: Employee }>(
-          ENDPOINTS.employees.update(id),
-          input.employee,
-        );
+        return apiClient.put<{
+          success: boolean;
+          message?: string;
+          employee?: Employee;
+        }>(ENDPOINTS.employees.update(id), input.employee);
       }
 
       return apiClient.delete<{ success: boolean; message?: string }>(

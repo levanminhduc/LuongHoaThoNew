@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  getSession,
+  clearSession,
+  hasStoredSession,
+} from "@/lib/auth/secure-session";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -56,26 +61,19 @@ export default function BulkExportPage() {
   }, [departmentsQuery.data]);
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    const userStr = localStorage.getItem("user_info");
+    void (async () => {
+      const session = await getSession<{ role?: string }>();
 
-    if (!token || !userStr) {
-      router.push("/admin/login");
-      return;
-    }
-
-    try {
-      const userData = JSON.parse(userStr);
-      if (userData.role !== "admin") {
+      if (!session?.user) {
+        clearSession();
         router.push("/admin/login");
         return;
       }
-    } catch {
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
-      router.push("/admin/login");
-      return;
-    }
+
+      if (session.user.role !== "admin") {
+        router.push("/admin/login");
+      }
+    })();
   }, [router]);
 
   useEffect(() => {
@@ -112,8 +110,7 @@ export default function BulkExportPage() {
   async function handleExport() {
     setExportError(null);
 
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+    if (!hasStoredSession()) {
       router.push("/admin/login");
       return;
     }

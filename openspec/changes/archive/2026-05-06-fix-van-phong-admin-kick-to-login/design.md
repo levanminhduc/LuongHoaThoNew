@@ -30,6 +30,7 @@ Two independent defects combine to produce the reported behaviour:
 `admin-dashboard-v2.tsx` already reads `localStorage.getItem("user_info")` and JSON-parses it to derive the role for its redirect switch. The sidebar and header will use the same pattern for consistency.
 
 Alternatives considered:
+
 - **Context / React state**: Would require a new provider wrapping the admin layout — more invasive change for a bug fix.
 - **Server Component prop drilling**: Admin layout is a client-heavy shell; adding server-side role propagation touches more files than the fix warrants.
 
@@ -44,6 +45,7 @@ If the sidebar file exceeds 200 lines after the change, the role-derivation logi
 ### D3 — Header: conditional href and menu item
 
 Two targeted changes in `admin-header.tsx`:
+
 - Breadcrumb "Admin" `href` is computed from role: `admin` → `/admin/dashboard`, `van_phong` → `/admin/employee-management`
 - The "Dashboard" `DropdownMenuItem` is conditionally rendered (`role !== "van_phong"`)
 
@@ -64,6 +66,7 @@ type AdminAccessResult =
 ```
 
 Implementation:
+
 - Calls existing `verifyToken(request)` (already exported from `lib/auth-middleware.ts`)
 - `null` result → `{ ok: false, status: 401, error: "Phiên đăng nhập đã hết hạn" }`
 - `decoded.role !== "admin"` → `{ ok: false, status: 403, error: "Không có quyền truy cập" }`
@@ -96,6 +99,7 @@ The variable name `admin` is preserved so downstream usage within each handler n
 No database migrations. No deployment coordination needed — changes are entirely within the Next.js application layer.
 
 Deploy order (all in one release):
+
 1. `lib/auth-middleware.ts` — new export, fully backward-compatible
 2. 22 API routes — consume new helper; behaviour change is 401 → 403 for non-admin valid tokens (client already handles this correctly)
 3. Frontend components — sidebar, header, dashboard guard

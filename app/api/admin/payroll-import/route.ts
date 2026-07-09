@@ -30,7 +30,6 @@ interface MappingConfig {
   configuration_field_mappings?: FieldMapping[];
 }
 
-
 // Function to load aliases from database and create comprehensive header mapping
 async function createHeaderToFieldMapping(
   supabase: ReturnType<typeof createServiceClient>,

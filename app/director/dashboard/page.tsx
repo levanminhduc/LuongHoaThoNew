@@ -12,6 +12,7 @@ import OverviewModal from "@/components/OverviewModal";
 import UnsignedEmployeesModal from "@/components/UnsignedEmployeesModal";
 import { getPreviousMonth, getRecentMonthOptions } from "@/utils/dateUtils";
 import { type JWTPayload } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/secure-session";
 import {
   FileSpreadsheet,
   Users,
@@ -51,15 +52,12 @@ export default function DirectorDashboard() {
   const isSigning = signatureMutation.isPending;
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user_info");
-    if (userStr) {
-      try {
-        const userData = JSON.parse(userStr);
+    void (async () => {
+      const userData = await getSessionUser<JWTPayload>();
+      if (userData) {
         setUser(userData);
-      } catch (error) {
-        console.error("Error parsing user info:", error);
       }
-    }
+    })();
   }, []);
 
   useEffect(() => {

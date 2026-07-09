@@ -201,7 +201,10 @@ export default function DepartmentDetailModal({
       const { blob, filename } = await apiClient.blob(
         `${ENDPOINTS.payroll.export}?${params}`,
       );
-      downloadBlob(blob, filename ?? `department-${departmentName}-${month}.xlsx`);
+      downloadBlob(
+        blob,
+        filename ?? `department-${departmentName}-${month}.xlsx`,
+      );
     } catch (error) {
       console.error("Error exporting data:", error);
       setError("Có lỗi xảy ra khi xuất dữ liệu");

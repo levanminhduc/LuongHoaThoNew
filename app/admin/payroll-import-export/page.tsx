@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hasStoredSession } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -132,11 +133,8 @@ export default function PayrollImportExportPage() {
   useAutoLoadConfigurations();
 
   useEffect(() => {
-    // Check authentication
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+    if (!hasStoredSession()) {
       router.push("/admin/login");
-      return;
     }
   }, [router]);
 
@@ -234,7 +232,8 @@ export default function PayrollImportExportPage() {
         message?: string;
         importBatchId?: string;
       };
-      const importData = (importResult.data || importResult) as Partial<ImportResult> & {
+      const importData = (importResult.data ||
+        importResult) as Partial<ImportResult> & {
         importBatchId?: string;
       };
       const importErrors = importResult.importErrors || importData.errors || [];
@@ -356,10 +355,7 @@ export default function PayrollImportExportPage() {
 
     try {
       const [{ detectColumns, autoMapColumnsWithAliases }, XLSX] =
-        await Promise.all([
-          import("@/lib/advanced-excel-parser"),
-          getXLSX(),
-        ]);
+        await Promise.all([import("@/lib/advanced-excel-parser"), getXLSX()]);
 
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });

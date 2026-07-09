@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, clearSession } from "@/lib/auth/secure-session";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -92,18 +93,17 @@ export function AdminDashboardV2() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    const userStr = localStorage.getItem("user_info");
+    void (async () => {
+      const session = await getSession<{ role?: string }>();
 
-    if (!token || !userStr) {
-      router.push("/admin/login");
-      return;
-    }
+      if (!session?.user) {
+        clearSession();
+        router.push("/admin/login");
+        return;
+      }
 
-    try {
-      const userData = JSON.parse(userStr);
-      if (userData.role !== "admin") {
-        switch (userData.role) {
+      if (session.user.role !== "admin") {
+        switch (session.user.role) {
           case "van_phong":
             router.push("/admin/employee-management");
             break;
@@ -119,14 +119,8 @@ export function AdminDashboardV2() {
           default:
             router.push("/admin/login");
         }
-        return;
       }
-    } catch {
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
-      router.push("/admin/login");
-      return;
-    }
+    })();
   }, [router]);
 
   useEffect(() => {

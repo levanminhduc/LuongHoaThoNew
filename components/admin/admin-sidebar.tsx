@@ -42,6 +42,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useLogout } from "@/lib/hooks/use-logout";
+import { getSessionUser } from "@/lib/auth/secure-session";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -51,15 +52,9 @@ interface NavItem {
   allowedRoles?: string[];
 }
 
-function getCurrentRole(): string {
-  try {
-    const userStr = localStorage.getItem("user_info");
-    if (!userStr) return "admin";
-    const parsed = JSON.parse(userStr) as { role?: string };
-    return parsed.role || "admin";
-  } catch {
-    return "admin";
-  }
+async function getCurrentRole(): Promise<string> {
+  const user = await getSessionUser<{ role?: string }>();
+  return user?.role || "admin";
 }
 
 const mainNavItems: NavItem[] = [
@@ -182,7 +177,7 @@ export function AdminSidebar() {
   const [currentRole, setCurrentRole] = useState("admin");
 
   useEffect(() => {
-    setCurrentRole(getCurrentRole());
+    void getCurrentRole().then(setCurrentRole);
   }, []);
 
   const isActive = useCallback((href: string) => pathname === href, [pathname]);

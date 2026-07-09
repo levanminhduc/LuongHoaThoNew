@@ -33,7 +33,8 @@ const itemVariants = cva(
 );
 
 export interface ItemProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof itemVariants> {
   asChild?: boolean;
 }

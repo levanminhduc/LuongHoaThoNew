@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getSession } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -85,27 +86,21 @@ export default function PasswordResetHistoryPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    const userStr = localStorage.getItem("user_info");
+    void (async () => {
+      const session = await getSession<{ role?: string }>();
 
-    if (!token || !userStr) {
-      router.push("/admin/login");
-      return;
-    }
+      if (!session?.user) {
+        router.push("/admin/login");
+        return;
+      }
 
-    try {
-      const userData = JSON.parse(userStr);
-      if (userData.role !== "admin") {
+      if (session.user.role !== "admin") {
         router.push("/admin/dashboard");
         return;
       }
-    } catch (error) {
-      console.error("Error parsing user info:", error);
-      router.push("/admin/login");
-      return;
-    }
 
-    loadData();
+      loadData();
+    })();
   }, [router, pagination.page]);
 
   const loadData = async () => {

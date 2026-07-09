@@ -13,7 +13,11 @@ describe("withToast", () => {
   it("calls showSuccessToast onSuccess with provided message", async () => {
     const opts = withToast({ success: "Đã ký" });
 
-    await opts.onSuccess(undefined as never, undefined as never, undefined as never);
+    await opts.onSuccess(
+      undefined as never,
+      undefined as never,
+      undefined as never,
+    );
 
     expect(showSuccessToast).toHaveBeenCalledWith("Đã ký");
   });

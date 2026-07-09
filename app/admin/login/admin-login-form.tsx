@@ -16,34 +16,79 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Shield, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { encryptJson, decryptJson } from "@/lib/utils/client-crypto";
+import { saveSession, getSession } from "@/lib/auth/secure-session";
 
 const ADMIN_CREDENTIALS_KEY = "admin_saved_credentials";
+const CREDENTIALS_KEY_MATERIAL = "hoatho-admin-login-remember-v1";
 
-function encodeCredentials(username: string, password: string): string {
-  const data = JSON.stringify({ username, password });
-  return btoa(encodeURIComponent(data));
+interface SavedCredentials {
+  username: string;
+  password: string;
 }
 
-function decodeCredentials(): { username: string; password: string } | null {
+function decodeLegacyCredentials(stored: string): SavedCredentials | null {
   try {
-    const encoded = localStorage.getItem(ADMIN_CREDENTIALS_KEY);
-    if (!encoded) return null;
-    const decoded = decodeURIComponent(atob(encoded));
-    return JSON.parse(decoded);
+    const decoded = decodeURIComponent(atob(stored));
+    const data = JSON.parse(decoded);
+    if (data.username && data.password) {
+      return { username: data.username, password: data.password };
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-function saveCredentials(username: string, password: string): void {
-  const encoded = encodeCredentials(username, password);
-  localStorage.setItem(ADMIN_CREDENTIALS_KEY, encoded);
+async function saveCredentials(
+  username: string,
+  password: string,
+): Promise<void> {
+  localStorage.setItem(
+    ADMIN_CREDENTIALS_KEY,
+    await encryptJson(CREDENTIALS_KEY_MATERIAL, { username, password }),
+  );
+}
+
+async function decodeCredentials(): Promise<SavedCredentials | null> {
+  const stored = localStorage.getItem(ADMIN_CREDENTIALS_KEY);
+  if (!stored) return null;
+
+  try {
+    const data = await decryptJson<Partial<SavedCredentials>>(
+      CREDENTIALS_KEY_MATERIAL,
+      stored,
+    );
+    if (data.username && data.password) {
+      return { username: data.username, password: data.password };
+    }
+    throw new Error("malformed payload");
+  } catch {
+    const legacy = decodeLegacyCredentials(stored);
+    if (legacy) {
+      await saveCredentials(legacy.username, legacy.password);
+      return legacy;
+    }
+    localStorage.removeItem(ADMIN_CREDENTIALS_KEY);
+    return null;
+  }
 }
 
 function clearCredentials(): void {
   localStorage.removeItem(ADMIN_CREDENTIALS_KEY);
+}
+
+function LoadingCard({ message }: { message: string }) {
+  return (
+    <Card className="max-w-md w-full">
+      <CardContent className="flex flex-col items-center gap-3 py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <p className="text-sm text-gray-500">{message}</p>
+      </CardContent>
+    </Card>
+  );
 }
 
 function LoginFormContent() {
@@ -54,6 +99,7 @@ function LoginFormContent() {
   const [error, setError] = useState("");
   const [rememberPassword, setRememberPassword] = useState(false);
   const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
@@ -62,14 +108,32 @@ function LoginFormContent() {
   const cursorPositionRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const savedCredentials = decodeCredentials();
-    if (savedCredentials) {
-      setUsername(savedCredentials.username);
-      setPassword(savedCredentials.password);
-      setRememberPassword(true);
-      setHasSavedCredentials(true);
-    }
+    void (async () => {
+      const savedCredentials = await decodeCredentials();
+      if (savedCredentials) {
+        setUsername(savedCredentials.username);
+        setPassword(savedCredentials.password);
+        setRememberPassword(true);
+        setHasSavedCredentials(true);
+      }
+    })();
   }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const session = await getSession<{ role?: string }>();
+      if (!session?.user) {
+        setCheckingSession(false);
+        return;
+      }
+
+      if (redirectUrl && redirectUrl.startsWith("/")) {
+        router.replace(redirectUrl);
+      } else {
+        router.replace(getDefaultRedirect(session.user.role ?? ""));
+      }
+    })();
+  }, [redirectUrl, router]);
 
   useLayoutEffect(() => {
     if (cursorPositionRef.current === null || !usernameInputRef.current) {
@@ -133,15 +197,14 @@ function LoginFormContent() {
 
       if (response.ok) {
         if (rememberPassword) {
-          saveCredentials(username, password);
+          await saveCredentials(username, password);
           setHasSavedCredentials(true);
         } else {
           clearCredentials();
           setHasSavedCredentials(false);
         }
 
-        localStorage.setItem("admin_token", data.token);
-        localStorage.setItem("user_info", JSON.stringify(data.user));
+        await saveSession(data.token, data.user);
 
         if (redirectUrl && redirectUrl.startsWith("/")) {
           router.push(redirectUrl);
@@ -161,17 +224,17 @@ function LoginFormContent() {
     }
   };
 
+  if (checkingSession) {
+    return <LoadingCard message="Đang kiểm tra phiên đăng nhập..." />;
+  }
+
   return (
-    <Card>
+    <Card className="max-w-md w-full">
       <CardHeader className="text-center">
-        <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-          <Shield className="w-6 h-6 text-blue-600" />
-        </div>
-        <CardTitle>Đăng Nhập Hệ Thống</CardTitle>
-        <CardDescription>
-          Hỗ trợ tất cả roles: Admin, Giám Đốc, Kế Toán, Người Lập Biểu, Trưởng
-          Phòng, Tổ Trưởng, Nhân Viên
-        </CardDescription>
+        <CardTitle className="text-3xl font-bold">
+          TRA CỨU VÀ XÁC NHẬN LƯƠNG
+        </CardTitle>
+        <CardDescription>CÔNG TY MAY HÒA THỌ ĐIỆN BÀN</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -273,21 +336,7 @@ function LoginFormContent() {
 
 export function AdminLoginForm() {
   return (
-    <Suspense
-      fallback={
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <Shield className="w-6 h-6 text-blue-600" />
-            </div>
-            <CardTitle>Đăng Nhập Hệ Thống</CardTitle>
-          </CardHeader>
-          <CardContent className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          </CardContent>
-        </Card>
-      }
-    >
+    <Suspense fallback={<LoadingCard message="Đang tải..." />}>
       <LoginFormContent />
     </Suspense>
   );

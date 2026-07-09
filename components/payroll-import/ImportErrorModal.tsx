@@ -39,10 +39,7 @@ import {
   BookOpen,
   Filter,
 } from "lucide-react";
-import {
-  showErrorToast,
-  showInfoToast,
-} from "@/lib/toast-utils";
+import { showErrorToast, showInfoToast } from "@/lib/toast-utils";
 import { useExportImportErrorsMutation } from "@/lib/hooks/use-payroll-import";
 
 interface ImportError {
@@ -338,7 +335,9 @@ export default function ImportErrorModal({
       header: "Loại Lỗi",
       width: "140px",
       cell: (error) => (
-        <Badge className={`${getErrorTypeBadgeColor(error.errorType)} text-white`}>
+        <Badge
+          className={`${getErrorTypeBadgeColor(error.errorType)} text-white`}
+        >
           {error.errorType}
         </Badge>
       ),

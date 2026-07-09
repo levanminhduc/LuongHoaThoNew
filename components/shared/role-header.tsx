@@ -86,10 +86,7 @@ export function RoleHeader({
               Dashboard
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={logout}
-              className="text-destructive"
-            >
+            <DropdownMenuItem onClick={logout} className="text-destructive">
               Đăng Xuất
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Loader2, AlertCircle, Pencil, PenTool } from "lucide-react";
-import {
-  showSuccessToast,
-  showNetworkErrorToast,
-} from "@/lib/toast-utils";
+import { showSuccessToast, showNetworkErrorToast } from "@/lib/toast-utils";
 import { useManagementSignatureDateMutation } from "@/lib/hooks/use-dashboard";
 
 interface ManagementSigInfo {

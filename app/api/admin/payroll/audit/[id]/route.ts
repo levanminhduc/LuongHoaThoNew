@@ -27,7 +27,6 @@ interface AuditGroup {
   }>;
 }
 
-
 // GET audit trail for specific payroll record
 export async function GET(
   request: NextRequest,

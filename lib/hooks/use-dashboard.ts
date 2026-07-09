@@ -3,7 +3,10 @@ import { apiClient, downloadBlob } from "@/lib/api/client";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 import { withToast } from "@/lib/api/mutation-helpers";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import type { MonthStatus, SignatureRecord } from "@/lib/management-signature-utils";
+import type {
+  MonthStatus,
+  SignatureRecord,
+} from "@/lib/management-signature-utils";
 import type { PayrollType } from "./use-payroll";
 
 export interface DashboardStatsFilters {
@@ -169,9 +172,12 @@ export function useSignatureDateMonthsQuery(enabled = true) {
   return useQuery({
     queryKey: ["signature-date-months"],
     queryFn: ({ signal }) =>
-      apiClient.get<SignatureDateMonthsResponse>(ENDPOINTS.signature.updateDate, {
-        signal,
-      }),
+      apiClient.get<SignatureDateMonthsResponse>(
+        ENDPOINTS.signature.updateDate,
+        {
+          signal,
+        },
+      ),
     enabled,
     staleTime: 5 * 60_000,
   });

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, clearSession } from "@/lib/auth/secure-session";
 import SupervisorDashboard from "@/components/SupervisorDashboard";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";
 
@@ -22,17 +23,16 @@ export default function SupervisorDashboardPage() {
     checkAuthentication();
   }, []);
 
-  const checkAuthentication = () => {
+  const checkAuthentication = async () => {
     try {
-      const token = localStorage.getItem("admin_token");
-      const userStr = localStorage.getItem("user_info");
+      const session = await getSession<User>();
 
-      if (!token || !userStr) {
+      if (!session?.user) {
         router.push("/admin/login");
         return;
       }
 
-      const userData = JSON.parse(userStr);
+      const userData = session.user;
 
       if (userData.role !== "to_truong") {
         switch (userData.role) {
@@ -54,8 +54,7 @@ export default function SupervisorDashboardPage() {
       setUser(userData);
     } catch (error) {
       console.error("Authentication check error:", error);
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
+      clearSession();
       router.push("/admin/login");
     } finally {
       setLoading(false);

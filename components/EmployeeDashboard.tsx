@@ -36,10 +36,7 @@ import {
   Calendar,
   TrendingUp,
 } from "lucide-react";
-import {
-  getCurrentVietnamYear,
-  getRecentYearOptions,
-} from "@/utils/dateUtils";
+import { getCurrentVietnamYear, getRecentYearOptions } from "@/utils/dateUtils";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
 import {
   useEmployeePayrollDataQuery,

@@ -128,9 +128,7 @@ export function useColumnAliasesMutation() {
         success: boolean;
         data?: ColumnAlias[];
         message?: string;
-      }>(
-        appendParams(ENDPOINTS.columnAliases.list, params),
-      );
+      }>(appendParams(ENDPOINTS.columnAliases.list, params));
     },
   });
 }
@@ -143,7 +141,8 @@ export function useExportImportErrorsMutation() {
         input,
       );
       const date = getVietnamTimestamp().slice(0, 10);
-      const finalName = filename ?? `${input.fileName ?? "import_errors"}_${date}.xlsx`;
+      const finalName =
+        filename ?? `${input.fileName ?? "import_errors"}_${date}.xlsx`;
       downloadBlob(blob, finalName);
       return { filename: finalName };
     },

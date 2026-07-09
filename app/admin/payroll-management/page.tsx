@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hasStoredSession } from "@/lib/auth/secure-session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Settings, Shield, CheckCircle, AlertTriangle } from "lucide-react";
@@ -27,17 +28,15 @@ export default function PayrollManagementPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const selectedPayrollId = selectedEmployee?.payroll_id ?? null;
-  const payrollDetailQuery = usePayrollDetailQuery<PayrollData>(selectedPayrollId);
+  const payrollDetailQuery =
+    usePayrollDetailQuery<PayrollData>(selectedPayrollId);
   const updatePayrollMutation = useUpdatePayrollMutation<PayrollData>();
   const loading = payrollDetailQuery.isFetching;
   const saving = updatePayrollMutation.isPending;
 
-  // Check admin authentication on mount
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
+    if (!hasStoredSession()) {
       router.push("/admin");
-      return;
     }
   }, [router]);
 

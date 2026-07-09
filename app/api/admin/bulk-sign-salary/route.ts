@@ -30,12 +30,7 @@ export async function POST(request: NextRequest) {
         headers: CACHE_HEADERS.sensitive,
       });
     }
-    const {
-      salary_month,
-      admin_note,
-      batch_size = 50,
-      is_t13,
-    } = parsed.data;
+    const { salary_month, admin_note, batch_size = 50, is_t13 } = parsed.data;
 
     const isT13Month = /^\d{4}-(13|T13)$/i.test(salary_month);
     const payrollType = isT13Month ? "t13" : "monthly";

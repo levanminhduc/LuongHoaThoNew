@@ -166,7 +166,10 @@ export function VirtualizedTable<T>({
         ))}
       </div>
       <div
-        style={{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }}
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          position: "relative",
+        }}
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = data[virtualRow.index];

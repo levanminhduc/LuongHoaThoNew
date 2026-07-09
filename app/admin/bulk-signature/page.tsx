@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getSession, clearSession } from "@/lib/auth/secure-session";
 import { BulkSignatureSection } from "@/components/admin/BulkSignatureSection";
 import { UpdateSignatureDateDialog } from "@/components/admin/UpdateSignatureDateDialog";
 import {
@@ -16,19 +17,17 @@ export default function BulkSignaturePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    const userStr = localStorage.getItem("user_info");
+    void (async () => {
+      const session = await getSession<{ role?: string }>();
 
-    if (!token || !userStr) {
-      router.push("/admin/login");
-      return;
-    }
+      if (!session?.user) {
+        clearSession();
+        router.push("/admin/login");
+        return;
+      }
 
-    try {
-      const userData = JSON.parse(userStr);
-
-      if (userData.role !== "admin") {
-        switch (userData.role) {
+      if (session.user.role !== "admin") {
+        switch (session.user.role) {
           case "truong_phong":
             router.push("/manager/dashboard");
             break;
@@ -41,14 +40,8 @@ export default function BulkSignaturePage() {
           default:
             router.push("/admin/login");
         }
-        return;
       }
-    } catch (error) {
-      console.error("Error parsing user info:", error);
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user_info");
-      router.push("/admin/login");
-    }
+    })();
   }, [router]);
 
   return (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { getSessionToken } from "@/lib/auth/secure-session";
 
 interface EmployeeProgress {
   completion_percentage: number;
@@ -73,7 +74,7 @@ export function useSignatureProgress({
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("admin_token");
+      const token = await getSessionToken();
       if (!token) {
         throw new Error("Không tìm thấy token xác thực");
       }

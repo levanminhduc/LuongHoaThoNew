@@ -296,9 +296,7 @@ export function ResetPasswordModal({
                     <span className="text-xs text-muted-foreground">
                       Độ mạnh:
                     </span>
-                    <span
-                      className="text-xs font-medium text-foreground"
-                    >
+                    <span className="text-xs font-medium text-foreground">
                       {passwordStrength.label}
                     </span>
                   </div>

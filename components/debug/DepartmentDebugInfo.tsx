@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getSession } from "@/lib/auth/secure-session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,15 +40,14 @@ export default function DepartmentDebugInfo() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("admin_token");
-      const userStr = localStorage.getItem("user_info");
+      const session = await getSession<Record<string, unknown>>();
 
-      if (!token || !userStr) {
+      if (!session?.user) {
         setError("Không tìm thấy thông tin đăng nhập");
         return;
       }
 
-      const userInfo = JSON.parse(userStr);
+      const userInfo = session.user;
 
       const params = new URLSearchParams();
       params.set(QUERY_PARAMS.INCLUDE_STATS, "true");

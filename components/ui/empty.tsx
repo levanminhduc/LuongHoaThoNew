@@ -20,7 +20,8 @@ const emptyVariants = cva(
 );
 
 export interface EmptyProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof emptyVariants> {
   icon?: React.ReactNode;
   title?: string;
