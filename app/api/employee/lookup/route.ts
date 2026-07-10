@@ -270,10 +270,19 @@ function validateT13Format(salaryMonth: string): boolean {
  *         $ref: '#/components/responses/InternalError'
  */
 export async function POST(request: NextRequest) {
-  const csrfResult = csrfProtection(request);
-  if (csrfResult) return csrfResult;
-
   const responseFormat = getResponseFormat(request);
+
+  const csrfResult = csrfProtection(request);
+  if (csrfResult) {
+    if (responseFormat === "html") {
+      return createHtmlResponse(
+        renderErrorHtml("Yêu cầu không hợp lệ. Vui lòng tra cứu lại."),
+        403,
+      );
+    }
+    return csrfResult;
+  }
+
   let employee_id = "";
   let cccd = "";
   let is_t13 = false;
