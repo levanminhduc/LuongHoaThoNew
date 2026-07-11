@@ -8,14 +8,14 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Form,
   FormControl,
@@ -24,9 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
+import { newPasswordFieldSchema } from "@/lib/validations/auth";
 import {
-  Eye,
-  EyeOff,
   KeyRound,
   AlertCircle,
   CheckCircle2,
@@ -34,27 +34,11 @@ import {
   Info,
 } from "lucide-react";
 
-interface ForgotPasswordModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess?: () => void;
-}
-
-interface PasswordStrength {
-  score: number;
-  label: string;
-  issues: string[];
-}
-
 const forgotPasswordSchema = z
   .object({
     employeeId: z.string().min(1, "Mã nhân viên là bắt buộc"),
-    cccd: z.string().min(1, "Số CCCD là bắt buộc"),
-    newPassword: z
-      .string()
-      .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
-      .regex(/[a-zA-Z]/, "Mật khẩu phải có chữ cái")
-      .regex(/[0-9]/, "Mật khẩu phải có số"),
+    cccd: z.string().regex(/^\d{12}$/, "CCCD phải đúng 12 chữ số"),
+    newPassword: newPasswordFieldSchema,
     confirmPassword: z.string().min(1, "Xác nhận mật khẩu là bắt buộc"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -63,6 +47,12 @@ const forgotPasswordSchema = z
   });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+
+interface ForgotPasswordModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
 
 export function ForgotPasswordModal({
   isOpen,
@@ -80,78 +70,9 @@ export function ForgotPasswordModal({
     },
   });
 
-  const [showPasswords, setShowPasswords] = useState({
-    new: false,
-    confirm: false,
-  });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({
-    score: 0,
-    label: "",
-    issues: [],
-  });
-
-  const checkPasswordStrength = (password: string): PasswordStrength => {
-    const issues: string[] = [];
-    let score = 0;
-
-    if (password.length < 8) {
-      issues.push("Ít nhất 8 ký tự");
-    } else if (password.length >= 12) {
-      score += 2;
-    } else {
-      score += 1;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      issues.push("Cần có chữ thường");
-    } else {
-      score += 1;
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      issues.push("Cần có chữ hoa");
-    } else {
-      score += 1;
-    }
-
-    if (!/[0-9]/.test(password)) {
-      issues.push("Cần có số");
-    } else {
-      score += 1;
-    }
-
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      issues.push("Nên có ký tự đặc biệt");
-    } else {
-      score += 1;
-    }
-
-    let label = "";
-    if (score <= 2) {
-      label = "Yếu";
-    } else if (score === 3) {
-      label = "Trung bình";
-    } else if (score === 4) {
-      label = "Tốt";
-    } else {
-      label = "Mạnh";
-    }
-
-    return { score: score * 20, label, issues };
-  };
-
-  const handlePasswordChange = (value: string) => {
-    form.setValue("newPassword", value, { shouldValidate: true });
-    if (value) {
-      setPasswordStrength(checkPasswordStrength(value));
-    } else {
-      setPasswordStrength({ score: 0, label: "", issues: [] });
-    }
-  };
 
   const onSubmit = async (formData: ForgotPasswordFormValues) => {
     setLoading(true);
@@ -201,26 +122,19 @@ export function ForgotPasswordModal({
 
   const handleClose = () => {
     form.reset();
-    setShowPasswords({
-      new: false,
-      confirm: false,
-    });
     setError("");
     setSuccess(false);
-    setPasswordStrength({ score: 0, label: "", issues: [] });
-
     onClose();
   };
 
   const newPasswordValue = form.watch("newPassword");
-  const confirmPasswordValue = form.watch("confirmPassword");
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden">
+      <DialogContent className="flex max-h-[90dvh] flex-col sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <KeyRound className="w-5 h-5" />
+            <KeyRound className="h-5 w-5" />
             Quên Mật Khẩu
           </DialogTitle>
           <DialogDescription>
@@ -228,9 +142,12 @@ export function ForgotPasswordModal({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[65vh] pr-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex min-h-0 flex-1 flex-col gap-4"
+          >
+            <div className="-mx-1 min-h-0 flex-1 space-y-4 overflow-y-auto px-1">
               <FormField
                 control={form.control}
                 name="employeeId"
@@ -244,6 +161,8 @@ export function ForgotPasswordModal({
                           field.onChange(e.target.value.toUpperCase())
                         }
                         placeholder="Nhập mã nhân viên"
+                        autoComplete="username"
+                        autoCapitalize="characters"
                         disabled={loading}
                       />
                     </FormControl>
@@ -257,13 +176,14 @@ export function ForgotPasswordModal({
                 name="cccd"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Số CCCD ( 12 chữ số )</FormLabel>
+                    <FormLabel>Số CCCD (12 chữ số)</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="Nhập số CCCD"
-                        disabled={loading}
+                        inputMode="numeric"
                         maxLength={12}
+                        disabled={loading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -278,60 +198,14 @@ export function ForgotPasswordModal({
                   <FormItem>
                     <FormLabel>Mật khẩu mới</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          type={showPasswords.new ? "text" : "password"}
-                          onChange={(e) => handlePasswordChange(e.target.value)}
-                          placeholder="Nhập mật khẩu mới"
-                          className="pr-10"
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowPasswords((prev) => ({
-                              ...prev,
-                              new: !prev.new,
-                            }))
-                          }
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                        >
-                          {showPasswords.new ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
+                      <PasswordInput
+                        {...field}
+                        placeholder="Nhập mật khẩu mới"
+                        autoComplete="new-password"
+                        disabled={loading}
+                      />
                     </FormControl>
-
-                    {newPasswordValue && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            Độ mạnh:
-                          </span>
-                          <span className="text-xs font-medium text-foreground">
-                            {passwordStrength.label}
-                          </span>
-                        </div>
-                        <Progress
-                          value={passwordStrength.score}
-                          className="h-2"
-                        />
-
-                        {passwordStrength.issues.length > 0 && (
-                          <ul className="text-xs text-muted-foreground space-y-1">
-                            {passwordStrength.issues.map((issue, idx) => (
-                              <li key={idx} className="flex items-center gap-1">
-                                <span>•</span> {issue}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )}
+                    <PasswordStrengthIndicator password={newPasswordValue} />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -344,38 +218,13 @@ export function ForgotPasswordModal({
                   <FormItem>
                     <FormLabel>Xác nhận mật khẩu mới</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          type={showPasswords.confirm ? "text" : "password"}
-                          placeholder="Nhập lại mật khẩu mới"
-                          className="pr-10"
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowPasswords((prev) => ({
-                              ...prev,
-                              confirm: !prev.confirm,
-                            }))
-                          }
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                        >
-                          {showPasswords.confirm ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
+                      <PasswordInput
+                        {...field}
+                        placeholder="Nhập lại mật khẩu mới"
+                        autoComplete="new-password"
+                        disabled={loading}
+                      />
                     </FormControl>
-                    {confirmPasswordValue.length > 0 &&
-                      newPasswordValue === confirmPasswordValue && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <span>✓</span> Mật khẩu xác nhận khớp
-                        </p>
-                      )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -406,38 +255,38 @@ export function ForgotPasswordModal({
                   Nếu cần hỗ trợ ngay, vui lòng liên hệ Văn Phòng.
                 </AlertDescription>
               </Alert>
+            </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={loading}
-                  className="w-full sm:w-auto order-2 sm:order-1"
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full sm:w-auto order-1 sm:order-2"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    <>
-                      <KeyRound className="mr-2 h-4 w-4" />
-                      Đặt Lại Mật Khẩu
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </ScrollArea>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Đặt Lại Mật Khẩu
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
