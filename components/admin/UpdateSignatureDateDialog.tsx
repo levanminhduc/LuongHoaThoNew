@@ -94,7 +94,7 @@ export function UpdateSignatureDateDialog({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Cập Nhật Ngày Ký Lương</DialogTitle>
             <DialogDescription>

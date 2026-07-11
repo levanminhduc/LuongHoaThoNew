@@ -239,7 +239,7 @@ export default function OverviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-7xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex-1">
             <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">

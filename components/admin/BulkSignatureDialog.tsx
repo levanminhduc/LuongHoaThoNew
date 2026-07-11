@@ -111,7 +111,7 @@ export function BulkSignatureDialog({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Ký Hàng Loạt Chữ Ký Nhân Viên</DialogTitle>
             <DialogDescription>Tháng: {month}</DialogDescription>

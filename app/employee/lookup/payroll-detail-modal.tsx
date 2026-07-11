@@ -111,7 +111,7 @@ export function PayrollDetailModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden payroll-detail-modal modal-event-isolation [&>button.absolute]:text-destructive [&>button.absolute:hover]:text-destructive [&>button.absolute:focus]:ring-destructive"
+        className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden payroll-detail-modal modal-event-isolation [&>button.absolute]:text-destructive [&>button.absolute:hover]:text-destructive [&>button.absolute:focus]:ring-destructive"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 px-5 py-4 sm:px-6">

@@ -211,7 +211,7 @@ export function SalaryHistoryModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-hidden salary-history-modal modal-event-isolation"
+        className="sm:max-w-4xl max-h-[90vh] overflow-hidden salary-history-modal modal-event-isolation"
         onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader>

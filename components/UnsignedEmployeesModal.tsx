@@ -355,7 +355,7 @@ export default function UnsignedEmployeesModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-700">
             <UserX className="w-5 h-5" />

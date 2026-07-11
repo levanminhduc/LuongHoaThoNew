@@ -79,7 +79,7 @@ export function PayrollDetailModalT13({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden payroll-detail-modal modal-event-isolation"
+        className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden payroll-detail-modal modal-event-isolation"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 pb-2 shrink-0">

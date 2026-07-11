@@ -249,7 +249,7 @@ export default function EmployeeManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0">
+      <DialogContent className="sm:max-w-7xl max-h-[95vh] overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <div className="flex items-center justify-between">
             <div>
@@ -278,7 +278,7 @@ export default function EmployeeManagementModal({
                       Thêm Nhân Viên
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+                  <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
                     <DialogHeader>
                       <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
                       <DialogDescription>
@@ -418,7 +418,7 @@ export default function EmployeeManagementModal({
                                         <Edit className="w-4 h-4" />
                                       </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+                                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
                                       <DialogHeader>
                                         <DialogTitle>
                                           Chỉnh Sửa Nhân Viên
@@ -453,7 +453,7 @@ export default function EmployeeManagementModal({
                                         <FileText className="w-4 h-4" />
                                       </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="max-w-4xl">
+                                    <DialogContent className="sm:max-w-4xl">
                                       <DialogHeader>
                                         <DialogTitle>
                                           Lịch Sử Thay Đổi
@@ -638,7 +638,7 @@ export default function EmployeeManagementModal({
                                           <Edit className="w-4 h-4" />
                                         </Button>
                                       </DialogTrigger>
-                                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+                                      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
                                         <DialogHeader>
                                           <DialogTitle>
                                             Chỉnh Sửa Nhân Viên
@@ -671,7 +671,7 @@ export default function EmployeeManagementModal({
                                           <FileText className="w-4 h-4" />
                                         </Button>
                                       </DialogTrigger>
-                                      <DialogContent className="max-w-4xl">
+                                      <DialogContent className="sm:max-w-4xl">
                                         <DialogHeader>
                                           <DialogTitle>
                                             Lịch Sử Thay Đổi

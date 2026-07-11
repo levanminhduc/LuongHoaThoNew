@@ -237,7 +237,7 @@ export default function EmployeeManagementPage() {
                 <Edit className="w-4 h-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
               <DialogHeader>
                 <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
                 <DialogDescription>
@@ -264,7 +264,7 @@ export default function EmployeeManagementPage() {
                 <FileText className="w-4 h-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="sm:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Lịch Sử Thay Đổi</DialogTitle>
                 <DialogDescription>
@@ -319,7 +319,7 @@ export default function EmployeeManagementPage() {
               Thêm Nhân Viên
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
               <DialogDescription>
@@ -526,7 +526,7 @@ export default function EmployeeManagementPage() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+                            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
                               <DialogHeader>
                                 <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
                                 <DialogDescription>
@@ -556,7 +556,7 @@ export default function EmployeeManagementPage() {
                                 <FileText className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-4xl">
+                            <DialogContent className="sm:max-w-4xl">
                               <DialogHeader>
                                 <DialogTitle>Lịch Sử Thay Đổi</DialogTitle>
                                 <DialogDescription>
