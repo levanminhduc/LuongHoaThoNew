@@ -25,6 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Gift, PenTool, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/date-formatter";
+import { formatBonusDetailValue } from "@/lib/bonus/bonus-detail-format";
 import type { EmployeeBonusItem } from "@/lib/bonus/bonus-types";
 import type { BonusDetailItem } from "@/lib/validations/bonus";
 
@@ -38,10 +39,6 @@ interface BonusDetailModalProps {
   onSign: () => void;
 }
 
-function renderDetailValue(value: BonusDetailItem["value"]): string {
-  return typeof value === "number" ? formatCurrency(value) : value;
-}
-
 function DetailRow({ item }: { item: BonusDetailItem }) {
   return (
     <div className="flex items-center justify-between border-b border-border py-3 last:border-b-0">
@@ -49,7 +46,7 @@ function DetailRow({ item }: { item: BonusDetailItem }) {
         {item.label}:
       </span>
       <span className="text-sm font-semibold text-foreground">
-        {renderDetailValue(item.value)}
+        {formatBonusDetailValue(item)}
       </span>
     </div>
   );

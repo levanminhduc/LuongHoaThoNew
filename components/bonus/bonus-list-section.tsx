@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Gift, AlertCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/date-formatter";
+import { formatBonusDetailValue } from "@/lib/bonus/bonus-detail-format";
 import {
   useBonusPeriodsQuery,
   useBonusListQuery,
@@ -57,13 +58,9 @@ function collectDetailLabels(rows: BonusListRow[]): string[] {
   return labels;
 }
 
-function formatDetailValue(value: number | string): string {
-  return typeof value === "number" ? formatCurrency(value) : value;
-}
-
 function findDetailValue(row: BonusListRow, label: string): string {
   const item = row.detail_data.find((detail) => detail.label === label);
-  return item ? formatDetailValue(item.value) : "-";
+  return item ? formatBonusDetailValue(item) : "-";
 }
 
 export function BonusListSection({ department }: BonusListSectionProps) {
