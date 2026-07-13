@@ -127,11 +127,13 @@ function LoginFormContent() {
         return;
       }
 
-      if (redirectUrl && redirectUrl.startsWith("/")) {
-        router.replace(redirectUrl);
-      } else {
-        router.replace(getDefaultRedirect(session.user.role ?? ""));
+      const bouncedHereByMissingAuthCookie = redirectUrl !== null;
+      if (bouncedHereByMissingAuthCookie) {
+        setCheckingSession(false);
+        return;
       }
+
+      router.replace(getDefaultRedirect(session.user.role ?? ""));
     })();
   }, [redirectUrl, router]);
 
@@ -206,7 +208,11 @@ function LoginFormContent() {
 
         await saveSession(data.token, data.user);
 
-        if (redirectUrl && redirectUrl.startsWith("/")) {
+        if (
+          redirectUrl &&
+          redirectUrl.startsWith("/") &&
+          !redirectUrl.startsWith("//")
+        ) {
           router.push(redirectUrl);
         } else {
           router.push(getDefaultRedirect(data.user?.role));

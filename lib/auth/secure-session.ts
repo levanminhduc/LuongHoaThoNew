@@ -1,4 +1,5 @@
 import { encryptJson, decryptJson } from "@/lib/utils/client-crypto";
+import { isJwtExpired } from "@/lib/auth/jwt-expiry";
 
 const TOKEN_KEY = "admin_token";
 const USER_KEY = "user_info";
@@ -35,6 +36,18 @@ export async function saveSession(token: string, user: unknown): Promise<void> {
 export async function getSessionToken(): Promise<string | null> {
   if (!isBrowser()) return null;
 
+  const token = await readStoredToken();
+  if (!token) return null;
+
+  if (isJwtExpired(token)) {
+    clearSession();
+    return null;
+  }
+
+  return token;
+}
+
+async function readStoredToken(): Promise<string | null> {
   const stored = localStorage.getItem(TOKEN_KEY);
   if (stored) {
     if (stored.startsWith(ENCRYPTED_PREFIX)) {
@@ -99,4 +112,7 @@ export function clearSession(): void {
   if (!isBrowser()) return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  for (const key of LEGACY_TOKEN_FALLBACK_KEYS) {
+    localStorage.removeItem(key);
+  }
 }
