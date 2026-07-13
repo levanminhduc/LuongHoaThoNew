@@ -22,6 +22,7 @@ import {
   CalendarDays,
   Calendar,
   Lock,
+  Gift,
   MoreHorizontal,
 } from "lucide-react";
 import {
@@ -37,6 +38,7 @@ interface EmployeeLookupResultProps {
   signSuccess: boolean;
   onSign: () => void;
   onShowDetail: () => void;
+  onShowBonus: () => void;
   onShowHistory: () => void;
   onShowT13: () => void;
   onShowPassword: () => void;
@@ -49,6 +51,7 @@ export function EmployeeLookupResult({
   signSuccess,
   onSign,
   onShowDetail,
+  onShowBonus,
   onShowHistory,
   onShowT13,
   onShowPassword,
@@ -122,10 +125,20 @@ export function EmployeeLookupResult({
               <Button
                 type="button"
                 size="sm"
+                onClick={onShowBonus}
+                className="min-h-9 gap-1.5 border border-amber-300/70 bg-[linear-gradient(135deg,#f59e0b_0%,#f97316_100%)] px-3 font-bold text-white shadow-[0_12px_26px_-14px_rgba(245,158,11,0.95),inset_0_1px_0_rgba(255,255,255,0.34)] transition-transform [transition-duration:200ms] hover:scale-[1.03] hover:bg-[linear-gradient(135deg,#f59e0b_0%,#f97316_100%)] hover:text-white hover:brightness-110 active:scale-[0.96]"
+              >
+                <Gift className="h-4 w-4 shrink-0" />
+                <span>Thưởng</span>
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
                 onClick={onShowDetail}
                 className="relative isolate min-h-9 overflow-hidden border border-sky-200/70 bg-[linear-gradient(135deg,#0ea5e9_0%,#2563eb_42%,#0a2c7d_100%)] px-3 font-bold text-white shadow-[0_14px_30px_-14px_rgba(37,99,235,0.95),inset_0_1px_0_rgba(255,255,255,0.34)] transition-[transform,filter] [transition-duration:200ms] before:absolute before:inset-y-[-55%] before:left-[-76%] before:z-0 before:w-1/2 before:skew-x-[-18deg] before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.18),rgba(255,255,255,0.72),rgba(255,255,255,0.18),transparent)] before:content-[''] before:animate-employee-detail-shine after:absolute after:inset-0 after:z-0 after:rounded-md after:border after:border-white/45 after:content-[''] after:animate-employee-detail-flash animate-employee-detail-pulse hover:scale-[1.03] hover:bg-[linear-gradient(135deg,#0ea5e9_0%,#2563eb_42%,#0a2c7d_100%)] hover:text-white hover:brightness-110 active:scale-[0.96] motion-reduce:animate-none motion-reduce:before:animate-none motion-reduce:after:animate-none"
               >
-                <span className="relative z-10">Xem Chi Tiết</span>
+                <span className="relative z-10">Chi Tiết</span>
               </Button>
 
               <DropdownMenu modal={false}>

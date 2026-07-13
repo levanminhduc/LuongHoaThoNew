@@ -783,15 +783,13 @@ export function useEmployeeLookup() {
     [state.sessionToken],
   );
 
-  const handleShowBonusList = useCallback(async () => {
-    if (!state.sessionToken) return;
-
+  const fetchBonusList = useCallback(async (sessionToken: string) => {
     dispatch({ type: "SHOW_MODAL", payload: "showBonusListModal" });
     dispatch({ type: "BONUS_LIST_START" });
 
     try {
       const response = await fetch("/api/employee/bonuses", {
-        headers: { Authorization: `Bearer ${state.sessionToken}` },
+        headers: { Authorization: `Bearer ${sessionToken}` },
       });
       const data = await response.json();
 
@@ -809,7 +807,12 @@ export function useEmployeeLookup() {
         payload: "Có lỗi xảy ra khi tải danh sách tiền thưởng",
       });
     }
-  }, [state.sessionToken]);
+  }, []);
+
+  const handleShowBonusList = useCallback(async () => {
+    if (!state.sessionToken) return;
+    await fetchBonusList(state.sessionToken);
+  }, [state.sessionToken, fetchBonusList]);
 
   const handleOpenBonusDetail = useCallback((bonus: EmployeeBonusItem) => {
     dispatch({ type: "OPEN_BONUS_DETAIL", payload: bonus });

@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Loader2, Search, Eye, EyeOff, Info, Gift } from "lucide-react";
+import { Loader2, Search, Eye, EyeOff, Info } from "lucide-react";
 import Link from "next/link";
 import { useEmployeeLookup } from "./use-employee-lookup";
 import { EmployeeLookupResult } from "./employee-lookup-result";
@@ -247,6 +247,7 @@ export function EmployeeLookup() {
             signSuccess={state.signSuccess}
             onSign={handlers.handleSignSalary}
             onShowDetail={() => handlers.handleShowDetail(false)}
+            onShowBonus={handlers.handleShowBonusList}
             onShowHistory={() =>
               dispatch({ type: "SHOW_MODAL", payload: "showHistoryModal" })
             }
@@ -256,15 +257,6 @@ export function EmployeeLookup() {
             }
             t13Loading={state.t13Loading}
           />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlers.handleShowBonusList}
-            className="mt-4 w-full min-h-[44px]"
-          >
-            <Gift className="mr-2 h-4 w-4" />
-            Tiền Thưởng
-          </Button>
         </div>
       )}
 
