@@ -45,11 +45,18 @@ function decodeLegacyCredentials(stored: string): SavedCredentials | null {
 async function saveCredentials(
   username: string,
   password: string,
-): Promise<void> {
-  localStorage.setItem(
-    ADMIN_CREDENTIALS_KEY,
-    await encryptJson(CREDENTIALS_KEY_MATERIAL, { username, password }),
-  );
+): Promise<boolean> {
+  const encrypted = await encryptJson(CREDENTIALS_KEY_MATERIAL, {
+    username,
+    password,
+  }).catch(() => null);
+  if (!encrypted) return false;
+  try {
+    localStorage.setItem(ADMIN_CREDENTIALS_KEY, encrypted);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function decodeCredentials(): Promise<SavedCredentials | null> {
@@ -198,15 +205,21 @@ function LoginFormContent() {
       const data = await response.json();
 
       if (response.ok) {
-        if (rememberPassword) {
-          await saveCredentials(username, password);
-          setHasSavedCredentials(true);
-        } else {
-          clearCredentials();
-          setHasSavedCredentials(false);
-        }
+        try {
+          await saveSession(data.token, data.user);
 
-        await saveSession(data.token, data.user);
+          if (rememberPassword) {
+            setHasSavedCredentials(await saveCredentials(username, password));
+          } else {
+            clearCredentials();
+            setHasSavedCredentials(false);
+          }
+        } catch {
+          setError(
+            "Trình duyệt không lưu được phiên đăng nhập. Vui lòng thoát chế độ ẩn danh hoặc cho phép trang web lưu dữ liệu rồi thử lại.",
+          );
+          return;
+        }
 
         if (
           redirectUrl &&
@@ -224,7 +237,9 @@ function LoginFormContent() {
         );
       }
     } catch {
-      setError("Có lỗi xảy ra khi đăng nhập");
+      setError(
+        "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.",
+      );
     } finally {
       setLoading(false);
     }

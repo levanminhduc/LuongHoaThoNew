@@ -27,10 +27,40 @@ async function migrateLegacyValue(key: string, value: unknown): Promise<void> {
   }
 }
 
+const PURGEABLE_CACHE_PREFIXES = ["dashboard_cache_", "department_cache_"];
+
+async function toStoredValue(
+  value: unknown,
+  plaintextFallback: string,
+): Promise<string> {
+  try {
+    return await encryptValue(value);
+  } catch {
+    return plaintextFallback;
+  }
+}
+
+function purgeAppCaches(): void {
+  for (const key of Object.keys(localStorage)) {
+    if (PURGEABLE_CACHE_PREFIXES.some((prefix) => key.startsWith(prefix))) {
+      localStorage.removeItem(key);
+    }
+  }
+}
+
+function setItemWithPurgeRetry(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    purgeAppCaches();
+    localStorage.setItem(key, value);
+  }
+}
+
 export async function saveSession(token: string, user: unknown): Promise<void> {
   if (!isBrowser()) return;
-  localStorage.setItem(TOKEN_KEY, await encryptValue(token));
-  localStorage.setItem(USER_KEY, await encryptValue(user));
+  setItemWithPurgeRetry(TOKEN_KEY, await toStoredValue(token, token));
+  setItemWithPurgeRetry(USER_KEY, await toStoredValue(user, JSON.stringify(user)));
 }
 
 export async function getSessionToken(): Promise<string | null> {
