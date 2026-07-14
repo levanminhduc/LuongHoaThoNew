@@ -42,3 +42,4 @@ auggie_shell.sh
 .zed/
 tests/
 .codex-review/runs/
+.claude/settings.local.json

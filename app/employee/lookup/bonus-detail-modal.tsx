@@ -8,17 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,11 +30,11 @@ interface BonusDetailModalProps {
 
 function DetailRow({ item }: { item: BonusDetailItem }) {
   return (
-    <div className="flex items-center justify-between border-b border-border py-3 last:border-b-0">
-      <span className="text-sm font-medium text-muted-foreground">
+    <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-b-0">
+      <span className="shrink-0 text-sm font-medium text-muted-foreground">
         {item.label}:
       </span>
-      <span className="text-sm font-semibold text-foreground">
+      <span className="min-w-0 break-words text-right text-sm font-semibold text-foreground">
         {formatBonusDetailValue(item)}
       </span>
     </div>
@@ -65,9 +54,11 @@ export function BonusDetailModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Gift className="w-5 h-5 text-pink-600" />
-            {bonus.bonus_title || bonus.bonus_type_label}
+          <DialogTitle className="flex items-start gap-2 pr-6">
+            <Gift className="mt-0.5 w-5 h-5 shrink-0 text-pink-600" />
+            <span className="min-w-0 break-words">
+              {bonus.bonus_title || bonus.bonus_type_label}
+            </span>
           </DialogTitle>
           <DialogDescription>
             {bonus.bonus_type_label} • {bonus.bonus_period}
@@ -116,40 +107,23 @@ export function BonusDetailModal({
               </div>
             </div>
           ) : (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button disabled={signingLoading} className="w-full">
-                  {signingLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang ký nhận...
-                    </>
-                  ) : (
-                    <>
-                      <PenTool className="mr-2 h-4 w-4" />
-                      Ký Nhận
-                    </>
-                  )}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Xác nhận ký nhận</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Bạn xác nhận đã nhận {bonus.bonus_type_label} kỳ{" "}
-                    {bonus.bonus_period} với số tiền{" "}
-                    {formatCurrency(bonus.amount)}? Thao tác này chỉ thực hiện
-                    được một lần.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Hủy</AlertDialogCancel>
-                  <AlertDialogAction onClick={onSign}>
-                    Ký Nhận
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button
+              onClick={onSign}
+              disabled={signingLoading}
+              className="w-full"
+            >
+              {signingLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang ký nhận...
+                </>
+              ) : (
+                <>
+                  <PenTool className="mr-2 h-4 w-4" />
+                  Ký Nhận
+                </>
+              )}
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

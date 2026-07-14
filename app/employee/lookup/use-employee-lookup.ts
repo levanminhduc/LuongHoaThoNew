@@ -794,7 +794,13 @@ export function useEmployeeLookup() {
       const data = await response.json();
 
       if (response.ok) {
-        dispatch({ type: "BONUS_LIST_SUCCESS", payload: data.bonuses });
+        const bonuses: EmployeeBonusItem[] = data.bonuses || [];
+        dispatch({ type: "BONUS_LIST_SUCCESS", payload: bonuses });
+
+        if (bonuses.length === 1) {
+          dispatch({ type: "HIDE_MODAL", payload: "showBonusListModal" });
+          dispatch({ type: "OPEN_BONUS_DETAIL", payload: bonuses[0] });
+        }
       } else {
         dispatch({
           type: "BONUS_LIST_ERROR",

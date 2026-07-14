@@ -37,7 +37,7 @@ export function detectColumnByCandidates(
 }
 
 export function parseAmount(raw: unknown): number | null {
-  if (isEmptyCell(raw)) return null;
+  if (isEmptyCell(raw)) return 0;
   if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
   const cleaned = String(raw)
     .trim()

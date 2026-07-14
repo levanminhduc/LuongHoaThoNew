@@ -121,10 +121,11 @@ describe("parseAmount", () => {
     expect(parseAmount("5.000.000 ₫")).toBeNull();
   });
 
-  it("returns null for empty cells", () => {
-    expect(parseAmount("")).toBeNull();
-    expect(parseAmount(null)).toBeNull();
-    expect(parseAmount(undefined)).toBeNull();
+  it("treats empty cells as zero", () => {
+    expect(parseAmount("")).toBe(0);
+    expect(parseAmount("   ")).toBe(0);
+    expect(parseAmount(null)).toBe(0);
+    expect(parseAmount(undefined)).toBe(0);
   });
 });
 

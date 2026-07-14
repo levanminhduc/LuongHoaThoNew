@@ -34,9 +34,9 @@ export function BonusListModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Gift className="w-5 h-5 text-pink-600" />
-            Tiền Thưởng Của Bạn
+          <DialogTitle className="flex items-center gap-2 pr-6">
+            <Gift className="w-5 h-5 shrink-0 text-pink-600" />
+            <span className="truncate">Tiền Thưởng Của Bạn</span>
           </DialogTitle>
           <DialogDescription>
             Chọn một đợt thưởng để xem chi tiết và ký nhận
@@ -66,22 +66,25 @@ export function BonusListModal({
                 onClick={() => onSelectBonus(bonus)}
                 className="flex w-full items-center justify-between gap-3 rounded-lg border border-border p-4 text-left transition-colors hover:bg-muted"
               >
-                <div className="min-w-0 space-y-1">
+                <div className="min-w-0 flex-1 space-y-1">
                   <p className="truncate font-semibold text-foreground">
                     {bonus.bonus_title || bonus.bonus_type_label}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="truncate text-xs text-muted-foreground">
                     {bonus.bonus_type_label} • {bonus.bonus_period}
                   </p>
-                  <p className="text-sm font-bold text-foreground">
+                  <p className="truncate text-sm font-bold text-foreground">
                     {formatCurrency(bonus.amount)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <Badge variant={bonus.is_signed ? "default" : "secondary"}>
+                  <Badge
+                    variant={bonus.is_signed ? "default" : "secondary"}
+                    className="whitespace-nowrap"
+                  >
                     {bonus.is_signed ? "Đã ký" : "Chưa ký"}
                   </Badge>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </div>
               </button>
             ))}
