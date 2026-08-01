@@ -218,10 +218,19 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 - [ ] 14.3 `app/api/admin/payrolls/route.ts`
 - [~] 14.4 `payroll-export` — **1/2 chỗ**. Chỗ `management_signatures` (`:359`) đổi sang 3 cột `signature_type, signed_by_name, signed_at`: cả file chỉ đọc `?.signed_at` và `.signed_by_name` (dòng 466-487). Nhân tiện bỏ 2 field khai thừa trong `interface ManagementSignature` cục bộ — `full_name` và `signature_image_url` được khai nhưng **không dòng nào đọc**, và chúng cũng không nằm trong 11 cột thật của bảng.
 
-  Chỗ `:145` **chưa đổi**: đó là truy vấn _fallback_ phải trả cùng hình dạng với truy vấn chính ở `:56` (vốn là `*` cộng join `employees`). Đổi nó đòi liệt kê 42 cột `PAYROLL_FIELDS` cộng phần join — làm được về nguyên tắc, nhưng đây đúng là chỗ dữ liệu chảy thẳng vào file XLSX nên phải mở file so mới dám chốt
+  Chỗ `:56` và `:145` **đã thử đổi rồi hoàn tác** — cái thu được là phát hiện, không phải code:
+
+  Danh sách cột thì suy được: cột ghi ra sheet **bằng đúng** `VISIBLE_FIELDS` (`lib/excel/payroll-excel-builder.ts:105`), vì cùng hằng đó vừa dựng header (`:258`) vừa đọc giá trị (`:305`). Cộng `employee_id` và `is_signed` là 36 cột, đối chiếu DDL `payrolls` không cột nào lạ.
+
+  Nhưng khi select thành tường minh, kiểu row thành cụ thể và `tsc` lôi ra thứ `select("*")` đang che: **hai nhánh của route trả hình dạng khác nhau**. Truy vấn chính `:56` để `employees` là embed của PostgREST (kiểu suy ra là mảng), còn nhánh fallback `:145` tự ghép `mergedData` nên `employees` là **object hoặc null**. Trước đây cả hai cùng lọt vì `select("*")` cho kiểu lỏng. Vá đòi 2 chỗ ép kiểu cộng dời `interface PayrollRecord` lên trước — tức sửa cấu trúc một route 627 dòng chưa từng smoke test, đổi lấy việc bớt khoảng 24 cột payload.
+
+  Không đáng khi chưa mở được file XLSX so. **Ghi lại để lần sau khỏi thử lại**: việc cần làm trước không phải bỏ `select("*")`, mà là cho hai nhánh cùng một hình dạng.
 
 - [x] 14.5 `bulk-payroll-export` — `management_signatures` đổi sang 3 cột. `interface ManagementSig` trong chính file (`:38-41`) khai đúng `signed_by_name?` và `signed_at?`, cộng `signature_type` dùng làm khoá ở `:311`
-- [ ] 14.6 `app/api/admin/attendance-export/route.ts` (2 chỗ)
+- [x] 14.6 `attendance-export` — cả 2 chỗ. `attendance_monthly` 8 cột, `attendance_daily` 6 cột, danh sách rút cơ học bằng regex `m\.([a-z0-9_]+)` / `d\.([a-z0-9_]+)` trên chính file; không có spread, không `Object.keys` nên tập đó là đủ.
+
+  **File này có lưới an toàn ở mức biên dịch** (khác `payroll-export`, xem 14.4): dòng 361 dùng `(typeof monthlyData)[0]` làm kiểu, nên select tường minh làm kiểu row thành cụ thể. Kiểm chứng: bỏ thử `sick_days` và `daily_records_json` khỏi hằng → `tsc` báo đúng 2 cột đó ở 4 dòng (157, 304×3). Tức danh sách 8 cột là đủ **và** không thừa
+
 - [ ] 14.7 `app/api/admin/payroll/audit/[id]/route.ts`
 - [x] 14.8 `update-management-signature-date` — `select("*")` → `select("id")`. Toàn file chỉ đọc **duy nhất** `existing.id` (grep `existing\.[a-z_]*` ra đúng 1 kết quả), phần còn lại của bản ghi chưa từng được dùng
 - [x] 14.9 `column-aliases/[id]` — liệt kê đúng 9 field của `interface ColumnAlias` (`lib/column-alias-config.ts:6-16`), vì kết quả được gán thẳng vào `ApiResponse<ColumnAlias>`

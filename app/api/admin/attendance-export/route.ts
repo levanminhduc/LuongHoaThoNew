@@ -13,6 +13,12 @@ import {
 import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 
+const ATTENDANCE_MONTHLY_SELECT =
+  "employee_id, source_file, total_days, total_hours, total_ot_hours, total_meal_ot_hours, sick_days, daily_records_json";
+
+const ATTENDANCE_DAILY_SELECT =
+  "employee_id, work_date, check_in_time, check_out_time, working_units, overtime_units";
+
 interface ExportRequestBody {
   period_year: number;
   period_month: number;
@@ -49,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     let monthlyQuery = supabase
       .from("attendance_monthly")
-      .select("*")
+      .select(ATTENDANCE_MONTHLY_SELECT)
       .eq("period_year", period_year)
       .eq("period_month", period_month);
 
@@ -312,7 +318,7 @@ export async function POST(request: NextRequest) {
       if (fallbackEmployeeIds.length > 0) {
         const { data: fallbackDailyData } = await supabase
           .from("attendance_daily")
-          .select("*")
+          .select(ATTENDANCE_DAILY_SELECT)
           .eq("period_year", period_year)
           .eq("period_month", period_month)
           .in("employee_id", fallbackEmployeeIds)
