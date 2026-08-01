@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { hasStoredSession } from "@/lib/auth/secure-session";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -119,7 +117,6 @@ export default function PayrollImportExportPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
 
-  const router = useRouter();
   const { configurations, defaultConfig } = useMappingConfig();
   const importPayrollMutation = useImportPayrollMutation();
   const payrollExportTemplateMutation = usePayrollExportTemplateMutation();
@@ -129,14 +126,7 @@ export default function PayrollImportExportPage() {
   const exportLoading =
     payrollExportTemplateMutation.isPending || aliasTemplateMutation.isPending;
 
-  // Auto-load configurations
   useAutoLoadConfigurations();
-
-  useEffect(() => {
-    if (!hasStoredSession()) {
-      router.push("/admin/login");
-    }
-  }, [router]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

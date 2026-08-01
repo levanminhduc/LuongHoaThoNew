@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { hasStoredSession } from "@/lib/auth/secure-session";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -35,7 +33,6 @@ import { BonusImportGuide } from "./components/bonus-import-guide";
 type ImportStatus = "idle" | "importing" | "complete" | "error";
 
 export default function BonusImportPage() {
-  const router = useRouter();
   const bonusImportMutation = useBonusImportMutation();
   const bonusTemplateMutation = useDownloadTemplateMutation("bonus");
 
@@ -51,12 +48,6 @@ export default function BonusImportPage() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BonusImportResult | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
-
-  useEffect(() => {
-    if (!hasStoredSession()) {
-      router.push("/admin/login");
-    }
-  }, [router]);
 
   const bonusPeriodError = useMemo(() => {
     if (!bonusPeriod) return null;

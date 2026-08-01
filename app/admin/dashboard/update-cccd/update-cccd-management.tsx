@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { hasStoredSession } from "@/lib/auth/secure-session";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -53,12 +52,6 @@ export function UpdateCCCDManagement() {
   const [pendingCCCD, setPendingCCCD] = useState("");
   const updateCccdMutation = useUpdateCccdMutation();
   const isUpdating = updateCccdMutation.isPending;
-
-  useEffect(() => {
-    if (!hasStoredSession()) {
-      router.push("/admin/login");
-    }
-  }, [router]);
 
   const handleEmployeeSelect = (employee: Employee) => {
     setSelectedEmployee(employee);

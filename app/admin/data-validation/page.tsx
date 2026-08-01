@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import {
   Card,
   CardContent,
@@ -32,7 +32,7 @@ import {
   Calendar,
   Database,
 } from "lucide-react";
-import { Spinner } from "@/components/ui/spinner";
+import { StatsWithTableSkeleton } from "@/components/patterns/skeleton-patterns";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
@@ -63,6 +63,7 @@ interface ValidationData {
 
 export default function DataValidationPage() {
   const router = useRouter();
+  const { role } = useAdminSession();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<ValidationData | null>(null);
@@ -72,19 +73,14 @@ export default function DataValidationPage() {
   const monthOptions = getRecentMonthOptions(13);
 
   useEffect(() => {
-    void (async () => {
-      const session = await getSession<{ role?: string }>();
-
-      if (!session?.user || session.user.role !== "admin") {
-        router.push("/admin/login");
-        return;
-      }
-
-      if (!selectedMonth) {
-        setSelectedMonth(getCurrentMonth());
-      }
-    })();
-  }, [router, selectedMonth]);
+    if (role !== "admin") {
+      router.replace("/admin/login");
+      return;
+    }
+    if (!selectedMonth) {
+      setSelectedMonth(getCurrentMonth());
+    }
+  }, [role, router, selectedMonth]);
 
   useEffect(() => {
     if (selectedMonth) {
@@ -156,12 +152,7 @@ export default function DataValidationPage() {
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex items-center space-x-2">
-            <Spinner size="lg" />
-            <span>Đang tải dữ liệu...</span>
-          </div>
-        </div>
+        <StatsWithTableSkeleton statsCount={4} rows={10} columns={5} />
       </div>
     );
   }

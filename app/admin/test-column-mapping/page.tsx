@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { hasStoredSession, getSessionToken } from "@/lib/auth/secure-session";
+import { useEffect, useState } from "react";
+import { getSessionToken } from "@/lib/auth/secure-session";
 import {
   Card,
   CardContent,
@@ -69,16 +68,10 @@ export default function TestColumnMappingPage() {
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
-    if (!hasStoredSession()) {
-      router.push("/admin/login");
-      return;
-    }
-
     loadAliases();
-  }, [router]);
+  }, []);
 
   const loadAliases = async () => {
     try {

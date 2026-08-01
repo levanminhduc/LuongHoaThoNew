@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, clearSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -58,11 +58,18 @@ interface PayrollRecord {
   import_status: string;
 }
 
+const NON_ADMIN_ROLE_ROUTES: Record<string, string> = {
+  truong_phong: "/manager/dashboard",
+  to_truong: "/supervisor/dashboard",
+  nhan_vien: "/employee/dashboard",
+};
+
 export function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [filteredPayrolls, setFilteredPayrolls] = useState<PayrollRecord[]>([]);
   const router = useRouter();
+  const { role } = useAdminSession();
   const dashboardQuery = useDashboardStatsQuery();
   const syncTemplateMutation = useSyncTemplateMutation();
   const logout = useLogout();
@@ -80,32 +87,9 @@ export function AdminDashboard() {
   };
 
   useEffect(() => {
-    void (async () => {
-      const session = await getSession<{ role?: string }>();
-
-      if (!session?.user) {
-        clearSession();
-        router.push("/admin/login");
-        return;
-      }
-
-      if (session.user.role !== "admin") {
-        switch (session.user.role) {
-          case "truong_phong":
-            router.push("/manager/dashboard");
-            break;
-          case "to_truong":
-            router.push("/supervisor/dashboard");
-            break;
-          case "nhan_vien":
-            router.push("/employee/dashboard");
-            break;
-          default:
-            router.push("/admin/login");
-        }
-      }
-    })();
-  }, [router]);
+    if (role === "admin") return;
+    router.replace(NON_ADMIN_ROLE_ROUTES[role] ?? "/admin/login");
+  }, [role, router]);
 
   useEffect(() => {
     if (!dashboardQuery.error) return;

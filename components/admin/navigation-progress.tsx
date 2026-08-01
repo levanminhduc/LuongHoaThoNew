@@ -1,39 +1,38 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useNavigationPending } from "@/components/admin/navigation-pending-context";
 
 export function NavigationProgress() {
-  const pathname = usePathname();
-  const [isPending] = useTransition();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const { isPending } = useNavigationPending();
+  const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    setIsNavigating(true);
-    setProgress(0);
-
-    const timer1 = setTimeout(() => setProgress(30), 50);
-    const timer2 = setTimeout(() => setProgress(60), 150);
-    const timer3 = setTimeout(() => setProgress(80), 300);
-    const timer4 = setTimeout(() => {
+    if (!isPending) {
+      if (!visible) return;
       setProgress(100);
-      setTimeout(() => {
-        setIsNavigating(false);
+      const done = setTimeout(() => {
+        setVisible(false);
         setProgress(0);
       }, 200);
-    }, 400);
+      return () => clearTimeout(done);
+    }
 
+    setVisible(true);
+    setProgress(15);
+    const t1 = setTimeout(() => setProgress(45), 100);
+    const t2 = setTimeout(() => setProgress(70), 300);
+    const t3 = setTimeout(() => setProgress(85), 700);
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
-  }, [pathname]);
+  }, [isPending, visible]);
 
-  if (!isNavigating && !isPending) return null;
+  if (!visible) return null;
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100] h-1">

@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { getSessionUser } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,16 +49,7 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const logout = useLogout();
-  const [currentRole, setCurrentRole] = useState("admin");
-
-  useEffect(() => {
-    void (async () => {
-      const user = await getSessionUser<{ role?: string }>();
-      if (user?.role) {
-        setCurrentRole(user.role);
-      }
-    })();
-  }, []);
+  const { role: currentRole } = useAdminSession();
 
   const adminHref =
     currentRole === "van_phong"
@@ -69,7 +59,7 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
   const pageTitle = title || pathTitleMap[pathname] || "Admin";
 
   return (
-    <header className="sticky top-8 sm:top-9 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
+    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="h-6" />
 

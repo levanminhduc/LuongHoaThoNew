@@ -35,6 +35,7 @@ import {
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { useAttendanceEmployeesQuery } from "@/lib/hooks/use-attendance";
 import { useAttendanceExportMutation } from "@/lib/hooks/use-bulk-export";
+import { TableSkeleton } from "@/components/patterns/skeleton-patterns";
 import type { AttendanceEmployee } from "@/lib/hooks/use-attendance";
 
 export default function AttendanceListPage() {
@@ -353,9 +354,7 @@ export default function AttendanceListPage() {
           )}
 
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
+            <TableSkeleton rows={8} columns={8} />
           ) : (
             <div className="overflow-x-auto">
               <VirtualizedTable

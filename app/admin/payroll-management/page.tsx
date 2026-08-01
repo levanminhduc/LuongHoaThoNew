@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { hasStoredSession } from "@/lib/auth/secure-session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Settings, Shield, CheckCircle, AlertTriangle } from "lucide-react";
-import { Spinner } from "@/components/ui/spinner";
+import { FormSkeleton } from "@/components/patterns/skeleton-patterns";
 import { EmployeeSearch } from "./components/EmployeeSearch";
 import { PayrollEditForm } from "./components/PayrollEditForm";
 import { AuditTrail } from "./components/AuditTrail";
@@ -21,7 +19,6 @@ import {
 } from "@/lib/hooks/use-payroll";
 
 export default function PayrollManagementPage() {
-  const router = useRouter();
   const [selectedEmployee, setSelectedEmployee] =
     useState<PayrollSearchResult | null>(null);
   const [payrollData, setPayrollData] = useState<PayrollData | null>(null);
@@ -33,12 +30,6 @@ export default function PayrollManagementPage() {
   const updatePayrollMutation = useUpdatePayrollMutation<PayrollData>();
   const loading = payrollDetailQuery.isFetching;
   const saving = updatePayrollMutation.isPending;
-
-  useEffect(() => {
-    if (!hasStoredSession()) {
-      router.push("/admin");
-    }
-  }, [router]);
 
   const handleEmployeeSelect = async (employee: PayrollSearchResult) => {
     setSelectedEmployee(employee);
@@ -134,14 +125,9 @@ export default function PayrollManagementPage() {
 
       {/* Loading State */}
       {loading && (
-        <Card className="mb-8">
-          <CardContent className="p-8 text-center">
-            <div className="flex justify-center py-4">
-              <Spinner size="lg" />
-            </div>
-            <p className="text-gray-600">Đang tải dữ liệu lương...</p>
-          </CardContent>
-        </Card>
+        <div className="mb-8">
+          <FormSkeleton fields={8} />
+        </div>
       )}
 
       {/* Main Content Grid */}

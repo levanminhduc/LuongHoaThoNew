@@ -2,11 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  getSession,
-  clearSession,
-  hasStoredSession,
-} from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import {
   Card,
   CardContent,
@@ -36,6 +32,7 @@ type PayrollType = "monthly" | "t13";
 
 export default function BulkExportPage() {
   const router = useRouter();
+  const { role } = useAdminSession();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [payrollType, setPayrollType] = useState<PayrollType>("monthly");
   const [salaryMonth, setSalaryMonth] = useState(() => {
@@ -61,20 +58,10 @@ export default function BulkExportPage() {
   }, [departmentsQuery.data]);
 
   useEffect(() => {
-    void (async () => {
-      const session = await getSession<{ role?: string }>();
-
-      if (!session?.user) {
-        clearSession();
-        router.push("/admin/login");
-        return;
-      }
-
-      if (session.user.role !== "admin") {
-        router.push("/admin/login");
-      }
-    })();
-  }, [router]);
+    if (role !== "admin") {
+      router.replace("/admin/login");
+    }
+  }, [role, router]);
 
   useEffect(() => {
     if (hasInitializedDepartments || departments.length === 0) return;
@@ -109,11 +96,6 @@ export default function BulkExportPage() {
 
   async function handleExport() {
     setExportError(null);
-
-    if (!hasStoredSession()) {
-      router.push("/admin/login");
-      return;
-    }
 
     try {
       await bulkExportMutation.mutateAsync({

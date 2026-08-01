@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, clearSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import { BulkSignatureSection } from "@/components/admin/BulkSignatureSection";
 import { UpdateSignatureDateDialog } from "@/components/admin/UpdateSignatureDateDialog";
 import {
@@ -13,36 +13,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+const NON_ADMIN_ROLE_ROUTES: Record<string, string> = {
+  truong_phong: "/manager/dashboard",
+  to_truong: "/supervisor/dashboard",
+  nhan_vien: "/employee/dashboard",
+};
+
 export default function BulkSignaturePage() {
   const router = useRouter();
+  const { role } = useAdminSession();
 
   useEffect(() => {
-    void (async () => {
-      const session = await getSession<{ role?: string }>();
-
-      if (!session?.user) {
-        clearSession();
-        router.push("/admin/login");
-        return;
-      }
-
-      if (session.user.role !== "admin") {
-        switch (session.user.role) {
-          case "truong_phong":
-            router.push("/manager/dashboard");
-            break;
-          case "to_truong":
-            router.push("/supervisor/dashboard");
-            break;
-          case "nhan_vien":
-            router.push("/employee/dashboard");
-            break;
-          default:
-            router.push("/admin/login");
-        }
-      }
-    })();
-  }, [router]);
+    if (role === "admin") return;
+    router.replace(NON_ADMIN_ROLE_ROUTES[role] ?? "/admin/login");
+  }, [role, router]);
 
   return (
     <div className="space-y-4 sm:space-y-6">

@@ -6,6 +6,8 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { NavigationProgress } from "@/components/admin/navigation-progress";
 import { AdminPrefetch } from "@/components/admin/admin-prefetch";
+import { AdminSessionProvider } from "@/components/admin/admin-session-provider";
+import { NavigationPendingProvider } from "@/components/admin/navigation-pending-context";
 
 const EXCLUDED_PATHS = ["/admin/login"];
 
@@ -25,14 +27,18 @@ export default function AdminLayout({
   }
 
   return (
-    <SidebarProvider>
-      <NavigationProgress />
-      <AdminPrefetch />
-      <AdminSidebar />
-      <SidebarInset>
-        <AdminHeader />
-        <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <AdminSessionProvider>
+      <NavigationPendingProvider>
+        <SidebarProvider>
+          <NavigationProgress />
+          <AdminPrefetch />
+          <AdminSidebar />
+          <SidebarInset>
+            <AdminHeader />
+            <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
+      </NavigationPendingProvider>
+    </AdminSessionProvider>
   );
 }

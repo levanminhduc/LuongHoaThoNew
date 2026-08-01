@@ -1,8 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { hasStoredSession } from "@/lib/auth/secure-session";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -53,6 +51,7 @@ import {
   useUpdateColumnAliasMutation,
 } from "@/lib/hooks/use-column-mapping";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
+import { TableSkeleton } from "@/components/patterns/skeleton-patterns";
 
 interface AliasFormData {
   database_field: string;
@@ -71,7 +70,6 @@ const fieldFilterOptions = [
 ];
 
 export default function ColumnMappingConfigPage() {
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showAliasDialog, setShowAliasDialog] = useState(false);
@@ -82,7 +80,6 @@ export default function ColumnMappingConfigPage() {
     confidence_score: 80,
   });
   const [selectedField, setSelectedField] = useState<string>("all");
-  const router = useRouter();
   const aliasFilters = useMemo(
     () => ({
       databaseField: selectedField !== "all" ? selectedField : undefined,
@@ -92,11 +89,8 @@ export default function ColumnMappingConfigPage() {
     }),
     [selectedField],
   );
-  const aliasesQuery = useColumnAliasesQuery(aliasFilters, isAuthorized);
-  const configurationsQuery = useMappingConfigurationsQuery(
-    { limit: 100 },
-    isAuthorized,
-  );
+  const aliasesQuery = useColumnAliasesQuery(aliasFilters);
+  const configurationsQuery = useMappingConfigurationsQuery({ limit: 100 });
   const createAliasMutation = useCreateColumnAliasMutation();
   const updateAliasMutation = useUpdateColumnAliasMutation();
   const deleteAliasMutation = useDeleteColumnAliasMutation();
@@ -109,15 +103,6 @@ export default function ColumnMappingConfigPage() {
     createAliasMutation.isPending ||
     updateAliasMutation.isPending ||
     deleteAliasMutation.isPending;
-
-  useEffect(() => {
-    if (!hasStoredSession()) {
-      router.push("/admin/login");
-      return;
-    }
-
-    setIsAuthorized(true);
-  }, [router]);
 
   const handleCreateAlias = async () => {
     if (!aliasForm.database_field || !aliasForm.alias_name) {
@@ -324,6 +309,10 @@ export default function ColumnMappingConfigPage() {
               </div>
 
               {/* Aliases Table */}
+              {aliasesQuery.isPending ? (
+                <TableSkeleton rows={6} columns={6} />
+              ) : (
+              <>
               <div className="hidden md:block border rounded-lg">
                 <Table>
                   <TableHeader>
@@ -480,6 +469,8 @@ export default function ColumnMappingConfigPage() {
                   ))
                 )}
               </div>
+              </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -497,6 +488,9 @@ export default function ColumnMappingConfigPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {configurationsQuery.isPending ? (
+                <TableSkeleton rows={5} columns={5} />
+              ) : (
               <div className="border rounded-lg">
                 <Table>
                   <TableHeader>
@@ -569,6 +563,7 @@ export default function ColumnMappingConfigPage() {
                   </TableBody>
                 </Table>
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

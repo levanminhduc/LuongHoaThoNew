@@ -44,6 +44,7 @@ import EmployeeForm from "./components/EmployeeForm";
 import EmployeeAuditLogs from "./components/EmployeeAuditLogs";
 import SecurityNotice from "./components/SecurityNotice";
 import { Spinner } from "@/components/ui/spinner";
+import { TableSkeleton } from "@/components/patterns/skeleton-patterns";
 import {
   useEmployeeMutation,
   useEmployeesQuery,
@@ -485,9 +486,7 @@ export default function EmployeeManagementPage() {
             </div>
           )}
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Spinner size="lg" />
-            </div>
+            <TableSkeleton rows={8} columns={6} />
           ) : (
             <>
               {/* Mobile Card Layout */}

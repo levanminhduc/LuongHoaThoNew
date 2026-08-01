@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, clearSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,7 +24,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Loader2,
   Database,
   FileSpreadsheet,
   Users,
@@ -38,6 +37,7 @@ import {
   ArrowUpDown,
   Gift,
 } from "lucide-react";
+import { PageLoading } from "@/components/patterns/skeleton-patterns";
 import { EmployeeImportSection } from "@/components/employee-import-section";
 import { MonthSelector } from "../payroll-management/components/MonthSelector";
 import {
@@ -72,11 +72,19 @@ const formatDate = (dateString: string): string => {
   return formatVietnamTimestamp(dateString);
 };
 
+const NON_ADMIN_ROLE_ROUTES: Record<string, string> = {
+  van_phong: "/admin/employee-management",
+  truong_phong: "/manager/dashboard",
+  to_truong: "/supervisor/dashboard",
+  nhan_vien: "/employee/dashboard",
+};
+
 export function AdminDashboardV2() {
   const [message, setMessage] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const { role } = useAdminSession();
   const dashboardQuery = useDashboardStatsQuery();
   const loading = dashboardQuery.isLoading;
   const payrolls = useMemo(
@@ -93,35 +101,9 @@ export function AdminDashboardV2() {
   };
 
   useEffect(() => {
-    void (async () => {
-      const session = await getSession<{ role?: string }>();
-
-      if (!session?.user) {
-        clearSession();
-        router.push("/admin/login");
-        return;
-      }
-
-      if (session.user.role !== "admin") {
-        switch (session.user.role) {
-          case "van_phong":
-            router.push("/admin/employee-management");
-            break;
-          case "truong_phong":
-            router.push("/manager/dashboard");
-            break;
-          case "to_truong":
-            router.push("/supervisor/dashboard");
-            break;
-          case "nhan_vien":
-            router.push("/employee/dashboard");
-            break;
-          default:
-            router.push("/admin/login");
-        }
-      }
-    })();
-  }, [router]);
+    if (role === "admin") return;
+    router.replace(NON_ADMIN_ROLE_ROUTES[role] ?? "/admin/login");
+  }, [role, router]);
 
   useEffect(() => {
     if (!dashboardQuery.error) return;
@@ -143,11 +125,7 @@ export function AdminDashboardV2() {
   }, [selectedMonth, payrolls, searchQuery]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <PageLoading variant="dashboard" />;
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import {
   Card,
   CardContent,
@@ -75,6 +75,7 @@ function PermissionsLoading() {
 function PermissionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { role } = useAdminSession();
   const departmentFilter = searchParams.get("department");
 
   const [error, setError] = useState<string | null>(null);
@@ -101,21 +102,10 @@ function PermissionsContent() {
     : null;
 
   useEffect(() => {
-    checkAuthentication();
-  }, []);
-
-  const checkAuthentication = async () => {
-    const session = await getSession<{ role?: string }>();
-
-    if (!session?.user) {
-      router.push("/admin/login");
-      return;
+    if (role !== "admin") {
+      router.replace("/admin/dashboard");
     }
-
-    if (session.user.role !== "admin") {
-      router.push("/admin/dashboard");
-    }
-  };
+  }, [role, router]);
 
   const filteredPermissions = useMemo(() => {
     let filtered = permissions;

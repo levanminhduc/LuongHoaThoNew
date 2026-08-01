@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import {
   Card,
   CardContent,
@@ -23,14 +23,15 @@ import {
   UserCheck,
   AlertCircle,
 } from "lucide-react";
-import { Spinner } from "@/components/ui/spinner";
 import {
   useDepartmentPermissionsQuery,
   useDepartmentStatsQuery,
 } from "@/lib/hooks/use-departments";
+import { GridCardsSkeleton } from "@/components/patterns/skeleton-patterns";
 
 export default function DepartmentManagementPage() {
   const router = useRouter();
+  const { role } = useAdminSession();
   const [searchTerm, setSearchTerm] = useState("");
   const departmentsQuery = useDepartmentStatsQuery();
   const permissionsQuery = useDepartmentPermissionsQuery();
@@ -49,21 +50,10 @@ export default function DepartmentManagementPage() {
         : null;
 
   useEffect(() => {
-    checkAuthentication();
-  }, []);
-
-  const checkAuthentication = async () => {
-    const session = await getSession<{ role?: string }>();
-
-    if (!session?.user) {
-      router.push("/admin/login");
-      return;
+    if (role !== "admin") {
+      router.replace("/admin/dashboard");
     }
-
-    if (session.user.role !== "admin") {
-      router.push("/admin/dashboard");
-    }
-  };
+  }, [role, router]);
 
   const getPermissionCount = (department: string) => {
     return permissions.filter((p) => p.department === department && p.is_active)
@@ -84,11 +74,7 @@ export default function DepartmentManagementPage() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Spinner size="xl" />
-      </div>
-    );
+    return <GridCardsSkeleton statsCount={4} cardsCount={6} columns={3} />;
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import {
   Card,
   CardContent,
@@ -38,9 +38,9 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  Loader2,
   Network,
 } from "lucide-react";
+import { TableSkeleton } from "@/components/patterns/skeleton-patterns";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
@@ -67,6 +67,7 @@ interface Pagination {
 
 export default function PasswordResetHistoryPage() {
   const router = useRouter();
+  const { role } = useAdminSession();
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState<SecurityLog[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
@@ -86,22 +87,12 @@ export default function PasswordResetHistoryPage() {
   });
 
   useEffect(() => {
-    void (async () => {
-      const session = await getSession<{ role?: string }>();
-
-      if (!session?.user) {
-        router.push("/admin/login");
-        return;
-      }
-
-      if (session.user.role !== "admin") {
-        router.push("/admin/dashboard");
-        return;
-      }
-
-      loadData();
-    })();
-  }, [router, pagination.page]);
+    if (role !== "admin") {
+      router.replace("/admin/dashboard");
+      return;
+    }
+    loadData();
+  }, [role, router, pagination.page]);
 
   const loadData = async () => {
     try {
@@ -373,9 +364,7 @@ export default function PasswordResetHistoryPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-            </div>
+            <TableSkeleton rows={8} columns={7} />
           ) : logs.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />

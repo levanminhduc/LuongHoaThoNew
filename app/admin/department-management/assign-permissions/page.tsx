@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import type { FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getSession } from "@/lib/auth/secure-session";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
 import {
   Card,
   CardContent,
@@ -63,6 +63,7 @@ function AssignPermissionsLoading() {
 function AssignPermissionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { role } = useAdminSession();
   const preselectedDepartment = searchParams.get("department");
 
   const [error, setError] = useState<string | null>(null);
@@ -98,21 +99,10 @@ function AssignPermissionsContent() {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    checkAuthentication();
-  }, []);
-
-  const checkAuthentication = async () => {
-    const session = await getSession<{ role?: string }>();
-
-    if (!session?.user) {
-      router.push("/admin/login");
-      return;
+    if (role !== "admin") {
+      router.replace("/admin/dashboard");
     }
-
-    if (session.user.role !== "admin") {
-      router.push("/admin/dashboard");
-    }
-  };
+  }, [role, router]);
 
   const handleDepartmentToggle = (department: string, checked: boolean) => {
     if (checked) {
