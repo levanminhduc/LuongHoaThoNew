@@ -214,8 +214,14 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 > **Đính chính danh sách của nhóm 14 (đo lại 2026-08-01).** `grep 'select("\*")'` ra 41 hit, nhưng **15 trong số đó là `.select("*", { count: "exact", head: true })`** — query chỉ đếm, `head: true` nghĩa là PostgREST **không trả dòng nào**, nên `"*"` ở đó không tốn một byte payload nào và là cách viết chuẩn để đếm. Đổi chúng thành danh sách cột là công cốc, tệ hơn là dễ làm hỏng bộ đếm. Số hit thật sự cần xử lý là **~20**, không phải 41. (Ngoại lệ cần chú ý: `bulk-signature-history:38`, `column-aliases:51`, `import-history:102` dùng `count: "exact"` **không có** `head` → có trả dòng, vẫn thuộc diện phải sửa.)
 
 - [x] 14.1 `lib/payroll/payroll-select.ts` (đã move ở nhóm 18) — **chưa thêm `PAYROLL_SELECT_DETAIL`**: hằng này chỉ có nghĩa khi biết chính xác cột nào UI chi tiết đọc, mà đó đúng là thứ cổng 9.3a đang chặn. Phần nhóm 14 làm được không cần dữ liệu thật đã làm ở 14.11, 14.15-14.17 (xem bên dưới), mỗi chỗ đều có nguồn chứng minh trong repo (mọi cột UI chi tiết cần) và `EMPLOYEE_SELECT_BASIC`
-- [ ] 14.2 `app/api/admin/payroll/[id]/route.ts`
-- [ ] 14.3 `app/api/admin/payrolls/route.ts`
+- [x] 14.2 `payroll/[id]` (nay ở `payroll-repository.findPayrollById`) — 42 cột = **allowlist `editableFields` ngay trong route** (40 cột, dòng 178-219) cộng `employee_id` và `salary_month` mà audit log cần. Tập này bị chặn cứng: `updates` từ client tuy là `z.record(z.string(), z.unknown())` nhưng route bỏ qua mọi key không nằm trong allowlist, nên `currentData[field]` không thể chạm cột nào ngoài 40 cột đó. Đối chiếu DDL: không cột nào lạ.
+
+  Sửa kèm: `currentData[field]` với `field: string` không index được vào kiểu cụ thể (`TS7053`). Thay bằng `Set<string>` cho phép kiểm tra và một `Record<string, unknown>` tường minh — đọc rõ hơn `Array.includes` cũ, và tra Set nhanh hơn duyệt mảng 40 phần tử mỗi vòng lặp
+
+- [~] 14.3 `app/api/admin/payrolls` — **không đổi select, vì phát hiện endpoint này không có caller nào.** Không nằm trong `lib/api/endpoints.ts`, và `grep "admin/payrolls"` toàn repo ngoài chính file route trả về **rỗng**.
+
+  Đây là trường hợp thứ hai giống `check-password-status` (7.7) và `generate-alias-template` (đã xoá): endpoint mồ côi. Không tự xoá vì có thể có caller ngoài repo. **Cần bạn quyết cùng lượt với 7.7** — nếu bỏ thì `select("*")` ở đây biến mất theo, khỏi phải liệt kê cột cho một endpoint không ai gọi
+
 - [~] 14.4 `payroll-export` — **1/2 chỗ**. Chỗ `management_signatures` (`:359`) đổi sang 3 cột `signature_type, signed_by_name, signed_at`: cả file chỉ đọc `?.signed_at` và `.signed_by_name` (dòng 466-487). Nhân tiện bỏ 2 field khai thừa trong `interface ManagementSignature` cục bộ — `full_name` và `signature_image_url` được khai nhưng **không dòng nào đọc**, và chúng cũng không nằm trong 11 cột thật của bảng.
 
   Chỗ `:56` và `:145` **đã thử đổi rồi hoàn tác** — cái thu được là phát hiện, không phải code:
@@ -231,7 +237,7 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   **File này có lưới an toàn ở mức biên dịch** (khác `payroll-export`, xem 14.4): dòng 361 dùng `(typeof monthlyData)[0]` làm kiểu, nên select tường minh làm kiểu row thành cụ thể. Kiểm chứng: bỏ thử `sick_days` và `daily_records_json` khỏi hằng → `tsc` báo đúng 2 cột đó ở 4 dòng (157, 304×3). Tức danh sách 8 cột là đủ **và** không thừa
 
-- [ ] 14.7 `app/api/admin/payroll/audit/[id]/route.ts`
+- [x] 14.7 `payroll/audit/[id]` (nay ở `payroll-repository.findPayrollAuditLogs`) — 9 cột, **bằng đúng `interface AuditLog` khai ở dòng 19-28 của chính route**. Không phải suy từ cách dùng mà đọc thẳng từ type người viết trước đã đặt
 - [x] 14.8 `update-management-signature-date` — `select("*")` → `select("id")`. Toàn file chỉ đọc **duy nhất** `existing.id` (grep `existing\.[a-z_]*` ra đúng 1 kết quả), phần còn lại của bản ghi chưa từng được dùng
 - [x] 14.9 `column-aliases/[id]` — liệt kê đúng 9 field của `interface ColumnAlias` (`lib/column-alias-config.ts:6-16`), vì kết quả được gán thẳng vào `ApiResponse<ColumnAlias>`
 - [x] 14.10 `sync-template` — **41 cột**, danh sách rút **cơ học từ chính code** chứ không gõ tay: `re.findall(r"payroll\.([a-z0-9_]+)")` trên file đó. Đối chiếu tiếp 41 tên này với `scripts/supabase-setup/02-create-payrolls-table.sql` và danh sách select tường minh ở `departments/[departmentName]` — **không tên nào lạ**. Đây là chỗ rủi ro nhất của cả nhóm 14 vì `select("*")` trước đây nuốt lỗi im lặng (`payroll.cot_khong_ton_tai || 0` cho ra giá trị mặc định), còn select tường minh thì PostgREST trả lỗi cho cả endpoint

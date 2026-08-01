@@ -218,12 +218,15 @@ export async function PUT(
       "tien_luong_thuc_nhan_cuoi_ky",
     ];
 
+    const editableFieldSet = new Set<string>(editableFields);
+    const currentValues = currentData as Record<string, unknown>;
+
     for (const [field, newValue] of Object.entries(updates)) {
-      if (!editableFields.includes(field)) {
+      if (!editableFieldSet.has(field)) {
         continue; // Skip non-editable fields
       }
 
-      const oldValue = currentData[field];
+      const oldValue = currentValues[field];
 
       // Only update if value actually changed
       if (oldValue !== newValue) {
