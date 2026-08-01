@@ -43,3 +43,6 @@ auggie_shell.sh
 tests/
 .codex-review/runs/
 .claude/settings.local.json
+.codex/config.toml
+opencode.json
+.mcp.json
