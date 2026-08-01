@@ -374,6 +374,7 @@ export default function DepartmentDetailModalRefactored({
               {/* Year selector for T13 */}
               {payrollType === "t13" && (
                 <select
+                  aria-label="Chọn năm cho lương T13"
                   value={t13Year}
                   onChange={(e) => setT13Year(e.target.value)}
                   className="h-7 px-2 text-xs border rounded-md bg-background"
@@ -402,6 +403,7 @@ export default function DepartmentDetailModalRefactored({
                 />
               </Button>
               <Button
+                aria-label="Đóng"
                 variant="ghost"
                 size="sm"
                 onClick={onClose}

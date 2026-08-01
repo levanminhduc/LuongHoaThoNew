@@ -49,7 +49,12 @@ export function DeleteAlertDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>Hủy</AlertDialogCancel>
           <Button variant="destructive" onClick={onConfirm} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {loading && (
+              <Loader2
+                data-icon="inline-start"
+                className="mr-2 h-4 w-4 animate-spin"
+              />
+            )}
             Xóa
           </Button>
         </AlertDialogFooter>
@@ -116,7 +121,12 @@ export function ConfirmAlertDialog({
             onClick={onConfirm}
             disabled={loading}
           >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {loading && (
+              <Loader2
+                data-icon="inline-start"
+                className="mr-2 h-4 w-4 animate-spin"
+              />
+            )}
             {confirmLabel}
           </Button>
         </AlertDialogFooter>

@@ -248,6 +248,7 @@ export function ExportConfigurationDialog({
                   {/* Export Type */}
                   <div className="flex items-center space-x-2">
                     <Switch
+                      aria-label="Bao gồm dữ liệu thực tế"
                       checked={includeData}
                       onCheckedChange={setIncludeData}
                     />
@@ -306,9 +307,15 @@ export function ExportConfigurationDialog({
                             "Chọn cấu hình..."
                           )}
                           {isConfigsLoading ? (
-                            <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+                            <Loader2
+                              data-icon="inline-end"
+                              className="h-4 w-4 shrink-0 animate-spin opacity-50"
+                            />
                           ) : (
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            <ChevronsUpDown
+                              data-icon="inline-end"
+                              className="h-4 w-4 shrink-0 opacity-50"
+                            />
                           )}
                         </Button>
                       </PopoverTrigger>
@@ -461,6 +468,7 @@ export function ExportConfigurationDialog({
                             className="flex items-start space-x-2 py-1"
                           >
                             <Switch
+                              aria-label={`Chọn trường ${field}`}
                               checked={isSelected}
                               onCheckedChange={(checked) =>
                                 handleFieldToggle(field, checked)
@@ -632,7 +640,10 @@ export function ExportConfigurationDialog({
                   onClick={handleGenerateTemplate}
                   className="flex items-center gap-2 h-9"
                 >
-                  <FileSpreadsheet className="h-4 w-4" />
+                  <FileSpreadsheet
+                    data-icon="inline-start"
+                    className="h-4 w-4"
+                  />
                   Generate Template
                 </Button>
               )}
@@ -641,7 +652,7 @@ export function ExportConfigurationDialog({
                 disabled={selectedFields.length === 0}
                 className="flex items-center gap-2 h-9"
               >
-                <Download className="h-4 w-4" />
+                <Download data-icon="inline-start" className="h-4 w-4" />
                 Export Excel
               </Button>
             </div>

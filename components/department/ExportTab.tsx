@@ -78,7 +78,7 @@ export default function ExportTab({
               disabled={exporting}
               className="flex items-center gap-2 w-full h-10 sm:h-9 touch-manipulation"
             >
-              <Download className="w-4 h-4" />
+              <Download data-icon="inline-start" className="w-4 h-4" />
               <span className="hidden sm:inline">
                 {exporting ? "Đang xuất..." : "Xuất Excel Đầy Đủ"}
               </span>
@@ -95,7 +95,7 @@ export default function ExportTab({
                 className="flex items-center gap-2 h-9 sm:h-8 touch-manipulation"
                 size="sm"
               >
-                <Download className="w-3 h-3" />
+                <Download data-icon="inline-start" className="w-3 h-3" />
                 <span className="hidden sm:inline">Tóm Tắt</span>
                 <span className="sm:hidden">TT</span>
               </Button>
@@ -106,7 +106,7 @@ export default function ExportTab({
                 className="flex items-center gap-2 h-9 sm:h-8 touch-manipulation"
                 size="sm"
               >
-                <Download className="w-3 h-3" />
+                <Download data-icon="inline-start" className="w-3 h-3" />
                 <span className="hidden sm:inline">Nhân Viên</span>
                 <span className="sm:hidden">NV</span>
               </Button>
@@ -129,7 +129,10 @@ export default function ExportTab({
               className="justify-start h-10 sm:h-9 touch-manipulation"
               onClick={() => onQuickAction("unsigned")}
             >
-              <FileCheck className="w-4 h-4 mr-2 flex-shrink-0" />
+              <FileCheck
+                data-icon="inline-start"
+                className="w-4 h-4 flex-shrink-0"
+              />
               <span className="truncate">
                 <span className="hidden sm:inline">
                   Xem nhân viên chưa ký (
@@ -146,7 +149,10 @@ export default function ExportTab({
               className="justify-start h-10 sm:h-9 touch-manipulation"
               onClick={() => onQuickAction("salary-desc")}
             >
-              <DollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
+              <DollarSign
+                data-icon="inline-start"
+                className="w-4 h-4 flex-shrink-0"
+              />
               <span className="truncate">
                 <span className="hidden sm:inline">
                   Sắp xếp theo lương cao nhất
@@ -160,7 +166,10 @@ export default function ExportTab({
               className="justify-start h-10 sm:h-9 touch-manipulation"
               onClick={() => onQuickAction("signed")}
             >
-              <Users className="w-4 h-4 mr-2 flex-shrink-0" />
+              <Users
+                data-icon="inline-start"
+                className="w-4 h-4 flex-shrink-0"
+              />
               <span className="truncate">
                 <span className="hidden sm:inline">
                   Xem nhân viên đã ký ({stats.signedCount})

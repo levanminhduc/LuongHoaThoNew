@@ -140,6 +140,7 @@ export default function SignatureHistoryTable({
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
+                    aria-label="Tìm kiếm theo tên người ký"
                     placeholder="Tên người ký..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -151,7 +152,7 @@ export default function SignatureHistoryTable({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Loại chữ ký:</label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Lọc theo loại chữ ký">
                     <SelectValue placeholder="Tất cả" />
                   </SelectTrigger>
                   <SelectContent>
@@ -168,6 +169,7 @@ export default function SignatureHistoryTable({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tháng:</label>
                 <Combobox
+                  aria-label="Chọn tháng lương"
                   options={[
                     { value: "", label: "Tất cả" },
                     ...getUniqueMonths().map((month) => ({
@@ -188,7 +190,7 @@ export default function SignatureHistoryTable({
                 <label className="text-sm font-medium">Hành động:</label>
                 <div className="flex gap-2">
                   <Button onClick={handleFilterChange} size="sm">
-                    <Filter className="h-4 w-4 mr-1" />
+                    <Filter data-icon="inline-start" className="h-4 w-4 mr-1" />
                     Lọc
                   </Button>
                   <Button onClick={clearFilters} variant="outline" size="sm">
@@ -289,7 +291,7 @@ export default function SignatureHistoryTable({
                 onClick={() => onPageChange?.(pagination.current_page - 1)}
                 disabled={pagination.current_page <= 1}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft data-icon="inline-start" className="h-4 w-4" />
                 Trước
               </Button>
 
@@ -324,7 +326,7 @@ export default function SignatureHistoryTable({
                 disabled={pagination.current_page >= pagination.total_pages}
               >
                 Sau
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight data-icon="inline-end" className="h-4 w-4" />
               </Button>
             </div>
           </div>

@@ -258,7 +258,12 @@ export default function EmployeeManagementModal({
                 Quản lý thông tin nhân viên trong hệ thống
               </DialogDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Đóng"
+              onClick={onClose}
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -274,7 +279,7 @@ export default function EmployeeManagementModal({
                 >
                   <DialogTrigger asChild>
                     <Button>
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus data-icon="inline-start" className="w-4 h-4" />
                       Thêm Nhân Viên
                     </Button>
                   </DialogTrigger>
@@ -343,6 +348,7 @@ export default function EmployeeManagementModal({
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
+                      aria-label="Tìm kiếm nhân viên"
                       placeholder="Tìm kiếm theo mã NV, tên, hoặc SĐT..."
                       value={search}
                       onChange={(e) => handleSearch(e.target.value)}
@@ -350,6 +356,7 @@ export default function EmployeeManagementModal({
                     />
                   </div>
                   <Combobox
+                    aria-label="Lọc theo phòng ban"
                     options={departmentOptions}
                     value={selectedDepartment}
                     onValueChange={(value) =>
@@ -364,7 +371,10 @@ export default function EmployeeManagementModal({
                     value={selectedRole}
                     onValueChange={(value) => handleFilterChange("role", value)}
                   >
-                    <SelectTrigger className="w-full sm:w-48">
+                    <SelectTrigger
+                      aria-label="Lọc theo chức vụ"
+                      className="w-full sm:w-48"
+                    >
                       <SelectValue placeholder="Chọn chức vụ" />
                     </SelectTrigger>
                     <SelectContent>
@@ -415,7 +425,10 @@ export default function EmployeeManagementModal({
                                         className="h-9 w-9 p-0 touch-manipulation"
                                         title="Chỉnh sửa"
                                       >
-                                        <Edit className="w-4 h-4" />
+                                        <Edit
+                                          data-icon="inline-start"
+                                          className="w-4 h-4"
+                                        />
                                       </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
@@ -450,7 +463,10 @@ export default function EmployeeManagementModal({
                                         className="h-9 w-9 p-0 touch-manipulation"
                                         title="Lịch sử"
                                       >
-                                        <FileText className="w-4 h-4" />
+                                        <FileText
+                                          data-icon="inline-start"
+                                          className="w-4 h-4"
+                                        />
                                       </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-4xl">
@@ -491,7 +507,10 @@ export default function EmployeeManagementModal({
                                       {deletingId === employee.employee_id ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
                                       ) : (
-                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                        <Trash2
+                                          data-icon="inline-start"
+                                          className="w-4 h-4 text-red-600"
+                                        />
                                       )}
                                     </Button>
                                   )}
@@ -629,13 +648,17 @@ export default function EmployeeManagementModal({
                                     <Dialog>
                                       <DialogTrigger asChild>
                                         <Button
+                                          aria-label={`Sửa nhân viên ${employee.employee_id}`}
                                           variant="outline"
                                           size="sm"
                                           onClick={() =>
                                             setEditingEmployee(employee)
                                           }
                                         >
-                                          <Edit className="w-4 h-4" />
+                                          <Edit
+                                            data-icon="inline-start"
+                                            className="w-4 h-4"
+                                          />
                                         </Button>
                                       </DialogTrigger>
                                       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
@@ -662,13 +685,17 @@ export default function EmployeeManagementModal({
                                     <Dialog>
                                       <DialogTrigger asChild>
                                         <Button
+                                          aria-label={`Xem nhật ký nhân viên ${employee.employee_id}`}
                                           variant="outline"
                                           size="sm"
                                           onClick={() =>
                                             setAuditLogsEmployee(employee)
                                           }
                                         >
-                                          <FileText className="w-4 h-4" />
+                                          <FileText
+                                            data-icon="inline-start"
+                                            className="w-4 h-4"
+                                          />
                                         </Button>
                                       </DialogTrigger>
                                       <DialogContent className="sm:max-w-4xl">
@@ -707,7 +734,10 @@ export default function EmployeeManagementModal({
                                         {deletingId === employee.employee_id ? (
                                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
                                         ) : (
-                                          <Trash2 className="w-4 h-4 text-red-600" />
+                                          <Trash2
+                                            data-icon="inline-start"
+                                            className="w-4 h-4 text-red-600"
+                                          />
                                         )}
                                       </Button>
                                     )}

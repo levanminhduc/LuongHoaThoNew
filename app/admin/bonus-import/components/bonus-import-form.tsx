@@ -70,9 +70,19 @@ export function BonusImportForm({
             onChange={(event) => onBonusPeriodChange(event.target.value)}
             placeholder="2026-Q2"
             disabled={disabled}
+            aria-invalid={bonusPeriodError ? true : undefined}
+            aria-describedby={
+              bonusPeriodError ? "bonus-period-error" : undefined
+            }
           />
           {bonusPeriodError && (
-            <p className="text-xs text-red-600">{bonusPeriodError}</p>
+            <p
+              id="bonus-period-error"
+              role="alert"
+              className="text-xs text-red-600"
+            >
+              {bonusPeriodError}
+            </p>
           )}
         </div>
 

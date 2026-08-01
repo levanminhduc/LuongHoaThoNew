@@ -110,7 +110,7 @@ export default function DirectorDashboard() {
               onClick={() => setShowOverviewModal(true)}
               className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
             >
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye data-icon="inline-start" className="h-4 w-4" />
               Tổng Quan
             </Button>
             <Button
@@ -120,7 +120,10 @@ export default function DirectorDashboard() {
               disabled={!monthStatus}
               className="w-full border-red-200 hover:bg-red-50 sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
             >
-              <UserX className="mr-2 h-4 w-4 text-red-600" />
+              <UserX
+                data-icon="inline-start"
+                className="h-4 w-4 text-red-600"
+              />
               <span className="text-red-700">Chưa Ký</span>
               {monthStatus && (
                 <Badge className="ml-2 bg-red-600 text-white">
@@ -131,6 +134,7 @@ export default function DirectorDashboard() {
             </Button>
           </div>
           <Combobox
+            aria-label="Chọn tháng lương"
             options={getRecentMonthOptions()}
             value={selectedMonth}
             onValueChange={setSelectedMonth}
@@ -301,12 +305,18 @@ export default function DirectorDashboard() {
                     >
                       {isSigning ? (
                         <>
-                          <Clock className="h-5 w-5 mr-2 animate-spin" />
+                          <Clock
+                            data-icon="inline-start"
+                            className="h-5 w-5 animate-spin"
+                          />
                           Đang xử lý...
                         </>
                       ) : (
                         <>
-                          <PenTool className="h-5 w-5 mr-2" />
+                          <PenTool
+                            data-icon="inline-start"
+                            className="h-5 w-5"
+                          />
                           Ký Xác Nhận Giám Đốc
                         </>
                       )}

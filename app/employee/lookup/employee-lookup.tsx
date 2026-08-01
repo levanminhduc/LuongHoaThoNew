@@ -99,7 +99,7 @@ export function EmployeeLookup() {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="relative isolate inline-flex h-5 w-5 items-center justify-center rounded-full border border-primary/45 bg-primary/10 text-primary shadow-[0_0_0_2px_rgba(37,99,235,0.08)] transition-[transform,background-color,color,box-shadow] [transition-duration:200ms] before:absolute before:inset-[-7px] before:-z-10 before:rounded-full before:border before:border-primary/40 before:content-[''] before:animate-lookup-guide-signal after:absolute after:inset-[-3px] after:-z-10 after:rounded-full after:bg-primary/15 after:content-[''] after:animate-lookup-guide-glow animate-lookup-guide-pop hover:scale-[1.05] hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 active:scale-[0.96] motion-reduce:animate-none motion-reduce:before:animate-none motion-reduce:after:animate-none"
+                  className="relative isolate inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary/45 bg-primary/10 text-primary shadow-[0_0_0_2px_rgba(37,99,235,0.08)] transition-[transform,background-color,color,box-shadow] [transition-duration:200ms] before:absolute before:inset-[-7px] before:-z-10 before:rounded-full before:border before:border-primary/40 before:content-[''] before:animate-lookup-guide-signal after:absolute after:inset-[-3px] after:-z-10 after:rounded-full after:bg-primary/15 after:content-[''] after:animate-lookup-guide-glow animate-lookup-guide-pop hover:scale-[1.05] hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 active:scale-[0.96] motion-reduce:animate-none motion-reduce:before:animate-none motion-reduce:after:animate-none"
                   aria-label="Hướng dẫn nhập mã nhân viên"
                 >
                   <Info className="w-4 h-4" />
@@ -151,6 +151,10 @@ export function EmployeeLookup() {
                 onChange={handlers.handleEmployeeIdChange}
                 placeholder="Nhập mã nhân viên (VD: DB01234)"
                 required
+                minLength={3}
+                maxLength={32}
+                pattern="[A-Za-z0-9]+"
+                title="Mã nhân viên chỉ gồm chữ và số"
                 autoComplete="username"
               />
             </div>
@@ -168,6 +172,8 @@ export function EmployeeLookup() {
                   }
                   placeholder="Nhập mật khẩu hoặc số CCCD"
                   required
+                  minLength={6}
+                  maxLength={64}
                   autoComplete="current-password"
                 />
                 <button
@@ -224,12 +230,15 @@ export function EmployeeLookup() {
               <Button type="submit" className="flex-1" disabled={state.loading}>
                 {state.loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                     Đang tra cứu...
                   </>
                 ) : (
                   <>
-                    <Search className="mr-2 h-4 w-4" />
+                    <Search data-icon="inline-start" className="h-4 w-4" />
                     Tra Cứu Lương
                   </>
                 )}
@@ -269,7 +278,18 @@ export function EmployeeLookup() {
         </Link>
       </div>
 
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm"
+          >
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <span className="sr-only">Đang tải chi tiết lương...</span>
+          </div>
+        }
+      >
         {state.result && state.showDetailModal && (
           <PayrollDetailModal
             isOpen={state.showDetailModal}

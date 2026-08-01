@@ -208,6 +208,7 @@ export default function HighPrecisionDemo() {
                 <div className="space-y-2">
                   <Label htmlFor="field-select">Field Type</Label>
                   <Combobox
+                    aria-label="Chọn loại trường"
                     options={Object.keys(FIELD_PRECISION_CONFIG).map(
                       (field) => ({
                         value: field,

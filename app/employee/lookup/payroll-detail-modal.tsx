@@ -492,7 +492,7 @@ export function PayrollDetailModal({
               onClick={onClose}
               className="mx-auto h-10 w-full max-w-xs border-destructive/30 bg-background/95 px-4 text-sm font-semibold text-destructive shadow-[0_10px_24px_-18px_rgba(15,23,42,0.65)] backdrop-blur hover:bg-destructive/10 hover:text-destructive"
             >
-              <X className="mr-2 h-4 w-4" />
+              <X data-icon="inline-start" className="h-4 w-4" />
               Đóng Lại
             </Button>
           </DialogFooter>

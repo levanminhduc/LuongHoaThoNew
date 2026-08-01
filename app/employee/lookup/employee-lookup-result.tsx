@@ -128,7 +128,7 @@ export function EmployeeLookupResult({
                 onClick={onShowBonus}
                 className="min-h-9 gap-1.5 border border-amber-300/70 bg-[linear-gradient(135deg,#f59e0b_0%,#f97316_100%)] px-3 font-bold text-white shadow-[0_12px_26px_-14px_rgba(245,158,11,0.95),inset_0_1px_0_rgba(255,255,255,0.34)] transition-transform [transition-duration:200ms] hover:scale-[1.03] hover:bg-[linear-gradient(135deg,#f59e0b_0%,#f97316_100%)] hover:text-white hover:brightness-110 active:scale-[0.96]"
               >
-                <Gift className="h-4 w-4 shrink-0" />
+                <Gift data-icon="inline-start" className="h-4 w-4 shrink-0" />
                 <span>Thưởng</span>
               </Button>
 
@@ -296,12 +296,15 @@ export function EmployeeLookupResult({
                   >
                     {signingLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2
+                          data-icon="inline-start"
+                          className="h-4 w-4 animate-spin"
+                        />
                         Đang ký nhận...
                       </>
                     ) : (
                       <>
-                        <PenTool className="mr-2 h-4 w-4" />
+                        <PenTool data-icon="inline-start" className="h-4 w-4" />
                         Ký Nhận Lương{" "}
                         {result.salary_month_display ||
                           formatSalaryMonth(result.salary_month)}

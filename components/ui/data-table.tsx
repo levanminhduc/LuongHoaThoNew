@@ -89,6 +89,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center gap-2 py-4">
         {searchKey && (
           <Input
+            aria-label="Tìm kiếm"
             placeholder={searchPlaceholder}
             value={
               (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
@@ -103,7 +104,8 @@ export function DataTable<TData, TValue>({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
-                Cột <ChevronDown className="ml-2 h-4 w-4" />
+                Cột{" "}
+                <ChevronDown data-icon="inline-end" className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -186,6 +188,7 @@ export function DataTable<TData, TValue>({
           </div>
           <div className="flex items-center space-x-2">
             <Button
+              aria-label="Trang trước"
               variant="outline"
               size="sm"
               onClick={() => table.previousPage()}
@@ -198,6 +201,7 @@ export function DataTable<TData, TValue>({
               {table.getPageCount()}
             </div>
             <Button
+              aria-label="Trang sau"
               variant="outline"
               size="sm"
               onClick={() => table.nextPage()}
@@ -234,11 +238,14 @@ export function DataTableColumnHeader<TData, TValue>({
     >
       {title}
       {column.getIsSorted() === "asc" ? (
-        <ChevronDown className="ml-2 h-4 w-4 rotate-180" />
+        <ChevronDown data-icon="inline-start" className="h-4 w-4 rotate-180" />
       ) : column.getIsSorted() === "desc" ? (
-        <ChevronDown className="ml-2 h-4 w-4" />
+        <ChevronDown data-icon="inline-end" className="h-4 w-4" />
       ) : (
-        <ChevronDown className="ml-2 h-4 w-4 opacity-0 group-hover:opacity-100" />
+        <ChevronDown
+          data-icon="inline-end"
+          className="h-4 w-4 opacity-0 group-hover:opacity-100"
+        />
       )}
     </Button>
   );

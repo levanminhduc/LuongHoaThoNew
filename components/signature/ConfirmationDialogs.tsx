@@ -116,7 +116,10 @@ export function ConfirmationDialog({
           >
             {loading ? (
               <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
+                <Clock
+                  data-icon="inline-start"
+                  className="h-4 w-4 animate-spin"
+                />
                 Đang xử lý...
               </>
             ) : (
@@ -295,12 +298,15 @@ export function SignatureConfirmationDialog({
           >
             {loading ? (
               <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
+                <Clock
+                  data-icon="inline-start"
+                  className="h-4 w-4 animate-spin"
+                />
                 Đang ký...
               </>
             ) : (
               <>
-                <PenTool className="h-4 w-4 mr-2" />
+                <PenTool data-icon="inline-start" className="h-4 w-4" />
                 Ký Xác Nhận
               </>
             )}
@@ -423,7 +429,10 @@ export function DeleteConfirmationDialog({
           >
             {loading ? (
               <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
+                <Clock
+                  data-icon="inline-start"
+                  className="h-4 w-4 animate-spin"
+                />
                 Đang xóa...
               </>
             ) : (

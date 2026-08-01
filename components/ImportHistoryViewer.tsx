@@ -30,6 +30,7 @@ import {
   Trash2,
   RefreshCw,
 } from "lucide-react";
+import { DeleteAlertDialog } from "@/components/ui/alert-dialogs";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 import { formatTimestampFromDBRaw } from "@/lib/utils/vietnam-timezone";
@@ -88,6 +89,9 @@ export function ImportHistoryViewer({
   const [dateFromFilter, setDateFromFilter] = useState<string>("");
   const [dateToFilter, setDateToFilter] = useState<string>("");
   const [page] = useState(1);
+  const [recordPendingDelete, setRecordPendingDelete] =
+    useState<ImportHistoryRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -119,14 +123,20 @@ export function ImportHistoryViewer({
     fetchHistory();
   }, [page, statusFilter, typeFilter, dateFromFilter, dateToFilter]);
 
-  const deleteHistoryRecord = async (id: string) => {
+  const deleteHistoryRecord = async () => {
+    if (!recordPendingDelete) return;
+
+    setDeleting(true);
     try {
       const params = new URLSearchParams();
-      params.set(QUERY_PARAMS.ID, id);
+      params.set(QUERY_PARAMS.ID, recordPendingDelete.id);
       await apiClient.delete(`${ENDPOINTS.importHistory.list}?${params}`);
       fetchHistory();
     } catch (error) {
       console.error("Error deleting history record:", error);
+    } finally {
+      setDeleting(false);
+      setRecordPendingDelete(null);
     }
   };
 
@@ -248,6 +258,7 @@ export function ImportHistoryViewer({
               className="flex items-center gap-2"
             >
               <RefreshCw
+                data-icon="inline-start"
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
               />
               Refresh
@@ -304,7 +315,7 @@ export function ImportHistoryViewer({
             <div className="space-y-2">
               <Label>Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Lọc theo trạng thái">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -318,7 +329,7 @@ export function ImportHistoryViewer({
             <div className="space-y-2">
               <Label>Type</Label>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Lọc theo loại import">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -329,16 +340,18 @@ export function ImportHistoryViewer({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Date From</Label>
+              <Label htmlFor="import-history-date-from">Date From</Label>
               <Input
+                id="import-history-date-from"
                 type="date"
                 value={dateFromFilter}
                 onChange={(e) => setDateFromFilter(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label>Date To</Label>
+              <Label htmlFor="import-history-date-to">Date To</Label>
               <Input
+                id="import-history-date-to"
                 type="date"
                 value={dateToFilter}
                 onChange={(e) => setDateToFilter(e.target.value)}
@@ -388,9 +401,11 @@ export function ImportHistoryViewer({
                         </span>
                       </div>
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => deleteHistoryRecord(record.id)}
+                        aria-label={`Xóa lịch sử import ${record.file_names.join(", ")}`}
+                        onClick={() => setRecordPendingDelete(record)}
                         className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -449,6 +464,17 @@ export function ImportHistoryViewer({
           )}
         </CardContent>
       </Card>
+
+      <DeleteAlertDialog
+        open={recordPendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setRecordPendingDelete(null);
+        }}
+        onConfirm={deleteHistoryRecord}
+        itemName={recordPendingDelete?.file_names.join(", ")}
+        title="Xóa lịch sử import"
+        loading={deleting}
+      />
     </div>
   );
 }

@@ -220,39 +220,40 @@ export default function EmployeeCheckPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div
-            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors hover:border-primary/50 cursor-pointer"
+            className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors hover:border-primary/50"
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
-            onClick={() => fileInputRef.current?.click()}
           >
             <FileSpreadsheet className="mb-3 h-10 w-10 text-muted-foreground" />
-            {file ? (
-              <div className="flex items-center gap-2">
+            {file && (
+              <div className="mb-2 flex items-center gap-2">
                 <span className="text-sm font-medium">{file.name}</span>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearFile();
-                  }}
+                  aria-label={`Bỏ chọn file ${file.name}`}
+                  onClick={clearFile}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Kéo thả file hoặc click để chọn
-              </p>
             )}
             <input
+              id="employee-check-file"
               ref={fileInputRef}
               type="file"
               accept=".xlsx,.xls"
               onChange={handleFileChange}
-              className="hidden"
+              className="peer sr-only"
             />
+            <label
+              htmlFor="employee-check-file"
+              className="cursor-pointer rounded-md px-2 py-1 text-sm text-muted-foreground underline-offset-4 hover:underline peer-focus-visible:ring-2 peer-focus-visible:ring-ring"
+            >
+              {file ? "Chọn file khác" : "Kéo thả file hoặc click để chọn"}
+            </label>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -260,7 +261,8 @@ export default function EmployeeCheckPage() {
           <Button onClick={handleCheck} disabled={!file || loading}>
             {loading ? (
               <>
-                <Spinner className="mr-2 h-4 w-4" /> Đang kiểm tra...
+                <Spinner data-icon="inline-start" className="mr-2 h-4 w-4" />{" "}
+                Đang kiểm tra...
               </>
             ) : (
               "Kiểm Tra"
@@ -318,7 +320,10 @@ export default function EmployeeCheckPage() {
                       setFilter(v as "all" | "missing" | "found")
                     }
                   >
-                    <SelectTrigger className="w-[160px]">
+                    <SelectTrigger
+                      aria-label="Lọc kết quả kiểm tra"
+                      className="w-[160px]"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -332,7 +337,7 @@ export default function EmployeeCheckPage() {
                     onClick={() => void exportMissingToExcel(missingIds)}
                     disabled={missingCount === 0}
                   >
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download data-icon="inline-start" className="h-4 w-4" />
                     Xuất DS Thiếu
                   </Button>
                 </div>

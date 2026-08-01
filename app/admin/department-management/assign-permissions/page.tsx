@@ -26,12 +26,20 @@ import {
   Building2,
   Info,
 } from "lucide-react";
+import { z } from "zod";
 import {
   useDepartmentPermissionsQuery,
   useDepartmentStatsQuery,
   useGrantDepartmentPermissionMutation,
   useManagementEmployeesQuery,
 } from "@/lib/hooks/use-departments";
+
+const AssignPermissionSchema = z.object({
+  employeeId: z.string().min(1, "Vui lòng chọn nhân viên"),
+  departments: z
+    .array(z.string())
+    .min(1, "Vui lòng chọn ít nhất một department"),
+});
 
 // Loading component cho Suspense fallback
 function AssignPermissionsLoading() {
@@ -59,6 +67,7 @@ function AssignPermissionsContent() {
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const departmentsQuery = useDepartmentStatsQuery();
   const employeesQuery = useManagementEmployeesQuery();
   const permissionsQuery = useDepartmentPermissionsQuery();
@@ -122,16 +131,22 @@ function AssignPermissionsContent() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!selectedEmployee) {
-      setError("Vui lòng chọn nhân viên");
+    const parsed = AssignPermissionSchema.safeParse({
+      employeeId: selectedEmployee,
+      departments: selectedDepartments,
+    });
+
+    if (!parsed.success) {
+      const nextFieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const field = String(issue.path[0]);
+        if (!nextFieldErrors[field]) nextFieldErrors[field] = issue.message;
+      }
+      setFieldErrors(nextFieldErrors);
       return;
     }
 
-    if (selectedDepartments.length === 0) {
-      setError("Vui lòng chọn ít nhất một department");
-      return;
-    }
-
+    setFieldErrors({});
     setError(null);
     setSuccess(null);
 
@@ -246,6 +261,14 @@ function AssignPermissionsContent() {
                   value={selectedEmployee}
                   onValueChange={setSelectedEmployee}
                 />
+                {fieldErrors.employeeId && (
+                  <p
+                    role="alert"
+                    className="text-sm font-medium text-destructive"
+                  >
+                    {fieldErrors.employeeId}
+                  </p>
+                )}
               </div>
 
               {selectedEmployeeData && (
@@ -289,6 +312,14 @@ function AssignPermissionsContent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {fieldErrors.departments && (
+              <p
+                role="alert"
+                className="mb-3 text-sm font-medium text-destructive"
+              >
+                {fieldErrors.departments}
+              </p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {departments.map((department) => {
                 const isSelected = selectedDepartments.includes(
@@ -364,6 +395,7 @@ function AssignPermissionsContent() {
           </CardHeader>
           <CardContent>
             <Textarea
+              aria-label="Ghi chú lý do cấp quyền"
               placeholder="Ví dụ: Cấp quyền quản lý department Production và QC theo quyết định của Ban Giám Đốc..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -397,7 +429,7 @@ function AssignPermissionsContent() {
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" />
+                <Save data-icon="inline-start" className="h-4 w-4" />
                 Cấp Quyền
               </>
             )}

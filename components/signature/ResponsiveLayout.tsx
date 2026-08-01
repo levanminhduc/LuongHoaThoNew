@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import {
   Menu,
@@ -105,7 +110,7 @@ export default function ResponsiveLayout({
   const navItems = navigation.length > 0 ? navigation : defaultNavigation;
 
   const NavigationContent = () => (
-    <nav className="space-y-1">
+    <nav aria-label="Điều hướng chính" className="space-y-1">
       {navItems.map((item, index) => (
         <Button
           key={index}
@@ -180,17 +185,25 @@ export default function ResponsiveLayout({
                   onOpenChange={setIsMobileMenuOpen}
                 >
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="sm" className="md:hidden">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="md:hidden"
+                      aria-label="Mở menu điều hướng"
+                    >
                       <Menu className="h-5 w-5" />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80">
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Menu</h2>
+                        <SheetTitle className="text-lg font-semibold">
+                          Menu
+                        </SheetTitle>
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-label="Đóng menu điều hướng"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <X className="h-4 w-4" />
@@ -209,7 +222,10 @@ export default function ResponsiveLayout({
                           }}
                           className="w-full"
                         >
-                          <LogOut className="h-4 w-4 mr-2" />
+                          <LogOut
+                            data-icon="inline-start"
+                            className="h-4 w-4"
+                          />
                           Đăng Xuất
                         </Button>
                       )}
@@ -252,7 +268,7 @@ export default function ResponsiveLayout({
 
               {!isMobile && onLogout && (
                 <Button variant="outline" onClick={onLogout} size="sm">
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <LogOut data-icon="inline-start" className="h-4 w-4" />
                   Đăng Xuất
                 </Button>
               )}

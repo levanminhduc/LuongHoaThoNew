@@ -119,11 +119,11 @@ function renderLookupShell(content: string, employeeId = ""): string {
       <form method="post" action="/api/employee/lookup">
         <div class="field">
           <label for="employee_id">Mã Nhân Viên</label>
-          <input id="employee_id" name="employee_id" value="${escapeHtml(employeeId)}" required autocomplete="off" autocapitalize="characters">
+          <input id="employee_id" name="employee_id" value="${escapeHtml(employeeId)}" required minlength="3" maxlength="32" pattern="[A-Za-z0-9]+" title="Mã nhân viên chỉ gồm chữ và số" autocomplete="off" autocapitalize="characters">
         </div>
         <div class="field">
           <label for="cccd">Mật Khẩu / CCCD</label>
-          <input id="cccd" name="cccd" type="password" required autocomplete="off">
+          <input id="cccd" name="cccd" type="password" required minlength="6" maxlength="64" autocomplete="off">
         </div>
         <button type="submit">Tra Cứu Lương</button>
       </form>

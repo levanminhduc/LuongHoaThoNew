@@ -75,6 +75,7 @@ export function DataTableToolbar({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
           {monthOptions && onMonthChange && (
             <Combobox
+              aria-label="Chọn tháng lương"
               options={monthOptions}
               value={selectedMonth}
               onValueChange={onMonthChange}
@@ -89,6 +90,7 @@ export function DataTableToolbar({
             <div className="relative flex-1 sm:max-w-[300px]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                aria-label="Tìm kiếm"
                 placeholder={searchPlaceholder}
                 value={searchValue}
                 onChange={(e) => onSearchChange(e.target.value)}
@@ -102,9 +104,9 @@ export function DataTableToolbar({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
+                    <Filter data-icon="inline-start" className="h-4 w-4" />
                     Lọc
-                    <ChevronDown className="h-4 w-4 ml-2" />
+                    <ChevronDown data-icon="inline-end" className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -133,6 +135,7 @@ export function DataTableToolbar({
                 disabled={isLoading}
               >
                 <RefreshCw
+                  data-icon="inline-start"
                   className={cn("h-4 w-4", isLoading && "animate-spin")}
                 />
                 <span className="hidden sm:inline ml-2">Làm mới</span>
@@ -141,7 +144,7 @@ export function DataTableToolbar({
 
             {onExport && (
               <Button variant="outline" size="sm" onClick={onExport}>
-                <Download className="h-4 w-4" />
+                <Download data-icon="inline-start" className="h-4 w-4" />
                 <span className="hidden sm:inline ml-2">Export</span>
               </Button>
             )}

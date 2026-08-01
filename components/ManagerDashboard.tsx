@@ -267,6 +267,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
         </div>
         <div className="flex items-center gap-2">
           <Combobox
+            aria-label="Chọn tháng lương"
             options={monthOptions}
             value={selectedMonth}
             onValueChange={setSelectedMonth}
@@ -458,7 +459,10 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                       className="flex-1 h-12 sm:h-8 text-xs sm:text-sm touch-manipulation"
                       onClick={() => handleViewPayroll(dept.name)}
                     >
-                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <Eye
+                        data-icon="inline-start"
+                        className="h-3 w-3 sm:h-4 sm:w-4"
+                      />
                       <span className="hidden sm:inline">Xem Chi Tiết</span>
                       <span className="sm:hidden">Xem Chi Tiết</span>
                     </Button>
@@ -477,7 +481,10 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                         </>
                       ) : (
                         <>
-                          <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                          <Download
+                            data-icon="inline-start"
+                            className="h-3 w-3 sm:h-4 sm:w-4"
+                          />
                           <span className="hidden sm:inline">Xuất Excel</span>
                           <span className="sm:hidden">Xuất Excel</span>
                         </>
@@ -494,6 +501,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div className="flex items-center space-x-4">
               <Combobox
+                aria-label="Chọn department"
                 options={departmentOptions}
                 value={selectedDepartment}
                 onValueChange={setSelectedDepartment}
@@ -516,7 +524,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                 </>
               ) : (
                 <>
-                  <Download className="h-4 w-4" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                   <span className="hidden sm:inline">Xuất Excel</span>
                   <span className="sm:hidden">Xuất</span>
                 </>
@@ -562,6 +570,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                               {payroll.is_signed ? "Đã ký" : "Chưa ký"}
                             </Badge>
                             <Button
+                              aria-label={`Xem chi tiết ${payroll.employee_id}`}
                               variant="outline"
                               size="sm"
                               onClick={() =>
@@ -569,7 +578,10 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                               }
                               className="h-11 w-11 sm:h-8 sm:w-8 p-0 touch-manipulation"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye
+                                data-icon="inline-start"
+                                className="h-4 w-4"
+                              />
                             </Button>
                           </div>
                         </div>
@@ -674,6 +686,7 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                           </TableCell>
                           <TableCell className="p-2 sm:p-3 text-center">
                             <Button
+                              aria-label={`Xem chi tiết ${payroll.employee_id}`}
                               variant="outline"
                               size="sm"
                               onClick={() =>
@@ -681,7 +694,10 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
                               }
                               className="h-8 w-8 p-0"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye
+                                data-icon="inline-start"
+                                className="h-4 w-4"
+                              />
                             </Button>
                           </TableCell>
                         </TableRow>

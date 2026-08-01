@@ -106,7 +106,7 @@ export function BulkSignatureDialog({
   return (
     <>
       <Button onClick={() => setOpen(true)} variant="default" className="gap-2">
-        <Users className="h-4 w-4" />
+        <Users data-icon="inline-start" className="h-4 w-4" />
         Ký Hàng Loạt
       </Button>
 

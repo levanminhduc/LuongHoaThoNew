@@ -251,6 +251,7 @@ export default function OverviewModal({
           </div>
           <div className="flex items-center space-x-4">
             <Combobox
+              aria-label="Chọn tháng lương"
               options={generateMonthOptions(2)}
               value={selectedMonth}
               onValueChange={setSelectedMonth}
@@ -259,7 +260,12 @@ export default function OverviewModal({
               emptyText="Không tìm thấy tháng."
               className="w-52"
             />
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button
+              aria-label="Đóng"
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -288,7 +294,7 @@ export default function OverviewModal({
                   className="w-full"
                   variant="default"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw data-icon="inline-start" className="h-4 w-4" />
                   Thử lại
                 </Button>
               </CardContent>
@@ -445,7 +451,10 @@ export default function OverviewModal({
                             className="flex-1 h-8 text-xs touch-manipulation"
                             onClick={() => handleViewPayroll(dept.name)}
                           >
-                            <Eye className="h-3 w-3 mr-1" />
+                            <Eye
+                              data-icon="inline-start"
+                              className="h-3 w-3 mr-1"
+                            />
                             <span className="hidden sm:inline">
                               Xem Chi Tiết
                             </span>
@@ -468,7 +477,10 @@ export default function OverviewModal({
                               </>
                             ) : (
                               <>
-                                <Download className="h-3 w-3 mr-1" />
+                                <Download
+                                  data-icon="inline-start"
+                                  className="h-3 w-3 mr-1"
+                                />
                                 <span className="hidden sm:inline">
                                   Xuất Excel
                                 </span>

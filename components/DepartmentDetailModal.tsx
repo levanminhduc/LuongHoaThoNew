@@ -320,6 +320,7 @@ export default function DepartmentDetailModal({
                 </span>
               </div>
               <Button
+                aria-label="Đóng"
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
@@ -450,6 +451,7 @@ export default function DepartmentDetailModal({
                         <div className="relative w-full sm:w-72">
                           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                           <Input
+                            aria-label="Tìm kiếm nhân viên"
                             placeholder="Tìm kiếm nhân viên..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -461,7 +463,10 @@ export default function DepartmentDetailModal({
                           value={statusFilter}
                           onValueChange={setStatusFilter}
                         >
-                          <SelectTrigger className="w-full sm:w-40">
+                          <SelectTrigger
+                            aria-label="Lọc theo trạng thái"
+                            className="w-full sm:w-40"
+                          >
                             <Filter className="w-4 h-4 mr-2" />
                             <SelectValue placeholder="Lọc trạng thái" />
                           </SelectTrigger>
@@ -473,7 +478,10 @@ export default function DepartmentDetailModal({
                         </Select>
 
                         <Select value={sortBy} onValueChange={setSortBy}>
-                          <SelectTrigger className="w-full sm:w-40">
+                          <SelectTrigger
+                            aria-label="Sắp xếp danh sách"
+                            className="w-full sm:w-40"
+                          >
                             <ArrowUpDown className="w-4 h-4 mr-2" />
                             <SelectValue placeholder="Sắp xếp" />
                           </SelectTrigger>
@@ -763,7 +771,10 @@ export default function DepartmentDetailModal({
                               disabled={exporting}
                               className="flex items-center gap-2"
                             >
-                              <Download className="w-4 h-4" />
+                              <Download
+                                data-icon="inline-start"
+                                className="w-4 h-4"
+                              />
                               {exporting ? "Đang xuất..." : "Xuất Excel"}
                             </Button>
                           </div>
@@ -789,7 +800,10 @@ export default function DepartmentDetailModal({
                                 setSortOrder("asc");
                               }}
                             >
-                              <FileCheck className="w-4 h-4 mr-2" />
+                              <FileCheck
+                                data-icon="inline-start"
+                                className="w-4 h-4"
+                              />
                               Xem nhân viên chưa ký (
                               {departmentData.stats.payrollCount -
                                 departmentData.stats.signedCount}
@@ -806,7 +820,10 @@ export default function DepartmentDetailModal({
                                 setSortOrder("desc");
                               }}
                             >
-                              <DollarSign className="w-4 h-4 mr-2" />
+                              <DollarSign
+                                data-icon="inline-start"
+                                className="w-4 h-4"
+                              />
                               Sắp xếp theo lương cao nhất
                             </Button>
 
@@ -820,7 +837,10 @@ export default function DepartmentDetailModal({
                                 setSortOrder("asc");
                               }}
                             >
-                              <Users className="w-4 h-4 mr-2" />
+                              <Users
+                                data-icon="inline-start"
+                                className="w-4 h-4"
+                              />
                               Xem nhân viên đã ký (
                               {departmentData.stats.signedCount})
                             </Button>

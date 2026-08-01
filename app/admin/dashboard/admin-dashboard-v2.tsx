@@ -152,13 +152,18 @@ export function AdminDashboardV2() {
 
   return (
     <>
-      {message && (
-        <Alert className="mb-4 border-blue-200 bg-blue-50">
-          <AlertDescription className="text-blue-800">
-            {message}
-          </AlertDescription>
-        </Alert>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {message && (
+          <Alert
+            role="presentation"
+            className="mb-4 border-blue-200 bg-blue-50"
+          >
+            <AlertDescription className="text-blue-800">
+              {message}
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       <StatsGrid className="mb-6">
         <StatsCard
@@ -249,7 +254,7 @@ export function AdminDashboardV2() {
                 size="sm"
                 onClick={() => router.push("/admin/payroll-management")}
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit data-icon="inline-start" className="h-4 w-4" />
                 <span className="hidden sm:inline">Chi Tiết</span>
               </Button>
             }
@@ -382,7 +387,7 @@ export function AdminDashboardV2() {
                 className="w-full sm:w-auto"
                 onClick={() => router.push("/admin/payroll-import-export")}
               >
-                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <ArrowUpDown data-icon="inline-start" className="h-4 w-4" />
                 Import/Export Lương
               </Button>
               <Button
@@ -390,7 +395,7 @@ export function AdminDashboardV2() {
                 className="w-full sm:w-auto"
                 onClick={() => router.push("/admin/bonus-import")}
               >
-                <Gift className="h-4 w-4 mr-2" />
+                <Gift data-icon="inline-start" className="h-4 w-4" />
                 Import Tiền Thưởng
               </Button>
               <Button
@@ -398,7 +403,7 @@ export function AdminDashboardV2() {
                 className="w-full sm:w-auto"
                 onClick={() => router.push("/admin/payroll-management")}
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit data-icon="inline-start" className="h-4 w-4" />
                 Quản Lý Chi Tiết
               </Button>
             </CardContent>
@@ -447,7 +452,7 @@ export function AdminDashboardV2() {
                   className="w-full justify-start"
                   onClick={() => router.push("/admin/bulk-signature")}
                 >
-                  <UserCheck className="h-4 w-4 mr-2" />
+                  <UserCheck data-icon="inline-start" className="h-4 w-4" />
                   Ký Hàng Loạt
                 </Button>
                 <Button
@@ -455,7 +460,7 @@ export function AdminDashboardV2() {
                   className="w-full justify-start"
                   onClick={() => router.push("/admin/data-validation")}
                 >
-                  <Database className="h-4 w-4 mr-2" />
+                  <Database data-icon="inline-start" className="h-4 w-4" />
                   Kiểm Tra Dữ Liệu
                 </Button>
                 <Button
@@ -463,7 +468,7 @@ export function AdminDashboardV2() {
                   className="w-full justify-start"
                   onClick={() => router.push("/admin/column-mapping-config")}
                 >
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings data-icon="inline-start" className="h-4 w-4" />
                   Column Mapping
                 </Button>
               </CardContent>

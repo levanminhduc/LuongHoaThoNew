@@ -274,12 +274,15 @@ export function ForgotPasswordModal({
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                     Đang xử lý...
                   </>
                 ) : (
                   <>
-                    <KeyRound className="mr-2 h-4 w-4" />
+                    <KeyRound data-icon="inline-start" className="h-4 w-4" />
                     Đặt Lại Mật Khẩu
                   </>
                 )}

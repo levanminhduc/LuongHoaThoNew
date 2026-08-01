@@ -68,6 +68,7 @@ export function BulkSignatureSection({ onSuccess }: BulkSignatureSectionProps) {
           <div className="flex-1 space-y-2">
             <Label>Chọn tháng</Label>
             <Combobox
+              aria-label="Chọn tháng lương"
               options={monthOptions}
               value={selectedMonth}
               onValueChange={setSelectedMonth}

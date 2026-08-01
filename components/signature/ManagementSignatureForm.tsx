@@ -129,7 +129,12 @@ export default function ManagementSignatureForm({
               <Calendar className="h-4 w-4" />
               Tháng lương
             </Label>
-            <Input value={month} disabled className="bg-gray-50" />
+            <Input
+              aria-label="Tháng lương"
+              value={month}
+              disabled
+              className="bg-gray-50"
+            />
           </div>
 
           <div className="space-y-2">
@@ -138,6 +143,7 @@ export default function ManagementSignatureForm({
               Loại chữ ký
             </Label>
             <Input
+              aria-label="Loại chữ ký"
               value={SIGNATURE_TYPE_LABELS[signatureType]}
               disabled
               className="bg-gray-50"
@@ -152,6 +158,7 @@ export default function ManagementSignatureForm({
               Người ký
             </Label>
             <Input
+              aria-label="Người ký"
               value={`${userInfo.full_name} (${userInfo.employee_id})`}
               disabled
               className="bg-gray-50"
@@ -161,6 +168,7 @@ export default function ManagementSignatureForm({
           <div className="space-y-2">
             <Label>Phòng ban</Label>
             <Input
+              aria-label="Phòng ban"
               value={userInfo.department}
               disabled
               className="bg-gray-50"
@@ -247,12 +255,15 @@ export default function ManagementSignatureForm({
             >
               {isSubmitting || loading ? (
                 <>
-                  <Clock className="h-4 w-4 mr-2 animate-spin" />
+                  <Clock
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                   Đang xử lý...
                 </>
               ) : (
                 <>
-                  <PenTool className="h-4 w-4 mr-2" />
+                  <PenTool data-icon="inline-start" className="h-4 w-4" />
                   Ký Xác Nhận {SIGNATURE_TYPE_LABELS[signatureType]}
                 </>
               )}

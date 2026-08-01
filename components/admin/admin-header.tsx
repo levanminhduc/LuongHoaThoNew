@@ -106,13 +106,18 @@ export function AdminHeader({ title, breadcrumbs }: AdminHeaderProps) {
 
       <div className="ml-auto flex items-center gap-2">
         <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Bell className="h-4 w-4" />
+          <Bell data-icon="inline-start" className="h-4 w-4" />
           <span className="sr-only">Thông báo</span>
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              aria-label="Mở menu tài khoản"
+            >
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   AD

@@ -247,13 +247,8 @@ interface StatCardProps {
 }
 
 function StatCard({ label, value, icon, className, onClick }: StatCardProps) {
-  const isClickable = onClick !== undefined;
-
-  return (
-    <div
-      className={`p-4 bg-muted rounded-lg ${isClickable ? "cursor-pointer hover:bg-muted/80 transition-colors" : ""}`}
-      onClick={onClick}
-    >
+  const content = (
+    <>
       <div className="flex items-center gap-2 mb-2">
         {icon}
         <p className="text-sm text-muted-foreground">{label}</p>
@@ -261,7 +256,21 @@ function StatCard({ label, value, icon, className, onClick }: StatCardProps) {
       <p className={`text-2xl font-bold ${className || ""}`}>
         {value.toLocaleString()}
       </p>
-    </div>
+    </>
+  );
+
+  if (!onClick) {
+    return <div className="p-4 bg-muted rounded-lg">{content}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left p-4 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+      {content}
+    </button>
   );
 }
 
@@ -300,8 +309,10 @@ export function FilePreview({
           </CardTitle>
           {onRemove && (
             <button
+              type="button"
               onClick={onRemove}
-              className="text-gray-400 hover:text-red-600 transition-colors"
+              aria-label={`Bỏ chọn file ${fileName}`}
+              className="text-gray-400 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
             >
               <XCircle className="h-5 w-5" />
             </button>

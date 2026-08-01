@@ -90,7 +90,7 @@ export default function DepartmentDebugInfo() {
           size="sm"
           className="bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
         >
-          <Bug className="h-4 w-4 mr-2" />
+          <Bug data-icon="inline-start" className="h-4 w-4" />
           Debug Departments
         </Button>
       </div>
@@ -114,6 +114,7 @@ export default function DepartmentDebugInfo() {
                 size="sm"
               >
                 <RefreshCw
+                  data-icon="inline-start"
                   className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
                 />
                 Refresh
@@ -123,7 +124,7 @@ export default function DepartmentDebugInfo() {
                 variant="outline"
                 size="sm"
               >
-                <EyeOff className="h-4 w-4 mr-2" />
+                <EyeOff data-icon="inline-start" className="h-4 w-4" />
                 Close
               </Button>
             </div>

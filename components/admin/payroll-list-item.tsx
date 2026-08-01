@@ -80,7 +80,12 @@ export function PayrollListItem({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                aria-label="Mở thao tác bảng lương"
+              >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -136,7 +141,7 @@ export function PayrollListItem({
             className="w-full mt-4"
             onClick={onView}
           >
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye data-icon="inline-start" className="h-4 w-4" />
             Xem Chi Tiết
           </Button>
         )}

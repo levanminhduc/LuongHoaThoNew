@@ -192,6 +192,7 @@ export default function MonthSelector({
 
         <div className="flex items-center gap-2">
           <Button
+            aria-label="Tháng trước"
             variant="outline"
             size="sm"
             onClick={handlePreviousMonth}
@@ -202,6 +203,7 @@ export default function MonthSelector({
           </Button>
 
           <Combobox
+            aria-label="Chọn tháng lương"
             options={monthOptions}
             value={selectedMonth}
             onValueChange={onMonthChange}
@@ -213,6 +215,7 @@ export default function MonthSelector({
           />
 
           <Button
+            aria-label="Tháng sau"
             variant="outline"
             size="sm"
             onClick={handleNextMonth}

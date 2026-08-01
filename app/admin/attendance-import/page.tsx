@@ -35,6 +35,16 @@ import { useAttendanceImportMutation } from "@/lib/hooks/use-attendance";
 import { useDownloadTemplateMutation } from "@/lib/hooks/use-bulk-export";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import type { AttendanceImportResult as ImportResult } from "@/lib/hooks/use-attendance";
+import { z } from "zod";
+
+const AttendanceFileSchema = z
+  .instanceof(File, { message: "Vui lòng chọn file Excel để import" })
+  .refine((candidate) => /\.(xlsx|xls)$/i.test(candidate.name), {
+    message: "Chỉ chấp nhận file Excel định dạng .xlsx hoặc .xls",
+  })
+  .refine((candidate) => candidate.size > 0, {
+    message: "File rỗng, vui lòng chọn file khác",
+  });
 
 export default function AttendanceImportPage() {
   const router = useRouter();
@@ -42,19 +52,24 @@ export default function AttendanceImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const importMutation = useAttendanceImportMutation();
   const templateMutation = useDownloadTemplateMutation("attendance");
   const loading = importMutation.isPending;
   const downloadingTemplate = templateMutation.isPending;
 
+  const validateFile = (candidate: File | null): string | null => {
+    const parsed = AttendanceFileSchema.safeParse(candidate);
+    return parsed.success ? null : parsed.error.issues[0].message;
+  };
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setResult(null);
-      setError(null);
-    }
+    const selectedFile = e.target.files?.[0] ?? null;
+    setFile(selectedFile);
+    setResult(null);
+    setError(null);
+    setFileError(selectedFile ? validateFile(selectedFile) : null);
   };
 
   const handleExportErrors = async () => {
@@ -100,7 +115,13 @@ export default function AttendanceImportPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+
+    const validationError = validateFile(file);
+    setFileError(validationError);
+    if (validationError || !file) {
+      fileInputRef.current?.focus();
+      return;
+    }
 
     setError(null);
     setResult(null);
@@ -133,8 +154,10 @@ export default function AttendanceImportPage() {
     <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-4">
         <Button
+          type="button"
           variant="ghost"
           size="icon"
+          aria-label="Quay lại dashboard"
           onClick={() => router.push("/admin/dashboard")}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -163,12 +186,15 @@ export default function AttendanceImportPage() {
             >
               {downloadingTemplate ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                   Đang tải mẫu...
                 </>
               ) : (
                 <>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                   Tải File Mẫu
                 </>
               )}
@@ -182,24 +208,40 @@ export default function AttendanceImportPage() {
                 ref={fileInputRef}
                 type="file"
                 accept=".xlsx,.xls"
+                required
+                aria-invalid={fileError ? true : undefined}
+                aria-describedby={fileError ? "file-error" : undefined}
                 onChange={handleFileChange}
                 disabled={loading}
               />
-              {file && (
-                <p className="text-sm text-muted-foreground">
-                  Đã chọn: {file.name}
+              {fileError ? (
+                <p
+                  id="file-error"
+                  role="alert"
+                  className="text-sm font-medium text-destructive"
+                >
+                  {fileError}
                 </p>
+              ) : (
+                file && (
+                  <p className="text-sm text-muted-foreground">
+                    Đã chọn: {file.name}
+                  </p>
+                )
               )}
             </div>
             <Button type="submit" disabled={!file || loading}>
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                   Đang xử lý...
                 </>
               ) : (
                 <>
-                  <Upload className="mr-2 h-4 w-4" />
+                  <Upload data-icon="inline-start" className="h-4 w-4" />
                   Import
                 </>
               )}
@@ -276,12 +318,15 @@ export default function AttendanceImportPage() {
                 >
                   {exporting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2
+                        data-icon="inline-start"
+                        className="h-4 w-4 animate-spin"
+                      />
                       Đang xuất...
                     </>
                   ) : (
                     <>
-                      <Download className="mr-2 h-4 w-4" />
+                      <Download data-icon="inline-start" className="h-4 w-4" />
                       Xuất Excel Lỗi
                     </>
                   )}

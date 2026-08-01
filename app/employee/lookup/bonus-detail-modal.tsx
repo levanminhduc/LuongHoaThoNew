@@ -114,12 +114,15 @@ export function BonusDetailModal({
             >
               {signingLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                   Đang ký nhận...
                 </>
               ) : (
                 <>
-                  <PenTool className="mr-2 h-4 w-4" />
+                  <PenTool data-icon="inline-start" className="h-4 w-4" />
                   Ký Nhận
                 </>
               )}

@@ -2,7 +2,7 @@
   "mcpServers": {
     "codebase-retrieval": {
       "type": "http",
-      "url": "http://127.0.0.1:62651/mcp-repo/d__hoathodienban_luonghoathonew"
+      "url": "http://127.0.0.1:41651/mcp-repo/d__hoathodienban_luonghoathonew"
     }
   }
 }

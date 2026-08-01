@@ -271,10 +271,16 @@ export default function EmployeeListModal({
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tìm kiếm</label>
+              <label
+                htmlFor="employee-list-search"
+                className="text-sm font-medium"
+              >
+                Tìm kiếm
+              </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
+                  id="employee-list-search"
                   placeholder="Mã NV hoặc tên nhân viên..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -286,6 +292,7 @@ export default function EmployeeListModal({
             <div className="space-y-2">
               <label className="text-sm font-medium">Phòng ban</label>
               <Combobox
+                aria-label="Lọc theo phòng ban"
                 options={[
                   { value: "all", label: "Tất cả phòng ban" },
                   ...[...departments]
@@ -444,7 +451,10 @@ export default function EmployeeListModal({
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft
+                        data-icon="inline-start"
+                        className="w-4 h-4"
+                      />
                       Trước
                     </Button>
                     <Button
@@ -454,7 +464,10 @@ export default function EmployeeListModal({
                       disabled={currentPage === totalPages}
                     >
                       Sau
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight
+                        data-icon="inline-end"
+                        className="w-4 h-4"
+                      />
                     </Button>
                   </div>
                 </div>

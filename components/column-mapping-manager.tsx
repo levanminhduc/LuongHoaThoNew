@@ -272,6 +272,7 @@ export function ColumnMappingManager({
           <div className="flex items-center gap-4">
             <Label>Filter by category:</Label>
             <Combobox
+              aria-label="Lọc theo danh mục"
               options={categoryOptions}
               value={selectedCategory}
               onValueChange={setSelectedCategory}
@@ -284,11 +285,11 @@ export function ColumnMappingManager({
 
           <div className="flex gap-2">
             <Button variant="outline" onClick={resetMappings}>
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw data-icon="inline-start" className="w-4 h-4" />
               Reset
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              <Save className="w-4 h-4 mr-2" />
+              <Save data-icon="inline-start" className="w-4 h-4" />
               {saving ? "Saving..." : "Save Mappings"}
             </Button>
           </div>
@@ -348,6 +349,7 @@ export function ColumnMappingManager({
                     {/* Database Field Selection */}
                     <div className="md:col-span-4">
                       <Combobox
+                        aria-label="Chọn database field"
                         options={[
                           {
                             value: "__no_mapping__",

@@ -113,7 +113,7 @@ export default function AccountantDashboard() {
               onClick={() => setShowOverviewModal(true)}
               className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
             >
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye data-icon="inline-start" className="h-4 w-4" />
               Tổng Quan
             </Button>
             <Button
@@ -123,7 +123,10 @@ export default function AccountantDashboard() {
               disabled={!monthStatus}
               className="w-full border-red-200 hover:bg-red-50 sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
             >
-              <UserX className="mr-2 h-4 w-4 text-red-600" />
+              <UserX
+                data-icon="inline-start"
+                className="h-4 w-4 text-red-600"
+              />
               <span className="text-red-700">Chưa Ký</span>
               {monthStatus && (
                 <Badge className="ml-2 bg-red-600 text-white">
@@ -134,6 +137,7 @@ export default function AccountantDashboard() {
             </Button>
           </div>
           <Combobox
+            aria-label="Chọn tháng lương"
             options={getRecentMonthOptions()}
             value={selectedMonth}
             onValueChange={setSelectedMonth}
@@ -144,12 +148,14 @@ export default function AccountantDashboard() {
           />
         </div>
       </div>
-      {message && (
-        <Alert className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {message && (
+          <Alert role="presentation" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       {monthStatus && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 mb-6 sm:mb-8">
@@ -322,12 +328,18 @@ export default function AccountantDashboard() {
                       >
                         {isSigning ? (
                           <>
-                            <Clock className="h-5 w-5 mr-2 animate-spin" />
+                            <Clock
+                              data-icon="inline-start"
+                              className="h-5 w-5 animate-spin"
+                            />
                             Đang xử lý...
                           </>
                         ) : (
                           <>
-                            <PenTool className="h-5 w-5 mr-2" />
+                            <PenTool
+                              data-icon="inline-start"
+                              className="h-5 w-5"
+                            />
                             Ký Xác Nhận Kế Toán
                           </>
                         )}

@@ -394,12 +394,15 @@ export function PayrollEditForm({
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                     Đang lưu...
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
+                    <Save data-icon="inline-start" className="h-4 w-4" />
                     Lưu Thay Đổi
                   </>
                 )}

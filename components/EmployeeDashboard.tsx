@@ -150,7 +150,10 @@ export default function EmployeeDashboard({
                 value={selectedYear.toString()}
                 onValueChange={(value) => setSelectedYear(parseInt(value))}
               >
-                <SelectTrigger className="w-full md:w-32 min-h-[44px] md:min-h-10">
+                <SelectTrigger
+                  aria-label="Chọn năm"
+                  className="w-full md:w-32 min-h-[44px] md:min-h-10"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -169,7 +172,7 @@ export default function EmployeeDashboard({
                 onClick={onLogout}
                 className="shrink-0 min-h-[44px] md:min-h-10 touch-manipulation"
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut data-icon="inline-start" className="h-4 w-4" />
                 <span className="hidden sm:inline">Đăng xuất</span>
                 <span className="sm:hidden">Thoát</span>
               </Button>
@@ -404,7 +407,10 @@ export default function EmployeeDashboard({
                           }
                           disabled={!payroll.is_signed}
                         >
-                          <Download className="h-4 w-4 mr-2" />
+                          <Download
+                            data-icon="inline-start"
+                            className="h-4 w-4"
+                          />
                           Tải Phiếu Lương
                         </Button>
                       </div>
@@ -484,6 +490,7 @@ export default function EmployeeDashboard({
                           </TableCell>
                           <TableCell className="p-3 text-center">
                             <Button
+                              aria-label={`Tải phiếu lương tháng ${payroll.salary_month}`}
                               variant="outline"
                               size="sm"
                               onClick={() =>
@@ -494,7 +501,10 @@ export default function EmployeeDashboard({
                               }
                               disabled={!payroll.is_signed}
                             >
-                              <Download className="h-4 w-4" />
+                              <Download
+                                data-icon="inline-start"
+                                className="h-4 w-4"
+                              />
                             </Button>
                           </TableCell>
                         </TableRow>

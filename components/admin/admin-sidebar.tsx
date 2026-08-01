@@ -3,25 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  Users,
-  FileSpreadsheet,
-  ArrowUpDown,
-  Database,
-  UserCheck,
-  Shield,
-  Cog,
-  KeyRound,
-  LogOut,
-  ChevronDown,
-  Building2,
-  Clock,
-  CalendarDays,
-  FileDown,
-  UserSearch,
-  Gift,
-} from "lucide-react";
+import { LogOut, ChevronDown, Building2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -43,99 +25,18 @@ import {
 } from "@/components/ui/collapsible";
 import { useLogout } from "@/lib/hooks/use-logout";
 import { getSessionUser } from "@/lib/auth/secure-session";
-import type { LucideIcon } from "lucide-react";
-
-interface NavItem {
-  title: string;
-  icon: LucideIcon;
-  href: string;
-  allowedRoles?: string[];
-}
+import {
+  adminToolsItems,
+  dataManagementItems,
+  filterNavItemsByRole,
+  mainNavItems,
+  type NavItem,
+} from "@/components/admin/admin-nav-items";
 
 async function getCurrentRole(): Promise<string> {
   const user = await getSessionUser<{ role?: string }>();
   return user?.role || "admin";
 }
-
-const mainNavItems: NavItem[] = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/admin/dashboard",
-  },
-  {
-    title: "Quản Lý Nhân Viên",
-    icon: Users,
-    href: "/admin/employee-management",
-    allowedRoles: ["admin", "van_phong", "nguoi_lap_bieu"],
-  },
-  {
-    title: "Quản Lý Lương",
-    icon: FileSpreadsheet,
-    href: "/admin/payroll-management",
-  },
-];
-
-const dataManagementItems: NavItem[] = [
-  {
-    title: "Import/Export Lương",
-    icon: ArrowUpDown,
-    href: "/admin/payroll-import-export",
-  },
-  {
-    title: "Import Tiền Thưởng",
-    icon: Gift,
-    href: "/admin/bonus-import",
-  },
-  {
-    title: "Kiểm Tra Dữ Liệu",
-    icon: Database,
-    href: "/admin/data-validation",
-  },
-  {
-    title: "Ký Hàng Loạt",
-    icon: UserCheck,
-    href: "/admin/bulk-signature",
-  },
-  {
-    title: "Import Chấm Công",
-    icon: Clock,
-    href: "/admin/attendance-import",
-  },
-  {
-    title: "Danh Sách Chấm Công",
-    icon: CalendarDays,
-    href: "/admin/attendance-list",
-  },
-  {
-    title: "Xuất Lương Toàn Bộ",
-    icon: FileDown,
-    href: "/admin/bulk-export",
-  },
-  {
-    title: "Kiểm Tra NV",
-    icon: UserSearch,
-    href: "/admin/employee-check",
-  },
-];
-
-const adminToolsItems: NavItem[] = [
-  {
-    title: "Quản Lý CCCD",
-    icon: KeyRound,
-    href: "/admin/dashboard/update-cccd",
-  },
-  {
-    title: "Column Mapping",
-    icon: Cog,
-    href: "/admin/column-mapping-config",
-  },
-  {
-    title: "Phân Quyền",
-    icon: Shield,
-    href: "/admin/department-management",
-  },
-];
 
 interface NavMenuItemProps {
   item: NavItem;
@@ -196,12 +97,7 @@ export function AdminSidebar() {
   );
 
   const filterByRole = useCallback(
-    (items: NavItem[]) =>
-      items.filter((item) =>
-        item.allowedRoles
-          ? item.allowedRoles.includes(currentRole)
-          : currentRole === "admin",
-      ),
+    (items: NavItem[]) => filterNavItemsByRole(items, currentRole),
     [currentRole],
   );
 

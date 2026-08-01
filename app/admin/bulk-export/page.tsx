@@ -250,12 +250,15 @@ export default function BulkExportPage() {
           >
             {exporting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2
+                  data-icon="inline-start"
+                  className="h-4 w-4 animate-spin"
+                />
                 Đang xuất...
               </>
             ) : (
               <>
-                <FileDown className="mr-2 h-4 w-4" />
+                <FileDown data-icon="inline-start" className="h-4 w-4" />
                 Xuất Excel
               </>
             )}

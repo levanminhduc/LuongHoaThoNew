@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Search, Loader2, User, AlertCircle } from "lucide-react";
@@ -56,6 +55,7 @@ export function EmployeeSearchForm({
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input
           type="text"
+          aria-label="Tìm nhân viên theo mã hoặc tên"
           placeholder="Nhập mã nhân viên hoặc tên nhân viên..."
           value={searchQuery}
           onChange={handleInputChange}
@@ -89,9 +89,10 @@ export function EmployeeSearchForm({
           </p>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {employees.map((employee) => (
-              <div
+              <button
                 key={employee.employee_id}
-                className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                type="button"
+                className="w-full text-left border rounded-lg p-4 hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 onClick={() => handleEmployeeClick(employee)}
               >
                 <div className="flex items-center justify-between">
@@ -111,11 +112,11 @@ export function EmployeeSearchForm({
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <span className="inline-flex h-9 shrink-0 items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
                     Chọn
-                  </Button>
+                  </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>

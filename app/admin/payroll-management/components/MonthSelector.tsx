@@ -93,6 +93,7 @@ export function MonthSelector({
       )}
 
       <Combobox
+        aria-label="Chọn tháng lương"
         options={comboboxOptions}
         value={value || "__EMPTY__"}
         onValueChange={handleValueChange}

@@ -31,7 +31,7 @@ export function EmployeeLookupActions({
         onClick={onShowDetail}
         className="w-full min-h-[44px]"
       >
-        <FileText className="w-4 h-4 flex-shrink-0" />
+        <FileText data-icon="inline-start" className="w-4 h-4 flex-shrink-0" />
         <span>Chi Tiết</span>
       </Button>
 
@@ -41,7 +41,7 @@ export function EmployeeLookupActions({
         onClick={onShowHistory}
         className="w-full min-h-[44px]"
       >
-        <Calendar className="w-4 h-4 flex-shrink-0" />
+        <Calendar data-icon="inline-start" className="w-4 h-4 flex-shrink-0" />
         <span>Lịch Sử</span>
       </Button>
 
@@ -54,10 +54,16 @@ export function EmployeeLookupActions({
           className="w-full min-h-[44px]"
         >
           {t13Loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2
+              data-icon="inline-start"
+              className="w-4 h-4 animate-spin"
+            />
           ) : (
             <>
-              <Calendar className="w-4 h-4 flex-shrink-0" />
+              <Calendar
+                data-icon="inline-start"
+                className="w-4 h-4 flex-shrink-0"
+              />
               <span>Lương T13</span>
             </>
           )}
@@ -70,7 +76,7 @@ export function EmployeeLookupActions({
         onClick={onShowBonus}
         className="w-full min-h-[44px]"
       >
-        <Gift className="w-4 h-4 flex-shrink-0" />
+        <Gift data-icon="inline-start" className="w-4 h-4 flex-shrink-0" />
         <span>Tiền Thưởng</span>
       </Button>
 
@@ -80,7 +86,7 @@ export function EmployeeLookupActions({
         onClick={onShowPassword}
         className="w-full min-h-[44px]"
       >
-        <Lock className="w-4 h-4 flex-shrink-0" />
+        <Lock data-icon="inline-start" className="w-4 h-4 flex-shrink-0" />
         <span>Đổi MK</span>
       </Button>
     </div>

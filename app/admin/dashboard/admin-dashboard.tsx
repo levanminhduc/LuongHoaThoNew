@@ -195,12 +195,15 @@ export function AdminDashboard() {
               >
                 {downloadingSyncTemplate ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                     <span className="hidden sm:inline">Đang tạo...</span>
                   </>
                 ) : (
                   <>
-                    <Database className="h-4 w-4" />
+                    <Database data-icon="inline-start" className="h-4 w-4" />
                     <span className="hidden md:inline">Template Mẫu Lương</span>
                     <span className="md:hidden">Template</span>
                   </>
@@ -214,7 +217,7 @@ export function AdminDashboard() {
                 size="sm"
                 className="flex-shrink-0"
               >
-                <LogOut className="w-4 h-4 sm:mr-2" />
+                <LogOut data-icon="inline-start" className="w-4 h-4" />
                 <span className="hidden sm:inline">Đăng Xuất</span>
               </Button>
             </div>
@@ -224,13 +227,18 @@ export function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Status Message */}
-        {message && (
-          <Alert className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
-            <AlertDescription className="text-blue-800 text-sm">
-              {message}
-            </AlertDescription>
-          </Alert>
-        )}
+        <div role="status" aria-live="polite" aria-atomic="true">
+          {message && (
+            <Alert
+              role="presentation"
+              className="mb-4 sm:mb-6 border-blue-200 bg-blue-50"
+            >
+              <AlertDescription className="text-blue-800 text-sm">
+                {message}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
 
         {/* Enhanced Stats Cards - Mobile Optimized Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
@@ -369,7 +377,7 @@ export function AdminDashboard() {
                     className="flex items-center gap-2 w-full sm:w-auto"
                     size="sm"
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings data-icon="inline-start" className="h-4 w-4" />
                     <span className="text-sm">Mở Trang Quản Lý Nhân Viên</span>
                   </Button>
                 </div>
@@ -401,7 +409,7 @@ export function AdminDashboard() {
                     className="flex items-center justify-center gap-2 bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 w-full sm:w-auto"
                     size="sm"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit data-icon="inline-start" className="h-4 w-4" />
                     <span className="text-xs sm:text-sm">
                       Quản Lý Lương Chi Tiết
                     </span>
@@ -412,7 +420,7 @@ export function AdminDashboard() {
                     className="w-full sm:w-auto"
                     size="sm"
                   >
-                    <RefreshCw className="w-4 h-4 sm:mr-2" />
+                    <RefreshCw data-icon="inline-start" className="w-4 h-4" />
                     <span className="text-xs sm:text-sm">Làm Mới</span>
                   </Button>
                 </div>

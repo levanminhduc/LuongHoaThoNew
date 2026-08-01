@@ -183,6 +183,7 @@ export default function DataValidationPage() {
           <div className="flex items-center gap-2 w-full sm:w-[140px]">
             <Calendar className="h-4 w-4 shrink-0" />
             <Combobox
+              aria-label="Chọn tháng lương"
               options={monthOptions}
               value={selectedMonth}
               onValueChange={setSelectedMonth}
@@ -201,6 +202,7 @@ export default function DataValidationPage() {
             className="w-full sm:w-auto"
           >
             <RefreshCw
+              data-icon="inline-start"
               className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
             />
             Làm mới

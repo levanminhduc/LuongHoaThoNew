@@ -237,12 +237,14 @@ export default function ColumnMappingConfigPage() {
       </div>
 
       {/* Messages */}
-      {message && (
-        <Alert className="mb-6">
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {message && (
+          <Alert role="presentation" className="mb-6">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -286,7 +288,7 @@ export default function ColumnMappingConfigPage() {
                   onClick={openCreateDialog}
                   className="flex items-center gap-2 w-full sm:w-auto"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus data-icon="inline-start" className="h-4 w-4" />
                   Thêm Alias
                 </Button>
               </div>
@@ -297,6 +299,7 @@ export default function ColumnMappingConfigPage() {
                 <div className="flex-1">
                   <Label htmlFor="field-filter">Lọc theo Database Field</Label>
                   <Combobox
+                    aria-label="Lọc theo database field"
                     options={fieldFilterOptions}
                     value={selectedField}
                     onValueChange={setSelectedField}
@@ -313,6 +316,7 @@ export default function ColumnMappingConfigPage() {
                   className="flex items-center gap-2 w-full sm:w-auto"
                 >
                   <RefreshCw
+                    data-icon="inline-start"
                     className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
                   />
                   Refresh
@@ -385,7 +389,10 @@ export default function ColumnMappingConfigPage() {
                                 onClick={() => openEditDialog(alias)}
                                 className="flex items-center gap-1"
                               >
-                                <Edit className="h-3 w-3" />
+                                <Edit
+                                  data-icon="inline-start"
+                                  className="h-3 w-3"
+                                />
                                 Edit
                               </Button>
                               <Button
@@ -394,7 +401,10 @@ export default function ColumnMappingConfigPage() {
                                 onClick={() => handleDeleteAlias(alias)}
                                 className="flex items-center gap-1 text-red-600 hover:text-red-700"
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2
+                                  data-icon="inline-start"
+                                  className="h-3 w-3"
+                                />
                                 Delete
                               </Button>
                             </div>
@@ -450,7 +460,7 @@ export default function ColumnMappingConfigPage() {
                           onClick={() => openEditDialog(alias)}
                           className="flex items-center gap-1 w-full"
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit data-icon="inline-start" className="h-3 w-3" />
                           Edit
                         </Button>
                         <Button
@@ -459,7 +469,10 @@ export default function ColumnMappingConfigPage() {
                           onClick={() => handleDeleteAlias(alias)}
                           className="flex items-center gap-1 text-red-600 hover:text-red-700 w-full"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2
+                            data-icon="inline-start"
+                            className="h-3 w-3"
+                          />
                           Delete
                         </Button>
                       </div>
@@ -579,6 +592,7 @@ export default function ColumnMappingConfigPage() {
             <div>
               <Label htmlFor="database_field">Database Field</Label>
               <Combobox
+                aria-label="Chọn database field"
                 options={fieldOptions}
                 value={aliasForm.database_field}
                 onValueChange={(value) =>

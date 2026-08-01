@@ -244,18 +244,19 @@ export function MappingConfigOverrideDialog({
             size="sm"
             onClick={() => setActiveTab("create")}
           >
-            <Save className="h-4 w-4 mr-2" />
+            <Save data-icon="inline-start" className="h-4 w-4" />
             Save Current
           </Button>
           <div className="relative">
             <input
+              aria-label="Nhập cấu hình từ file JSON"
               type="file"
               accept=".json"
               onChange={handleImport}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
             <Button variant="outline" size="sm">
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload data-icon="inline-start" className="h-4 w-4" />
               Import
             </Button>
           </div>
@@ -302,6 +303,7 @@ export function MappingConfigOverrideDialog({
 
                   <div className="flex gap-1">
                     <Button
+                      aria-label="Sửa cấu hình"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
@@ -312,6 +314,7 @@ export function MappingConfigOverrideDialog({
                       <Edit className="h-3 w-3" />
                     </Button>
                     <Button
+                      aria-label="Xuất cấu hình"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
@@ -323,6 +326,7 @@ export function MappingConfigOverrideDialog({
                     </Button>
                     {!config.is_default && (
                       <Button
+                        aria-label="Đặt làm mặc định"
                         variant="ghost"
                         size="sm"
                         onClick={(e) => {
@@ -334,6 +338,7 @@ export function MappingConfigOverrideDialog({
                       </Button>
                     )}
                     <Button
+                      aria-label="Xóa cấu hình"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
@@ -438,7 +443,7 @@ export function MappingConfigOverrideDialog({
                 size="sm"
                 onClick={() => setActiveTab("browse")}
               >
-                <Eye className="h-4 w-4 mr-2" />
+                <Eye data-icon="inline-start" className="h-4 w-4" />
                 Browse
               </Button>
               <Button
@@ -446,7 +451,7 @@ export function MappingConfigOverrideDialog({
                 size="sm"
                 onClick={() => setActiveTab("create")}
               >
-                <Save className="h-4 w-4 mr-2" />
+                <Save data-icon="inline-start" className="h-4 w-4" />
                 Save Current
               </Button>
               {editingConfig && (
@@ -455,7 +460,7 @@ export function MappingConfigOverrideDialog({
                   size="sm"
                   onClick={() => setActiveTab("edit")}
                 >
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit data-icon="inline-start" className="h-4 w-4" />
                   Edit
                 </Button>
               )}
@@ -470,6 +475,7 @@ export function MappingConfigOverrideDialog({
                   <div>
                     <Label>Configuration Name</Label>
                     <Input
+                      aria-label="Tên cấu hình"
                       value={editingConfig.config_name || ""}
                       onChange={(e) =>
                         setEditingConfig((prev) =>
@@ -483,6 +489,7 @@ export function MappingConfigOverrideDialog({
                   <div>
                     <Label>Description</Label>
                     <Textarea
+                      aria-label="Mô tả cấu hình"
                       value={editingConfig.description || ""}
                       onChange={(e) =>
                         setEditingConfig((prev) =>
@@ -496,6 +503,7 @@ export function MappingConfigOverrideDialog({
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
+                      aria-label="Kích hoạt cấu hình"
                       checked={editingConfig.is_active}
                       onCheckedChange={(checked) =>
                         setEditingConfig((prev) =>

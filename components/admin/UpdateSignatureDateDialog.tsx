@@ -89,7 +89,7 @@ export function UpdateSignatureDateDialog({
   return (
     <>
       <Button onClick={() => setOpen(true)} variant="outline" className="gap-2">
-        <CalendarClock className="h-4 w-4" />
+        <CalendarClock data-icon="inline-start" className="h-4 w-4" />
         Cập Nhật Ngày Ký
       </Button>
 
@@ -118,6 +118,7 @@ export function UpdateSignatureDateDialog({
                   </div>
                 ) : (
                   <select
+                    aria-label="Chọn tháng lương"
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
                     value={salaryMonth}
                     onChange={(e) => setSalaryMonth(e.target.value)}

@@ -208,6 +208,7 @@ export function EmployeeSearch({
           <div className="space-y-2">
             <Label htmlFor="month">Tháng Lương (Tùy chọn)</Label>
             <Combobox
+              aria-label="Chọn tháng lương"
               options={[
                 { value: "__EMPTY__", label: "Tất cả tháng" },
                 ...availableMonths,
@@ -250,12 +251,15 @@ export function EmployeeSearch({
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                   Đang tìm...
                 </>
               ) : (
                 <>
-                  <Search className="mr-2 h-4 w-4" />
+                  <Search data-icon="inline-start" className="h-4 w-4" />
                   Tìm Kiếm
                 </>
               )}

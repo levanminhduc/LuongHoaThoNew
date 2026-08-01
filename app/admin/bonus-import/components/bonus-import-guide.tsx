@@ -73,12 +73,15 @@ export function BonusImportGuide({
               >
                 {downloadingTemplate ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                     Đang tải mẫu...
                   </>
                 ) : (
                   <>
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download data-icon="inline-start" className="h-4 w-4" />
                     Export File Mẫu
                   </>
                 )}

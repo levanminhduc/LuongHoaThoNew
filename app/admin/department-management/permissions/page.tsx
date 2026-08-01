@@ -277,9 +277,12 @@ function PermissionsContent() {
             className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             {revokingId === permission.id ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2
+                data-icon="inline-start"
+                className="h-4 w-4 animate-spin"
+              />
             ) : (
-              <Trash2 className="h-4 w-4" />
+              <Trash2 data-icon="inline-start" className="h-4 w-4" />
             )}
           </Button>
         ) : null,
@@ -312,17 +315,19 @@ function PermissionsContent() {
           }
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
         >
-          <Plus className="h-4 w-4" />
+          <Plus data-icon="inline-start" className="h-4 w-4" />
           Cấp Quyền Mới
         </Button>
       </div>
 
-      {(error || queryError) && (
-        <Alert className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error || queryError}</AlertDescription>
-        </Alert>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {(error || queryError) && (
+          <Alert role="presentation" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error || queryError}</AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       {/* Filters */}
       <Card className="mb-6">
@@ -335,10 +340,16 @@ function PermissionsContent() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Tìm kiếm</label>
+              <label
+                htmlFor="permission-search"
+                className="text-sm font-medium mb-2 block"
+              >
+                Tìm kiếm
+              </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
+                  id="permission-search"
                   placeholder="Tìm theo tên, mã NV, department..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -352,7 +363,7 @@ function PermissionsContent() {
                 Trạng thái
               </label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Lọc theo trạng thái">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -368,6 +379,7 @@ function PermissionsContent() {
                 Department
               </label>
               <Combobox
+                aria-label="Chọn department"
                 options={departmentOptions}
                 value={departmentFilterState}
                 onValueChange={setDepartmentFilterState}
@@ -474,7 +486,10 @@ function PermissionsContent() {
         <CardContent>
           <div className="mb-4 flex justify-end">
             <Select value={visibleLimit} onValueChange={setVisibleLimit}>
-              <SelectTrigger className="w-full sm:w-[170px]">
+              <SelectTrigger
+                aria-label="Số dòng hiển thị"
+                className="w-full sm:w-[170px]"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -515,7 +530,7 @@ function PermissionsContent() {
                     }
                     className="bg-blue-600 hover:bg-blue-700"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus data-icon="inline-start" className="h-4 w-4" />
                     Cấp Quyền Đầu Tiên
                   </Button>
                 </div>

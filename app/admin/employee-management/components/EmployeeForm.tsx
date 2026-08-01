@@ -218,6 +218,7 @@ export default function EmployeeForm({
           </Label>
           <Input
             id="full_name"
+            autoComplete="name"
             value={formData.full_name}
             onChange={(e) => handleInputChange("full_name", e.target.value)}
             disabled={loading}
@@ -321,9 +322,15 @@ export default function EmployeeForm({
               disabled={loading}
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                <EyeOff
+                  data-icon="inline-start"
+                  className="h-4 w-4 text-muted-foreground"
+                />
               ) : (
-                <Eye className="h-4 w-4 text-muted-foreground" />
+                <Eye
+                  data-icon="inline-start"
+                  className="h-4 w-4 text-muted-foreground"
+                />
               )}
             </Button>
           </div>
@@ -354,6 +361,7 @@ export default function EmployeeForm({
             disabled={loading}
           >
             <SelectTrigger
+              aria-label="Chọn chức vụ"
               className={cn(
                 "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                 errors.chuc_vu ? "border-red-500" : "",
@@ -392,6 +400,7 @@ export default function EmployeeForm({
           >
             <PopoverTrigger asChild>
               <Button
+                type="button"
                 variant="outline"
                 role="combobox"
                 aria-expanded={openDepartment}
@@ -401,7 +410,10 @@ export default function EmployeeForm({
                 <span className="truncate">
                   {formData.department ? formData.department : "Chọn phòng ban"}
                 </span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronsUpDown
+                  data-icon="inline-end"
+                  className="h-4 w-4 shrink-0 opacity-50"
+                />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
@@ -470,6 +482,8 @@ export default function EmployeeForm({
           </Label>
           <Input
             id="phone_number"
+            type="tel"
+            autoComplete="tel"
             value={formData.phone_number}
             onChange={(e) => handleInputChange("phone_number", e.target.value)}
             disabled={loading}

@@ -258,11 +258,12 @@ export default function PasswordResetHistoryPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ip-address">IP Address</Label>
+              <Label htmlFor="filter-ip">Địa chỉ IP</Label>
               <div className="relative">
                 <Network className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  id="ip-address"
+                  id="filter-ip"
+                  autoComplete="off"
                   placeholder="VD: 192.168.1.1"
                   value={filters.ipAddress}
                   onChange={(e) =>
@@ -332,7 +333,7 @@ export default function PasswordResetHistoryPage() {
 
           <div className="flex gap-2 mt-4">
             <Button onClick={handleApplyFilters} className="flex-1">
-              <Search className="w-4 h-4 mr-2" />
+              <Search data-icon="inline-start" className="w-4 h-4" />
               Áp Dụng Bộ Lọc
             </Button>
             <Button
@@ -340,7 +341,7 @@ export default function PasswordResetHistoryPage() {
               onClick={handleResetFilters}
               className="flex-1"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw data-icon="inline-start" className="w-4 h-4" />
               Đặt Lại
             </Button>
           </div>
@@ -363,6 +364,7 @@ export default function PasswordResetHistoryPage() {
               disabled={loading}
             >
               <RefreshCw
+                data-icon="inline-start"
                 className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
               />
               Làm mới

@@ -10,17 +10,23 @@ import { Loader2, Save, AlertCircle, Shield } from "lucide-react";
 interface CCCDUpdateFormProps {
   onSubmit: (newCCCD: string) => void;
   isLoading: boolean;
+  disabled?: boolean;
   employeeName: string;
 }
 
 export function CCCDUpdateForm({
   onSubmit,
   isLoading,
+  disabled = false,
   employeeName,
 }: CCCDUpdateFormProps) {
   const [newCCCD, setNewCCCD] = useState("");
   const [confirmCCCD, setConfirmCCCD] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<{
+    newCCCD?: string;
+    confirmCCCD?: string;
+  }>({});
 
   const validateCCCD = (cccd: string): string[] => {
     const validationErrors: string[] = [];
@@ -55,10 +61,16 @@ export function CCCDUpdateForm({
 
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
+      setFieldErrors({
+        newCCCD: cccdErrors[0],
+        confirmCCCD:
+          newCCCD !== confirmCCCD ? "Số CCCD xác nhận không khớp" : undefined,
+      });
       return;
     }
 
     setErrors([]);
+    setFieldErrors({});
     onSubmit(newCCCD);
   };
 
@@ -66,12 +78,14 @@ export function CCCDUpdateForm({
     const value = e.target.value.replace(/\D/g, "").slice(0, 12);
     setNewCCCD(value);
     setErrors([]);
+    setFieldErrors({});
   };
 
   const handleConfirmCCCDChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 12);
     setConfirmCCCD(value);
     setErrors([]);
+    setFieldErrors({});
   };
 
   const isFormValid =
@@ -116,11 +130,23 @@ export function CCCDUpdateForm({
             onChange={handleNewCCCDChange}
             maxLength={12}
             className="mt-1"
-            disabled={isLoading}
+            disabled={isLoading || disabled}
+            aria-invalid={fieldErrors.newCCCD ? true : undefined}
+            aria-describedby={fieldErrors.newCCCD ? "newCCCD-error" : undefined}
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Đã nhập: {newCCCD.length}/12 chữ số
-          </p>
+          {fieldErrors.newCCCD ? (
+            <p
+              id="newCCCD-error"
+              role="alert"
+              className="text-xs font-medium text-red-600 mt-1"
+            >
+              {fieldErrors.newCCCD}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-500 mt-1">
+              Đã nhập: {newCCCD.length}/12 chữ số
+            </p>
+          )}
         </div>
 
         <div>
@@ -135,8 +161,21 @@ export function CCCDUpdateForm({
             onChange={handleConfirmCCCDChange}
             maxLength={12}
             className="mt-1"
-            disabled={isLoading}
+            disabled={isLoading || disabled}
+            aria-invalid={fieldErrors.confirmCCCD ? true : undefined}
+            aria-describedby={
+              fieldErrors.confirmCCCD ? "confirmCCCD-error" : undefined
+            }
           />
+          {fieldErrors.confirmCCCD && (
+            <p
+              id="confirmCCCD-error"
+              role="alert"
+              className="text-xs font-medium text-red-600 mt-1"
+            >
+              {fieldErrors.confirmCCCD}
+            </p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             Đã nhập: {confirmCCCD.length}/12 chữ số
             {confirmCCCD.length > 0 && newCCCD.length > 0 && (
@@ -153,17 +192,20 @@ export function CCCDUpdateForm({
       <div className="flex gap-3 pt-4">
         <Button
           type="submit"
-          disabled={!isFormValid || isLoading}
+          disabled={!isFormValid || isLoading || disabled}
           className="flex-1"
         >
           {isLoading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2
+                data-icon="inline-start"
+                className="w-4 h-4 animate-spin"
+              />
               Đang cập nhật...
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 mr-2" />
+              <Save data-icon="inline-start" className="w-4 h-4" />
               Cập nhật CCCD
             </>
           )}

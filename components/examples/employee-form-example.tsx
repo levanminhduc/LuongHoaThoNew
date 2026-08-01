@@ -318,9 +318,15 @@ export default function EmployeeFormExample({
                       disabled={isSubmitting}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff
+                          data-icon="inline-start"
+                          className="h-4 w-4 text-gray-400"
+                        />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye
+                          data-icon="inline-start"
+                          className="h-4 w-4 text-gray-400"
+                        />
                       )}
                     </Button>
                   </div>
@@ -343,6 +349,7 @@ export default function EmployeeFormExample({
                 <FormLabel>Phòng Ban *</FormLabel>
                 <FormControl>
                   <Combobox
+                    aria-label="Chọn phòng ban"
                     options={departmentOptions}
                     value={field.value}
                     onValueChange={field.onChange}
@@ -375,7 +382,7 @@ export default function EmployeeFormExample({
                   disabled={isSubmitting}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Chọn chức vụ">
                       <SelectValue placeholder="Chọn chức vụ" />
                     </SelectTrigger>
                   </FormControl>
@@ -427,6 +434,7 @@ export default function EmployeeFormExample({
               </div>
               <FormControl>
                 <Switch
+                  aria-label="Kích hoạt tài khoản nhân viên"
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   disabled={isSubmitting}
@@ -442,7 +450,12 @@ export default function EmployeeFormExample({
             disabled={isSubmitting || !isFormValid}
             className="w-full md:w-auto"
           >
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting && (
+              <Loader2
+                data-icon="inline-start"
+                className="mr-2 h-4 w-4 animate-spin"
+              />
+            )}
             {isSubmitting ? "Đang lưu..." : employee ? "Cập nhật" : "Tạo mới"}
           </Button>
           <Button

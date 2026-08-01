@@ -94,7 +94,10 @@ export function ErrorAlert({
                   onClick={onRetry}
                   className="h-8"
                 >
-                  <RefreshCw className="h-3 w-3 mr-1" />
+                  <RefreshCw
+                    data-icon="inline-start"
+                    className="h-3 w-3 mr-1"
+                  />
                   {retryLabel}
                 </Button>
               )}
@@ -119,12 +122,18 @@ export function ErrorAlert({
                 >
                   {isDetailsExpanded ? (
                     <>
-                      <ChevronUp className="h-3 w-3 mr-1" />
+                      <ChevronUp
+                        data-icon="inline-start"
+                        className="h-3 w-3 mr-1"
+                      />
                       Ẩn chi tiết
                     </>
                   ) : (
                     <>
-                      <ChevronDown className="h-3 w-3 mr-1" />
+                      <ChevronDown
+                        data-icon="inline-start"
+                        className="h-3 w-3 mr-1"
+                      />
                       Xem chi tiết
                     </>
                   )}
@@ -138,6 +147,7 @@ export function ErrorAlert({
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium">Chi tiết lỗi:</span>
                 <Button
+                  aria-label="Sao chép chi tiết lỗi"
                   variant="ghost"
                   size="sm"
                   onClick={() => copyToClipboard(details)}
@@ -196,7 +206,7 @@ export function ErrorBoundaryFallback({
                 onClick={() => setShowDetails(!showDetails)}
                 className="w-full"
               >
-                <Bug className="h-4 w-4 mr-2" />
+                <Bug data-icon="inline-start" className="h-4 w-4" />
                 {showDetails ? "Ẩn" : "Hiện"} thông tin lỗi
               </Button>
 
@@ -222,14 +232,14 @@ export function ErrorBoundaryFallback({
           <div className="flex flex-col gap-2">
             {onRetry && (
               <Button onClick={onRetry} className="w-full">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw data-icon="inline-start" className="h-4 w-4" />
                 Thử lại
               </Button>
             )}
 
             {onGoHome && (
               <Button variant="outline" onClick={onGoHome} className="w-full">
-                <Home className="h-4 w-4 mr-2" />
+                <Home data-icon="inline-start" className="h-4 w-4" />
                 Về trang chủ
               </Button>
             )}

@@ -124,7 +124,7 @@ class ErrorBoundary extends Component<Props, State> {
                   className="w-full flex items-center justify-center gap-2"
                   size="lg"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw data-icon="inline-start" className="w-4 h-4" />
                   Tải lại trang
                 </Button>
 
@@ -134,7 +134,7 @@ class ErrorBoundary extends Component<Props, State> {
                   className="w-full flex items-center justify-center gap-2"
                   size="lg"
                 >
-                  <Home className="w-4 h-4" />
+                  <Home data-icon="inline-start" className="w-4 h-4" />
                   Về trang chủ
                 </Button>
               </div>

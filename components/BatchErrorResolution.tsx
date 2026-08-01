@@ -296,7 +296,7 @@ export function BatchErrorResolution({
                 disabled={undoStack.length === 0}
                 className="flex items-center gap-1"
               >
-                <Undo2 className="h-3 w-3" />
+                <Undo2 data-icon="inline-start" className="h-3 w-3" />
                 Undo
               </Button>
               <Button
@@ -306,7 +306,7 @@ export function BatchErrorResolution({
                 disabled={redoStack.length === 0}
                 className="flex items-center gap-1"
               >
-                <Redo2 className="h-3 w-3" />
+                <Redo2 data-icon="inline-start" className="h-3 w-3" />
                 Redo
               </Button>
             </div>
@@ -380,6 +380,7 @@ export function BatchErrorResolution({
                               }`}
                             >
                               <Checkbox
+                                aria-label={`Chọn lỗi dòng ${error.index + 1}`}
                                 checked={selectedErrors.has(error.index)}
                                 onCheckedChange={() =>
                                   toggleErrorSelection(error.index)
@@ -474,6 +475,7 @@ export function BatchErrorResolution({
                             </p>
                           </div>
                           <Button
+                            aria-label="Bỏ cách sửa này"
                             variant="outline"
                             size="sm"
                             onClick={() => removeFix(index)}
@@ -506,7 +508,7 @@ export function BatchErrorResolution({
                     disabled={selectedErrors.size === 0}
                     className="flex items-center gap-2"
                   >
-                    <Wand2 className="h-4 w-4" />
+                    <Wand2 data-icon="inline-start" className="h-4 w-4" />
                     Apply Auto-Fix
                   </Button>
                   <span className="text-sm text-gray-500 self-center">
@@ -545,7 +547,7 @@ export function BatchErrorResolution({
                   disabled={fixes.length === 0}
                   className="flex items-center gap-2"
                 >
-                  <CheckCircle className="h-4 w-4" />
+                  <CheckCircle data-icon="inline-start" className="h-4 w-4" />
                   Apply All Fixes ({fixes.length})
                 </Button>
                 <Button
@@ -553,7 +555,7 @@ export function BatchErrorResolution({
                   onClick={onExportErrors}
                   className="flex items-center gap-2"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                   Export Errors
                 </Button>
               </div>

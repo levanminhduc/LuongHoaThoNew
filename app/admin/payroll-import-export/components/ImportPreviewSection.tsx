@@ -40,7 +40,7 @@ export function ImportPreviewSection({
           >
             {isExpanded ? (
               <>
-                <ChevronUp className="h-4 w-4" />
+                <ChevronUp data-icon="inline-start" className="h-4 w-4" />
                 Ẩn
               </>
             ) : (

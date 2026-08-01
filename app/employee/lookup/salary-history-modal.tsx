@@ -231,6 +231,7 @@ export function SalaryHistoryModal({
           <div className="space-y-2">
             <label className="text-sm font-medium">Chọn tháng lương</label>
             <Combobox
+              aria-label="Chọn tháng lương"
               options={monthOptions}
               value={selectedMonth}
               onValueChange={handleMonthChange}

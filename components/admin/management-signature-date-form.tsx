@@ -120,6 +120,7 @@ export function ManagementSignatureDateForm({
                   </div>
 
                   <Input
+                    aria-label="Thời điểm ký"
                     type="datetime-local"
                     value={mgmtDates[sigType] || ""}
                     onChange={(e) =>
@@ -139,9 +140,15 @@ export function ManagementSignatureDateForm({
                       disabled={mgmtLoading[sigType]}
                     >
                       {mgmtLoading[sigType] ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2
+                          data-icon="inline-start"
+                          className="h-3 w-3 animate-spin"
+                        />
                       ) : (
-                        <Pencil className="h-3 w-3 mr-1" />
+                        <Pencil
+                          data-icon="inline-start"
+                          className="h-3 w-3 mr-1"
+                        />
                       )}
                       Sửa ngày
                     </Button>
@@ -152,9 +159,15 @@ export function ManagementSignatureDateForm({
                       disabled={mgmtLoading[sigType]}
                     >
                       {mgmtLoading[sigType] ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2
+                          data-icon="inline-start"
+                          className="h-3 w-3 animate-spin"
+                        />
                       ) : (
-                        <PenTool className="h-3 w-3 mr-1" />
+                        <PenTool
+                          data-icon="inline-start"
+                          className="h-3 w-3 mr-1"
+                        />
                       )}
                       Ký luôn
                     </Button>

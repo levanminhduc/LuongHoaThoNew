@@ -34,6 +34,8 @@ interface ComboboxProps {
   emptyText?: string;
   disabled?: boolean;
   className?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
 }
 
 export function Combobox({
@@ -45,6 +47,8 @@ export function Combobox({
   emptyText = "Không tìm thấy.",
   disabled = false,
   className,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -63,9 +67,12 @@ export function Combobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : placeholder)}
+          aria-labelledby={ariaLabelledBy}
           className={cn(
             "w-[200px] justify-between font-normal",
             !value && "text-muted-foreground",
@@ -76,7 +83,10 @@ export function Combobox({
           <span className="truncate">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown
+            data-icon="inline-end"
+            className="h-4 w-4 shrink-0 opacity-50"
+          />
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -129,6 +139,8 @@ interface MultiComboboxProps {
   disabled?: boolean;
   className?: string;
   maxDisplay?: number;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
 }
 
 export function MultiCombobox({
@@ -141,6 +153,8 @@ export function MultiCombobox({
   disabled = false,
   className,
   maxDisplay = 2,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
 }: MultiComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -179,9 +193,12 @@ export function MultiCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : placeholder)}
+          aria-labelledby={ariaLabelledBy}
           className={cn(
             "w-[200px] justify-between",
             values.length === 0 && "text-muted-foreground",
@@ -190,7 +207,10 @@ export function MultiCombobox({
           disabled={disabled}
         >
           <span className="truncate">{displayText()}</span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown
+            data-icon="inline-end"
+            className="h-4 w-4 shrink-0 opacity-50"
+          />
         </Button>
       </PopoverTrigger>
       <PopoverContent

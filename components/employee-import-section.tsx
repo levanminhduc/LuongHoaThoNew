@@ -161,12 +161,15 @@ export function EmployeeImportSection() {
             >
               {downloadingTemplate ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="w-4 h-4 animate-spin"
+                  />
                   Đang tạo...
                 </>
               ) : (
                 <>
-                  <Download className="w-4 h-4" />
+                  <Download data-icon="inline-start" className="w-4 h-4" />
                   Tải File Mẫu
                 </>
               )}
@@ -179,12 +182,15 @@ export function EmployeeImportSection() {
             >
               {importing ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="w-4 h-4 animate-spin"
+                  />
                   Đang Import...
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4" />
+                  <Upload data-icon="inline-start" className="w-4 h-4" />
                   Import Nhân Viên
                 </>
               )}

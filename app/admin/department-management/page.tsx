@@ -110,7 +110,7 @@ export default function DepartmentManagementPage() {
             }
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
           >
-            <Plus className="h-4 w-4" />
+            <Plus data-icon="inline-start" className="h-4 w-4" />
             Cấp Quyền Mới
           </Button>
           <Button
@@ -120,7 +120,7 @@ export default function DepartmentManagementPage() {
             }
             className="flex items-center gap-2"
           >
-            <Eye className="h-4 w-4" />
+            <Eye data-icon="inline-start" className="h-4 w-4" />
             Xem Tất Cả Quyền
           </Button>
         </div>
@@ -210,6 +210,7 @@ export default function DepartmentManagementPage() {
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
         <Input
+          aria-label="Tìm kiếm department"
           placeholder="Tìm kiếm department..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -311,7 +312,10 @@ export default function DepartmentManagementPage() {
                           )
                         }
                       >
-                        <Plus className="h-4 w-4 mr-1" />
+                        <Plus
+                          data-icon="inline-start"
+                          className="h-4 w-4 mr-1"
+                        />
                         Cấp Quyền
                       </Button>
                       <Button
@@ -324,7 +328,10 @@ export default function DepartmentManagementPage() {
                           )
                         }
                       >
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye
+                          data-icon="inline-start"
+                          className="h-4 w-4 mr-1"
+                        />
                         Xem Chi Tiết
                       </Button>
                     </div>

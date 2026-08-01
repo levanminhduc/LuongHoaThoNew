@@ -108,6 +108,7 @@ export function BonusListSection({ department }: BonusListSectionProps) {
           Chọn đợt thưởng để xem danh sách nhân viên và trạng thái ký nhận
         </CardDescription>
         <Combobox
+          aria-label="Chọn đợt thưởng"
           options={periodOptions}
           value={
             selected

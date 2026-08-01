@@ -248,6 +248,7 @@ export function EmployeeSignatureDateForm({
         <div className="space-y-1">
           <Label className="text-xs">Từ ngày</Label>
           <Input
+            aria-label="Từ ngày"
             type="date"
             value={fromDate}
             onChange={(e) => {
@@ -260,6 +261,7 @@ export function EmployeeSignatureDateForm({
         <div className="space-y-1">
           <Label className="text-xs">Đến ngày</Label>
           <Input
+            aria-label="Đến ngày"
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
@@ -291,6 +293,7 @@ export function EmployeeSignatureDateForm({
                 className="flex items-center gap-2 text-sm hover:bg-gray-50 p-1 rounded cursor-pointer"
               >
                 <Checkbox
+                  aria-label={`Chọn ${emp.employee_id} - ${emp.full_name}`}
                   checked={selectedIds.includes(emp.employee_id)}
                   onCheckedChange={() => toggleEmployee(emp.employee_id)}
                 />
@@ -387,7 +390,7 @@ export function EmployeeSignatureDateForm({
         size="sm"
       >
         {(loading || isStreaming) && (
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <Loader2 data-icon="inline-start" className="h-4 w-4 animate-spin" />
         )}
         Cập Nhật Ngày Ký NV
       </Button>

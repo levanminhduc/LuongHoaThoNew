@@ -104,6 +104,7 @@ export default function AttendanceListPage() {
       key: "select",
       header: (
         <Checkbox
+          aria-label="Chọn tất cả nhân viên"
           checked={
             employees.length > 0 && selectedIds.size === employees.length
           }
@@ -113,6 +114,7 @@ export default function AttendanceListPage() {
       width: "56px",
       cell: (emp) => (
         <Checkbox
+          aria-label={`Chọn nhân viên ${emp.employee_id}`}
           checked={selectedIds.has(emp.employee_id)}
           onCheckedChange={(checked) =>
             handleSelectOne(emp.employee_id, checked === true)
@@ -187,8 +189,10 @@ export default function AttendanceListPage() {
     <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-4">
         <Button
+          type="button"
           variant="ghost"
           size="icon"
+          aria-label="Quay lại dashboard"
           onClick={() => router.push("/admin/dashboard")}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -212,6 +216,7 @@ export default function AttendanceListPage() {
             <div className="space-y-1">
               <label className="text-sm font-medium">Kỳ công</label>
               <Combobox
+                aria-label="Chọn kỳ công"
                 options={periods.map((p) => ({
                   value: `${p.year}-${p.month}`,
                   label: `${String(p.month).padStart(2, "0")}/${p.year}`,
@@ -232,6 +237,7 @@ export default function AttendanceListPage() {
             <div className="space-y-1">
               <label className="text-sm font-medium">Phòng ban</label>
               <Combobox
+                aria-label="Lọc theo phòng ban"
                 options={[
                   { value: "all", label: "Tất cả" },
                   ...[...departments]
@@ -253,10 +259,16 @@ export default function AttendanceListPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">Tìm kiếm</label>
+              <label
+                htmlFor="attendance-search"
+                className="text-sm font-medium"
+              >
+                Tìm kiếm
+              </label>
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id="attendance-search"
                   placeholder="Mã NV, tên..."
                   className="pl-8 w-[200px]"
                   value={search}
@@ -274,7 +286,10 @@ export default function AttendanceListPage() {
                   setSelectedIds(new Set());
                 }}
               >
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger
+                  aria-label="Số dòng hiển thị"
+                  className="w-[150px]"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -305,9 +320,12 @@ export default function AttendanceListPage() {
                 onClick={() => handleExport(false)}
               >
                 {exporting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                 ) : (
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                 )}
                 Xuất đã chọn ({selectedIds.size})
               </Button>
@@ -316,9 +334,12 @@ export default function AttendanceListPage() {
                 onClick={() => handleExport(true)}
               >
                 {exporting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                 ) : (
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                 )}
                 Xuất tất cả
               </Button>

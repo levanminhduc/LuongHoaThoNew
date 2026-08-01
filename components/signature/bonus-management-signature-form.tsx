@@ -87,6 +87,7 @@ export default function BonusManagementSignatureForm({
         <div className="space-y-2">
           <Label>Chọn đợt thưởng</Label>
           <Combobox
+            aria-label="Chọn đợt thưởng để ký duyệt"
             options={periods.map((period) => ({
               value: toPeriodKey(period.bonus_type, period.bonus_period),
               label: `${period.bonus_type_label} • ${period.bonus_period}${period.bonus_title ? ` • ${period.bonus_title}` : ""}`,

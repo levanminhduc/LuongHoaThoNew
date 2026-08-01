@@ -372,10 +372,16 @@ export default function UnsignedEmployeesModal({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tìm kiếm</label>
+              <label
+                htmlFor="unsigned-employee-search"
+                className="text-sm font-medium"
+              >
+                Tìm kiếm
+              </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
+                  id="unsigned-employee-search"
                   placeholder="Mã NV hoặc tên nhân viên..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -387,6 +393,7 @@ export default function UnsignedEmployeesModal({
             <div className="space-y-2">
               <label className="text-sm font-medium">Phòng ban</label>
               <Combobox
+                aria-label="Lọc theo phòng ban"
                 options={departmentOptions}
                 value={selectedDepartment}
                 onValueChange={(v) => handleDepartmentChange(v || "all")}
@@ -405,7 +412,10 @@ export default function UnsignedEmployeesModal({
                   {departments.length} phòng ban
                 </div>
                 <Select value={String(limit)} onValueChange={handleLimitChange}>
-                  <SelectTrigger className="w-[120px]">
+                  <SelectTrigger
+                    aria-label="Số dòng hiển thị"
+                    className="w-[120px]"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -425,12 +435,15 @@ export default function UnsignedEmployeesModal({
                 >
                   {exporting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2
+                        data-icon="inline-start"
+                        className="w-4 h-4 animate-spin"
+                      />
                       Đang xuất...
                     </>
                   ) : (
                     <>
-                      <Download className="w-4 h-4" />
+                      <Download data-icon="inline-start" className="w-4 h-4" />
                       Xuất Excel
                     </>
                   )}
@@ -482,7 +495,10 @@ export default function UnsignedEmployeesModal({
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft
+                        data-icon="inline-start"
+                        className="w-4 h-4"
+                      />
                       Trước
                     </Button>
                     <Button
@@ -492,7 +508,10 @@ export default function UnsignedEmployeesModal({
                       disabled={currentPage === totalPages}
                     >
                       Sau
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight
+                        data-icon="inline-end"
+                        className="w-4 h-4"
+                      />
                     </Button>
                   </div>
                 </div>

@@ -530,7 +530,10 @@ export function AdvancedSalaryImport({
                     onClick={() => setShowOverrideDialog(true)}
                     className="text-xs"
                   >
-                    <Settings className="h-3 w-3 mr-1" />
+                    <Settings
+                      data-icon="inline-start"
+                      className="h-3 w-3 mr-1"
+                    />
                     Manage
                   </Button>
                 </div>
@@ -567,9 +570,15 @@ export function AdvancedSalaryImport({
                             "Chọn mapping configuration..."
                           )}
                           {isLoadingConfigurations ? (
-                            <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+                            <Loader2
+                              data-icon="inline-end"
+                              className="h-4 w-4 shrink-0 animate-spin opacity-50"
+                            />
                           ) : (
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            <ChevronsUpDown
+                              data-icon="inline-end"
+                              className="h-4 w-4 shrink-0 opacity-50"
+                            />
                           )}
                         </Button>
                       </PopoverTrigger>
@@ -676,12 +685,15 @@ export function AdvancedSalaryImport({
               >
                 {importing ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                     Đang phân tích...
                   </>
                 ) : (
                   <>
-                    <Settings className="h-4 w-4" />
+                    <Settings data-icon="inline-start" className="h-4 w-4" />
                     Phân Tích & Cấu Hình
                   </>
                 )}
@@ -694,7 +706,7 @@ export function AdvancedSalaryImport({
                   disabled={importing}
                   className="flex items-center gap-2"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                   Tải Template
                 </Button>
               )}

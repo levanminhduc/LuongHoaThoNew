@@ -65,7 +65,8 @@ export function UpdateCCCDManagement() {
     setUpdateResult(null);
   };
 
-  const handleCCCDUpdate = (newCCCD: string) => {
+  const handleCCCDUpdate = async (newCCCD: string) => {
+    if (isUpdating) return;
     setPendingCCCD(newCCCD);
     setShowConfirmDialog(true);
   };
@@ -74,7 +75,6 @@ export function UpdateCCCDManagement() {
     if (!selectedEmployee || !pendingCCCD) return;
 
     setUpdateResult(null);
-    setShowConfirmDialog(false);
 
     try {
       const data = await updateCccdMutation.mutateAsync({
@@ -109,6 +109,8 @@ export function UpdateCCCDManagement() {
         success: false,
         message: "Lỗi kết nối. Vui lòng thử lại.",
       });
+    } finally {
+      setShowConfirmDialog(false);
     }
   };
 
@@ -129,7 +131,7 @@ export function UpdateCCCDManagement() {
           onClick={handleBackToDashboard}
           className="mb-4"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft data-icon="inline-start" className="w-4 h-4" />
           Quay lại Dashboard
         </Button>
 
@@ -144,26 +146,29 @@ export function UpdateCCCDManagement() {
         </p>
       </div>
 
-      {updateResult && (
-        <Alert
-          className={`mb-6 ${updateResult.success ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50"}`}
-        >
-          <div className="flex items-center gap-2">
-            {updateResult.success ? (
-              <CheckCircle className="w-4 h-4 text-green-600" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-600" />
-            )}
-            <AlertDescription
-              className={
-                updateResult.success ? "text-green-800" : "text-red-800"
-              }
-            >
-              {updateResult.message}
-            </AlertDescription>
-          </div>
-        </Alert>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {updateResult && (
+          <Alert
+            role="presentation"
+            className={`mb-6 ${updateResult.success ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50"}`}
+          >
+            <div className="flex items-center gap-2">
+              {updateResult.success ? (
+                <CheckCircle className="w-4 h-4 text-green-600" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-red-600" />
+              )}
+              <AlertDescription
+                className={
+                  updateResult.success ? "text-green-800" : "text-red-800"
+                }
+              >
+                {updateResult.message}
+              </AlertDescription>
+            </div>
+          </Alert>
+        )}
+      </div>
 
       <div className="grid gap-6">
         {!selectedEmployee ? (
@@ -189,7 +194,7 @@ export function UpdateCCCDManagement() {
                 <div className="flex items-center justify-between">
                   <CardTitle>Thông Tin Nhân Viên</CardTitle>
                   <Button variant="outline" size="sm" onClick={handleBack}>
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <ArrowLeft data-icon="inline-start" className="w-4 h-4" />
                     Chọn nhân viên khác
                   </Button>
                 </div>
@@ -251,6 +256,7 @@ export function UpdateCCCDManagement() {
                 <CCCDUpdateForm
                   onSubmit={handleCCCDUpdate}
                   isLoading={isUpdating}
+                  disabled={isUpdating}
                   employeeName={selectedEmployee.full_name}
                 />
               </CardContent>
@@ -265,9 +271,10 @@ export function UpdateCCCDManagement() {
         onConfirm={executeCCCDUpdate}
         title="Xác nhận cập nhật CCCD"
         description={`Bạn có chắc chắn muốn cập nhật số CCCD cho nhân viên ${selectedEmployee?.full_name} không?`}
-        confirmLabel="Đồng ý"
+        confirmLabel={isUpdating ? "Đang cập nhật..." : "Đồng ý"}
         cancelLabel="Hủy"
         variant="warning"
+        loading={isUpdating}
       />
     </div>
   );

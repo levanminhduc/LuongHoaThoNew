@@ -294,7 +294,12 @@ export function ColumnMappingDialog({
       <Card className="w-full max-w-4xl max-h-[90vh] flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Cấu Hình Ánh Xạ Cột</CardTitle>
-          <Button variant="ghost" size="icon" onClick={onCancel}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Đóng cấu hình cột"
+            onClick={onCancel}
+          >
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
@@ -323,6 +328,7 @@ export function ColumnMappingDialog({
                           Load Configuration
                         </Label>
                         <Combobox
+                          aria-label="Chọn cấu hình đã lưu"
                           options={[
                             { value: "", label: "No configuration" },
                             ...availableConfigs.map((config) => ({
@@ -348,6 +354,7 @@ export function ColumnMappingDialog({
 
                     <div className="flex items-center space-x-2">
                       <Switch
+                        aria-label="Lưu ánh xạ này thành cấu hình"
                         checked={shouldSaveConfig}
                         onCheckedChange={setShouldSaveConfig}
                       />
@@ -405,6 +412,7 @@ export function ColumnMappingDialog({
                 disabled={isBusy}
               >
                 <RefreshCw
+                  data-icon="inline-start"
                   className={`h-4 w-4 ${isBusy ? "animate-spin" : ""}`}
                 />
                 {enableAliasMapping ? "Smart Auto-Map" : "Tự Động Ánh Xạ"}
@@ -417,7 +425,7 @@ export function ColumnMappingDialog({
                   size="sm"
                   className="flex items-center gap-2"
                 >
-                  <Target className="h-4 w-4" />
+                  <Target data-icon="inline-start" className="h-4 w-4" />
                   {showAdvancedView ? "Simple View" : "Advanced View"}
                 </Button>
               )}
@@ -564,6 +572,7 @@ export function ColumnMappingDialog({
                         </div>
                         <div className="flex items-center gap-2">
                           <Combobox
+                            aria-label="Chọn trường dữ liệu"
                             options={[
                               { value: "none", label: "Không ánh xạ" },
                               ...PAYROLL_FIELD_CONFIG.map((field) => ({
@@ -587,6 +596,7 @@ export function ColumnMappingDialog({
                             <Button
                               variant="ghost"
                               size="icon"
+                              aria-label={`Xóa ánh xạ cột ${column}`}
                               onClick={() => handleRemoveMapping(column)}
                             >
                               <X className="h-4 w-4" />
@@ -652,7 +662,10 @@ export function ColumnMappingDialog({
                                   }}
                                   className="ml-2 text-xs"
                                 >
-                                  <Plus className="h-3 w-3 mr-1" />
+                                  <Plus
+                                    data-icon="inline-start"
+                                    className="h-3 w-3 mr-1"
+                                  />
                                   Tạo Alias
                                 </Button>
                               )}
@@ -704,6 +717,7 @@ export function ColumnMappingDialog({
                         </Badge>
                       </div>
                       <Button
+                        aria-label="Xóa alias mới"
                         variant="ghost"
                         size="sm"
                         onClick={() => handleRemoveNewAlias(index)}
@@ -728,7 +742,7 @@ export function ColumnMappingDialog({
                 disabled={errors.length > 0}
                 className="flex items-center gap-2"
               >
-                <Check className="h-4 w-4" />
+                <Check data-icon="inline-start" className="h-4 w-4" />
                 Lưu Cấu Hình
                 {newAliases.length > 0 && (
                   <Badge variant="secondary" className="ml-1">
@@ -769,6 +783,7 @@ export function ColumnMappingDialog({
             <div>
               <Label htmlFor="database-field">Database Field</Label>
               <Combobox
+                aria-label="Chọn database field"
                 options={PAYROLL_FIELD_CONFIG.map((field) => ({
                   value: field.field,
                   label: `${field.label} (${field.field})`,

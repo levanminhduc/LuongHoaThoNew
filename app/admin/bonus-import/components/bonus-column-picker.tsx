@@ -61,6 +61,7 @@ export function BonusColumnPicker({
         <div className="space-y-2">
           <Label>Cột Mã Nhân Viên</Label>
           <Combobox
+            aria-label="Chọn cột Mã Nhân Viên"
             options={headerOptions}
             value={employeeIdColumn}
             onValueChange={onEmployeeIdColumnChange}
@@ -75,6 +76,7 @@ export function BonusColumnPicker({
         <div className="space-y-2">
           <Label>Cột Số Tiền Thưởng</Label>
           <Combobox
+            aria-label="Chọn cột Số Tiền Thưởng"
             options={headerOptions}
             value={amountColumn}
             onValueChange={onAmountColumnChange}

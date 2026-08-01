@@ -367,6 +367,7 @@ export default function ImportErrorModal({
       width: "90px",
       cell: (error) => (
         <Button
+          aria-label="Sao chép nội dung lỗi"
           variant="ghost"
           size="sm"
           onClick={() => handleCopyError(error.message)}
@@ -447,6 +448,7 @@ export default function ImportErrorModal({
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
+                  aria-label="Tìm kiếm lỗi"
                   placeholder="Tìm kiếm lỗi (Row, Mã NV, Field, Message)..."
                   value={searchQuery}
                   onChange={(e) => {
@@ -463,7 +465,10 @@ export default function ImportErrorModal({
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger
+                  aria-label="Lọc theo loại lỗi"
+                  className="w-full sm:w-[200px]"
+                >
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Lọc theo loại" />
                 </SelectTrigger>
@@ -483,7 +488,7 @@ export default function ImportErrorModal({
                 disabled={isExporting}
                 className="w-full sm:w-auto"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download data-icon="inline-start" className="h-4 w-4" />
                 {isExporting ? "Đang xuất..." : "Tải Excel"}
               </Button>
             </div>
@@ -524,6 +529,7 @@ export default function ImportErrorModal({
                           {getSeverityIcon(error.severity)}
                         </div>
                         <Button
+                          aria-label="Sao chép nội dung lỗi"
                           variant="ghost"
                           size="sm"
                           onClick={() => handleCopyError(error.message)}
@@ -580,6 +586,7 @@ export default function ImportErrorModal({
                 </div>
                 <div className="flex gap-2">
                   <Button
+                    aria-label="Trang trước"
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -588,6 +595,7 @@ export default function ImportErrorModal({
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button
+                    aria-label="Trang sau"
                     variant="outline"
                     size="sm"
                     onClick={() =>
@@ -595,7 +603,10 @@ export default function ImportErrorModal({
                     }
                     disabled={currentPage === totalPages}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight
+                      data-icon="inline-start"
+                      className="h-4 w-4"
+                    />
                   </Button>
                 </div>
               </div>

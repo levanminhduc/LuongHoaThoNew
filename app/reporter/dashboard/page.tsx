@@ -117,7 +117,7 @@ export default function ReporterDashboard() {
               onClick={() => setShowOverviewModal(true)}
               className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
             >
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye data-icon="inline-start" className="h-4 w-4" />
               Tổng Quan
             </Button>
             <Button
@@ -127,7 +127,10 @@ export default function ReporterDashboard() {
               disabled={!monthStatus}
               className="w-full border-red-200 hover:bg-red-50 sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
             >
-              <UserX className="mr-2 h-4 w-4 text-red-600" />
+              <UserX
+                data-icon="inline-start"
+                className="h-4 w-4 text-red-600"
+              />
               <span className="text-red-700">Chưa Ký</span>
               {monthStatus && (
                 <Badge className="ml-2 bg-red-600 text-white">
@@ -142,11 +145,12 @@ export default function ReporterDashboard() {
               onClick={() => setShowEmployeeManagementModal(true)}
               className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation col-span-2"
             >
-              <Users className="mr-2 h-4 w-4" />
+              <Users data-icon="inline-start" className="h-4 w-4" />
               Quản Lý NV
             </Button>
           </div>
           <Combobox
+            aria-label="Chọn tháng lương"
             options={getRecentMonthOptions()}
             value={selectedMonth}
             onValueChange={setSelectedMonth}
@@ -346,12 +350,18 @@ export default function ReporterDashboard() {
                       >
                         {isSigning ? (
                           <>
-                            <Clock className="h-5 w-5 mr-2 animate-spin" />
+                            <Clock
+                              data-icon="inline-start"
+                              className="h-5 w-5 animate-spin"
+                            />
                             Đang xử lý...
                           </>
                         ) : (
                           <>
-                            <PenTool className="h-5 w-5 mr-2" />
+                            <PenTool
+                              data-icon="inline-start"
+                              className="h-5 w-5"
+                            />
                             Ký Xác Nhận Báo Cáo
                           </>
                         )}

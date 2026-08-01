@@ -209,16 +209,29 @@ export default function BonusImportPage() {
             />
           )}
 
+          {bonusPeriodError && (
+            <p
+              role="alert"
+              className="text-center text-sm font-medium text-destructive"
+            >
+              {bonusPeriodError}
+            </p>
+          )}
+
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Button
               onClick={handleImport}
               disabled={!canImport}
+              aria-invalid={bonusPeriodError ? true : undefined}
               className="flex items-center gap-2 px-8 w-full sm:w-auto"
             >
               {importStatus === "importing" ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
+                <RefreshCw
+                  data-icon="inline-start"
+                  className="h-4 w-4 animate-spin"
+                />
               ) : (
-                <Upload className="h-4 w-4" />
+                <Upload data-icon="inline-start" className="h-4 w-4" />
               )}
               {importStatus === "importing"
                 ? "Đang Import..."
@@ -232,7 +245,7 @@ export default function BonusImportPage() {
                 disabled={importStatus === "importing"}
                 className="flex items-center gap-2 w-full sm:w-auto"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw data-icon="inline-start" className="h-4 w-4" />
                 Reset
               </Button>
             )}
@@ -269,7 +282,7 @@ export default function BonusImportPage() {
                     onClick={() => setShowErrorModal(true)}
                     className="text-red-600 border-red-300 hover:bg-red-50"
                   >
-                    <Eye className="h-4 w-4 mr-2" />
+                    <Eye data-icon="inline-start" className="h-4 w-4" />
                     Xem Chi Tiết
                   </Button>
                 </div>

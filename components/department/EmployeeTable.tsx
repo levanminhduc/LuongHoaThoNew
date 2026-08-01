@@ -252,6 +252,7 @@ export default function EmployeeTable({
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
+              aria-label="Tìm kiếm nhân viên"
               placeholder="Tìm kiếm nhân viên..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -260,7 +261,10 @@ export default function EmployeeTable({
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger
+              aria-label="Lọc theo trạng thái"
+              className="w-full sm:w-40"
+            >
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Lọc trạng thái" />
             </SelectTrigger>
@@ -272,7 +276,10 @@ export default function EmployeeTable({
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger
+              aria-label="Sắp xếp danh sách"
+              className="w-full sm:w-40"
+            >
               <ArrowUpDown className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Sắp xếp" />
             </SelectTrigger>

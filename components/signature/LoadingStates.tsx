@@ -86,6 +86,7 @@ export function RefreshButton({
         className={className}
       >
         <RefreshCw
+          data-icon="inline-start"
           className={`h-4 w-4 ${loading ? "animate-spin" : ""} ${size === "sm" ? "mr-1" : "mr-2"}`}
         />
         {loading ? "Đang cập nhật..." : "Cập nhật"}

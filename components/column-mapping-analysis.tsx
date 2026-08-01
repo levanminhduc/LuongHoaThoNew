@@ -171,7 +171,7 @@ export function ColumnMappingAnalysis({
           onClick={onReanalyze}
           className="flex items-center gap-2"
         >
-          <Settings className="h-4 w-4" />
+          <Settings data-icon="inline-start" className="h-4 w-4" />
           Re-analyze
         </Button>
       </div>
@@ -350,12 +350,12 @@ export function ColumnMappingAnalysis({
       <div className="flex justify-center gap-4">
         {needsReviewColumns > 0 || unmappedColumns > 0 ? (
           <Button onClick={onFixMapping} className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
+            <Settings data-icon="inline-start" className="h-4 w-4" />
             Fix Mapping Issues
           </Button>
         ) : (
           <Button onClick={onProceedImport} className="flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
+            <FileSpreadsheet data-icon="inline-start" className="h-4 w-4" />
             Proceed with Import
           </Button>
         )}

@@ -43,11 +43,9 @@ export default function HomePage() {
                     <span>Quản lý dữ liệu lương</span>
                   </div>
                 </div>
-                <Link href="/admin/login">
-                  <Button variant="gradientBlue" className="w-full p-4">
-                    Đăng Nhập
-                  </Button>
-                </Link>
+                <Button asChild variant="gradientBlue" className="w-full p-4">
+                  <Link href="/admin/login">Đăng Nhập</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -69,11 +67,9 @@ export default function HomePage() {
                 <div className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                   <p>Nhập mã nhân viên và số CCCD để xem thông tin lương</p>
                 </div>
-                <Link href="/employee/lookup">
-                  <Button variant="gradientGreen" className="w-full p-4">
-                    Tra Cứu Lương
-                  </Button>
-                </Link>
+                <Button asChild variant="gradientGreen" className="w-full p-4">
+                  <Link href="/employee/lookup">Tra Cứu Lương</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>

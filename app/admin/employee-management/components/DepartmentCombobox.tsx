@@ -72,9 +72,20 @@ export function DepartmentCombobox({
           >
             {value || "Chọn phòng ban"}
             {isLoading ? (
-              <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+              <>
+                <span role="status" aria-live="polite" className="sr-only">
+                  Đang tải danh sách phòng ban
+                </span>
+                <Loader2
+                  data-icon="inline-end"
+                  className="h-4 w-4 shrink-0 animate-spin opacity-50"
+                />
+              </>
             ) : (
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronsUpDown
+                data-icon="inline-end"
+                className="h-4 w-4 shrink-0 opacity-50"
+              />
             )}
           </Button>
         </FormControl>

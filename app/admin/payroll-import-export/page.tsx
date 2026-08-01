@@ -578,7 +578,7 @@ export default function PayrollImportExportPage() {
                       setExportType(value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Chọn loại export">
                       <SelectValue placeholder="Chọn loại export" />
                     </SelectTrigger>
                     <SelectContent>
@@ -628,9 +628,12 @@ export default function PayrollImportExportPage() {
                   className="flex items-center gap-2 px-8 w-full sm:w-auto"
                 >
                   {exportLoading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <RefreshCw
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                   ) : (
-                    <Download className="h-4 w-4" />
+                    <Download data-icon="inline-start" className="h-4 w-4" />
                   )}
                   {exportLoading
                     ? "Đang tạo file..."
@@ -643,7 +646,10 @@ export default function PayrollImportExportPage() {
                   disabled={exportLoading}
                   className="flex items-center gap-2 w-full sm:w-auto"
                 >
-                  <FileSpreadsheet className="h-4 w-4" />
+                  <FileSpreadsheet
+                    data-icon="inline-start"
+                    className="h-4 w-4"
+                  />
                   Template từ Config
                 </Button>
 
@@ -653,7 +659,10 @@ export default function PayrollImportExportPage() {
                   disabled={exportLoading}
                   className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 w-full sm:w-auto"
                 >
-                  <FileSpreadsheet className="h-4 w-4" />
+                  <FileSpreadsheet
+                    data-icon="inline-start"
+                    className="h-4 w-4"
+                  />
                   Template từ Aliases
                 </Button>
               </div>
@@ -731,9 +740,12 @@ export default function PayrollImportExportPage() {
                   className="flex items-center gap-2 px-8"
                 >
                   {analysisLoading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <RefreshCw
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                   ) : (
-                    <Search className="h-4 w-4" />
+                    <Search data-icon="inline-start" className="h-4 w-4" />
                   )}
                   {analysisLoading ? "Analyzing..." : "Analyze Column Mapping"}
                 </Button>
@@ -840,9 +852,12 @@ export default function PayrollImportExportPage() {
                   className="flex items-center gap-2 px-8 w-full sm:w-auto"
                 >
                   {loading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <RefreshCw
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                   ) : (
-                    <Upload className="h-4 w-4" />
+                    <Upload data-icon="inline-start" className="h-4 w-4" />
                   )}
                   {loading ? "Đang Import..." : "Bắt Đầu Import"}
                 </Button>
@@ -854,7 +869,7 @@ export default function PayrollImportExportPage() {
                     disabled={loading}
                     className="flex items-center gap-2 w-full sm:w-auto"
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw data-icon="inline-start" className="h-4 w-4" />
                     Reset
                   </Button>
                 )}
@@ -890,12 +905,14 @@ export default function PayrollImportExportPage() {
       </Tabs>
 
       {/* Messages */}
-      {message && (
-        <Alert className="mt-6">
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {message && (
+          <Alert role="presentation" className="mt-6">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        )}
+      </div>
 
       {error && (
         <Alert variant="destructive" className="mt-6">
@@ -945,7 +962,7 @@ export default function PayrollImportExportPage() {
                       onClick={() => setShowErrorModal(true)}
                       className="w-full sm:w-auto text-red-600 border-red-300 hover:bg-red-50"
                     >
-                      <Eye className="h-4 w-4 mr-2" />
+                      <Eye data-icon="inline-start" className="h-4 w-4" />
                       Xem Chi Tiết
                     </Button>
                     <Button
@@ -955,7 +972,7 @@ export default function PayrollImportExportPage() {
                       disabled={exportImportErrorsMutation.isPending}
                       className="w-full sm:w-auto text-blue-600 border-blue-300 hover:bg-blue-50"
                     >
-                      <Download className="h-4 w-4 mr-2" />
+                      <Download data-icon="inline-start" className="h-4 w-4" />
                       Tải Báo Cáo Lỗi Excel
                     </Button>
                   </div>

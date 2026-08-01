@@ -20,6 +20,12 @@ import { Loader2, Eye, EyeOff, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { encryptJson, decryptJson } from "@/lib/utils/client-crypto";
 import { saveSession, getSession } from "@/lib/auth/secure-session";
+import { z } from "zod";
+
+const LoginSchema = z.object({
+  username: z.string().trim().min(1, "Vui lòng nhập tên đăng nhập"),
+  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+});
 
 const ADMIN_CREDENTIALS_KEY = "admin_saved_credentials";
 const CREDENTIALS_KEY_MATERIAL = "hoatho-admin-login-remember-v1";
@@ -104,6 +110,7 @@ function LoginFormContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [rememberPassword, setRememberPassword] = useState(false);
   const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -190,6 +197,19 @@ function LoginFormContent() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const parsed = LoginSchema.safeParse({ username, password });
+    if (!parsed.success) {
+      const nextFieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const field = String(issue.path[0]);
+        if (!nextFieldErrors[field]) nextFieldErrors[field] = issue.message;
+      }
+      setFieldErrors(nextFieldErrors);
+      return;
+    }
+
+    setFieldErrors({});
     setLoading(true);
     setError("");
 
@@ -270,6 +290,7 @@ function LoginFormContent() {
             <Input
               id="username"
               type="text"
+              autoComplete="username"
               value={username}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 const input = e.target;
@@ -280,7 +301,20 @@ function LoginFormContent() {
               placeholder="Nhập tên đăng nhập"
               required
               ref={usernameInputRef}
+              aria-invalid={fieldErrors.username ? true : undefined}
+              aria-describedby={
+                fieldErrors.username ? "username-error" : undefined
+              }
             />
+            {fieldErrors.username && (
+              <p
+                id="username-error"
+                role="alert"
+                className="text-sm font-medium text-destructive"
+              >
+                {fieldErrors.username}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -289,15 +323,21 @@ function LoginFormContent() {
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Nhập mật khẩu"
                 required
                 className="pr-10"
+                aria-invalid={fieldErrors.password ? true : undefined}
+                aria-describedby={
+                  fieldErrors.password ? "password-error" : undefined
+                }
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 {showPassword ? (
@@ -307,6 +347,15 @@ function LoginFormContent() {
                 )}
               </button>
             </div>
+            {fieldErrors.password && (
+              <p
+                id="password-error"
+                role="alert"
+                className="text-sm font-medium text-destructive"
+              >
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
@@ -333,7 +382,7 @@ function LoginFormContent() {
                 onClick={handleClearSavedCredentials}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
-                <Trash2 className="w-4 h-4 mr-1" />
+                <Trash2 data-icon="inline-start" className="w-4 h-4 mr-1" />
                 Xóa thông tin đã lưu
               </Button>
             )}
@@ -342,7 +391,12 @@ function LoginFormContent() {
 
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {loading && (
+              <Loader2
+                data-icon="inline-start"
+                className="mr-2 h-4 w-4 animate-spin"
+              />
+            )}
             Đăng Nhập
           </Button>
 

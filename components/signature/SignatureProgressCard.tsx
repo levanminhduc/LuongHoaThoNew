@@ -85,6 +85,7 @@ export default function SignatureProgressCard({
         <div className="flex items-center gap-2">
           {onRefresh && (
             <Button
+              aria-label="Làm mới tiến độ"
               variant="outline"
               size="sm"
               onClick={onRefresh}
@@ -195,12 +196,12 @@ export default function SignatureProgressCard({
                   >
                     {showUnsignedList ? (
                       <>
-                        <EyeOff className="h-4 w-4 mr-2" />
+                        <EyeOff data-icon="inline-start" className="h-4 w-4" />
                         Ẩn danh sách chưa ký
                       </>
                     ) : (
                       <>
-                        <Eye className="h-4 w-4 mr-2" />
+                        <Eye data-icon="inline-start" className="h-4 w-4" />
                         Xem nhân viên chưa ký (
                         {employeeCompletion.unsigned_employees_sample.length})
                       </>

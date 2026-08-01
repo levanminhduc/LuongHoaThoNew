@@ -87,9 +87,12 @@ export function EmployeeCombobox({
     <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
+          id="employee"
           aria-expanded={open}
+          aria-busy={isLoading || undefined}
           disabled={disabled || isLoading}
           className={cn(
             "h-auto min-h-10 w-full justify-between font-normal",
@@ -116,9 +119,20 @@ export function EmployeeCombobox({
             placeholder
           )}
           {isLoading ? (
-            <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+            <>
+              <span role="status" aria-live="polite" className="sr-only">
+                Đang tải danh sách nhân viên
+              </span>
+              <Loader2
+                data-icon="inline-end"
+                className="h-4 w-4 shrink-0 animate-spin opacity-50"
+              />
+            </>
           ) : (
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown
+              data-icon="inline-end"
+              className="h-4 w-4 shrink-0 opacity-50"
+            />
           )}
         </Button>
       </PopoverTrigger>

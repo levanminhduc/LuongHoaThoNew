@@ -298,7 +298,7 @@ export function PayrollDetailModalT13({
               onClick={onClose}
               className="w-full h-12 text-base font-medium"
             >
-              <X className="w-5 h-5 mr-2" />
+              <X data-icon="inline-start" className="w-5 h-5" />
               Đóng Lại
             </Button>
           </DialogFooter>

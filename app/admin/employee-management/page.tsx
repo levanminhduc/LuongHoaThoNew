@@ -232,6 +232,7 @@ export default function EmployeeManagementPage() {
               <Button
                 variant="outline"
                 size="sm"
+                aria-label={`Sửa nhân viên ${employee.employee_id}`}
                 onClick={() => setEditingEmployee(employee)}
               >
                 <Edit className="w-4 h-4" />
@@ -257,6 +258,7 @@ export default function EmployeeManagementPage() {
           <Dialog>
             <DialogTrigger asChild>
               <Button
+                aria-label={`Xem nhật ký nhân viên ${employee.employee_id}`}
                 variant="outline"
                 size="sm"
                 onClick={() => setAuditLogsEmployee(employee)}
@@ -289,9 +291,16 @@ export default function EmployeeManagementPage() {
             }}
           >
             {deletingId === employee.employee_id ? (
-              <Spinner size="sm" variant="destructive" />
+              <Spinner
+                data-icon="inline-start"
+                size="sm"
+                variant="destructive"
+              />
             ) : (
-              <Trash2 className="w-4 h-4 text-red-600" />
+              <Trash2
+                data-icon="inline-start"
+                className="w-4 h-4 text-red-600"
+              />
             )}
           </Button>
         </div>
@@ -315,7 +324,7 @@ export default function EmployeeManagementPage() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus data-icon="inline-start" className="w-4 h-4" />
               Thêm Nhân Viên
             </Button>
           </DialogTrigger>
@@ -391,6 +400,7 @@ export default function EmployeeManagementPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
+                aria-label="Tìm kiếm nhân viên"
                 placeholder="Tìm kiếm theo mã NV, tên, hoặc SĐT..."
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -398,6 +408,7 @@ export default function EmployeeManagementPage() {
               />
             </div>
             <Combobox
+              aria-label="Lọc theo phòng ban"
               options={departmentOptions}
               value={selectedDepartment}
               onValueChange={(value) =>
@@ -412,7 +423,10 @@ export default function EmployeeManagementPage() {
               value={selectedRole}
               onValueChange={(value) => handleFilterChange("role", value)}
             >
-              <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectTrigger
+                aria-label="Lọc theo chức vụ"
+                className="w-full sm:w-[200px]"
+              >
                 <SelectValue placeholder="Chọn chức vụ" />
               </SelectTrigger>
               <SelectContent>
@@ -431,7 +445,10 @@ export default function EmployeeManagementPage() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-full sm:w-[140px]">
+              <SelectTrigger
+                aria-label="Số dòng hiển thị"
+                className="w-full sm:w-[140px]"
+              >
                 <SelectValue placeholder="Hiển thị" />
               </SelectTrigger>
               <SelectContent>
@@ -583,9 +600,16 @@ export default function EmployeeManagementPage() {
                             }}
                           >
                             {deletingId === employee.employee_id ? (
-                              <Spinner size="sm" variant="destructive" />
+                              <Spinner
+                                data-icon="inline-start"
+                                size="sm"
+                                variant="destructive"
+                              />
                             ) : (
-                              <Trash2 className="w-4 h-4 text-red-600" />
+                              <Trash2
+                                data-icon="inline-start"
+                                className="w-4 h-4 text-red-600"
+                              />
                             )}
                           </Button>
                         </div>

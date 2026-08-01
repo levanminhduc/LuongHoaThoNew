@@ -478,6 +478,7 @@ export function AdvancedConflictResolver({
                         >
                           <div className="flex items-start gap-3">
                             <Checkbox
+                              aria-label={`Chọn xung đột ${conflict.employee_id} - ${conflict.salary_month}`}
                               checked={selectedConflicts.has(conflict.id)}
                               onCheckedChange={() =>
                                 toggleConflictSelection(conflict.id)
@@ -583,7 +584,7 @@ export function AdvancedConflictResolver({
                           disabled={selectedConflicts.size === 0}
                           className="flex items-center gap-1"
                         >
-                          <Zap className="h-3 w-3" />
+                          <Zap data-icon="inline-start" className="h-3 w-3" />
                           Apply to Selected
                         </Button>
                       </div>
@@ -606,8 +607,9 @@ export function AdvancedConflictResolver({
                 <h4 className="font-medium mb-3">Create Custom Rule</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Rule Name</Label>
+                    <Label htmlFor="custom-rule-name">Rule Name</Label>
                     <Input
+                      id="custom-rule-name"
                       value={customRule.name}
                       onChange={(e) =>
                         setCustomRule((prev) => ({
@@ -626,7 +628,7 @@ export function AdvancedConflictResolver({
                         setCustomRule((prev) => ({ ...prev, action: value }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Chọn hành động cho rule">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -645,8 +647,9 @@ export function AdvancedConflictResolver({
                     </Select>
                   </div>
                   <div className="space-y-2 col-span-2">
-                    <Label>Description</Label>
+                    <Label htmlFor="custom-rule-description">Description</Label>
                     <Input
+                      id="custom-rule-description"
                       value={customRule.description}
                       onChange={(e) =>
                         setCustomRule((prev) => ({
@@ -734,7 +737,7 @@ export function AdvancedConflictResolver({
                       onClick={applyAllResolutions}
                       className="flex items-center gap-2"
                     >
-                      <Target className="h-4 w-4" />
+                      <Target data-icon="inline-start" className="h-4 w-4" />
                       Apply All Resolutions ({resolutions.size})
                     </Button>
                   </div>

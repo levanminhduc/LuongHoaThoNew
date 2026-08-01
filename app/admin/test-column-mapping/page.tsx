@@ -266,7 +266,7 @@ export default function TestColumnMappingPage() {
               disabled={loading}
               className="flex items-center gap-2"
             >
-              <Database className="h-4 w-4" />
+              <Database data-icon="inline-start" className="h-4 w-4" />
               Basic Test
             </Button>
 
@@ -276,7 +276,7 @@ export default function TestColumnMappingPage() {
               variant="outline"
               className="flex items-center gap-2"
             >
-              <AlertTriangle className="h-4 w-4" />
+              <AlertTriangle data-icon="inline-start" className="h-4 w-4" />
               Problematic Test
             </Button>
 
@@ -286,7 +286,7 @@ export default function TestColumnMappingPage() {
               variant="outline"
               className="flex items-center gap-2"
             >
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle data-icon="inline-start" className="h-4 w-4" />
               Validation Test
             </Button>
 
@@ -296,7 +296,7 @@ export default function TestColumnMappingPage() {
               variant="default"
               className="flex items-center gap-2"
             >
-              <TestTube className="h-4 w-4" />
+              <TestTube data-icon="inline-start" className="h-4 w-4" />
               Run All Tests
             </Button>
           </div>

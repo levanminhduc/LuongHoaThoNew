@@ -199,6 +199,7 @@ export default function SupervisorDashboard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Combobox
+            aria-label="Chọn tháng lương"
             options={monthOptions}
             value={selectedMonth}
             onValueChange={setSelectedMonth}
@@ -341,13 +342,16 @@ export default function SupervisorDashboard({
             >
               {exportingExcel ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                   <span className="hidden sm:inline">Đang xuất...</span>
                   <span className="sm:hidden">Xuất...</span>
                 </>
               ) : (
                 <>
-                  <Download className="h-4 w-4" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                   <span className="hidden sm:inline">Xuất Tổng Quan</span>
                   <span className="sm:hidden">Xuất</span>
                 </>
@@ -429,13 +433,16 @@ export default function SupervisorDashboard({
               >
                 {exportingExcel ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2
+                      data-icon="inline-start"
+                      className="h-4 w-4 animate-spin"
+                    />
                     <span className="hidden sm:inline">Đang xuất...</span>
                     <span className="sm:hidden">Xuất...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="h-4 w-4" />
+                    <Download data-icon="inline-start" className="h-4 w-4" />
                     <span className="hidden sm:inline">Xuất Excel</span>
                     <span className="sm:hidden">Xuất</span>
                   </>
@@ -457,6 +464,7 @@ export default function SupervisorDashboard({
                           </p>
                         </div>
                         <Button
+                          aria-label={`Xem chi tiết ${payroll.employee_id}`}
                           variant="outline"
                           size="sm"
                           onClick={() =>
@@ -464,7 +472,7 @@ export default function SupervisorDashboard({
                           }
                           className="ml-2 h-11 w-11 sm:h-8 sm:w-8 p-0 touch-manipulation"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye data-icon="inline-start" className="h-4 w-4" />
                         </Button>
                       </div>
 
@@ -715,6 +723,7 @@ export default function SupervisorDashboard({
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
+                            aria-label={`Xem chi tiết ${payroll.employee_id}`}
                             variant="outline"
                             size="sm"
                             onClick={() =>
@@ -722,7 +731,7 @@ export default function SupervisorDashboard({
                             }
                             className="h-8 w-8 p-0"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye data-icon="inline-start" className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -750,12 +759,15 @@ export default function SupervisorDashboard({
             >
               {exportingExcel ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2
+                    data-icon="inline-start"
+                    className="h-4 w-4 animate-spin"
+                  />
                   Đang xuất...
                 </>
               ) : (
                 <>
-                  <Download className="h-4 w-4" />
+                  <Download data-icon="inline-start" className="h-4 w-4" />
                   Xuất Xu Hướng
                 </>
               )}
