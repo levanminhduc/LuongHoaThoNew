@@ -216,8 +216,11 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 - [x] 14.1 `lib/payroll/payroll-select.ts` (đã move ở nhóm 18) — **chưa thêm `PAYROLL_SELECT_DETAIL`**: hằng này chỉ có nghĩa khi biết chính xác cột nào UI chi tiết đọc, mà đó đúng là thứ cổng 9.3a đang chặn. Phần nhóm 14 làm được không cần dữ liệu thật đã làm ở 14.11, 14.15-14.17 (xem bên dưới), mỗi chỗ đều có nguồn chứng minh trong repo (mọi cột UI chi tiết cần) và `EMPLOYEE_SELECT_BASIC`
 - [ ] 14.2 `app/api/admin/payroll/[id]/route.ts`
 - [ ] 14.3 `app/api/admin/payrolls/route.ts`
-- [ ] 14.4 `app/api/admin/payroll-export/route.ts` (2 chỗ)
-- [ ] 14.5 `app/api/admin/bulk-payroll-export/route.ts`
+- [~] 14.4 `payroll-export` — **1/2 chỗ**. Chỗ `management_signatures` (`:359`) đổi sang 3 cột `signature_type, signed_by_name, signed_at`: cả file chỉ đọc `?.signed_at` và `.signed_by_name` (dòng 466-487). Nhân tiện bỏ 2 field khai thừa trong `interface ManagementSignature` cục bộ — `full_name` và `signature_image_url` được khai nhưng **không dòng nào đọc**, và chúng cũng không nằm trong 11 cột thật của bảng.
+
+  Chỗ `:145` **chưa đổi**: đó là truy vấn _fallback_ phải trả cùng hình dạng với truy vấn chính ở `:56` (vốn là `*` cộng join `employees`). Đổi nó đòi liệt kê 42 cột `PAYROLL_FIELDS` cộng phần join — làm được về nguyên tắc, nhưng đây đúng là chỗ dữ liệu chảy thẳng vào file XLSX nên phải mở file so mới dám chốt
+
+- [x] 14.5 `bulk-payroll-export` — `management_signatures` đổi sang 3 cột. `interface ManagementSig` trong chính file (`:38-41`) khai đúng `signed_by_name?` và `signed_at?`, cộng `signature_type` dùng làm khoá ở `:311`
 - [ ] 14.6 `app/api/admin/attendance-export/route.ts` (2 chỗ)
 - [ ] 14.7 `app/api/admin/payroll/audit/[id]/route.ts`
 - [x] 14.8 `update-management-signature-date` — `select("*")` → `select("id")`. Toàn file chỉ đọc **duy nhất** `existing.id` (grep `existing\.[a-z_]*` ra đúng 1 kết quả), phần còn lại của bản ghi chưa từng được dùng

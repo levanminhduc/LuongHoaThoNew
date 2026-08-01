@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
         .eq("salary_month", salary_month),
       supabase
         .from("management_signatures")
-        .select("*")
+        .select("signature_type, signed_by_name, signed_at")
         .eq("salary_month", salary_month)
         .eq("is_active", true),
     ]);

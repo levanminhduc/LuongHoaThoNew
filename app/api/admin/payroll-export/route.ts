@@ -277,8 +277,6 @@ export async function GET(request: NextRequest) {
     }
 
     interface ManagementSignature {
-      full_name?: string;
-      signature_image_url?: string;
       signed_by_name?: string;
       signed_at?: string;
     }
@@ -356,7 +354,7 @@ export async function GET(request: NextRequest) {
       try {
         const { data: signatures, error: sigError } = await supabase
           .from("management_signatures")
-          .select("*")
+          .select("signature_type, signed_by_name, signed_at")
           .eq("salary_month", month)
           .eq("is_active", true);
 
