@@ -122,8 +122,21 @@ Danh sách xác minh 2026-08-01: 17 route đọc `request.json()` không import 
 - [ ] 9.3a Ba luồng còn thiếu chặn đúng ba nhóm: **ký nhận** → chưa xác nhận 7 chỗ sửa xác thực hash (11.10-11.14); **import Excel** → chưa xác nhận nhóm 1 (chặn stack trace trong response lỗi) và nhóm 5; **export XLSX** → chặn nhóm 14 (bỏ `select("*")`) và nhóm 16 (tách builder). Nhóm 14 đặc biệt không được mở nếu chỉ "bấm qua loa": thiếu một cột trong JSON trả về là lỗi im lặng, TypeScript không bắt, mắt thường không thấy
 - [x] 9.4 Cập nhật `docs/audit/nextjs-backend-audit.md` — thêm bảng đối chiếu trước/sau ở đầu báo cáo
 - [x] 9.7 **Tự soát lại diff trước khi commit** — lọc mọi dòng bị xoá có dính `csrfProtection|rateLimit|verifyToken|verifyAdminAccess|bcrypt|status 4xx`: không có middleware bảo mật nào bị mất mà không có thay thế. Dòng xoá chỉ gồm các `status: 400` của if-check tay (đã thay bằng zod) và 3 dòng `401 "Unauthorized"` ở `import-history` (gộp vào `verifyToken` → vẫn 401, chỉ đổi message của trường hợp thiếu header). Kiểm thêm 2 chỗ nghi siết chặt hành vi: trần `limit` 200 — client cao nhất đang gọi đúng 200 nên không vỡ; sàn năm 2020 của `attendance` — trùng với `PeriodExportRequestSchema` có sẵn trong repo, không phải tôi tự đặt
-- [ ] 9.6 **Phát hiện: `main` đang đỏ CI từ trước.** `npm run format` (prettier --write toàn repo) đã sửa 4 file tôi không hề đụng tới: `app/admin/column-mapping-config/page.tsx` (±420 dòng, thuần thụt lề), `components/admin/admin-session-provider.tsx`, `components/admin/admin-sidebar.tsx`, `lib/auth/secure-session.ts`. Kiểm chứng: `git show HEAD:<file> | prettier --check` fail cả 4 → bước `prettier --check` trong `.github/workflows/ci.yml` đang fail trên `main` chứ không phải do refactor này. Khi commit phải tách riêng thành 1 commit `style:` để không lẫn vào diff refactor
-- [ ] 9.5 **Chưa commit gì cả.** Bản đồ 12 commit đã soạn sẵn ở `commit-plan.md` cùng thư mục (kèm cảnh báo: nhiều file nằm ở nhiều commit nên phải `git add -p`, và phương án rút gọn còn 3 commit nếu thấy 12 là quá). Kế hoạch giả định mỗi nhóm = 1 PR merge dần; thực tế nhóm 1-8 đang nằm chung trong working tree của nhánh `refactor/backend-architecture`. Cần tách thành 8 commit theo nhóm trước khi đẩy ← (verify: 3 BLOCKER trong báo cáo audit không còn tái hiện được; CI xanh)
+- [x] 9.6 **Đã tách thành commit `style:` đầu tiên (`fe99866`).** Chứng minh 4 file chỉ đổi định dạng chứ không đổi logic: chạy `prettier` lên **bản HEAD** của từng file rồi so với bản hiện tại — giống hệt cả 4. Ghi lại phát hiện gốc: `main` đang đỏ CI từ trước.
+- [~] 9.5 **Đã commit — nhưng 3 commit chứ không phải 22, và lý do quan trọng hơn con số.**
+
+  Bản đồ 22 commit trong `commit-plan.md` **không tách được theo file**. Hai nguyên nhân độc lập:
+  1. _File nằm ở nhiều nhóm_: `lookup/route.ts` thuộc nhóm 1, 7, 10; `import-history` thuộc 4, 5, 6. Tách đúng đòi `git add -p` từng hunk.
+  2. _Nhóm 18 đổi đường dẫn 6 module_. Commit nào tách **trước** nó mà đụng 8 file call site sẽ có import trỏ vào đường dẫn cũ → **không build được**. Mà commit không build được thì mất luôn giá trị chính của việc tách commit (bisect, revert từng phần).
+
+  Nên chọn cách `commit-plan.md` đã ghi sẵn là chấp nhận được, rút còn 3:
+  - `fe99866` `style:` — 4 file prettier bỏ sót (task 9.6)
+  - `aa00118` `refactor:` — toàn bộ code, 143 file
+  - `813f40c` `docs:` — spec + báo cáo audit (`docs/` bị gitignore nên `add -f` có chủ đích)
+
+  Bản đồ 22 commit **giữ nguyên** trong `commit-plan.md` cho ai muốn làm lại bằng `git add -p`.
+
+  **Chưa push** — đẩy lên remote là việc cần bạn duyệt. Nhánh `refactor/backend-architecture`, working tree sạch.
 
 ---
 
@@ -269,7 +282,7 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
 ## 17. Chốt phase 1
 
-- [ ] 17.1 `npm run format && npm run lint && npm run typecheck && npm run build` — sạch
+- [x] 17.1 Chạy trên **bản đã commit** (không phải working tree): format, lint, typecheck, `npm run build` (webpack) — sạch cả 4. 257 test pass; 7 suite fail đúng baseline pnpm/msw đã biết từ đầu
 - [ ] 17.2 Smoke test: tra cứu lương, ký nhận, import, export attendance, export payroll, thưởng
 - [ ] 17.3 Cập nhật `docs/audit/nextjs-backend-audit.md`: A2/A3/A5 chuyển trạng thái tương ứng ← (verify: CI xanh; không endpoint nào đổi contract ngoài những gì đã ghi trong `proposal.md` mục Impact)
 
@@ -317,5 +330,5 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   **Phát hiện khi viết mục này**: kế hoạch ghi nhận bẫy "truy vấn DB nằm giữa phần dựng sheet" chỉ ở `attendance-export`. Kiểm lại thì `payroll-export` **giống hệt** — workbook tạo ở dòng 251, worksheet ráp ở dòng 491, giữa hai mốc có 2 truy vấn (`signature_logs:289`, `management_signatures:357`). Tức **cả nhóm 16 chứ không riêng 16.1** đều không phải là rút hàm cơ học
 
-- [~] 22.3 Kiểm ràng buộc DB (D0): `git diff main --stat -- scripts/supabase-setup/` **rỗng** sau nhóm 1-13, 15 phần an toàn, 18-21. Kiểm lại lần cuối trước khi archive
+- [x] 22.3 Kiểm ràng buộc DB (D0) trên bản đã commit: `git diff main --stat -- scripts/supabase-setup/ scripts/*.sql` **rỗng**. Không một file `.sql` nào bị sửa qua toàn bộ 22 nhóm
 - [ ] 22.4 Archive change này sang `openspec/changes/archive/2026-08-01-refactor-backend-architecture/` theo đúng quy ước repo ← (verify: scorecard mới không còn ô Fail nào ở nhóm P0; CI xanh; `npm run build` xanh; không có file `.sql` nào bị sửa)

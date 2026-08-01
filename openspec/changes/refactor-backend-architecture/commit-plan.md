@@ -1,5 +1,22 @@
 # Bản đồ commit (task 9.5)
 
+> **ĐÃ THỰC HIỆN — nhưng rút còn 3 commit, không phải 22.** Bản đồ chi tiết bên dưới **giữ nguyên** cho ai muốn tách lại bằng `git add -p`.
+>
+> | Commit    | Nội dung                                                           |
+> | --------- | ------------------------------------------------------------------ |
+> | `fe99866` | `style: format lại 4 file prettier bỏ sót`                         |
+> | `aa00118` | `refactor: vá bảo mật và tách layer backend theo audit` — 143 file |
+> | `813f40c` | `docs: spec refactor backend và cập nhật báo cáo audit`            |
+>
+> **Vì sao không tách được theo file** (thử rồi mới biết, ghi lại để khỏi thử lại):
+>
+> 1. File nằm ở nhiều nhóm — `lookup/route.ts` ở nhóm 1, 7, 10; `import-history` ở 4, 5, 6.
+> 2. Quan trọng hơn: **nhóm 18 đổi đường dẫn 6 module**. Bất kỳ commit nào tách _trước_ nó mà đụng 8 file call site sẽ có import trỏ vào đường dẫn cũ → **không build được**. Commit không build được thì mất luôn giá trị chính của việc tách (bisect, revert từng phần).
+>
+> Nếu làm lại bằng `git add -p`: commit nhóm 18 phải đi **đầu tiên** trong loạt code, không phải cuối như ghi chú cũ ở cuối file.
+>
+> **Chưa push.** Đẩy lên remote cần người dùng duyệt.
+
 Chuẩn bị sẵn để khi được duyệt là tách được ngay. Nhánh `refactor/backend-architecture`, 67 mục đang nằm chung trong working tree.
 
 Thứ tự dưới đây là thứ tự commit — mỗi commit đứng một mình vẫn build được và test xanh.
