@@ -266,8 +266,20 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   > **Kiểm chứng cơ chế (làm khi tới 14.17, ghi lại vì nó đổi cách đọc cả nhóm 14):** supabase-js **có** phân tích chuỗi select ở mức kiểu. Thử bớt cột trong `MANAGEMENT_SIGNATURE_SELECT` từ 11 xuống 3 → `tsc` báo `TS2739: missing the following properties from type 'SignatureRecord'` ở đúng 2 dòng. Nghĩa là: chỗ nào kết quả query được gán vào **biến có kiểu tường minh** thì thiếu cột là lỗi biên dịch, không phải lỗi im lặng. Chỗ nào kết quả chỉ được đọc bằng `row.ten_cot` (kiểu `any`) thì TypeScript không giúp gì — đó mới là chỗ nguy hiểm thật.
 
-- [ ] 14.18 Với **mỗi** endpoint đổi: ghi lại danh sách key JSON trước và sau, dán vào PR — thiếu cột là lỗi im lặng, TypeScript không bắt được
-- [ ] 14.19 Chia thành ≥3 PR theo nhóm (payroll export / signature / auth) ← (verify: diff key JSON trước-sau rỗng cho mọi endpoint; file XLSX export mở ra đủ cột như bản cũ)
+- [x] 14.18 Bảng đối chiếu key JSON ở `response-keys.md` cùng thư mục. **Kết quả quan trọng hơn bảng: chỉ 3 trong 13 chỗ đổi select là có thể đổi key response.** 10 chỗ còn lại không thể — hoặc route tự dựng object với key cố định trong code, hoặc đầu ra là file XLSX, hoặc là hàm nội bộ không phải endpoint.
+
+  Ba chỗ có rủi ro thật: `column-aliases/[id]`, `signature-history`, `payroll/audit/[id]`. Với cả ba, danh sách "sau" **bằng đúng một type đã khai sẵn trong repo mà client đang dùng** — tức không phải tôi chọn cột mà là làm truy vấn khớp với hợp đồng vốn có.
+
+  **Đúng một key mất đi trong cả nhóm 14**: `payroll_type` ở `signature-history`. Không nằm trong type client (`SignatureHistoryResponse.signatures: SignatureRecord[]`, 11 field), không nằm trong dữ liệu mock của nhánh fallback trong chính route, và `grep payroll_type` ở `lib/hooks/` + `components/` không có hit nào liên quan lịch sử ký
+
+- [x] 14.19 Chia thành **5 commit** theo nhóm chức năng, nhiều hơn mức ≥3 kế hoạch đặt ra:
+  - `f5d44cc` 3 endpoint suy được cột từ code (`update-management-signature-date`, `column-aliases/[id]`, `sync-template`)
+  - `e9229c2` 3 endpoint chữ ký quản lý
+  - `ee3904e` chữ ký quản lý trong route export
+  - `4916b0a` `attendance-export`
+  - `5f6c0ce` sửa lương + audit log
+
+  Không tách thành PR riêng vì cả đợt refactor đã gộp còn 3 commit gốc theo task 9.5 — lý do ở đó
 
 > **Đã khảo sát nhóm 16 và quyết định KHÔNG làm trước cổng 9.3** (ghi lại để lần sau khỏi khảo sát lại). Khác với nhóm 12/13 vốn rút được sạch, `attendance-export/route.ts` có **một truy vấn DB nằm giữa phần dựng sheet**: khi `daily_records_json` rỗng, code fallback sang query bảng `attendance_daily` ngay trong nhánh `include_daily` (`route.ts:308-330`). Muốn tách builder thành hàm thuần thì phải kéo phần fetch fallback ra trước, tức đổi thứ tự truy vấn — không còn là rút hàm cơ học nữa. Cộng thêm: đúng/sai của nhóm này chỉ chứng minh được bằng cách mở file XLSX xuất ra và so với bản cũ, mà việc đó cần dữ liệu thật. Test đơn vị chỉ khẳng định lại chính điều tôi vừa viết. Vậy nhóm 16 xếp **sau** 9.3 cùng với 14 và 10.6-10.8.
 
