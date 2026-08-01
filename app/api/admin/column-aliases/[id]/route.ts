@@ -11,6 +11,9 @@ import {
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 
+const COLUMN_ALIAS_SELECT =
+  "id, database_field, alias_name, confidence_score, is_active, created_by, created_at, updated_at, config_id";
+
 // GET: Fetch specific column alias
 export async function GET(
   request: NextRequest,
@@ -37,7 +40,7 @@ export async function GET(
     const supabase = createServiceClient();
     const { data: alias, error } = await supabase
       .from("column_aliases")
-      .select("*")
+      .select(COLUMN_ALIAS_SELECT)
       .eq("id", aliasId)
       .single();
 

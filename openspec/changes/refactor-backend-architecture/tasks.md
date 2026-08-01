@@ -220,9 +220,9 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 - [ ] 14.5 `app/api/admin/bulk-payroll-export/route.ts`
 - [ ] 14.6 `app/api/admin/attendance-export/route.ts` (2 chỗ)
 - [ ] 14.7 `app/api/admin/payroll/audit/[id]/route.ts`
-- [ ] 14.8 `app/api/admin/update-management-signature-date/route.ts`
-- [ ] 14.9 `app/api/admin/column-aliases/[id]/route.ts`
-- [ ] 14.10 `app/api/admin/sync-template/route.ts`
+- [x] 14.8 `update-management-signature-date` — `select("*")` → `select("id")`. Toàn file chỉ đọc **duy nhất** `existing.id` (grep `existing\.[a-z_]*` ra đúng 1 kết quả), phần còn lại của bản ghi chưa từng được dùng
+- [x] 14.9 `column-aliases/[id]` — liệt kê đúng 9 field của `interface ColumnAlias` (`lib/column-alias-config.ts:6-16`), vì kết quả được gán thẳng vào `ApiResponse<ColumnAlias>`
+- [x] 14.10 `sync-template` — **41 cột**, danh sách rút **cơ học từ chính code** chứ không gõ tay: `re.findall(r"payroll\.([a-z0-9_]+)")` trên file đó. Đối chiếu tiếp 41 tên này với `scripts/supabase-setup/02-create-payrolls-table.sql` và danh sách select tường minh ở `departments/[departmentName]` — **không tên nào lạ**. Đây là chỗ rủi ro nhất của cả nhóm 14 vì `select("*")` trước đây nuốt lỗi im lặng (`payroll.cot_khong_ton_tai || 0` cho ra giá trị mặc định), còn select tường minh thì PostgREST trả lỗi cho cả endpoint
 - [x] 14.11 `app/api/employee/change-password/route.ts` — **comment "Select all to handle missing columns gracefully" là tiền đề sai, đã chứng minh và bỏ.** File này đọc 5 cột (`locked_until`, `failed_login_attempts`, `must_change_password`, `password_changed_at`, `password_hash`) cộng 3 cột `verifyEmployeeCredential` cần (`cccd_hash`, `password_hash`, `last_password_change_at`).
 
   Chứng minh 4 cột "có thể vắng" thật ra là bắt buộc:
@@ -240,6 +240,9 @@ Danh sách xác minh 2026-08-01 — 21 call site:
   - `:267` `verifyEmployeeCredentials` — **xoá hẳn**. Hàm này có **0 caller** trong toàn repo, và nó query `payrolls` với `.eq("cccd", cccd)` trong khi `cccd` là cột của `employees` chứ không phải `payrolls`; tức nó vừa chết vừa hỏng. Xoá an toàn hơn hẳn `check-password-status` (task 7.7) vì đây là hàm nội bộ trong file có `import "server-only"`, không có đường nào gọi từ ngoài repo
 - [x] 14.16 `lib/bonus/{bonus-signature-service,bonus-signature-status}.ts` — tạo `lib/bonus/bonus-select.ts` với `BONUS_SIGNATURE_SELECT` (8 cột, đúng bằng `BonusSignatureRecord` trong `bonus-types.ts` mà `toBonusSignatureRecord()` map ra). Đặt hằng ở module riêng thay vì cho file này import file kia — tránh dựng lại đúng loại vòng import vừa phá ở 20.4
 - [x] 14.17 `lib/management-signature-utils.ts` — 2 chỗ, dùng chung `MANAGEMENT_SIGNATURE_SELECT` (11 cột = đúng `SignatureRecord`). Chỗ này có tính chất tốt: kết quả được gán thẳng vào biến kiểu `SignatureRecord | null`, nên khi select đã tường minh thì **TypeScript bắt được nếu thiếu cột** — khác với `select("*")` vốn trả kiểu lỏng và nuốt mọi sai sót
+
+  > **Kiểm chứng cơ chế (làm khi tới 14.17, ghi lại vì nó đổi cách đọc cả nhóm 14):** supabase-js **có** phân tích chuỗi select ở mức kiểu. Thử bớt cột trong `MANAGEMENT_SIGNATURE_SELECT` từ 11 xuống 3 → `tsc` báo `TS2739: missing the following properties from type 'SignatureRecord'` ở đúng 2 dòng. Nghĩa là: chỗ nào kết quả query được gán vào **biến có kiểu tường minh** thì thiếu cột là lỗi biên dịch, không phải lỗi im lặng. Chỗ nào kết quả chỉ được đọc bằng `row.ten_cot` (kiểu `any`) thì TypeScript không giúp gì — đó mới là chỗ nguy hiểm thật.
+
 - [ ] 14.18 Với **mỗi** endpoint đổi: ghi lại danh sách key JSON trước và sau, dán vào PR — thiếu cột là lỗi im lặng, TypeScript không bắt được
 - [ ] 14.19 Chia thành ≥3 PR theo nhóm (payroll export / signature / auth) ← (verify: diff key JSON trước-sau rỗng cho mọi endpoint; file XLSX export mở ra đủ cột như bản cũ)
 

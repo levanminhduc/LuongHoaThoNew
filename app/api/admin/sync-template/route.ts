@@ -5,6 +5,9 @@ import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { getVietnamDate, getVietnamMonth } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 
+const SAMPLE_PAYROLL_SELECT =
+  "bhxh_21_5_percent, bhxh_bhtn_bhyt_total, bo_sung_luong, don_gia_tien_luong_tren_gio, employee_id, gio_an_ca, gio_cong_tang_ca, he_so_lam_viec, he_so_luong_co_ban, he_so_phu_cap_ket_qua, ho_tro_gui_con_nha_tre, ho_tro_thoi_tiet_nong, ho_tro_xang_xe, luong_cnkcp_vuot, luong_hoc_viec_pc_luong, luong_phu_nu_hanh_kinh, luong_toi_thieu_cty, ngay_cong_chu_nhat, ngay_cong_phep_le, ngay_cong_trong_gio, pc_cdcs_pccc_atvsv, salary_month, tam_ung, thue_tncn, thue_tncn_nam_2024, tien_boc_vac, tien_con_bu_thai_7_thang, tien_khen_thuong_chuyen_can, tien_luong_30p_an_ca, tien_luong_chu_nhat, tien_luong_san_pham_trong_gio, tien_luong_tang_ca, tien_luong_thuc_nhan_cuoi_ky, tien_phep_le, tien_tang_ca_vuot, tong_cong_tien_luong, tong_cong_tien_luong_san_pham, tong_gio_lam_viec, tong_he_so_quy_doi, tong_luong_san_pham_cong_doan, truy_thu_the_bhyt";
+
 export async function GET(request: NextRequest) {
   try {
     const auth = verifyAdminAccess(request);
@@ -17,7 +20,7 @@ export async function GET(request: NextRequest) {
     // Get current salary data structure from database
     const { data: samplePayrolls, error } = await supabase
       .from("payrolls")
-      .select("*")
+      .select(SAMPLE_PAYROLL_SELECT)
       .limit(3)
       .order("created_at", { ascending: false });
 

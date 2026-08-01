@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (action === "update") {
       let query = supabase
         .from("management_signatures")
-        .select("*")
+        .select("id")
         .eq("salary_month", salary_month)
         .eq("signature_type", signature_type)
         .eq("is_active", true);
