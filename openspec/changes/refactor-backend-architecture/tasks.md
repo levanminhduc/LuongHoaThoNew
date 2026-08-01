@@ -325,7 +325,12 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
 > **Cập nhật 22.2: bẫy này áp cho CẢ HAI route, không riêng `attendance-export`.** `payroll-export/route.ts` cũng vậy — workbook tạo ở dòng 251, worksheet ráp ở dòng 491, nhưng giữa hai mốc có **2 truy vấn DB** (`signature_logs:289`, `management_signatures:357`). Nên 16.2 không dễ hơn 16.1 như kế hoạch giả định; cả nhóm 16 đều đòi kéo phần fetch ra trước, tức đổi thứ tự truy vấn.
 
-- [ ] 16.1 `app/api/admin/attendance-export/route.ts` (697 dòng) — chuyển phần build workbook sang `lib/excel/attendance-export-builder.ts`, nhận dữ liệu đã query, trả `Buffer`/`Workbook`
+- [x] 16.1 `attendance-export` **697 → 208 dòng**. Builder tách làm 3 file theo 16.4: `lib/excel/attendance-summary-sheet.ts` (75), `lib/excel/attendance-daily-sheet.ts` (361), `lib/excel/attendance-sheet-types.ts` (37).
+
+  **Điểm cắt hoá ra sạch hơn khảo sát trước đó nói.** Khảo sát cũ kết luận phải kéo phần fetch fallback ra trước, tức đổi thứ tự truy vấn. Không cần: chỉ tách **hai hàm dựng sheet** thì truy vấn `attendance_daily` nằm nguyên chỗ cũ, giữa hai lời gọi builder. Route giữ nguyên luồng `book_new → append summary → gather daily (có await) → append daily → write`.
+
+  Mỗi builder nhận `AttendanceSheetContext` (dữ liệu đã query) và **trả về worksheet**, không tự tạo workbook — nhờ vậy test được mà không cần mock gì
+
 - [ ] 16.2 `app/api/admin/payroll-export/route.ts` (628 dòng) — tương tự, `lib/excel/payroll-export-builder.ts`
 - [ ] 16.3 Query dữ liệu dùng repository từ nhóm 15
 - [x] 16.4 Tách phần **thuần tuý** ra trước, không đụng phần dựng sheet: `lib/attendance/daily-records.ts` (84 dòng) gồm `formatTimeHHmm`, `parseNumericValue`, `normalizeDailyRecords` + type `DailyExportRecord`. Route 697 → **602 dòng**.
@@ -334,7 +339,9 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   Rút gọn thêm khi tách: 4 cặp `"x" in item ? item.x : "y" in item ? item.y : mặc-định` lồng nhau gom về một hàm `pick(item, camelKey, snakeKey)`
 
-- [~] 16.5 **17 test** cho phần vừa tách (`lib/attendance/__tests__/daily-records.test.ts`), phủ đúng các ca dễ vỡ: hai quy ước đặt tên cho **cùng một ngày** phải ra kết quả bằng nhau, chuỗi JSON, JSON hỏng, ngày ngoài 1-31, ngày dạng chuỗi, `NaN`/`Infinity` không được lọt vào ô Excel, và camelCase thắng khi có cả hai quy ước.
+- [x] 16.5 **10 test** ở `lib/excel/__tests__/attendance-sheets.test.ts`: đúng số dòng dữ liệu, đúng 13 cột tiêu đề theo thứ tự, trạng thái ký, mỗi ngày chiếm 2 cột nên bề rộng tăng đúng `(31-28)*2`, nhóm theo phòng ban, dữ liệu rỗng không ném, và workbook ghép ra đúng 2 sheet đúng tên.
+
+  **3 test đầu tiên tôi viết đã sai** — và đó là giá trị của việc viết test: tôi giả định cột tên là `"Tên Nhân Viên"` (thật ra `"Họ Tên"`), giả định sheet tổng hợp hiện **tên người ký** (thật ra chỉ hiện `"Đã Ký"` + ngày), và giả định tiêu đề phòng ban là `"Tổ May 1"` (thật ra `"Bộ phận Tổ May 1"`). Đã dò sheet thật rồi sửa test cho khớp. Test giờ ghi lại bố cục thật thay vì bố cục tôi tưởng
 
   **Chưa test workbook** (số sheet / header / số dòng) vì phần dựng sheet chưa tách — xem 16.1/16.2
 
