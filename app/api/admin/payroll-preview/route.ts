@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findPayrollPreviewByBatch } from "@/lib/payroll/payroll-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,27 +20,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: previewData, error } = await supabase
-      .from("payrolls")
-      .select(
-        `
-        id,
-        employee_id,
-        salary_month,
-        tien_luong_thuc_nhan_cuoi_ky,
-        source_file,
-        import_batch_id,
-        import_status,
-        created_at,
-        employees!inner(
-          full_name,
-          department
-        )
-      `,
-      )
-      .eq("import_batch_id", batchId)
-      .order("employee_id", { ascending: true })
-      .limit(1700);
+    const { data: previewData, error } = await findPayrollPreviewByBatch(
+      supabase,
+      batchId,
+    );
 
     if (error) {
       console.error("Error fetching preview data:", error);

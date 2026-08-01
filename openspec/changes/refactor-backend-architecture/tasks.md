@@ -253,7 +253,12 @@ Danh sách xác minh 2026-08-01 — 21 call site:
   - thiếu bộ lọc `search` → khi người dùng tìm kiếm, `total` và `totalPages` vẫn tính trên toàn bộ tập, phân trang hiện thừa trang rỗng;
   - thiếu bộ lọc `department` cụ thể ở `my-departments:93-95`;
   - và đáng ngờ nhất: count query dùng `.select("*", {count:"exact", head:true})` **không có embed `employees`** nhưng lại lọc `.eq("employees.department", ...)` — PostgREST cần embed mới lọc được cột của bảng nhúng, nên nhiều khả năng bộ lọc phòng ban **không có tác dụng** và `total` đang là tổng số bản ghi `payrolls` của toàn công ty. Cần xác nhận trên DB thật rồi mới sửa; sửa xong `total` sẽ đổi giá trị nên phải báo người dùng
-- [ ] 15.3 Chuyển call site trong `app/api/admin/payroll*/**` sang repository (commit riêng)
+- [~] 15.3 Tạo `lib/payroll/payroll-repository.ts` và chuyển **4/9 file** dưới `app/api/admin/payroll*/**` về **0 chỗ gọi `.from()`**: `payroll/[id]`, `payroll/audit/[id]`, `payroll-preview`, `payrolls`.
+
+  **Đây là phép dời thuần, không phải viết lại**: mỗi chuỗi select được đưa nguyên si vào hằng trong repository. Đã đối chiếu chuỗi cũ (`git show HEAD:<file>`) với hằng mới sau khi bỏ khoảng trắng — **giống hệt từng ký tự**. Với query bị bồi thêm bộ lọc phía sau (`payroll/[id]:56`, `payrolls:21`, audit summary) thì repository trả về **query builder** chứ không trả dữ liệu, để phần lọc theo role ở route giữ nguyên vị trí. Một điều chỉnh kiểu: `payrollId` trong `payroll/[id]` là `number` chứ không phải `string`, nên tham số repository khai `string | number`.
+
+  **5 file còn lại cố ý chưa chuyển** (`payroll-export` 6 chỗ, `payroll-import` 6, `payroll/search` 9, `bulk-payroll-export` 3, `payroll-export-template` 3) — đều nằm trong luồng import/export chưa smoke test, và `payroll/search` còn dính `sanitizePostgrestValue` cùng nhánh fallback phức tạp. Chuyển tiếp khi cổng 9.3a mở
+
 - [x] 15.4 `lib/bonus/bonus-repository.ts` — gom cả **5** chỗ gọi Supabase trực tiếp trong `lib/bonus/` (2 ở `bonus-signature-service.ts`, 2 ở `bonus-signature-status.ts`, cộng chỗ insert): `findBonusSignFlags`, `findActiveSigner`, `findActiveBonusSignatures`, `findActiveBonusSignatureByType`, `insertBonusSignature`. Theo đúng khuôn D2 (nhận `supabase` qua tham số).
 
   Kèm một siết kiểu: `toBonusSignatureRecord()` trước nhận `Record<string, unknown>` — tức không kiểm tra gì. Nay nhận `BonusSignatureRow`, nên bỏ được 2 ép kiểu `as string | null`. `insertBonusSignature` cũng đổi `.select()` trần thành `.select(BONUS_SIGNATURE_SELECT)` để bản ghi trả về có cùng hình dạng với bản ghi đọc ra
@@ -284,7 +289,7 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
 - [x] 17.1 Chạy trên **bản đã commit** (không phải working tree): format, lint, typecheck, `npm run build` (webpack) — sạch cả 4. 257 test pass; 7 suite fail đúng baseline pnpm/msw đã biết từ đầu
 - [ ] 17.2 Smoke test: tra cứu lương, ký nhận, import, export attendance, export payroll, thưởng
-- [ ] 17.3 Cập nhật `docs/audit/nextjs-backend-audit.md`: A2/A3/A5 chuyển trạng thái tương ứng ← (verify: CI xanh; không endpoint nào đổi contract ngoài những gì đã ghi trong `proposal.md` mục Impact)
+- [x] 17.3 Đã làm cùng 22.1 (bảng **"Cập nhật lần 2"** trong `docs/audit/nextjs-backend-audit.md`) — hai task này trùng nhau, 17.3 chỉ hẹp hơn ở 3 tiêu chí. Trạng thái ghi trong bảng: **A5 Pass**, **A3 Partial**, **A2 Partial**, mỗi ô kèm căn cứ đo
 
 ---
 

@@ -8,6 +8,13 @@ import {
   PayrollAuditFilterRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  PAYROLL_AUDIT_SUMMARY_LIMIT,
+  buildPayrollAuditSummaryQuery,
+  findPayrollAuditLogs,
+  findPayrollIdentity,
+  probePayrollAuditTable,
+} from "@/lib/payroll/payroll-repository";
 
 interface AuditLog {
   id: number;
@@ -55,10 +62,7 @@ export async function GET(
 
     // First, check if audit table exists and is accessible
     try {
-      const { error: tableError } = await supabase
-        .from("payroll_audit_logs")
-        .select("id")
-        .limit(1);
+      const { error: tableError } = await probePayrollAuditTable(supabase);
 
       if (tableError) {
         console.error("❌ Audit table access error:", tableError);
@@ -108,11 +112,10 @@ export async function GET(
     }
 
     // Get audit trail for this payroll record
-    const { data: auditData, error: auditError } = await supabase
-      .from("payroll_audit_logs")
-      .select("*")
-      .eq("payroll_id", payrollId)
-      .order("changed_at", { ascending: false });
+    const { data: auditData, error: auditError } = await findPayrollAuditLogs(
+      supabase,
+      payrollId,
+    );
 
     console.log("📊 Audit query result:", {
       hasData: !!auditData,
@@ -172,11 +175,10 @@ export async function GET(
       console.log("ℹ️ No audit data found for payroll ID:", payrollId);
 
       // Check if the payroll record exists
-      const { data: payrollExists } = await supabase
-        .from("payrolls")
-        .select("id, employee_id, salary_month")
-        .eq("id", payrollId)
-        .single();
+      const { data: payrollExists } = await findPayrollIdentity(
+        supabase,
+        payrollId,
+      );
 
       if (!payrollExists) {
         return NextResponse.json(
@@ -233,20 +235,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let query = supabase
-      .from("payroll_audit_logs")
-      .select(
-        `
-        id,
-        employee_id,
-        salary_month,
-        changed_by,
-        changed_at,
-        change_reason,
-        field_name
-      `,
-      )
-      .order("changed_at", { ascending: false });
+    let query = buildPayrollAuditSummaryQuery(supabase);
 
     // Apply filters
     if (startDate) {
@@ -259,7 +248,9 @@ export async function POST(request: NextRequest) {
       query = query.eq("employee_id", employeeId);
     }
 
-    const { data: auditData, error: auditError } = await query.limit(100);
+    const { data: auditData, error: auditError } = await query.limit(
+      PAYROLL_AUDIT_SUMMARY_LIMIT,
+    );
 
     if (auditError) {
       console.error("Error fetching audit summary:", auditError);

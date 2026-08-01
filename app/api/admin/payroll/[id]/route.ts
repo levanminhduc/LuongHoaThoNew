@@ -10,6 +10,12 @@ import {
   PayrollUpdateRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  buildPayrollDetailQuery,
+  findPayrollById,
+  insertPayrollAuditLogs,
+  updatePayrollById,
+} from "@/lib/payroll/payroll-repository";
 
 // Get client IP address
 function getClientIP(request: NextRequest): string {
@@ -52,20 +58,7 @@ export async function GET(
     const supabase = createServiceClient();
 
     // Role-based data access control
-    let query = supabase
-      .from("payrolls")
-      .select(
-        `
-        *,
-        employees!inner(
-          employee_id,
-          full_name,
-          department,
-          chuc_vu
-        )
-      `,
-      )
-      .eq("id", payrollId);
+    let query = buildPayrollDetailQuery(supabase, payrollId);
 
     // Apply role-based filtering
     if (
@@ -165,11 +158,10 @@ export async function PUT(
     const clientIP = getClientIP(request);
 
     // Get current payroll data for audit trail
-    const { data: currentData, error: getCurrentError } = await supabase
-      .from("payrolls")
-      .select("*")
-      .eq("id", payrollId)
-      .single();
+    const { data: currentData, error: getCurrentError } = await findPayrollById(
+      supabase,
+      payrollId,
+    );
 
     if (getCurrentError || !currentData) {
       return NextResponse.json(
@@ -262,12 +254,11 @@ export async function PUT(
     validatedUpdates.updated_at = getVietnamTimestamp();
 
     // Update payroll record
-    const { data: updatedData, error: updateError } = await supabase
-      .from("payrolls")
-      .update(validatedUpdates)
-      .eq("id", payrollId)
-      .select()
-      .single();
+    const { data: updatedData, error: updateError } = await updatePayrollById(
+      supabase,
+      payrollId,
+      validatedUpdates,
+    );
 
     if (updateError) {
       console.error("Update payroll error:", updateError);
@@ -279,9 +270,10 @@ export async function PUT(
 
     // Insert audit logs
     if (auditLogs.length > 0) {
-      const { error: auditError } = await supabase
-        .from("payroll_audit_logs")
-        .insert(auditLogs);
+      const { error: auditError } = await insertPayrollAuditLogs(
+        supabase,
+        auditLogs,
+      );
 
       if (auditError) {
         console.error("Audit log error:", auditError);

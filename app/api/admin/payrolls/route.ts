@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { buildPayrollListQuery } from "@/lib/payroll/payroll-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const payrollType = searchParams.get("payroll_type") || "monthly";
 
-    let query = supabase.from("payrolls").select("*");
+    let query = buildPayrollListQuery(supabase);
 
     if (payrollType === "t13") {
       query = query.eq("payroll_type", "t13");
