@@ -3,6 +3,10 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyToken } from "@/lib/auth-middleware";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  MANAGEMENT_SIGNATURE_SELECT,
+  type SignatureRecord,
+} from "@/lib/management-signature-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let signatures = [];
+    let signatures: SignatureRecord[] = [];
     let totalCount = 0;
 
     try {
@@ -92,7 +96,7 @@ export async function GET(request: NextRequest) {
 
       let signatureQuery = supabase
         .from("management_signatures")
-        .select("*")
+        .select(MANAGEMENT_SIGNATURE_SELECT)
         .eq("is_active", true);
 
       if (isT13) {
@@ -190,7 +194,7 @@ export async function GET(request: NextRequest) {
       user_filter: auth.user.role !== "admin" ? auth.user.employee_id : null,
     };
 
-    interface SignatureRecord {
+    interface MonthlyStatSource {
       salary_month: string;
       signature_type: string;
     }
@@ -202,7 +206,7 @@ export async function GET(request: NextRequest) {
     }
 
     const monthlyStats: Record<string, MonthlyStatRecord> = {};
-    signatures.forEach((sig: SignatureRecord) => {
+    signatures.forEach((sig: MonthlyStatSource) => {
       if (!monthlyStats[sig.salary_month]) {
         monthlyStats[sig.salary_month] = {
           month: sig.salary_month,

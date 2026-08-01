@@ -232,9 +232,14 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   Tức `select("*")` ở đây không hề "graceful" — nó chỉ giấu lỗi ở đúng một dòng trong khi cả file vẫn phụ thuộc cứng
 
-- [ ] 14.12 `app/api/management-signature/route.ts`
-- [ ] 14.13 `app/api/signature-history/route.ts`
-- [ ] 14.14 `app/api/signature-status/[month]/route.ts`
+- [x] 14.12 `management-signature` — 4 cột (`signed_by_id, signed_by_name, signed_at, department`). Bản ghi chỉ dùng để dựng thông báo "đã có chữ ký", code nêu tên đúng 4 field đó
+- [x] 14.13 `signature-history` — dùng lại `MANAGEMENT_SIGNATURE_SELECT` (11 cột). **Bằng chứng nằm ngay trong file**: nhánh fallback khi bảng chưa tồn tại trả về dữ liệu mock liệt kê đúng 11 field này, tức đó chính là hợp đồng mà client đang trông đợi.
+
+  Hai thứ phải sửa kèm, cả hai đều do `select("*")` che đi:
+  - `let signatures = []` suy ra `any[]`. Khi select đã tường minh, TypeScript không suy được nữa và bắt lỗi `TS7034` — phải khai `SignatureRecord[]`.
+  - Khai xong thì lộ ra **một `interface SignatureRecord` cục bộ ở dòng 197 che mất bản import**: cùng một tên mang hai nghĩa trong một file, bản cục bộ chỉ có 2 field. Đổi tên thành `MonthlyStatSource` theo đúng việc nó làm
+
+- [x] 14.14 `signature-status/[month]` — 8 cột. Code đọc bản ghi bằng cách dựng object nêu tên từng field (`id, signed_by_id, signed_by_name, department, signed_at, notes, payroll_type`) cộng `signature_type` dùng làm khoá
 - [x] 14.15 `lib/auth.ts` — 2 chỗ, xử lý khác nhau:
   - `:78` `admin_users` → `ADMIN_CREDENTIAL_SELECT = "id, username, password_hash"`. Đây là **đúng 3 cột caller đọc** (`admin.password_hash` để bcrypt, `admin.id` để update `last_login`, `admin.username` để dựng session). Đổi kiểu trả về `AdminUser` → `AdminCredentialRecord = Pick<AdminUser, ...>` và bỏ được `as AdminUser` — ép kiểu đó đang che việc TypeScript không kiểm tra gì cả. **Cố ý không liệt kê đủ 8 field của `AdminUser`**: DDL `admin_users` trong `scripts/create-tables.sql` đã cũ (thiếu `role`, `is_active`, `last_login`, `updated_at` mà code đang dùng), nên không có nguồn nào trong repo chứng minh `updated_at` tồn tại. Liệt kê theo cái code thật sự đọc thì không cần đoán.
   - `:267` `verifyEmployeeCredentials` — **xoá hẳn**. Hàm này có **0 caller** trong toàn repo, và nó query `payrolls` với `.eq("cccd", cccd)` trong khi `cccd` là cột của `employees` chứ không phải `payrolls`; tức nó vừa chết vừa hỏng. Xoá an toàn hơn hẳn `check-password-status` (task 7.7) vì đây là hàm nội bộ trong file có `import "server-only"`, không có đường nào gọi từ ngoài repo

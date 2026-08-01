@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     try {
       let existingQuery = supabase
         .from("management_signatures")
-        .select("*")
+        .select("signed_by_id, signed_by_name, signed_at, department")
         .eq("salary_month", salary_month)
         .eq("signature_type", signature_type)
         .eq("is_active", true);

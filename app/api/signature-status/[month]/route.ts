@@ -115,7 +115,9 @@ export async function GET(
     try {
       let sigQuery = supabase
         .from("management_signatures")
-        .select("*")
+        .select(
+          "id, signature_type, signed_by_id, signed_by_name, department, signed_at, notes, payroll_type",
+        )
         .eq("salary_month", month)
         .eq("is_active", true);
 
