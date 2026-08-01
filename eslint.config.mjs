@@ -3,6 +3,7 @@ import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import nextPlugin from "@next/eslint-plugin-next";
+import importPlugin from "eslint-plugin-import";
 
 export default [
   js.configs.recommended,
@@ -115,6 +116,18 @@ export default [
     files: ["tailwind.config.ts"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  importPlugin.flatConfigs.typescript,
+  {
+    files: ["**/*.{ts,tsx}"],
+    settings: {
+      "import/resolver": {
+        typescript: { project: "./tsconfig.json" },
+      },
+    },
+    rules: {
+      "import/no-cycle": ["error", { maxDepth: 10 }],
     },
   },
   {

@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { authenticateUser, type JWTPayload } from "@/lib/auth";
 import jwt from "jsonwebtoken";
 import { getJwtSecret } from "@/lib/config/jwt";
-import { rateLimit } from "@/lib/security-middleware";
+import { csrfProtection, rateLimit } from "@/lib/security-middleware";
 import { isProduction } from "@/lib/config/runtime";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
@@ -42,6 +42,9 @@ import { toErrorResponse } from "@/lib/errors/app-error";
  */
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
+
     const rateLimitResult = rateLimit("login")(request);
     if (rateLimitResult) return rateLimitResult;
 

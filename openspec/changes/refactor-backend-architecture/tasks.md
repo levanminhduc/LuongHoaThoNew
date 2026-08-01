@@ -114,7 +114,9 @@ Danh sách xác minh 2026-08-01: 17 route đọc `request.json()` không import 
 - [x] 8.2 Ba route thiếu đều là endpoint tiền-đăng-nhập: `admin/login`, `auth/forgot-password`, `auth/change-password-with-cccd`. Verify caller: hai route password được gọi bằng `fetch` same-origin từ modal trình duyệt (`app/employee/lookup/forgot-password-modal.tsx:82`, `reset-password-modal.tsx:84`) → trình duyệt tự gắn `Origin`, bật CSRF an toàn
 - [x] 8.3 Thêm `csrfProtection` vào `auth/forgot-password` và `auth/change-password-with-cccd`, đặt **trước** `rateLimit` và trước khi đọc body
 - [x] 8.4 Không cần chia commit theo thư mục vì chỉ đụng 2 file
-- [ ] 8.5 **Cố ý chưa làm, cần bạn quyết**: `admin/login` vẫn không có CSRF, theo đúng ngoại lệ mà 8.2 của kế hoạch đặt ra cho endpoint đăng nhập. Bật thêm sẽ chống được login-CSRF, rủi ro là chặn mọi caller không phải trình duyệt (script giám sát, health check tự động đăng nhập nếu có) ← (verify: gọi một route đã bổ sung bằng `curl` không kèm `Origin`/`Referer` → 403; thao tác tương ứng trên UI → chạy bình thường; smoke test import lương + ký nhận + sửa nhân viên)
+- [x] 8.5 **Đã bật CSRF cho `admin/login` theo quyết định của bạn.** `csrfProtection(request)` đặt **trước** `rateLimit` — request bị chặn vì sai Origin không nên tiêu một lượt rate limit của IP đó.
+
+  **Việc cho người vận hành**: từ nay mọi caller không phải trình duyệt (script giám sát, health check tự đăng nhập) sẽ nhận **403**. `csrfProtection` kiểm `Origin`/`Referer` (`lib/security-middleware.ts:63-92`), không dùng token, nên caller hợp lệ chỉ cần gửi kèm `Origin` đúng
 
 ## 9. Chốt phase 0
 
@@ -386,7 +388,13 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 - [x] 20.4 Vá vòng đó bằng cách đảo chiều phụ thuộc: `mapping-config-sync.ts` không còn `import { useMappingConfigStore }`, thay bằng `registerConfigurationRefresher()` để store tự đăng ký hàm refresh lúc khởi tạo. Chiều còn lại (store → sync để gọi `syncManager.triggerXxx`) giữ nguyên. Đếm lại: **0 vòng**
 - [x] 20.5 Nâng `@typescript-eslint/no-explicit-any` lên `"error"`: đếm trước khi nâng được **0 vi phạm** trên 471 file (`grep -rn ": any"` cũng 0 hit), nên nâng không tốn PR sửa nào ← (verify: file dò thử trong `components/` import cả `@/utils/supabase/server` lẫn `@/lib/employee/employee-repository` → lint báo đúng 2 error kèm thông báo tiếng Việt, đã xoá file dò sau khi kiểm; `npm run lint` toàn repo: 0 error 0 warning)
 
-- [ ] 20.6 **Chưa làm, cần bạn quyết**: có thêm `eslint-plugin-import` + `eslint-import-resolver-typescript` vào `devDependencies` để `import/no-cycle` được CI chặn liên tục không? Hiện tại 0 vòng, nhưng không có gì ngăn vòng mới xuất hiện — script dò ở 20.3 là công cụ chạy tay, không nằm trong CI. Rủi ro: `npm install` sẽ ghi lại `package-lock.json` trong khi máy local đang cài bằng pnpm và repo còn cả `bun.lock`
+- [x] 20.6 **Đã thêm dependency và bật `import/no-cycle` ở mức `error` theo quyết định của bạn** — nhưng mất 4 lần thử mới ra, ghi lại vì đây đúng là loại lỗi âm thầm:
+  1. `eslint-import-resolver-typescript@^4` **xung đột peer dep**: `eslint-config-next@16.2.0` ghim `^3.5.2`. Hạ xuống `^3.10.1` (đúng bản đang có trong node_modules) thì cài được. Dùng `npm i --package-lock-only` như task 2.1 nên `package-lock.json` chỉ **+2 dòng**, không xáo trộn.
+  2. Cấu hình xong, `npm run lint` **xanh** — nhưng đó là xanh giả. File dò 2 chiều kinh điển không bị bắt. Nếu tin vào màu xanh đó thì CI có rule mà không chặn được gì.
+  3. Khoanh vùng: `import/no-unresolved` **có** bắt được đường dẫn sai, tức resolver chạy tốt. Vấn đề nằm ở chỗ khác.
+  4. Nguyên nhân: `import/no-cycle` cần `languageOptions`/parser mà preset **`importPlugin.flatConfigs.typescript`** dựng sẵn; chỉ khai `plugins` + `settings` bằng tay là không đủ. Thêm preset đó vào, và phải **bỏ** `plugins: { import: importPlugin }` của mình vì ESLint 9 báo `Cannot redefine plugin "import"`.
+
+  Kiểm chứng sau khi sửa: file dò dùng alias `@/` → `error Dependency cycle detected`. Toàn repo: **0 vi phạm** ← (verify: thêm thử vòng import 2 file → lint đỏ; xoá đi → xanh)
 
 ## 21. Env validate eager
 
