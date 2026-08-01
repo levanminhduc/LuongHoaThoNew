@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
-import { cascadeUpdateEmployeeId } from "@/lib/cascade-update-employee";
+import { cascadeUpdateEmployeeId } from "@/lib/employee/cascade-update-employee";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
@@ -13,6 +13,7 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function PUT(
   request: NextRequest,
@@ -324,10 +325,10 @@ export async function PUT(
     );
   } catch (error) {
     console.error("Employee PUT error:", error);
-    return NextResponse.json(
-      { error: "Lỗi server" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -483,10 +484,10 @@ export async function DELETE(
     }
   } catch (error) {
     console.error("Employee DELETE error:", error);
-    return NextResponse.json(
-      { error: "Lỗi server" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -531,9 +532,9 @@ export async function GET(
     );
   } catch (error) {
     console.error("Employee GET by ID error:", error);
-    return NextResponse.json(
-      { error: "Lỗi server" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

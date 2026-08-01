@@ -26,20 +26,13 @@ import {
   Building2,
   Info,
 } from "lucide-react";
-import { z } from "zod";
 import {
   useDepartmentPermissionsQuery,
   useDepartmentStatsQuery,
   useGrantDepartmentPermissionMutation,
   useManagementEmployeesQuery,
 } from "@/lib/hooks/use-departments";
-
-const AssignPermissionSchema = z.object({
-  employeeId: z.string().min(1, "Vui lòng chọn nhân viên"),
-  departments: z
-    .array(z.string())
-    .min(1, "Vui lòng chọn ít nhất một department"),
-});
+import { DepartmentPermissionAssignSchema } from "@/lib/validations/admin-employee";
 
 // Loading component cho Suspense fallback
 function AssignPermissionsLoading() {
@@ -121,7 +114,7 @@ function AssignPermissionsContent() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const parsed = AssignPermissionSchema.safeParse({
+    const parsed = DepartmentPermissionAssignSchema.safeParse({
       employeeId: selectedEmployee,
       departments: selectedDepartments,
     });

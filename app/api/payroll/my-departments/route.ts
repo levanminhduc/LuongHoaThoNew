@@ -5,6 +5,17 @@ import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { PAYROLL_WITH_EMPLOYEE_SELECT } from "@/lib/payroll/payroll-list-query";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  pageQuerySchema,
+  DepartmentStatsRequestSchema,
+} from "@/lib/validations";
+import { getVietnamMonth, getVietnamYear } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
+
+const MyDepartmentsQuerySchema = pageQuerySchema(20);
 
 // GET payroll data for truong_phong's assigned departments
 export async function GET(request: NextRequest) {
@@ -29,14 +40,22 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const parsedQuery = parseSchema(MyDepartmentsQuerySchema, {
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+    });
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const { page, limit } = parsedQuery.data;
     const month = searchParams.get("month");
     const search = searchParams.get("search");
     const department = searchParams.get("department");
     const payrollType = searchParams.get("payroll_type") || "monthly";
-    const year =
-      searchParams.get("year") || new Date().getFullYear().toString();
+    const year = searchParams.get("year") || String(getVietnamYear());
 
     const offset = (page - 1) * limit;
 
@@ -57,17 +76,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("payrolls")
-      .select(
-        `
-        *,
-        employees!payrolls_employee_id_fkey!inner(
-          employee_id,
-          full_name,
-          department,
-          chuc_vu
-        )
-      `,
-      )
+      .select(PAYROLL_WITH_EMPLOYEE_SELECT)
       .in("employees.department", allowedDepartments);
 
     // Apply salary_month filter
@@ -145,10 +154,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("My departments payroll error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy dữ liệu lương" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy dữ liệu lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -166,7 +175,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { month } = await request.json();
+    const parsedBody = parseSchema(
+      DepartmentStatsRequestSchema,
+      await request.json(),
+    );
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedBody.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const { month } = parsedBody.data;
     const supabase = createServiceClient();
     const allowedDepartments = auth.user.allowed_departments || [];
 
@@ -190,7 +209,7 @@ export async function POST(request: NextRequest) {
       `,
       )
       .in("employees.department", allowedDepartments)
-      .eq("salary_month", month || new Date().toISOString().slice(0, 7));
+      .eq("salary_month", month || getVietnamMonth());
 
     if (error) {
       return NextResponse.json(
@@ -262,9 +281,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Departments statistics error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy thống kê" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy thống kê",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

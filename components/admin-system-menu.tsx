@@ -41,9 +41,9 @@ export function AdminSystemMenu({ className }: AdminSystemMenuProps) {
   const menuItems: MenuItem[] = [
     {
       id: "import-export",
-      label: "Import/Export Lương",
+      label: "Import Lương",
       icon: ArrowUpDown,
-      description: "Quản lý import và export dữ liệu lương",
+      description: "Import dữ liệu lương từ file Excel",
       href: "/admin/payroll-import-export",
       colorClass: "text-blue-700 hover:text-blue-800 hover:bg-blue-50",
       iconColorClass: "text-blue-600",

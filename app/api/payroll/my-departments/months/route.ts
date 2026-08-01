@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,9 +55,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("My departments months fetch error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy danh sách tháng lương" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy danh sách tháng lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

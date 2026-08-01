@@ -3,38 +3,12 @@ import * as XLSX from "xlsx";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
-
-interface ImportError {
-  row: number;
-  column?: string;
-  field?: string;
-  value?: unknown;
-  employee_id?: string;
-  salary_month?: string;
-  errorType:
-    | "validation"
-    | "format"
-    | "duplicate"
-    | "database"
-    | "system"
-    | "employee_not_found";
-  severity?: "low" | "medium" | "high" | "critical";
-  message?: string;
-  error?: string;
-  suggestion?: string;
-  expectedFormat?: string;
-  currentValue?: string;
-  originalData?: Record<string, unknown>;
-}
-
-interface ErrorExportRequest {
-  errors: ImportError[];
-  originalData?: Record<string, unknown>[];
-  fileName?: string;
-  format: "excel" | "csv";
-  includeOriginalData?: boolean;
-  originalHeaders?: string[];
-}
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ImportErrorExportRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,21 +19,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const body: ErrorExportRequest = await request.json();
-    const {
-      errors,
-      fileName = "import_errors",
-      format = "excel",
-      includeOriginalData = true,
-      originalHeaders = [],
-    } = body;
-
-    if (!errors || errors.length === 0) {
-      return NextResponse.json(
-        { error: "No errors to export" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      ImportErrorExportRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
+    const { errors, fileName, format, includeOriginalData, originalHeaders } =
+      parsed.data;
 
     const getErrorTypeLabel = (errorType: string): string => {
       const labels: Record<string, string> = {
@@ -177,10 +147,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unsupported format" }, { status: 400 });
   } catch (error) {
     console.error("Export errors error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Internal server error",
+    });
   }
 }
 
@@ -229,9 +198,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Export template error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Internal server error",
+    });
   }
 }

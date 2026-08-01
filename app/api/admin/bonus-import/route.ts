@@ -24,6 +24,7 @@ import {
   validateEmployeeId,
   validateEmployeeExists,
 } from "@/lib/import-error-collector";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -278,12 +279,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Bonus import error:", error);
-    const apiError = ApiErrorHandler.fromError(
-      error,
-      ApiErrorHandler.ErrorCodes.INTERNAL_ERROR,
-    );
-    return NextResponse.json(ApiErrorHandler.createErrorResponse(apiError), {
-      status: 500,
-    });
+    return toErrorResponse(error);
   }
 }

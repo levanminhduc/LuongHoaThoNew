@@ -2,8 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
-
-const VALID_SIGNATURE_TYPES = ["giam_doc", "ke_toan", "nguoi_lap_bieu"];
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  UpdateManagementSignatureDateRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 const SIGNATURE_TYPE_LABELS: Record<string, string> = {
   giam_doc: "Giám Đốc",
@@ -23,40 +27,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const {
-      salary_month,
-      signature_type,
-      new_signed_at,
-      action = "update",
-      is_t13 = false,
-    } = body;
-
-    const monthPattern = is_t13 ? /^\d{4}-(13|T13)$/i : /^\d{4}-\d{2}$/;
-    if (!salary_month || !monthPattern.test(salary_month)) {
-      return NextResponse.json(
-        {
-          error: is_t13
-            ? "Định dạng tháng không hợp lệ (YYYY-13)"
-            : "Định dạng tháng không hợp lệ (YYYY-MM)",
-        },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      UpdateManagementSignatureDateRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
-
-    if (!signature_type || !VALID_SIGNATURE_TYPES.includes(signature_type)) {
-      return NextResponse.json(
-        { error: "Loại chữ ký không hợp lệ" },
-        { status: 400 },
-      );
-    }
-
-    if (!new_signed_at) {
-      return NextResponse.json(
-        { error: "Chưa nhập ngày ký mới" },
-        { status: 400 },
-      );
-    }
+    const { salary_month, signature_type, new_signed_at, action, is_t13 } =
+      parsed.data;
 
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";
@@ -187,12 +168,8 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+    });
   }
 }

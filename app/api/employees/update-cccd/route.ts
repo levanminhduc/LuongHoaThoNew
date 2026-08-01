@@ -1,28 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import type { JWTPayload } from "@/lib/auth";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { getJwtSecret } from "@/lib/config/jwt";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { csrfProtection } from "@/lib/security-middleware";
-
-function verifyAdminToken(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
-    return decoded.role === "admin" ? decoded : null;
-  } catch {
-    return null;
-  }
-}
+import { verifyAdminAccess } from "@/lib/auth-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  UpdateCccdRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 async function hashCCCD(cccd: string): Promise<string> {
   return await bcrypt.hash(cccd, BCRYPT_ROUNDS);
@@ -32,43 +21,25 @@ export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    const adminUser = verifyAdminToken(request);
-    if (!adminUser) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập. Vui lòng đăng nhập lại." },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { employee_id, new_cccd } = await request.json();
-
-    if (!employee_id || !new_cccd) {
-      return NextResponse.json(
-        { error: "Thiếu mã nhân viên hoặc số CCCD mới" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(UpdateCccdRequestSchema, await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
-
-    if (new_cccd.length !== 12) {
-      return NextResponse.json(
-        { error: "Số CCCD phải có đúng 12 chữ số" },
-        { status: 400 },
-      );
-    }
-
-    if (!/^\d{12}$/.test(new_cccd)) {
-      return NextResponse.json(
-        { error: "Số CCCD chỉ được chứa các chữ số" },
-        { status: 400 },
-      );
-    }
+    const { employee_id, new_cccd } = parsed.data;
 
     const supabase = createServiceClient();
 
     const { data: employee, error: findError } = await supabase
       .from("employees")
       .select("id, employee_id, full_name, cccd_hash")
-      .eq("employee_id", employee_id.trim())
+      .eq("employee_id", employee_id)
       .single();
 
     if (findError || !employee) {
@@ -78,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newCccdHash = await hashCCCD(new_cccd.trim());
+    const newCccdHash = await hashCCCD(new_cccd);
 
     const { error: updateError } = await supabase
       .from("employees")
@@ -86,7 +57,7 @@ export async function POST(request: NextRequest) {
         cccd_hash: newCccdHash,
         updated_at: getVietnamTimestamp(),
       })
-      .eq("employee_id", employee_id.trim());
+      .eq("employee_id", employee_id);
 
     if (updateError) {
       console.error("Error updating CCCD:", updateError);
@@ -111,21 +82,17 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in update-cccd API:", error);
-    return NextResponse.json(
-      { error: "Lỗi server. Vui lòng thử lại sau." },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server. Vui lòng thử lại sau.",
+    });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const adminUser = verifyAdminToken(request);
-    if (!adminUser) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401 },
-      );
+    const auth = verifyAdminAccess(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { searchParams } = new URL(request.url);
@@ -164,6 +131,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in search employees API:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server",
+    });
   }
 }

@@ -4,7 +4,6 @@
  * và detect external config changes
  */
 
-import { useMappingConfigStore } from "@/lib/stores/mapping-config-store";
 import { cacheUtils } from "@/lib/cache/mapping-config-cache";
 import { apiClient } from "@/lib/api/client";
 import { hasStoredSession } from "@/lib/auth/secure-session";
@@ -30,6 +29,16 @@ export interface SyncSubscription {
   id: string;
   callback: (event: SyncEvent) => void;
   filter?: (event: SyncEvent) => boolean;
+}
+
+export type ConfigurationRefresher = () => Promise<void>;
+
+let configurationRefresher: ConfigurationRefresher | null = null;
+
+export function registerConfigurationRefresher(
+  refresher: ConfigurationRefresher,
+): void {
+  configurationRefresher = refresher;
 }
 
 export interface SyncOptions {
@@ -299,9 +308,10 @@ class MappingConfigSyncManager {
   }
 
   private async refreshConfigurations(): Promise<void> {
+    if (!configurationRefresher) return;
+
     try {
-      const store = useMappingConfigStore.getState();
-      await store.refreshConfigurations();
+      await configurationRefresher();
     } catch (error) {
       console.warn("Failed to refresh configurations:", error);
     }

@@ -15,6 +15,26 @@ export function getVietnamTimestamp(): string {
   });
 }
 
+export function getVietnamDate(): string {
+  return getVietnamTimestamp().slice(0, 10);
+}
+
+export function getVietnamMonth(): string {
+  return getVietnamTimestamp().slice(0, 7);
+}
+
+export function getVietnamYear(): number {
+  return Number(getVietnamTimestamp().slice(0, 4));
+}
+
+export function getVietnamMonthsAgo(monthsBack: number): string {
+  const [year, month] = getVietnamMonth().split("-").map(Number);
+  const totalMonths = year * 12 + (month - 1) - monthsBack;
+  const shiftedYear = Math.floor(totalMonths / 12);
+  const shiftedMonth = (totalMonths % 12) + 1;
+  return `${shiftedYear}-${String(shiftedMonth).padStart(2, "0")}`;
+}
+
 /**
  * Tạo ISO timestamp theo timezone Việt Nam
  *

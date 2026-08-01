@@ -4,6 +4,12 @@ import { csrfProtection } from "@/lib/security-middleware";
 import { type ColumnAlias, type ApiResponse } from "@/lib/column-alias-config";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ColumnAliasUpdateRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // GET: Fetch specific column alias
 export async function GET(
@@ -50,10 +56,9 @@ export async function GET(
     return NextResponse.json(response);
   } catch (error) {
     console.error("Column alias GET error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi tải alias" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tải alias",
+    });
   }
 }
 
@@ -82,26 +87,16 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
-    const { alias_name, confidence_score, is_active } = body;
-
-    if (!alias_name) {
-      return NextResponse.json(
-        { success: false, message: "Thiếu thông tin alias_name" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      ColumnAliasUpdateRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
-
-    // Validate confidence score
-    if (
-      confidence_score !== undefined &&
-      (confidence_score < 0 || confidence_score > 100)
-    ) {
-      return NextResponse.json(
-        { success: false, message: "Confidence score phải từ 0 đến 100" },
-        { status: 400 },
-      );
-    }
+    const { alias_name, confidence_score, is_active } = parsed.data;
 
     const supabase = createServiceClient();
 
@@ -175,10 +170,9 @@ export async function PUT(
     return NextResponse.json(response);
   } catch (error) {
     console.error("Column alias PUT error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi cập nhật alias" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi cập nhật alias",
+    });
   }
 }
 
@@ -243,9 +237,8 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Column alias DELETE error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi xóa alias" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xóa alias",
+    });
   }
 }

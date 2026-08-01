@@ -3,6 +3,12 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  AdvancedUploadRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,14 +20,16 @@ export async function POST(request: NextRequest) {
     }
     const admin = auth.user;
 
-    const { payrollData, columnMappings, summary } = await request.json();
-
-    if (!payrollData || !Array.isArray(payrollData)) {
-      return NextResponse.json(
-        { error: "Dữ liệu không hợp lệ" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      AdvancedUploadRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
+    const { payrollData, columnMappings, summary } = parsed.data;
 
     const supabase = createServiceClient();
 
@@ -93,12 +101,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Advanced upload error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi xử lý dữ liệu",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xử lý dữ liệu",
+    });
   }
 }

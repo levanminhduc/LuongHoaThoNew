@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
+import { getVietnamMonth } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface ValidationStats {
   totalEmployees: number;
@@ -169,21 +171,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error in data validation API:", error);
-    return NextResponse.json(
-      {
-        error: "Lỗi server khi xử lý yêu cầu",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server khi xử lý yêu cầu",
+    });
   }
 }
 
 // Helper function to get current month in YYYY-MM format
 function getCurrentMonth(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
+  return getVietnamMonth();
 }
 
 // Clear cache endpoint (for admin use)
@@ -216,11 +212,8 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error clearing cache:", error);
-    return NextResponse.json(
-      {
-        error: "Lỗi khi xóa cache",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi khi xóa cache",
+    });
   }
 }

@@ -2,63 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import jwt from "jsonwebtoken";
-import { type JWTPayload } from "@/lib/auth";
-import { getJwtSecret } from "@/lib/config/jwt";
+import { verifyToken } from "@/lib/auth-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ImportSessionHistoryCreateSchema,
+  ImportHistoryDeleteQuerySchema,
+  pageQuerySchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
-interface ImportHistoryRecord {
-  id?: string;
-  session_id: string;
-  import_type: "single" | "dual";
-  file_names: string[];
-  total_records: number;
-  success_count: number;
-  error_count: number;
-  auto_fix_count: number;
-  processing_time_ms: number;
-  error_summary: {
-    validation: number;
-    format: number;
-    duplicate: number;
-    database: number;
-    system: number;
-  };
-  auto_fixes: Array<Record<string, unknown>>;
-  detailed_errors: Array<Record<string, unknown>>;
-  user_id: string;
-  created_at: string;
-  status: "completed" | "failed" | "partial";
-}
+const ImportHistoryListQuerySchema = pageQuerySchema(20);
 
 // POST - Create new import history record
 export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // Verify admin authentication
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    let decoded: JWTPayload;
-    try {
-      decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
-    } catch {
+    const auth = verifyToken(request);
+    if (!auth) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const body: Omit<ImportHistoryRecord, "id" | "created_at"> =
-      await request.json();
+    const parsed = parseSchema(
+      ImportSessionHistoryCreateSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
+    }
 
     // For now, we'll store in a mock way since we don't have import_history table
     // In a real implementation, you would create this table in Supabase
     const mockData = {
       id: `hist_${Date.now()}`,
-      ...body,
-      user_id: decoded.employee_id || "admin",
+      ...parsed.data,
+      user_id: auth.user.employee_id || "admin",
       created_at: getVietnamTimestamp(),
     };
 
@@ -84,33 +65,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("Import history creation error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Internal server error",
+    });
   }
 }
 
 // GET - Retrieve import history with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    try {
-      jwt.verify(token, getJwtSecret());
-    } catch {
+    if (!verifyToken(request)) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const parsedQuery = parseSchema(ImportHistoryListQuerySchema, {
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+    });
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400 },
+      );
+    }
+    const { page, limit } = parsedQuery.data;
     const status = searchParams.get("status");
     const importType = searchParams.get("import_type");
     const dateFrom = searchParams.get("date_from");
@@ -228,10 +207,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Import history fetch error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Internal server error",
+    });
   }
 }
 
@@ -240,29 +218,20 @@ export async function DELETE(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // Verify admin authentication
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    try {
-      jwt.verify(token, getJwtSecret());
-    } catch {
+    if (!verifyToken(request)) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Import history ID is required" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(ImportHistoryDeleteQuerySchema, {
+      id: searchParams.get("id"),
+    });
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
+    const { id } = parsed.data;
 
     const supabase = createServiceClient();
 
@@ -282,9 +251,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Import history deletion error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Internal server error",
+    });
   }
 }

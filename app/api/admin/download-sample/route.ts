@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -184,9 +185,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Download sample error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi tạo file mẫu" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tạo file mẫu",
+    });
   }
 }

@@ -14,7 +14,10 @@ import {
   CacheKeys,
   mappingConfigCache,
 } from "@/lib/cache/mapping-config-cache";
-import { syncManager } from "@/lib/sync/mapping-config-sync";
+import {
+  registerConfigurationRefresher,
+  syncManager,
+} from "@/lib/sync/mapping-config-sync";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import type { ApiResponse } from "@/lib/column-alias-config";
@@ -613,6 +616,10 @@ export const useMappingConfigStore = create<MappingConfigStore>()(
       name: "mapping-config-store",
     },
   ),
+);
+
+registerConfigurationRefresher(() =>
+  useMappingConfigStore.getState().refreshConfigurations(),
 );
 
 // ===== EXPORT STORE FOR DIRECT USAGE =====

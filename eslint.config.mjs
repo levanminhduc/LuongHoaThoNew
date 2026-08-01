@@ -56,7 +56,7 @@ export default [
     },
     rules: {
       "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-require-imports": "off",
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
@@ -115,6 +115,28 @@ export default [
     files: ["tailwind.config.ts"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  {
+    files: ["components/**/*.{ts,tsx}", "app/**/*.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/utils/supabase/server"],
+              message:
+                "createServiceClient() chỉ được gọi trong app/api/** hoặc lib phía server. Import ở đây sẽ đẩy SUPABASE_SERVICE_ROLE_KEY vào client bundle.",
+            },
+            {
+              group: ["**/lib/*/*-repository"],
+              message:
+                "Repository là tầng truy cập DB phía server. Component gọi API qua apiClient + ENDPOINTS.",
+            },
+          ],
+        },
+      ],
     },
   },
   {

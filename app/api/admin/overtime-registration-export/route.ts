@@ -9,6 +9,7 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface DailyExportRecord {
   day: number;
@@ -428,12 +429,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Overtime registration export error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi xuất file",
-        details: error instanceof Error ? error.message : "Unknown",
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xuất file",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

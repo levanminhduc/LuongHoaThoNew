@@ -1,27 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
+import { getEnv } from "@/lib/config/env";
+import { hashClientIp } from "@/lib/utils/hash-ip";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { rateLimit } from "@/lib/security-middleware";
+import { rateLimit, csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   parseSchema,
   createValidationErrorResponse,
   ForgotPasswordRequestSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000;
-
-function hashIp(ip: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(ip + process.env.IP_SALT || "default-salt")
-    .digest("hex")
-    .substring(0, 16);
-}
 
 function shrinkUA(ua: string | null): string {
   if (!ua) return "unknown";
@@ -76,6 +70,9 @@ async function logToSecurityLogs(
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
+
     const body = await request.json();
     const parsed = parseSchema(ForgotPasswordRequestSchema, body);
     if (!parsed.success) {
@@ -91,7 +88,7 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-real-ip") ||
       "unknown";
     const ua = request.headers.get("user-agent");
-    const ipHash = hashIp(ip);
+    const ipHash = hashClientIp(ip, getEnv().IP_SALT);
     const userAgent = shrinkUA(ua);
 
     const rateLimitResult = rateLimit("passwordReset")(request);
@@ -210,7 +207,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const isValidCCCD = await bcrypt.compare(cccd.trim(), employee.cccd_hash);
+    const isValidCCCD = employee.cccd_hash
+      ? await bcrypt.compare(cccd.trim(), employee.cccd_hash)
+      : false;
 
     if (!isValidCCCD) {
       const { data: failResult } = await supabase.rpc(
@@ -341,9 +340,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Forgot password error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra. Vui lòng thử lại sau." },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra. Vui lòng thử lại sau.",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

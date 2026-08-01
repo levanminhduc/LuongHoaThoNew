@@ -1,39 +1,40 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { csrfProtection } from "@/lib/security-middleware";
+import { findEmployeeAuthRecord } from "@/lib/employee/employee-repository";
+import { csrfProtection, rateLimit } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  CheckPasswordStatusRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResult = rateLimit("login")(request);
+    if (rateLimitResult) return rateLimitResult;
+
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
 
-    const { employee_id } = await request.json();
-
-    if (!employee_id) {
-      return NextResponse.json(
-        { error: "Thiếu mã nhân viên" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+    const parsed = parseSchema(
+      CheckPasswordStatusRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
+    const { employee_id } = parsed.data;
 
     const supabase = createServiceClient();
 
-    // Kiểm tra nhân viên và trạng thái password
-    const { data: employee, error } = await supabase
-      .from("employees")
-      .select("employee_id, password_hash, cccd_hash, last_password_change_at")
-      .eq("employee_id", employee_id.trim())
-      .single();
+    const employee = await findEmployeeAuthRecord(supabase, employee_id);
 
-    if (error || !employee) {
-      return NextResponse.json(
-        { error: "Không tìm thấy nhân viên" },
-        { status: 404, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    const hasChangedPassword = employee.last_password_change_at !== null;
+    const hasChangedPassword = employee?.last_password_change_at != null;
     const mustChangePassword = !hasChangedPassword;
 
     return NextResponse.json(
@@ -53,9 +54,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Check password status error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi kiểm tra trạng thái" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi kiểm tra trạng thái",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

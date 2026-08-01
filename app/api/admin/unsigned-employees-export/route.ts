@@ -4,6 +4,8 @@ import { verifyToken } from "@/lib/auth-middleware";
 import * as XLSX from "xlsx";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -160,7 +162,7 @@ export async function GET(request: NextRequest) {
       bookType: "xlsx",
     });
 
-    const timestamp = new Date().toISOString().slice(0, 10);
+    const timestamp = getVietnamDate();
     const typePrefix = isT13 ? "NV_Chua_Ky_T13" : "NV_Chua_Ky";
     const filename = `${typePrefix}_${month}_${timestamp}.xlsx`;
 
@@ -176,12 +178,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Unsigned employees export error:", error);
-    return NextResponse.json(
-      {
-        error: "Lỗi khi xuất Excel",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi khi xuất Excel",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

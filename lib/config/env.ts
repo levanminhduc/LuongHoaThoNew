@@ -5,6 +5,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   JWT_SECRET: z.string().min(32),
+  IP_SALT: z.string().min(16),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -16,6 +17,7 @@ function validateEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     JWT_SECRET: process.env.JWT_SECRET,
+    IP_SALT: process.env.IP_SALT,
     NODE_ENV: process.env.NODE_ENV,
   });
 

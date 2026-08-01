@@ -1,5 +1,6 @@
+import "server-only";
 import { createServiceClient } from "@/utils/supabase/server";
-import { auditService } from "./audit-service";
+import { auditService } from "@/lib/audit-service";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 
 interface CascadeUpdateResult {

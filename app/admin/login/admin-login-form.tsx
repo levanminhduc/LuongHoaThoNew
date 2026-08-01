@@ -20,12 +20,7 @@ import { Loader2, Eye, EyeOff, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { encryptJson, decryptJson } from "@/lib/utils/client-crypto";
 import { saveSession, getSession } from "@/lib/auth/secure-session";
-import { z } from "zod";
-
-const LoginSchema = z.object({
-  username: z.string().trim().min(1, "Vui lòng nhập tên đăng nhập"),
-  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
-});
+import { AdminLoginRequestSchema } from "@/lib/validations/auth";
 
 const ADMIN_CREDENTIALS_KEY = "admin_saved_credentials";
 const CREDENTIALS_KEY_MATERIAL = "hoatho-admin-login-remember-v1";
@@ -198,7 +193,7 @@ function LoginFormContent() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const parsed = LoginSchema.safeParse({ username, password });
+    const parsed = AdminLoginRequestSchema.safeParse({ username, password });
     if (!parsed.success) {
       const nextFieldErrors: Record<string, string> = {};
       for (const issue of parsed.error.issues) {

@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import bcrypt from "bcryptjs";
+import {
+  hasChangedPassword,
+  verifyEmployeeCredential,
+} from "@/lib/auth/employee-credential";
 import {
   formatSalaryMonth,
   formatSignatureTime,
@@ -13,6 +16,7 @@ import {
   createValidationErrorResponse,
   EmployeeSignSalaryRequestSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,13 +88,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const hasChangedPassword = employee.last_password_change_at !== null;
-      const hashToVerify = hasChangedPassword
-        ? employee.password_hash
-        : employee.cccd_hash;
-      const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify);
+      const isValidPassword = await verifyEmployeeCredential(
+        employee,
+        cccd.trim(),
+      );
       if (!isValidPassword) {
-        const errorMsg = hasChangedPassword
+        const errorMsg = hasChangedPassword(employee)
           ? "Mật khẩu không đúng"
           : "Số CCCD không đúng";
         return NextResponse.json(
@@ -173,9 +176,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Sign salary API error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi ký nhận lương" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi ký nhận lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

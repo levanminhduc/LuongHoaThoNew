@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { csrfProtection } from "@/lib/security-middleware";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -116,13 +117,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Detect columns error:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Internal server error",
+    });
   }
 }
 

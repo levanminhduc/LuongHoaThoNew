@@ -11,6 +11,7 @@ import {
   BONUS_TYPE_LABELS,
 } from "@/lib/validations/bonus";
 import type { BonusListRow, BonusListResponse } from "@/lib/bonus/bonus-types";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface BonusRowWithEmployee {
   employee_id: string;
@@ -110,9 +111,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Get bonuses error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy dữ liệu tiền thưởng" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy dữ liệu tiền thưởng",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

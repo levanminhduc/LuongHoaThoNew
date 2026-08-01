@@ -3,6 +3,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  DepartmentCreateRequestSchema,
+} from "@/lib/validations";
+import { getVietnamMonth, getVietnamYear } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // GET all departments with statistics
 export async function GET(request: NextRequest) {
@@ -19,14 +26,12 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
     const includeStats = searchParams.get("include_stats") === "true";
-    const month =
-      searchParams.get("month") || new Date().toISOString().slice(0, 7);
+    const month = searchParams.get("month") || getVietnamMonth();
     const payrollType = searchParams.get("payroll_type") as
       | "monthly"
       | "t13"
       | null;
-    const year =
-      searchParams.get("year") || new Date().getFullYear().toString();
+    const year = searchParams.get("year") || String(getVietnamYear());
 
     // Get ALL departments (including those with only inactive employees)
     const { data: allDepartments, error: allDeptError } = await supabase
@@ -291,7 +296,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Get departments error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+    });
   }
 }
 
@@ -309,14 +316,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description } = await request.json();
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Tên department không được để trống" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      DepartmentCreateRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
+    const { name, description } = parsed.data;
 
     const supabase = createServiceClient();
 
@@ -351,7 +360,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Create department error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+    });
   }
 }
 
@@ -468,6 +479,8 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error("Department permissions summary error:", error);
-    return NextResponse.json({ error: "Có lỗi xảy ra" }, { status: 500 });
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+    });
   }
 }

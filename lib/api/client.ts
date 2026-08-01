@@ -112,19 +112,37 @@ async function parseJsonOrText(response: Response) {
   }
 }
 
-function errorFromParsedBody(response: Response, parsed: unknown) {
+interface ApiErrorBodyEntry {
+  code?: string;
+  message?: string;
+}
+
+interface ApiErrorBody {
+  code?: string;
+  error?: string | ApiErrorBodyEntry;
+  errors?: ApiErrorBodyEntry[];
+  message?: string;
+  details?: unknown;
+}
+
+function firstEntry(body: ApiErrorBody): ApiErrorBodyEntry | null {
+  if (body.error && typeof body.error === "object") {
+    return body.error;
+  }
+  return body.errors?.[0] ?? null;
+}
+
+export function errorFromParsedBody(response: Response, parsed: unknown) {
   if (parsed && typeof parsed === "object") {
-    const body = parsed as {
-      code?: string;
-      error?: string;
-      message?: string;
-      details?: unknown;
-    };
+    const body = parsed as ApiErrorBody;
+    const entry = firstEntry(body);
+    const errorText = typeof body.error === "string" ? body.error : undefined;
+
     return new ApiError(
-      body.code ?? mapStatusToCode(response.status),
-      body.error ?? body.message ?? `Lỗi ${response.status}`,
+      body.code ?? entry?.code ?? mapStatusToCode(response.status),
+      errorText ?? entry?.message ?? body.message ?? `Lỗi ${response.status}`,
       response.status,
-      body.details,
+      body.errors ?? body.details,
     );
   }
 

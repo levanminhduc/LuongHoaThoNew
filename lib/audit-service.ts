@@ -1,3 +1,4 @@
+import "server-only";
 import { createServiceClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 

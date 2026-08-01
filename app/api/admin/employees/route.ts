@@ -14,6 +14,7 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 /**
  * @swagger
@@ -168,10 +169,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Employee GET error:", error);
-    return NextResponse.json(
-      { error: "Lỗi server" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -375,9 +376,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Employee POST error:", error);
-    return NextResponse.json(
-      { error: "Lỗi server" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

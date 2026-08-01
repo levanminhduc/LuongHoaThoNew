@@ -1,4 +1,6 @@
+import "server-only";
 import bcrypt from "bcryptjs";
+import { verifyEmployeeCredential } from "@/lib/auth/employee-credential";
 import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
@@ -50,16 +52,23 @@ export interface AdminUser {
   updated_at: string;
 }
 
+export type AdminCredentialRecord = Pick<
+  AdminUser,
+  "id" | "username" | "password_hash"
+>;
+
+const ADMIN_CREDENTIAL_SELECT = "id, username, password_hash";
+
 /**
  * Verify admin credentials from admin_users table
  * @param username Admin username
  * @param password Plain text password
- * @returns Promise<AdminUser | null>
+ * @returns Promise<AdminCredentialRecord | null>
  */
 export async function verifyAdminCredentials(
   username: string,
   password: string,
-): Promise<AdminUser | null> {
+): Promise<AdminCredentialRecord | null> {
   // SECURITY BLOCK: Reject 'admin' username completely
   if (username.toLowerCase() === "admin") {
     console.error(
@@ -73,7 +82,7 @@ export async function verifyAdminCredentials(
 
     const { data: admin, error } = await supabase
       .from("admin_users")
-      .select("*")
+      .select(ADMIN_CREDENTIAL_SELECT)
       .eq("username", username)
       .eq("is_active", true)
       .single();
@@ -93,7 +102,7 @@ export async function verifyAdminCredentials(
       .update({ last_login: getVietnamTimestamp() })
       .eq("id", admin.id);
 
-    return admin as AdminUser;
+    return admin;
   } catch (error) {
     console.error("Error verifying admin credentials:", error);
     return null;
@@ -150,14 +159,7 @@ export async function authenticateUser(
       };
     }
 
-    // Verify password based on last_password_change_at
-    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
-    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
-    const hasChangedPassword = employee.last_password_change_at !== null;
-    const hashToVerify = hasChangedPassword
-      ? employee.password_hash
-      : employee.cccd_hash;
-    const isPasswordValid = await bcrypt.compare(password, hashToVerify);
+    const isPasswordValid = await verifyEmployeeCredential(employee, password);
 
     if (!isPasswordValid) {
       return {
@@ -252,32 +254,6 @@ function getPermissionsByRole(role: string): string[] {
       ];
     default:
       return [];
-  }
-}
-
-/**
- * Verify employee credentials for salary lookup
- * @param employeeId Employee ID
- * @param cccd CCCD number (plain text)
- * @returns Promise<any> Employee payroll data or null
- */
-export async function verifyEmployeeCredentials(
-  employeeId: string,
-  cccd: string,
-): Promise<Record<string, unknown> | null> {
-  try {
-    const supabase = createServiceClient();
-    const { data: employee } = await supabase
-      .from("payrolls")
-      .select("*")
-      .eq("employee_id", employeeId)
-      .eq("cccd", cccd)
-      .single();
-
-    return employee;
-  } catch (error) {
-    console.error("Error verifying employee credentials:", error);
-    return null;
   }
 }
 

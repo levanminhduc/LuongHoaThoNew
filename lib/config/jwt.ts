@@ -1,3 +1,5 @@
+import "server-only";
+
 let _cached: string | null = null;
 
 export function getJwtSecret(): string {

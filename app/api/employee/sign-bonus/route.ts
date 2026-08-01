@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import bcrypt from "bcryptjs";
+import { findEmployeeAuthRecord } from "@/lib/employee/employee-repository";
+import {
+  hasChangedPassword,
+  verifyEmployeeCredential,
+} from "@/lib/auth/employee-credential";
 import { verifyEmployeeSession } from "@/lib/employee-session";
 import { csrfProtection } from "@/lib/security-middleware";
 import { formatSignatureTime } from "@/lib/utils/date-formatter";
@@ -14,6 +18,7 @@ import {
   BONUS_TYPE_LABELS,
 } from "@/lib/validations/bonus";
 import type { SignBonusResponse } from "@/lib/bonus/bonus-types";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface SignBonusRpcResult {
   success: boolean;
@@ -57,13 +62,12 @@ async function authenticateEmployee(
     };
   }
 
-  const { data: employee, error } = await supabase
-    .from("employees")
-    .select("employee_id, cccd_hash, password_hash, last_password_change_at")
-    .eq("employee_id", bodyEmployeeId.trim())
-    .single();
+  const employee = await findEmployeeAuthRecord(
+    supabase,
+    bodyEmployeeId.trim(),
+  );
 
-  if (error || !employee) {
+  if (!employee) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -73,17 +77,13 @@ async function authenticateEmployee(
     };
   }
 
-  const hasChangedPassword = employee.last_password_change_at !== null;
-  const hashToVerify = hasChangedPassword
-    ? employee.password_hash
-    : employee.cccd_hash;
-  const isValid = await bcrypt.compare(cccd.trim(), hashToVerify);
+  const isValid = await verifyEmployeeCredential(employee, cccd.trim());
   if (!isValid) {
     return {
       ok: false,
       response: NextResponse.json(
         {
-          error: hasChangedPassword
+          error: hasChangedPassword(employee)
             ? "Mật khẩu không đúng"
             : "Số CCCD không đúng",
         },
@@ -187,9 +187,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Sign bonus API error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi ký nhận tiền thưởng" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi ký nhận tiền thưởng",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

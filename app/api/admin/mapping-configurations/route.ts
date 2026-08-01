@@ -3,11 +3,19 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
 import {
   type MappingConfiguration,
-  type FieldMapping,
   type ConfigurationSearchParams,
   type ApiResponse,
 } from "@/lib/column-alias-config";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  MappingConfigurationCreateRequestSchema,
+  MappingConfigurationSaveRequestSchema,
+  MappingConfigurationListQuerySchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // GET: Fetch mapping configurations
 export async function GET(request: NextRequest) {
@@ -21,23 +29,20 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const parsedQuery = parseSchema(
+      MappingConfigurationListQuerySchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400 },
+      );
+    }
     const params: ConfigurationSearchParams = {
-      config_name: searchParams.get("config_name") || undefined,
-      is_active:
-        searchParams.get("is_active") === "true"
-          ? true
-          : searchParams.get("is_active") === "false"
-            ? false
-            : undefined,
-      is_default:
-        searchParams.get("is_default") === "true"
-          ? true
-          : searchParams.get("is_default") === "false"
-            ? false
-            : undefined,
-      created_by: searchParams.get("created_by") || undefined,
-      page: parseInt(searchParams.get("page") || "1"),
-      limit: parseInt(searchParams.get("limit") || "20"),
+      ...parsedQuery.data,
+      config_name: parsedQuery.data.config_name ?? undefined,
+      created_by: parsedQuery.data.created_by ?? undefined,
     };
 
     const supabase = createServiceClient();
@@ -100,10 +105,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Mapping configurations GET error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi tải cấu hình" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tải cấu hình",
+    });
   }
 }
 
@@ -121,20 +125,17 @@ export async function POST(request: NextRequest) {
     }
     const adminUser = authResult.user;
 
-    const body = await request.json();
-    const {
-      config_name,
-      description,
-      field_mappings = [],
-      is_default = false,
-    } = body;
-
-    if (!config_name) {
-      return NextResponse.json(
-        { success: false, message: "Thiếu tên cấu hình" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      MappingConfigurationCreateRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
+    const { config_name, description, field_mappings, is_default } =
+      parsed.data;
 
     const supabase = createServiceClient();
 
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
 
     // Create field mappings if provided
     if (field_mappings.length > 0) {
-      const mappingsToInsert = field_mappings.map((mapping: FieldMapping) => ({
+      const mappingsToInsert = field_mappings.map((mapping) => ({
         config_id: newConfig.id,
         database_field: mapping.database_field,
         excel_column_name: mapping.excel_column_name,
@@ -239,10 +240,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Mapping configurations POST error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi tạo cấu hình" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tạo cấu hình",
+    });
   }
 }
 
@@ -260,21 +260,21 @@ export async function PUT(request: NextRequest) {
     }
     const adminUser = authResult.user;
 
-    const body = await request.json();
-    const { mapping, file_name, auto_generate_name = true } = body;
-
-    if (!mapping || typeof mapping !== "object") {
-      return NextResponse.json(
-        { success: false, message: "Thiếu thông tin mapping" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      MappingConfigurationSaveRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
+    const { mapping, file_name, auto_generate_name } = parsed.data;
 
     const supabase = createServiceClient();
 
     // Generate configuration name
-    const vietnamDate = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
-    const timestamp = vietnamDate.toISOString().slice(0, 16).replace("T", " ");
+    const timestamp = getVietnamTimestamp().slice(0, 16);
     const configName = auto_generate_name
       ? `Auto-saved ${file_name || "mapping"} - ${timestamp}`
       : `Manual mapping - ${timestamp}`;
@@ -338,9 +338,8 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error("Auto-save mapping configuration error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi lưu cấu hình" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lưu cấu hình",
+    });
   }
 }

@@ -1,3 +1,4 @@
+import "server-only";
 import { type NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 import { type JWTPayload } from "@/lib/auth";

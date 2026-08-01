@@ -79,7 +79,6 @@ export const ENDPOINTS = {
     employee: "/api/admin/download-employee-template",
     attendance: "/api/admin/download-attendance-template",
     payroll: "/api/admin/payroll-export-template",
-    alias: "/api/admin/generate-alias-template",
     importGenerated: "/api/admin/generate-import-template",
     bonus: "/api/admin/download-bonus-template",
   },
@@ -94,7 +93,6 @@ export const ENDPOINTS = {
     list: "/api/admin/column-aliases",
     detail: (id: string | number) =>
       `/api/admin/column-aliases/${encodeURIComponent(String(id))}`,
-    generateTemplate: "/api/admin/generate-alias-template",
   },
   passwordResetHistory: {
     list: "/api/admin/password-reset-history",

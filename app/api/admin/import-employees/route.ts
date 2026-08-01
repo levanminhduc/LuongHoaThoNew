@@ -3,11 +3,12 @@ import { createServiceClient } from "@/utils/supabase/server";
 import {
   parseEmployeeExcelFile,
   type EmployeeData,
-} from "@/lib/employee-parser";
+} from "@/lib/employee/employee-parser";
 import { csrfProtection } from "@/lib/security-middleware";
 import bcrypt from "bcryptjs";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // Hash CCCD for security
 async function hashCCCD(cccd: string): Promise<string> {
@@ -184,12 +185,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Import employees error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi import nhân viên",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi import nhân viên",
+    });
   }
 }

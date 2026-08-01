@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import {
+  getVietnamMonth,
+  getVietnamTimestamp,
+} from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // Mapping database fields to user-friendly Vietnamese headers
 const FIELD_HEADERS: Record<string, string> = {
@@ -276,7 +280,7 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Add sample rows for template
-      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+      const currentMonth = getVietnamMonth();
       const sampleRow1 = activeFields.map((field) => {
         if (field === "employee_id") return "NV001";
         if (field === "salary_month") return currentMonth;
@@ -354,9 +358,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Export template error:", error);
-    return NextResponse.json(
-      { error: "Lỗi khi tạo template export" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi khi tạo template export",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

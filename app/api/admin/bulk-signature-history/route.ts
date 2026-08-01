@@ -7,6 +7,7 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,9 +74,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Get bulk signature history error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

@@ -17,6 +17,7 @@ import {
   getBonusManagementSignatureStatus,
 } from "@/lib/bonus/bonus-signature-status";
 import { createBonusManagementSignature } from "@/lib/bonus/bonus-signature-service";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 function isBonusSignerRole(role: string): boolean {
   return (BONUS_SIGNER_ROLES as readonly string[]).includes(role);
@@ -69,10 +70,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Bonus management signature error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi ký xác nhận đợt thưởng" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi ký xác nhận đợt thưởng",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -111,9 +112,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Bonus management signature status error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy trạng thái chữ ký đợt thưởng" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy trạng thái chữ ký đợt thưởng",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

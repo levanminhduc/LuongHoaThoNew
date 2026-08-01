@@ -79,6 +79,24 @@ export const PaginationSchema = z.object({
     .default(0),
 });
 
+export function pageQuerySchema(defaultLimit = 50, maxLimit = 200) {
+  return z.object({
+    page: z.coerce
+      .number()
+      .int({ message: "Trang phải là số nguyên" })
+      .min(1, { message: "Trang phải >= 1" })
+      .nullish()
+      .transform((value) => value ?? 1),
+    limit: z.coerce
+      .number()
+      .int({ message: "Limit phải là số nguyên" })
+      .min(1, { message: "Limit phải >= 1" })
+      .max(maxLimit, { message: `Limit không được quá ${maxLimit}` })
+      .nullish()
+      .transform((value) => value ?? defaultLimit),
+  });
+}
+
 export const IsT13Schema = z.boolean().optional();
 
 export const NotesSchema = z

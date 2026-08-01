@@ -1,3 +1,4 @@
+import "server-only";
 import type { NextRequest } from "next/server";
 import type { createServiceClient } from "@/utils/supabase/server";
 import { SIGNATURE_TYPES } from "@/lib/validations";
@@ -8,6 +9,11 @@ import type {
   BonusEmployeeSignProgress,
   BonusManagementSignatureStatus,
 } from "@/lib/bonus/bonus-types";
+import {
+  findActiveBonusSignatures,
+  findBonusSignFlags,
+  type BonusSignatureRow,
+} from "@/lib/bonus/bonus-repository";
 
 export const BONUS_SIGNER_ROLES = [
   "admin",
@@ -59,7 +65,7 @@ function summarizeEmployeeSignProgress(
 }
 
 export function toBonusSignatureRecord(
-  row: Record<string, unknown>,
+  row: BonusSignatureRow,
 ): BonusSignatureRecord {
   return {
     signature_type: row.signature_type as SignatureType,
@@ -67,9 +73,9 @@ export function toBonusSignatureRecord(
     bonus_period: String(row.bonus_period),
     signed_by_id: String(row.signed_by_id),
     signed_by_name: String(row.signed_by_name),
-    department: (row.department as string | null) ?? null,
+    department: row.department ?? null,
     signed_at: String(row.signed_at),
-    notes: (row.notes as string | null) ?? null,
+    notes: row.notes ?? null,
   };
 }
 
@@ -78,17 +84,9 @@ export async function loadEmployeeSignProgress(
   bonusType: BonusType,
   bonusPeriod: string,
 ): Promise<BonusEmployeeSignProgress | null> {
-  const { data, error } = await supabase
-    .from("employee_bonuses")
-    .select("employee_id, is_signed")
-    .eq("bonus_type", bonusType)
-    .eq("bonus_period", bonusPeriod);
-
-  if (error) {
-    console.error("Error fetching bonus batch:", error);
-    return null;
-  }
-  return summarizeEmployeeSignProgress((data ?? []) as BonusSignFlag[]);
+  const flags = await findBonusSignFlags(supabase, bonusType, bonusPeriod);
+  if (!flags) return null;
+  return summarizeEmployeeSignProgress(flags);
 }
 
 export async function getBonusManagementSignatureStatus(
@@ -108,15 +106,13 @@ export async function getBonusManagementSignatureStatus(
     };
   }
 
-  const { data: signatureRows, error: signatureError } = await supabase
-    .from("bonus_management_signatures")
-    .select("*")
-    .eq("bonus_type", bonusType)
-    .eq("bonus_period", bonusPeriod)
-    .eq("is_active", true);
+  const signatureRows = await findActiveBonusSignatures(
+    supabase,
+    bonusType,
+    bonusPeriod,
+  );
 
-  if (signatureError) {
-    console.error("Error fetching bonus signatures:", signatureError);
+  if (!signatureRows) {
     return {
       status: 500,
       body: { error: "Lỗi khi lấy trạng thái chữ ký đợt thưởng" },
@@ -125,9 +121,7 @@ export async function getBonusManagementSignatureStatus(
 
   const signatures = SIGNATURE_TYPES.reduce(
     (acc, type) => {
-      const matched = (signatureRows ?? []).find(
-        (row) => row.signature_type === type,
-      );
+      const matched = signatureRows.find((row) => row.signature_type === type);
       acc[type] = matched ? toBonusSignatureRecord(matched) : null;
       return acc;
     },

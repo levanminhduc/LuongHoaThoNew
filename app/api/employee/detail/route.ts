@@ -5,8 +5,12 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
-import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
+import {
+  getPayrollSelect,
+  type PayrollRecord,
+} from "@/lib/payroll/payroll-select";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -177,9 +181,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Employee detail error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy chi tiết lương" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy chi tiết lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

@@ -2,6 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  AttendanceEmployeesQuerySchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,20 +22,27 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
 
-    const periodYear = parseInt(searchParams.get("period_year") || "");
-    const periodMonth = parseInt(searchParams.get("period_month") || "");
-    const department = searchParams.get("department");
-    const search = searchParams.get("search");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const offset = (page - 1) * limit;
-
-    if (!periodYear || !periodMonth || periodMonth < 1 || periodMonth > 12) {
+    const parsedQuery = parseSchema(AttendanceEmployeesQuerySchema, {
+      period_year: searchParams.get("period_year"),
+      period_month: searchParams.get("period_month"),
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+    });
+    if (!parsedQuery.success) {
       return NextResponse.json(
-        { error: "Thiếu hoặc sai tham số period_year/period_month" },
+        createValidationErrorResponse(parsedQuery.errors),
         { status: 400 },
       );
     }
+    const {
+      period_year: periodYear,
+      period_month: periodMonth,
+      page,
+      limit,
+    } = parsedQuery.data;
+    const department = searchParams.get("department");
+    const search = searchParams.get("search");
+    const offset = (page - 1) * limit;
 
     const { data: periodsData } = await supabase
       .from("attendance_monthly")
@@ -160,12 +173,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Attendance employees error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra",
-        details: error instanceof Error ? error.message : "Unknown",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+    });
   }
 }

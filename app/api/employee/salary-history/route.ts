@@ -1,29 +1,40 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import bcrypt from "bcryptjs";
+import { verifyEmployeeCredential } from "@/lib/auth/employee-credential";
 import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
-import { getPayrollSelect, type PayrollRecord } from "@/lib/payroll-select";
+import {
+  getPayrollSelect,
+  type PayrollRecord,
+} from "@/lib/payroll/payroll-select";
 import { verifyEmployeeSession } from "@/lib/employee-session";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  SalaryHistoryActionRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
 
-    const body = await request.json();
-    const { action, salary_month, is_t13 } = body;
-
-    if (!action) {
-      return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+    const parsed = parseSchema(
+      SalaryHistoryActionRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
+    const { action, salary_month, is_t13 } = parsed.data;
 
     const supabase = createServiceClient();
     const payrollType = is_t13 ? "t13" : "monthly";
@@ -41,7 +52,7 @@ export async function POST(request: NextRequest) {
       }
       authenticatedEmployeeId = session.employee_id;
     } else {
-      const { employee_id, cccd } = body;
+      const { employee_id, cccd } = parsed.data;
       if (!employee_id || !cccd) {
         return NextResponse.json(
           { error: "Thiếu thông tin bắt buộc" },
@@ -64,11 +75,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const hasChangedPassword = empData.last_password_change_at !== null;
-      const hashToVerify = hasChangedPassword
-        ? empData.password_hash
-        : empData.cccd_hash;
-      const isValidPassword = await bcrypt.compare(cccd.trim(), hashToVerify);
+      const isValidPassword = await verifyEmployeeCredential(
+        empData,
+        cccd.trim(),
+      );
 
       if (!isValidPassword) {
         return NextResponse.json(
@@ -166,7 +176,6 @@ export async function POST(request: NextRequest) {
       const baseResponse = {
         employee_id: employee.employee_id,
         full_name: employee.full_name,
-        cccd: body.cccd ? body.cccd.trim() : "",
         position: employee.chuc_vu,
         department: employee.department,
         salary_month: payroll.salary_month,
@@ -277,9 +286,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Salary history error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi xử lý yêu cầu" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xử lý yêu cầu",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

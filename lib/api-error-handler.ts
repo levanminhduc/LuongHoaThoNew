@@ -1,4 +1,5 @@
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { isProduction } from "@/lib/config/runtime";
 
 export interface ApiError {
   code: string;
@@ -111,9 +112,15 @@ export class ApiErrorHandler {
     salary_month?: string,
     file_type?: "file1" | "file2",
   ): ApiError {
+    console.error("[API_ERROR]", error);
+
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";
-    const details = error instanceof Error ? error.stack : String(error);
+    const details = isProduction()
+      ? undefined
+      : error instanceof Error
+        ? error.stack
+        : String(error);
 
     return this.createError(
       code,

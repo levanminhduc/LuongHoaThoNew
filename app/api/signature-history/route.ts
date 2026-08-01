@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyToken } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -248,12 +249,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Signature history error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi lấy lịch sử ký",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy lịch sử ký",
+    });
   }
 }

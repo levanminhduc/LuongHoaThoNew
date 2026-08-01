@@ -34,7 +34,7 @@ const pathTitleMap: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
   "/admin/employee-management": "Quản Lý Nhân Viên",
   "/admin/payroll-management": "Quản Lý Lương",
-  "/admin/payroll-import-export": "Import/Export Lương",
+  "/admin/payroll-import-export": "Import Lương",
   "/admin/bonus-import": "Import Tiền Thưởng",
   "/admin/data-validation": "Kiểm Tra Dữ Liệu",
   "/admin/bulk-signature": "Ký Hàng Loạt",

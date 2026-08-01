@@ -2,6 +2,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
+import { isProduction } from "@/lib/config/runtime";
+import {
+  getVietnamMonth,
+  getVietnamMonthsAgo,
+  getVietnamYear,
+} from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface DepartmentDetailParams {
   params: Promise<{
@@ -46,14 +53,12 @@ export async function GET(
     const departmentName = decodeURIComponent(resolvedParams.departmentName);
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
-    const month =
-      searchParams.get("month") || new Date().toISOString().slice(0, 7);
+    const month = searchParams.get("month") || getVietnamMonth();
     const payrollType = searchParams.get("payroll_type") as
       | "monthly"
       | "t13"
       | null;
-    const year =
-      searchParams.get("year") || new Date().getFullYear().toString();
+    const year = searchParams.get("year") || String(getVietnamYear());
 
     // Check if user has permission to access this department
     // For to_truong: use auth.user.department
@@ -214,10 +219,7 @@ export async function GET(
       return NextResponse.json(
         {
           error: "Lỗi truy vấn dữ liệu lương",
-          details:
-            process.env.NODE_ENV === "development"
-              ? payrollsError.message
-              : undefined,
+          details: isProduction() ? undefined : payrollsError.message,
         },
         { status: 500 },
       );
@@ -249,9 +251,7 @@ export async function GET(
       historicalQuery = historicalQuery.in("salary_month", t13Months);
     } else {
       // For monthly: Get last 6 months
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      const startMonth = sixMonthsAgo.toISOString().slice(0, 7);
+      const startMonth = getVietnamMonthsAgo(6);
       historicalQuery = historicalQuery
         .gte("salary_month", startMonth)
         .not("salary_month", "like", "%-13"); // Exclude T13 records
@@ -399,9 +399,8 @@ export async function GET(
     });
   } catch (error) {
     console.error("Department detail error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy chi tiết department" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy chi tiết department",
+    });
   }
 }

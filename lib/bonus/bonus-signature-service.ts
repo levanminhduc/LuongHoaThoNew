@@ -9,6 +9,11 @@ import {
   toBonusSignatureRecord,
   resolveClientIp,
 } from "@/lib/bonus/bonus-signature-status";
+import {
+  findActiveBonusSignatureByType,
+  findActiveSigner,
+  insertBonusSignature,
+} from "@/lib/bonus/bonus-repository";
 
 export async function createBonusManagementSignature(
   supabase: SupabaseServiceClient,
@@ -54,14 +59,9 @@ export async function createBonusManagementSignature(
     };
   }
 
-  const { data: employee, error: empError } = await supabase
-    .from("employees")
-    .select("employee_id, full_name, department, chuc_vu")
-    .eq("employee_id", signerEmployeeId)
-    .eq("is_active", true)
-    .single();
+  const employee = await findActiveSigner(supabase, signerEmployeeId);
 
-  if (empError || !employee) {
+  if (!employee) {
     return {
       status: 400,
       body: { error: "Nhân viên không tồn tại hoặc đã bị khóa" },
@@ -75,14 +75,12 @@ export async function createBonusManagementSignature(
     };
   }
 
-  const { data: existingSignature } = await supabase
-    .from("bonus_management_signatures")
-    .select("*")
-    .eq("bonus_type", bonus_type)
-    .eq("bonus_period", bonus_period)
-    .eq("signature_type", signature_type)
-    .eq("is_active", true)
-    .maybeSingle();
+  const existingSignature = await findActiveBonusSignatureByType(
+    supabase,
+    bonus_type,
+    bonus_period,
+    signature_type,
+  );
 
   if (existingSignature) {
     return {
@@ -114,14 +112,12 @@ export async function createBonusManagementSignature(
     is_active: true,
   };
 
-  const { data: insertedSignature, error: insertError } = await supabase
-    .from("bonus_management_signatures")
-    .insert(signatureRecord)
-    .select()
-    .single();
+  const insertedSignature = await insertBonusSignature(
+    supabase,
+    signatureRecord,
+  );
 
-  if (insertError || !insertedSignature) {
-    console.error("Error inserting bonus signature:", insertError);
+  if (!insertedSignature) {
     return { status: 500, body: { error: "Lỗi khi lưu chữ ký đợt thưởng" } };
   }
 

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import JSZip from "jszip";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 function createExcelBuffer(data: unknown[][], sheetName: string) {
   const workbook = XLSX.utils.book_new();
@@ -212,9 +213,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Download multiple samples error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi tạo file mẫu" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tạo file mẫu",
+    });
   }
 }

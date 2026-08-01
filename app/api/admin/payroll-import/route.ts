@@ -14,6 +14,7 @@ import {
   validateEmployeeExists,
 } from "@/lib/import-error-collector";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // Type definitions for mapping
 interface ColumnAlias {
@@ -485,12 +486,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Payroll import error:", error);
-    const apiError = ApiErrorHandler.fromError(
-      error,
-      ApiErrorHandler.ErrorCodes.INTERNAL_ERROR,
-    );
-    return NextResponse.json(ApiErrorHandler.createErrorResponse(apiError), {
-      status: 500,
-    });
+    return toErrorResponse(error);
   }
 }

@@ -7,6 +7,8 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { getVietnamMonth } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,7 +76,7 @@ export async function GET(request: NextRequest) {
           (sum, p) => sum + (p.tien_luong_thuc_nhan_cuoi_ky || 0),
           0,
         ) || 0,
-      currentMonth: new Date().toISOString().substr(0, 7),
+      currentMonth: getVietnamMonth(),
       lastImportBatch: payrolls?.[0]?.import_batch_id?.slice(-8) || "N/A",
       signatureRate: payrolls?.length
         ? (payrolls.filter((p) => p.import_status === "signed").length /
@@ -109,12 +111,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Dashboard stats error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi lấy thống kê dashboard",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy thống kê dashboard",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

@@ -2,6 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  PayrollAuditFilterRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface AuditLog {
   id: number;
@@ -96,12 +102,9 @@ export async function GET(
       console.log("✅ Audit table accessible");
     } catch (accessError) {
       console.error("❌ Audit table access exception:", accessError);
-      return NextResponse.json(
-        {
-          error: "Không thể truy cập bảng audit trail.",
-        },
-        { status: 500 },
-      );
+      return toErrorResponse(accessError, {
+        fallbackMessage: "Không thể truy cập bảng audit trail.",
+      });
     }
 
     // Get audit trail for this payroll record
@@ -201,10 +204,9 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get audit trail error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy lịch sử thay đổi" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy lịch sử thay đổi",
+    });
   }
 }
 
@@ -218,7 +220,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { startDate, endDate, employeeId } = await request.json();
+    const parsed = parseSchema(
+      PayrollAuditFilterRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
+    }
+    const { startDate, endDate, employeeId } = parsed.data;
 
     const supabase = createServiceClient();
 
@@ -273,9 +284,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Get audit summary error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy tổng quan thay đổi" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy tổng quan thay đổi",
+    });
   }
 }

@@ -3,12 +3,14 @@ import { authenticateUser, type JWTPayload } from "@/lib/auth";
 import jwt from "jsonwebtoken";
 import { getJwtSecret } from "@/lib/config/jwt";
 import { rateLimit } from "@/lib/security-middleware";
+import { isProduction } from "@/lib/config/runtime";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   parseSchema,
   createValidationErrorResponse,
   AdminLoginRequestSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 /**
  * @swagger
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction(),
       sameSite: "lax",
       maxAge: 60 * 60 * 24,
       path: "/",
@@ -104,9 +106,9 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi đăng nhập" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi đăng nhập",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

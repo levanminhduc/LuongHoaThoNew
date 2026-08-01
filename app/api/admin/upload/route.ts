@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { parseExcelFile, type PayrollData } from "@/lib/excel-parser";
 import { csrfProtection } from "@/lib/security-middleware";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -82,9 +83,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi upload file" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi upload file",
+    });
   }
 }

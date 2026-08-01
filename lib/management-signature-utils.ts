@@ -1,3 +1,4 @@
+import "server-only";
 import { createServiceClient } from "@/utils/supabase/server";
 
 export interface EmployeeCompletion {
@@ -28,6 +29,9 @@ export interface SignatureRecord {
   notes?: string;
   is_active: boolean;
 }
+
+export const MANAGEMENT_SIGNATURE_SELECT =
+  "id, signature_type, salary_month, signed_by_id, signed_by_name, department, signed_at, ip_address, device_info, notes, is_active";
 
 export interface MonthStatus {
   month: string;
@@ -152,7 +156,7 @@ export async function checkSignatureEligibility(
     try {
       const { data: existingSignature, error: existingError } = await supabase
         .from("management_signatures")
-        .select("*")
+        .select(MANAGEMENT_SIGNATURE_SELECT)
         .eq("salary_month", month)
         .eq("signature_type", signatureType)
         .eq("is_active", true)
@@ -201,7 +205,7 @@ export async function getManagementSignatureStatus(
       const supabase = createServiceClient();
       const { data: signatures, error: sigError } = await supabase
         .from("management_signatures")
-        .select("*")
+        .select(MANAGEMENT_SIGNATURE_SELECT)
         .eq("salary_month", month)
         .eq("is_active", true);
 

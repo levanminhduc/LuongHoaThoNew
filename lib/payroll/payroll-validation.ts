@@ -3,7 +3,7 @@
  * Provides comprehensive validation including business logic and cross-field validation
  */
 
-import { ApiErrorHandler, type ApiError } from "./api-error-handler";
+import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 
 export interface ValidationResult {
   isValid: boolean;

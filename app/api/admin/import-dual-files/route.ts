@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
 import { csrfProtection } from "@/lib/security-middleware";
-import jwt from "jsonwebtoken";
+import { verifyToken } from "@/lib/auth-middleware";
 import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
-import { PayrollValidator } from "@/lib/payroll-validation";
-import { getJwtSecret } from "@/lib/config/jwt";
+import { PayrollValidator } from "@/lib/payroll/payroll-validation";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
@@ -13,6 +12,7 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface ColumnMapping {
   excel_column_name: string;
@@ -94,11 +94,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const token = authHeader.split(" ")[1];
-
-    try {
-      jwt.verify(token, getJwtSecret());
-    } catch {
+    if (!verifyToken(request)) {
       const apiError = ApiErrorHandler.createError(
         ApiErrorHandler.ErrorCodes.INVALID_TOKEN,
         ApiErrorHandler.getUserFriendlyMessage(
@@ -372,13 +368,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Import dual files error:", error);
-    const apiError = ApiErrorHandler.fromError(
-      error,
-      ApiErrorHandler.ErrorCodes.INTERNAL_ERROR,
-    );
-    return NextResponse.json(ApiErrorHandler.createErrorResponse(apiError), {
-      status: 500,
-    });
+    return toErrorResponse(error);
   }
 }
 

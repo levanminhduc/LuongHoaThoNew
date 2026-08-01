@@ -9,6 +9,7 @@ import type {
   EmployeeBonusItem,
   EmployeeBonusesResponse,
 } from "@/lib/bonus/bonus-types";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface EmployeeBonusRow {
   bonus_type: BonusType;
@@ -78,9 +79,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, { headers: CACHE_HEADERS.sensitive });
   } catch (error) {
     console.error("Employee bonuses error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy danh sách tiền thưởng" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy danh sách tiền thưởng",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

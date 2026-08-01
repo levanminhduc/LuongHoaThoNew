@@ -9,6 +9,7 @@ import {
   createValidationErrorResponse,
   BulkSignSalaryRequestSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -249,9 +250,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Bulk sign salary error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi ký hàng loạt" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi ký hàng loạt",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

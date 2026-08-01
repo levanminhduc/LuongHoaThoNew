@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { verifyToken } from "@/lib/auth-middleware";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 const TEMPLATE_HEADERS = [
   "Mã NV",
@@ -80,9 +81,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Download bonus template error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi tạo file template" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tạo file template",
+    });
   }
 }

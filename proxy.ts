@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 import { MAINTENANCE_MODE } from "@/lib/maintenance";
 import { applySecurityHeadersTo } from "@/lib/security-middleware";
+import { isProduction } from "@/lib/config/runtime";
 
 const PROTECTED_PATHS = [
   "/admin",
@@ -42,7 +43,7 @@ function isMaintenanceAllowed(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (process.env.NODE_ENV === "production" && isDevOnlyRoute(pathname)) {
+  if (isProduction() && isDevOnlyRoute(pathname)) {
     const response = new NextResponse(null, { status: 404 });
     applySecurityHeadersTo(response);
     return response;

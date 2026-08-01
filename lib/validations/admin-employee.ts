@@ -90,6 +90,16 @@ export type DepartmentPermissionGrant = z.infer<
   typeof DepartmentPermissionGrantSchema
 >;
 
+export const DepartmentPermissionAssignSchema = z.object({
+  employeeId: z.string().min(1, { message: "Vui lòng chọn nhân viên" }),
+  departments: z
+    .array(z.string())
+    .min(1, { message: "Vui lòng chọn ít nhất một department" }),
+});
+export type DepartmentPermissionAssign = z.infer<
+  typeof DepartmentPermissionAssignSchema
+>;
+
 export const DepartmentPermissionRevokeSchema = z
   .object({
     id: z.coerce
@@ -141,3 +151,23 @@ export const BulkSignatureHistoryQuerySchema = z.object({
 export type BulkSignatureHistoryQuery = z.infer<
   typeof BulkSignatureHistoryQuerySchema
 >;
+
+export const DepartmentCreateRequestSchema = z.object({
+  name: DepartmentSchema,
+  description: z
+    .string()
+    .trim()
+    .max(500, { message: "Mô tả không được quá 500 ký tự" })
+    .optional(),
+});
+export type DepartmentCreateRequest = z.infer<
+  typeof DepartmentCreateRequestSchema
+>;
+
+export const UpdateCccdRequestSchema = z.object({
+  employee_id: EmployeeIdSchema,
+  new_cccd: z
+    .string()
+    .regex(CCCD_REGEX, { message: "Số CCCD phải có đúng 12 chữ số" }),
+});
+export type UpdateCccdRequest = z.infer<typeof UpdateCccdRequestSchema>;

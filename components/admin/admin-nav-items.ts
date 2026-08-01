@@ -44,7 +44,7 @@ export const mainNavItems: NavItem[] = [
 
 export const dataManagementItems: NavItem[] = [
   {
-    title: "Import/Export Lương",
+    title: "Import Lương",
     icon: ArrowUpDown,
     href: "/admin/payroll-import-export",
   },

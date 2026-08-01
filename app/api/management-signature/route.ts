@@ -9,6 +9,7 @@ import {
   createValidationErrorResponse,
   ManagementSignatureRequestSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -246,12 +247,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Management signature error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi ký xác nhận",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi ký xác nhận",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

@@ -1,18 +1,19 @@
 import { z } from "zod";
 import type { ApiError } from "@/lib/api-error-handler";
 import { ApiErrorHandler } from "@/lib/api-error-handler";
+import { ValidationError } from "@/lib/errors/app-error";
 
 export interface ValidationResult<T> {
   success: true;
   data: T;
 }
 
-export interface ValidationError {
+export interface ParseFailure {
   success: false;
   errors: ApiError[];
 }
 
-export type ParseResult<T> = ValidationResult<T> | ValidationError;
+export type ParseResult<T> = ValidationResult<T> | ParseFailure;
 
 export function zodErrorToApiErrors(
   zodError: z.ZodError,
@@ -72,7 +73,7 @@ export function parseSchemaOrThrow<T>(
   }
 
   const firstError = result.error.issues[0];
-  throw new Error(firstError?.message || "Dữ liệu không hợp lệ");
+  throw new ValidationError(firstError?.message || "Dữ liệu không hợp lệ");
 }
 
 export function createValidationErrorResponse(errors: ApiError[]) {

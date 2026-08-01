@@ -1,6 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  pageQuerySchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
+
+const PasswordResetHistoryQuerySchema = pageQuerySchema(50);
 
 interface SecurityLog {
   id: number;
@@ -37,8 +45,17 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const parsedQuery = parseSchema(PasswordResetHistoryQuerySchema, {
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+    });
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400 },
+      );
+    }
+    const { page, limit } = parsedQuery.data;
     const employeeCode = searchParams.get("employee_code");
     const status = searchParams.get("status");
     const startDate = searchParams.get("start_date");
@@ -150,9 +167,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Password reset history error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi tải lịch sử" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tải lịch sử",
+    });
   }
 }

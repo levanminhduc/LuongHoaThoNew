@@ -1,29 +1,26 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
+import {
+  hasChangedPassword,
+  verifyEmployeeCredential,
+} from "@/lib/auth/employee-credential";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
+import { getEnv } from "@/lib/config/env";
+import { hashClientIp } from "@/lib/utils/hash-ip";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { rateLimit } from "@/lib/security-middleware";
+import { rateLimit, csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   parseSchema,
   createValidationErrorResponse,
   ChangePasswordWithCccdRequestSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // Constants for account-level lockout (passed to DB RPC)
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
-
-// Hash IP for privacy (don't store raw IPs)
-function hashIp(ip: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(ip + process.env.IP_SALT || "default-salt")
-    .digest("hex")
-    .substring(0, 16);
-}
 
 // Shrink user agent to essential info
 function shrinkUA(ua: string | null): string {
@@ -73,6 +70,9 @@ function okGeneric() {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrfResult = csrfProtection(request);
+    if (csrfResult) return csrfResult;
+
     const body = await request.json();
     const parsed = parseSchema(ChangePasswordWithCccdRequestSchema, body);
     if (!parsed.success) {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-real-ip") ||
       "unknown";
     const ua = request.headers.get("user-agent");
-    const ipHash = hashIp(ip);
+    const ipHash = hashClientIp(ip, getEnv().IP_SALT);
     const userAgent = shrinkUA(ua);
 
     const rateLimitResult = rateLimit("passwordReset")(request);
@@ -134,14 +134,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Step 3: Verify credentials based on last_password_change_at
-    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
-    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
-    const hasChangedPassword = employee.last_password_change_at !== null;
-    const hashToVerify = hasChangedPassword
-      ? employee.password_hash
-      : employee.cccd_hash;
-    const isValidCCCD = await bcrypt.compare(cccd.trim(), hashToVerify);
+    const isValidCCCD = await verifyEmployeeCredential(employee, cccd.trim());
 
     if (!isValidCCCD) {
       // Increment fail count and possibly lock
@@ -161,7 +154,9 @@ export async function POST(request: NextRequest) {
         ipHash,
         userAgent,
         {
-          reason: hasChangedPassword ? "invalid_password" : "invalid_cccd",
+          reason: hasChangedPassword(employee)
+            ? "invalid_password"
+            : "invalid_cccd",
           fail_count: failResult?.fail_count,
           locked: failResult?.locked,
         },
@@ -232,10 +227,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Password reset error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra. Vui lòng thử lại sau." },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra. Vui lòng thử lại sau.",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -285,9 +280,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Check password status error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

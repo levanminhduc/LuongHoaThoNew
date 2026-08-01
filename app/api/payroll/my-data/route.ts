@@ -4,6 +4,20 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  PAYROLL_WITH_EMPLOYEE_SELECT,
+  applyPayrollFilters,
+} from "@/lib/payroll/payroll-list-query";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  pageQuerySchema,
+  YearlySummaryRequestSchema,
+} from "@/lib/validations";
+import { getVietnamYear } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
+
+const MyDataQuerySchema = pageQuerySchema(12);
 
 // GET own payroll data for nhan_vien
 export async function GET(request: NextRequest) {
@@ -28,8 +42,17 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "12");
+    const parsedQuery = parseSchema(MyDataQuerySchema, {
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+    });
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const { page, limit } = parsedQuery.data;
     const month = searchParams.get("month");
     const payrollType = searchParams.get("payroll_type") || "monthly";
 
@@ -37,28 +60,13 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("payrolls")
-      .select(
-        `
-        *,
-        employees!payrolls_employee_id_fkey!inner(
-          employee_id,
-          full_name,
-          department,
-          chuc_vu
-        )
-      `,
-      )
+      .select(PAYROLL_WITH_EMPLOYEE_SELECT)
       .eq("employee_id", auth.user.employee_id);
 
-    if (payrollType === "t13") {
-      query = query.eq("payroll_type", "t13");
-    } else {
-      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-    }
-
-    if (month) {
-      query = query.eq("salary_month", month);
-    }
+    query = applyPayrollFilters(query, {
+      payrollType,
+      salaryMonth: month,
+    });
 
     let countQuery = supabase
       .from("payrolls")
@@ -124,10 +132,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("My data payroll error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy dữ liệu lương" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy dữ liệu lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -145,8 +153,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { year } = await request.json();
-    const currentYear = year || new Date().getFullYear();
+    const parsedBody = parseSchema(
+      YearlySummaryRequestSchema,
+      await request.json(),
+    );
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedBody.errors),
+        { status: 400, headers: CACHE_HEADERS.sensitive },
+      );
+    }
+    const currentYear = parsedBody.data.year ?? getVietnamYear();
     const supabase = createServiceClient();
 
     // Get yearly summary for the employee
@@ -228,9 +245,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Personal summary error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy tổng kết" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy tổng kết",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

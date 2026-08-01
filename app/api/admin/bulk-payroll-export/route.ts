@@ -20,6 +20,7 @@ import {
   getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface PayrollRecord {
   [key: string]: unknown;
@@ -516,12 +517,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Bulk payroll export error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi xuất dữ liệu lương",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xuất dữ liệu lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

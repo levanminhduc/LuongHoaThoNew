@@ -14,6 +14,8 @@ import {
   getSignatureMergeRanges,
 } from "@/lib/excel/payroll-excel-builder";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -591,7 +593,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Create meaningful filename (safe for download)
-    const timestamp = new Date().toISOString().slice(0, 10);
+    const timestamp = getVietnamDate();
 
     const safeDepartmentName = departmentName
       .replace(/[^\w\s-]/g, "")
@@ -617,12 +619,9 @@ export async function GET(request: NextRequest) {
       "Error stack:",
       error instanceof Error ? error.stack : "No stack trace",
     );
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi xuất dữ liệu lương",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xuất dữ liệu lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

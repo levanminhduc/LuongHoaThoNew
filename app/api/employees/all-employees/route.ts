@@ -4,6 +4,14 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  pageQuerySchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
+
+const AllEmployeesQuerySchema = pageQuerySchema(50);
 
 // GET all employees for management roles with caching
 export async function GET(request: NextRequest) {
@@ -32,8 +40,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     // Query parameters
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const parsedQuery = parseSchema(AllEmployeesQuerySchema, {
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+    });
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400 },
+      );
+    }
+    const { page, limit } = parsedQuery.data;
     const search = searchParams.get("search");
     const department = searchParams.get("department");
     const month = searchParams.get("month");
@@ -251,12 +268,8 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("All employees API error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi lấy danh sách nhân viên",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy danh sách nhân viên",
+    });
   }
 }

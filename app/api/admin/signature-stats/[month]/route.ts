@@ -3,6 +3,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { SalaryMonthSchema } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(
   request: NextRequest,
@@ -137,9 +138,9 @@ export async function GET(
     );
   } catch (error) {
     console.error("Get signature stats error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra" },
-      { status: 500, headers: CACHE_HEADERS.shortPrivate },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+      headers: CACHE_HEADERS.shortPrivate,
+    });
   }
 }

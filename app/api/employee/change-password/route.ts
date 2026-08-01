@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
+import { verifyEmployeeCredential } from "@/lib/auth/employee-credential";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { rateLimit, csrfProtection } from "@/lib/security-middleware";
@@ -10,6 +11,7 @@ import {
   createValidationErrorResponse,
   EmployeeChangePasswordRequestSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // Constants
 const MAX_ATTEMPTS = 5;
@@ -71,7 +73,9 @@ export async function POST(request: NextRequest) {
     // Step 1: Get employee and check if account is locked
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select("*") // Select all to handle missing columns gracefully
+      .select(
+        "employee_id, cccd_hash, password_hash, last_password_change_at, locked_until, failed_login_attempts, must_change_password, password_changed_at",
+      )
       .eq("employee_id", employee_id.trim())
       .single();
 
@@ -115,16 +119,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Step 2: Verify current password based on last_password_change_at
-    // If last_password_change_at is NULL, user still uses CCCD (verify against cccd_hash)
-    // If last_password_change_at is NOT NULL, user has changed password (verify against password_hash)
-    const hasChangedPassword = employee.last_password_change_at !== null;
-    const passwordToCheck = hasChangedPassword
-      ? employee.password_hash
-      : employee.cccd_hash;
-    const isValidPassword = await bcrypt.compare(
+    const isValidPassword = await verifyEmployeeCredential(
+      employee,
       current_password.trim(),
-      passwordToCheck,
     );
 
     if (!isValidPassword) {
@@ -263,10 +260,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Password change error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi đổi mật khẩu" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi đổi mật khẩu",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -308,9 +305,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Check password status error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

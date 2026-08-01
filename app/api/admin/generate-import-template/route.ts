@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import {
+  getVietnamMonthsAgo,
+  getVietnamTimestamp,
+} from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface FieldMapping {
   database_field: string;
@@ -156,10 +160,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Generate template error:", error);
-    return NextResponse.json(
-      { error: "Lỗi khi tạo template" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi khi tạo template",
+    });
   }
 }
 
@@ -169,12 +172,7 @@ function generateSampleRow(
   employeeId?: string,
 ): unknown[] {
   // Generate valid salary month (current year, previous month to avoid future dates)
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
-  const sampleMonth = currentMonth > 1 ? currentMonth - 1 : 12;
-  const sampleYear = currentMonth > 1 ? currentYear : currentYear - 1;
-  const formattedMonth = sampleMonth.toString().padStart(2, "0");
+  const [sampleYear, formattedMonth] = getVietnamMonthsAgo(1).split("-");
 
   const sampleData: Record<string, unknown> = {
     employee_id: employeeId || `EMP00${rowIndex}`,

@@ -9,6 +9,7 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface EmployeeInfo {
   full_name: string | null;
@@ -73,12 +74,10 @@ export async function GET(request: NextRequest) {
         "Database connection exception:",
         connectError instanceof Error ? connectError.message : connectError,
       );
-      return NextResponse.json(
-        {
-          error: "Lỗi kết nối database nghiêm trọng.",
-        },
-        { status: 500, headers: CACHE_HEADERS.sensitive },
-      );
+      return toErrorResponse(connectError, {
+        fallbackMessage: "Lỗi kết nối database nghiêm trọng.",
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
 
     // First, check if tables have data using correct Supabase syntax
@@ -354,12 +353,10 @@ export async function GET(request: NextRequest) {
       error instanceof Error ? error.message : error,
     );
 
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi tìm kiếm nhân viên",
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tìm kiếm nhân viên",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -414,9 +411,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Salary months fetch error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy danh sách tháng lương" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy danh sách tháng lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

@@ -4,6 +4,12 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  PayrollUpdateRequestSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // Get client IP address
 function getClientIP(request: NextRequest): string {
@@ -102,10 +108,10 @@ export async function GET(
     );
   } catch (error) {
     console.error("Get payroll error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy thông tin lương" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy thông tin lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -143,14 +149,17 @@ export async function PUT(
       );
     }
 
-    const { updates, changeReason } = await request.json();
-
-    if (!updates || !changeReason) {
-      return NextResponse.json(
-        { error: "Thiếu dữ liệu cập nhật hoặc lý do thay đổi" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
+    const parsed = parseSchema(
+      PayrollUpdateRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+        headers: CACHE_HEADERS.sensitive,
+      });
     }
+    const { updates, changeReason } = parsed.data;
 
     const supabase = createServiceClient();
     const clientIP = getClientIP(request);
@@ -291,9 +300,9 @@ export async function PUT(
     );
   } catch (error) {
     console.error("Update payroll error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi cập nhật dữ liệu lương" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi cập nhật dữ liệu lương",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,9 +55,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Get payrolls error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi lấy dữ liệu" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi lấy dữ liệu",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

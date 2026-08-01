@@ -7,6 +7,14 @@ import {
   type ApiResponse,
 } from "@/lib/column-alias-config";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  ColumnAliasCreateRequestSchema,
+  ColumnAliasBulkRequestSchema,
+  ColumnAliasListQuerySchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // GET: Fetch column aliases with search/filter
 export async function GET(request: NextRequest) {
@@ -20,31 +28,23 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const parsedQuery = parseSchema(
+      ColumnAliasListQuerySchema,
+      Object.fromEntries(searchParams),
+    );
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(parsedQuery.errors),
+        { status: 400 },
+      );
+    }
     const params: AliasSearchParams = {
-      database_field: searchParams.get("database_field") || undefined,
-      alias_name: searchParams.get("alias_name") || undefined,
-      is_active:
-        searchParams.get("is_active") === "true"
-          ? true
-          : searchParams.get("is_active") === "false"
-            ? false
-            : undefined,
-      created_by: searchParams.get("created_by") || undefined,
-      confidence_min: searchParams.get("confidence_min")
-        ? parseInt(searchParams.get("confidence_min")!)
-        : undefined,
-      confidence_max: searchParams.get("confidence_max")
-        ? parseInt(searchParams.get("confidence_max")!)
-        : undefined,
-      page: parseInt(searchParams.get("page") || "1"),
-      limit: parseInt(searchParams.get("limit") || "50"),
-      sort_by:
-        (searchParams.get("sort_by") as
-          | "alias_name"
-          | "confidence_score"
-          | "created_at"
-          | null) || "alias_name",
-      sort_order: (searchParams.get("sort_order") as "asc" | "desc") || "asc",
+      ...parsedQuery.data,
+      database_field: parsedQuery.data.database_field ?? undefined,
+      alias_name: parsedQuery.data.alias_name ?? undefined,
+      created_by: parsedQuery.data.created_by ?? undefined,
+      confidence_min: parsedQuery.data.confidence_min ?? undefined,
+      confidence_max: parsedQuery.data.confidence_max ?? undefined,
     };
 
     const supabase = createServiceClient();
@@ -103,10 +103,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Column aliases GET error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi tải aliases" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tải aliases",
+    });
   }
 }
 
@@ -124,31 +123,17 @@ export async function POST(request: NextRequest) {
     }
     const adminUser = authResult.user;
 
-    const body = await request.json();
-    const {
-      database_field,
-      alias_name,
-      confidence_score = 80,
-      config_id,
-    } = body;
-
-    if (!database_field || !alias_name) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Thiếu thông tin database_field hoặc alias_name",
-        },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      ColumnAliasCreateRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
-
-    // Validate confidence score
-    if (confidence_score < 0 || confidence_score > 100) {
-      return NextResponse.json(
-        { success: false, message: "Confidence score phải từ 0 đến 100" },
-        { status: 400 },
-      );
-    }
+    const { database_field, alias_name, confidence_score, config_id } =
+      parsed.data;
 
     const supabase = createServiceClient();
 
@@ -213,10 +198,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Column aliases POST error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi tạo alias" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tạo alias",
+    });
   }
 }
 
@@ -234,15 +218,16 @@ export async function PUT(request: NextRequest) {
     }
     const adminUser = authResult.user;
 
-    const body = await request.json();
-    const { aliases } = body;
-
-    if (!Array.isArray(aliases) || aliases.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "Danh sách aliases không hợp lệ" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      ColumnAliasBulkRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
+    const { aliases } = parsed.data;
 
     const supabase = createServiceClient();
     const results = {
@@ -302,9 +287,8 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error("Column aliases bulk create error:", error);
-    return NextResponse.json(
-      { success: false, message: "Có lỗi xảy ra khi tạo bulk aliases" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tạo bulk aliases",
+    });
   }
 }

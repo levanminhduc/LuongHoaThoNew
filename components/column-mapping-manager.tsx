@@ -31,7 +31,7 @@ import {
   PAYROLL_FIELD_CATEGORIES,
   getFieldsByCategory,
   getRequiredFields,
-} from "@/lib/payroll-field-definitions";
+} from "@/lib/payroll/payroll-field-definitions";
 
 interface ColumnMapping {
   id?: number;

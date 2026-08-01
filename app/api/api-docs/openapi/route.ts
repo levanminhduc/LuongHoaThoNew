@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import type { JWTPayload } from "@/lib/auth";
 import { getOpenAPISpec } from "@/lib/openapi-spec";
 import { getJwtSecret } from "@/lib/config/jwt";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 const ALLOWED_ROLES = ["admin", "giam_doc", "ke_toan", "nguoi_lap_bieu"];
 
@@ -58,9 +59,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error generating OpenAPI spec:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error - Không thể tạo tài liệu API" },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Internal Server Error - Không thể tạo tài liệu API",
+    });
   }
 }

@@ -10,6 +10,8 @@ import {
   parseSchema,
   createValidationErrorResponse,
 } from "@/lib/validations";
+import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface ExportRequestBody {
   period_year: number;
@@ -673,7 +675,7 @@ export async function POST(request: NextRequest) {
 
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
     const monthStr = String(period_month).padStart(2, "0");
-    const filename = `BangCong_${period_year}-${monthStr}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const filename = `BangCong_${period_year}-${monthStr}_${getVietnamDate()}.xlsx`;
 
     return new NextResponse(buffer, {
       status: 200,
@@ -687,12 +689,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Attendance export error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi xuất file",
-        details: error instanceof Error ? error.message : "Unknown",
-      },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xuất file",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { verifyAuditLogsAccess } from "@/lib/auth-middleware";
 import { auditService } from "@/lib/audit-service";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  PaginationSchema,
+} from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export const runtime = "nodejs"; // ép route này chạy Node.js thay vì Edge
 
@@ -20,20 +26,17 @@ export async function GET(
     const resolvedParams = await params;
     const { id } = resolvedParams;
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const offset = parseInt(searchParams.get("offset") || "0");
-
-    // Validate parameters
-    if (limit > 100) {
+    const parsedQuery = parseSchema(PaginationSchema, {
+      limit: searchParams.get("limit") ?? undefined,
+      offset: searchParams.get("offset") ?? undefined,
+    });
+    if (!parsedQuery.success) {
       return NextResponse.json(
-        { error: "Limit không được vượt quá 100" },
+        createValidationErrorResponse(parsedQuery.errors),
         { status: 400 },
       );
     }
-
-    if (offset < 0) {
-      return NextResponse.json({ error: "Offset phải >= 0" }, { status: 400 });
-    }
+    const { limit, offset } = parsedQuery.data;
 
     // Get audit logs for the employee
     const result = await auditService.getEmployeeAuditLogs(id, limit, offset);
@@ -59,6 +62,8 @@ export async function GET(
     });
   } catch (error) {
     console.error("Audit logs GET error:", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return toErrorResponse(error, {
+      fallbackMessage: "Lỗi server",
+    });
   }
 }

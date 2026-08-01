@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
+import { getVietnamDate, getVietnamMonth } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -131,7 +133,7 @@ export async function GET(request: NextRequest) {
       });
     } else if (employees && employees.length > 0) {
       employees.forEach((employee) => {
-        const currentMonth = new Date().toISOString().substr(0, 7);
+        const currentMonth = getVietnamMonth();
         templateData.push([
           employee.employee_id,
           currentMonth,
@@ -221,18 +223,14 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename=template-luong-dong-bo-${new Date().toISOString().substr(0, 10)}.xlsx`,
+        "Content-Disposition": `attachment; filename=template-luong-dong-bo-${getVietnamDate()}.xlsx`,
         "Content-Length": buffer.length.toString(),
       },
     });
   } catch (error) {
     console.error("Sync template error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi tạo template đồng bộ",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi tạo template đồng bộ",
+    });
   }
 }

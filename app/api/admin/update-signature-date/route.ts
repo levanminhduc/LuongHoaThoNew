@@ -2,20 +2,15 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
-import { z } from "zod";
+import {
+  parseSchema,
+  createValidationErrorResponse,
+  UpdateSignatureDateRequestSchema,
+} from "@/lib/validations";
+import { getVietnamYear } from "@/lib/utils/vietnam-timezone";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 const BATCH_SIZE = 200;
-
-const UpdateSignatureDateSchema = z.object({
-  salary_month: z.string().trim().min(1),
-  base_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày cơ sở không hợp lệ (YYYY-MM-DD)"),
-  random_range_days: z.number().int().min(0).max(30).default(0),
-  scope: z.enum(["all", "selected"]),
-  employee_ids: z.array(z.string()).optional(),
-  is_t13: z.boolean().default(false),
-});
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,14 +24,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const parseResult = UpdateSignatureDateSchema.safeParse(body);
-    if (!parseResult.success) {
-      const firstError = parseResult.error.issues[0];
-      return NextResponse.json(
-        { error: firstError?.message || "Dữ liệu không hợp lệ" },
-        { status: 400 },
-      );
+    const parsed = parseSchema(
+      UpdateSignatureDateRequestSchema,
+      await request.json(),
+    );
+    if (!parsed.success) {
+      return NextResponse.json(createValidationErrorResponse(parsed.errors), {
+        status: 400,
+      });
     }
     const {
       salary_month,
@@ -45,28 +40,7 @@ export async function POST(request: NextRequest) {
       scope,
       employee_ids,
       is_t13,
-    } = parseResult.data;
-
-    const monthPattern = is_t13
-      ? /^\d{4}-(13|T13)$/i
-      : /^\d{4}-(0[1-9]|1[0-2])$/;
-    if (!monthPattern.test(salary_month)) {
-      return NextResponse.json(
-        {
-          error: is_t13
-            ? "Định dạng tháng không hợp lệ (YYYY-13)"
-            : "Định dạng tháng không hợp lệ (YYYY-MM)",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (scope === "selected" && (!employee_ids || employee_ids.length === 0)) {
-      return NextResponse.json(
-        { error: "Chưa chọn nhân viên nào" },
-        { status: 400 },
-      );
-    }
+    } = parsed.data;
 
     const supabase = createServiceClient();
     let payrollQuery = supabase
@@ -222,13 +196,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+    });
   }
 }
 
@@ -301,8 +271,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
+    const currentYear = getVietnamYear();
     const prevYear = currentYear - 1;
 
     const allMonths: string[] = [];
@@ -315,12 +284,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, months: allMonths });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+    });
   }
 }

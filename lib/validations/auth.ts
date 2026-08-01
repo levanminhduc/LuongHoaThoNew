@@ -1,8 +1,15 @@
 import { z } from "zod";
 
 export const AdminLoginRequestSchema = z.object({
-  username: z.string().min(1).max(50),
-  password: z.string().min(1).max(200),
+  username: z
+    .string()
+    .trim()
+    .min(1, { message: "Vui lòng nhập tên đăng nhập" })
+    .max(50, { message: "Tên đăng nhập tối đa 50 ký tự" }),
+  password: z
+    .string()
+    .min(1, { message: "Vui lòng nhập mật khẩu" })
+    .max(200, { message: "Mật khẩu tối đa 200 ký tự" }),
 });
 export type AdminLoginRequest = z.infer<typeof AdminLoginRequestSchema>;
 

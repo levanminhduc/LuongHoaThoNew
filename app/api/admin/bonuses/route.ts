@@ -5,6 +5,7 @@ import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { BonusTypeSchema, BonusPeriodSchema } from "@/lib/validations/bonus";
 import type { BonusType } from "@/lib/validations/bonus";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 interface BonusPeriodTarget {
   bonus_type: BonusType;
@@ -104,9 +105,9 @@ export async function DELETE(request: NextRequest) {
     );
   } catch (error) {
     console.error("Delete bonuses error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra khi xóa đợt thưởng" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi xóa đợt thưởng",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

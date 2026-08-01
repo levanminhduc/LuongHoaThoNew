@@ -11,6 +11,7 @@ import {
   DepartmentPermissionListQuerySchema,
   DepartmentPermissionRevokeSchema,
 } from "@/lib/validations";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
@@ -90,10 +91,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Get department permissions error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -285,10 +286,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Create department permission error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }
 
@@ -388,9 +389,9 @@ export async function DELETE(request: NextRequest) {
     );
   } catch (error) {
     console.error("Delete department permission error:", error);
-    return NextResponse.json(
-      { error: "Có lỗi xảy ra" },
-      { status: 500, headers: CACHE_HEADERS.sensitive },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra",
+      headers: CACHE_HEADERS.sensitive,
+    });
   }
 }

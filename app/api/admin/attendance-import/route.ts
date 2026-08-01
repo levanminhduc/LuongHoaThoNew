@@ -2,9 +2,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
-import { parseAttendanceExcel } from "@/lib/attendance-parser";
+import { parseAttendanceExcel } from "@/lib/attendance/attendance-parser";
 import type { AttendanceImportError } from "@/types/attendance";
 import { randomUUID } from "crypto";
+import { toErrorResponse } from "@/lib/errors/app-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -156,12 +157,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Attendance import error:", error);
-    return NextResponse.json(
-      {
-        error: "Có lỗi xảy ra khi import chấm công",
-        details: error instanceof Error ? error.message : "Unknown",
-      },
-      { status: 500 },
-    );
+    return toErrorResponse(error, {
+      fallbackMessage: "Có lỗi xảy ra khi import chấm công",
+    });
   }
 }
