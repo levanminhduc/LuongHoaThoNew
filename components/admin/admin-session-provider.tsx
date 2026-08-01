@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getSession, clearSession } from "@/lib/auth/secure-session";
 import { PageLoading } from "@/components/patterns/skeleton-patterns";

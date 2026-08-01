@@ -60,7 +60,10 @@ function setItemWithPurgeRetry(key: string, value: string): void {
 export async function saveSession(token: string, user: unknown): Promise<void> {
   if (!isBrowser()) return;
   setItemWithPurgeRetry(TOKEN_KEY, await toStoredValue(token, token));
-  setItemWithPurgeRetry(USER_KEY, await toStoredValue(user, JSON.stringify(user)));
+  setItemWithPurgeRetry(
+    USER_KEY,
+    await toStoredValue(user, JSON.stringify(user)),
+  );
 }
 
 export async function getSessionToken(): Promise<string | null> {

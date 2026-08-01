@@ -146,7 +146,9 @@ export function AdminSidebar() {
           </div>
           <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
             <div className="flex items-center gap-1.5">
-              <span className="truncate text-sm font-semibold">MAY HÒA THỌ</span>
+              <span className="truncate text-sm font-semibold">
+                MAY HÒA THỌ
+              </span>
               <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary">
                 {ROLE_LABEL[currentRole] ?? currentRole}
               </span>

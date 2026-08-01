@@ -312,46 +312,129 @@ export default function ColumnMappingConfigPage() {
               {aliasesQuery.isPending ? (
                 <TableSkeleton rows={6} columns={6} />
               ) : (
-              <>
-              <div className="hidden md:block border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Database Field</TableHead>
-                      <TableHead>Alias Name</TableHead>
-                      <TableHead>Confidence</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created By</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <>
+                  <div className="hidden md:block border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Database Field</TableHead>
+                          <TableHead>Alias Name</TableHead>
+                          <TableHead>Confidence</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Created By</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAliases.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={6}
+                              className="text-center py-8 text-gray-500"
+                            >
+                              {loading ? "Đang tải..." : "Không có aliases nào"}
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredAliases.map((alias) => (
+                            <TableRow key={alias.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium">
+                                    {getFieldLabel(alias.database_field)}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {alias.database_field}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {alias.alias_name}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={getConfidenceColor(
+                                    alias.confidence_score,
+                                  )}
+                                >
+                                  {alias.confidence_score}%
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    alias.is_active ? "default" : "secondary"
+                                  }
+                                >
+                                  {alias.is_active ? "Active" : "Inactive"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{alias.created_by}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openEditDialog(alias)}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Edit
+                                      data-icon="inline-start"
+                                      className="h-3 w-3"
+                                    />
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteAlias(alias)}
+                                    className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2
+                                      data-icon="inline-start"
+                                      className="h-3 w-3"
+                                    />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="md:hidden space-y-3">
                     {filteredAliases.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={6}
-                          className="text-center py-8 text-gray-500"
-                        >
-                          {loading ? "Đang tải..." : "Không có aliases nào"}
-                        </TableCell>
-                      </TableRow>
+                      <div className="text-center py-6 text-gray-500">
+                        {loading ? "Đang tải..." : "Không có aliases nào"}
+                      </div>
                     ) : (
                       filteredAliases.map((alias) => (
-                        <TableRow key={alias.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">
-                                {getFieldLabel(alias.database_field)}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {alias.database_field}
-                              </div>
+                        <div
+                          key={alias.id}
+                          className="border rounded-lg p-4 space-y-3"
+                        >
+                          <div className="space-y-1">
+                            <div className="text-sm text-gray-500">
+                              Database Field
                             </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {alias.alias_name}
-                          </TableCell>
-                          <TableCell>
+                            <div className="font-semibold">
+                              {getFieldLabel(alias.database_field)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {alias.database_field}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-500">
+                              Alias Name
+                            </div>
+                            <div className="font-medium">
+                              {alias.alias_name}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
                             <Badge
                               className={getConfidenceColor(
                                 alias.confidence_score,
@@ -359,8 +442,6 @@ export default function ColumnMappingConfigPage() {
                             >
                               {alias.confidence_score}%
                             </Badge>
-                          </TableCell>
-                          <TableCell>
                             <Badge
                               variant={
                                 alias.is_active ? "default" : "secondary"
@@ -368,108 +449,38 @@ export default function ColumnMappingConfigPage() {
                             >
                               {alias.is_active ? "Active" : "Inactive"}
                             </Badge>
-                          </TableCell>
-                          <TableCell>{alias.created_by}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openEditDialog(alias)}
-                                className="flex items-center gap-1"
-                              >
-                                <Edit
-                                  data-icon="inline-start"
-                                  className="h-3 w-3"
-                                />
-                                Edit
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteAlias(alias)}
-                                className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                              >
-                                <Trash2
-                                  data-icon="inline-start"
-                                  className="h-3 w-3"
-                                />
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditDialog(alias)}
+                              className="flex items-center gap-1 w-full"
+                            >
+                              <Edit
+                                data-icon="inline-start"
+                                className="h-3 w-3"
+                              />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteAlias(alias)}
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700 w-full"
+                            >
+                              <Trash2
+                                data-icon="inline-start"
+                                className="h-3 w-3"
+                              />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
                       ))
                     )}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="md:hidden space-y-3">
-                {filteredAliases.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
-                    {loading ? "Đang tải..." : "Không có aliases nào"}
                   </div>
-                ) : (
-                  filteredAliases.map((alias) => (
-                    <div
-                      key={alias.id}
-                      className="border rounded-lg p-4 space-y-3"
-                    >
-                      <div className="space-y-1">
-                        <div className="text-sm text-gray-500">
-                          Database Field
-                        </div>
-                        <div className="font-semibold">
-                          {getFieldLabel(alias.database_field)}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {alias.database_field}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-500">Alias Name</div>
-                        <div className="font-medium">{alias.alias_name}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          className={getConfidenceColor(alias.confidence_score)}
-                        >
-                          {alias.confidence_score}%
-                        </Badge>
-                        <Badge
-                          variant={alias.is_active ? "default" : "secondary"}
-                        >
-                          {alias.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(alias)}
-                          className="flex items-center gap-1 w-full"
-                        >
-                          <Edit data-icon="inline-start" className="h-3 w-3" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteAlias(alias)}
-                          className="flex items-center gap-1 text-red-600 hover:text-red-700 w-full"
-                        >
-                          <Trash2
-                            data-icon="inline-start"
-                            className="h-3 w-3"
-                          />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              </>
+                </>
               )}
             </CardContent>
           </Card>
@@ -491,78 +502,79 @@ export default function ColumnMappingConfigPage() {
               {configurationsQuery.isPending ? (
                 <TableSkeleton rows={5} columns={5} />
               ) : (
-              <div className="border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Configuration Name</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Mappings</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {configurations.length === 0 ? (
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell
-                          colSpan={5}
-                          className="text-center py-8 text-gray-500"
-                        >
-                          Chưa có cấu hình nào được lưu
-                        </TableCell>
+                        <TableHead>Configuration Name</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Mappings</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
                       </TableRow>
-                    ) : (
-                      configurations.map((config) => (
-                        <TableRow key={config.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">
-                                {config.config_name}
-                              </span>
-                              {config.is_default && (
-                                <Badge variant="outline">Default</Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            {config.description || "Không có mô tả"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {(
-                                config as {
-                                  configuration_field_mappings?: unknown[];
-                                }
-                              ).configuration_field_mappings?.length || 0}{" "}
-                              fields
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                config.is_active ? "default" : "secondary"
-                              }
-                            >
-                              {config.is_active ? "Active" : "Inactive"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div>{config.created_by}</div>
-                              <div className="text-gray-500">
-                                {formatTimestampFromDBRaw(
-                                  config.created_at,
-                                ).split(" ")[1] || ""}
-                              </div>
-                            </div>
+                    </TableHeader>
+                    <TableBody>
+                      {configurations.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={5}
+                            className="text-center py-8 text-gray-500"
+                          >
+                            Chưa có cấu hình nào được lưu
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                      ) : (
+                        configurations.map((config) => (
+                          <TableRow key={config.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  {config.config_name}
+                                </span>
+                                {config.is_default && (
+                                  <Badge variant="outline">Default</Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate">
+                              {config.description || "Không có mô tả"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">
+                                {(
+                                  config as {
+                                    configuration_field_mappings?: unknown[];
+                                  }
+                                ).configuration_field_mappings?.length ||
+                                  0}{" "}
+                                fields
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  config.is_active ? "default" : "secondary"
+                                }
+                              >
+                                {config.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <div>{config.created_by}</div>
+                                <div className="text-gray-500">
+                                  {formatTimestampFromDBRaw(
+                                    config.created_at,
+                                  ).split(" ")[1] || ""}
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
