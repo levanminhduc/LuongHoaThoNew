@@ -319,8 +319,16 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 - [ ] 16.1 `app/api/admin/attendance-export/route.ts` (697 dòng) — chuyển phần build workbook sang `lib/excel/attendance-export-builder.ts`, nhận dữ liệu đã query, trả `Buffer`/`Workbook`
 - [ ] 16.2 `app/api/admin/payroll-export/route.ts` (628 dòng) — tương tự, `lib/excel/payroll-export-builder.ts`
 - [ ] 16.3 Query dữ liệu dùng repository từ nhóm 15
-- [ ] 16.4 Nếu builder vượt 200 dòng: tách theo sheet/section, không để một file khổng lồ
-- [ ] 16.5 Test builder: dữ liệu mẫu → workbook có đúng số sheet, đúng header, đúng số dòng
+- [x] 16.4 Tách phần **thuần tuý** ra trước, không đụng phần dựng sheet: `lib/attendance/daily-records.ts` (84 dòng) gồm `formatTimeHHmm`, `parseNumericValue`, `normalizeDailyRecords` + type `DailyExportRecord`. Route 697 → **602 dòng**.
+
+  Đây là chỗ đáng tách nhất trong cả nhóm 16 và không có rủi ro nào: hàm thuần, không chạm DB, không chạm XLSX. `normalizeDailyRecords` là ~60 dòng logic thật — nó đọc cột `daily_records_json` vốn có thể là **text hoặc JSON**, chịu được **hai quy ước đặt tên** (`day`/`work_day`, `checkIn`/`check_in_time`, `workingUnits`/`working_units`) và JSON hỏng. Bug ở đây làm **mất ngày công một cách âm thầm**, mà trước giờ không có test nào.
+
+  Rút gọn thêm khi tách: 4 cặp `"x" in item ? item.x : "y" in item ? item.y : mặc-định` lồng nhau gom về một hàm `pick(item, camelKey, snakeKey)`
+
+- [~] 16.5 **17 test** cho phần vừa tách (`lib/attendance/__tests__/daily-records.test.ts`), phủ đúng các ca dễ vỡ: hai quy ước đặt tên cho **cùng một ngày** phải ra kết quả bằng nhau, chuỗi JSON, JSON hỏng, ngày ngoài 1-31, ngày dạng chuỗi, `NaN`/`Infinity` không được lọt vào ô Excel, và camelCase thắng khi có cả hai quy ước.
+
+  **Chưa test workbook** (số sheet / header / số dòng) vì phần dựng sheet chưa tách — xem 16.1/16.2
+
 - [ ] 16.6 Mỗi route 1 PR ← (verify: tải file export từ UI, mở bằng Excel, so với file xuất từ bản trước: giống hệt về sheet/header/định dạng số)
 
 ## 17. Chốt phase 1

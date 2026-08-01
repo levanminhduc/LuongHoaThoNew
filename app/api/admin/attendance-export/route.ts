@@ -12,6 +12,11 @@ import {
 } from "@/lib/validations";
 import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  formatTimeHHmm,
+  normalizeDailyRecords,
+  type DailyExportRecord,
+} from "@/lib/attendance/daily-records";
 
 const ATTENDANCE_MONTHLY_SELECT =
   "employee_id, source_file, total_days, total_hours, total_ot_hours, total_meal_ot_hours, sick_days, daily_records_json";
@@ -188,112 +193,6 @@ export async function POST(request: NextRequest) {
 
     if (include_daily) {
       const daysInMonth = new Date(period_year, period_month, 0).getDate();
-
-      const formatTimeHHmm = (timeStr: string | null): string => {
-        if (!timeStr) return "";
-        const match = timeStr.match(/(\d{1,2}):(\d{2})/);
-        if (match) {
-          return `${match[1].padStart(2, "0")}:${match[2]}`;
-        }
-        return timeStr;
-      };
-
-      const parseNumericValue = (value: unknown): number => {
-        if (typeof value === "number") {
-          return Number.isFinite(value) ? value : 0;
-        }
-        if (typeof value === "string" && value.trim()) {
-          const parsed = Number.parseFloat(value);
-          return Number.isFinite(parsed) ? parsed : 0;
-        }
-        return 0;
-      };
-
-      type DailyExportRecord = {
-        day: number;
-        checkIn: string;
-        checkOut: string;
-        working: number;
-        ot: number;
-      };
-
-      const normalizeDailyRecords = (value: unknown): DailyExportRecord[] => {
-        let rawValue = value;
-
-        if (typeof rawValue === "string") {
-          try {
-            rawValue = JSON.parse(rawValue);
-          } catch {
-            return [];
-          }
-        }
-
-        if (!Array.isArray(rawValue)) {
-          return [];
-        }
-
-        return rawValue.flatMap((item) => {
-          if (!item || typeof item !== "object") {
-            return [];
-          }
-
-          const rawDay =
-            "day" in item
-              ? item.day
-              : "work_day" in item
-                ? item.work_day
-                : undefined;
-          const day =
-            typeof rawDay === "number"
-              ? rawDay
-              : Number.parseInt(String(rawDay ?? ""), 10);
-
-          if (!Number.isInteger(day) || day < 1 || day > 31) {
-            return [];
-          }
-
-          const rawCheckIn =
-            "checkIn" in item
-              ? item.checkIn
-              : "check_in_time" in item
-                ? item.check_in_time
-                : null;
-          const rawCheckOut =
-            "checkOut" in item
-              ? item.checkOut
-              : "check_out_time" in item
-                ? item.check_out_time
-                : null;
-          const rawWorking =
-            "workingUnits" in item
-              ? item.workingUnits
-              : "working_units" in item
-                ? item.working_units
-                : 0;
-          const rawOt =
-            "overtimeUnits" in item
-              ? item.overtimeUnits
-              : "overtime_units" in item
-                ? item.overtime_units
-                : 0;
-
-          return [
-            {
-              day,
-              checkIn:
-                typeof rawCheckIn === "string"
-                  ? formatTimeHHmm(rawCheckIn)
-                  : "",
-              checkOut:
-                typeof rawCheckOut === "string"
-                  ? formatTimeHHmm(rawCheckOut)
-                  : "",
-              working: parseNumericValue(rawWorking),
-              ot: parseNumericValue(rawOt),
-            },
-          ];
-        });
-      };
 
       const dailyByEmployee = new Map<string, Map<number, DailyExportRecord>>();
       const fallbackEmployeeIds: string[] = [];
