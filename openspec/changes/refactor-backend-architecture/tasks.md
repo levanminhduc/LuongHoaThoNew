@@ -331,8 +331,13 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   Mỗi builder nhận `AttendanceSheetContext` (dữ liệu đã query) và **trả về worksheet**, không tự tạo workbook — nhờ vậy test được mà không cần mock gì
 
-- [ ] 16.2 `app/api/admin/payroll-export/route.ts` (628 dòng) — tương tự, `lib/excel/payroll-export-builder.ts`
-- [ ] 16.3 Query dữ liệu dùng repository từ nhóm 15
+- [x] 16.2 `payroll-export` **627 → 346 dòng**; `lib/excel/payroll-export-sheet.ts` 326 dòng, trả `{ worksheet, sheetName }`.
+
+  Khác `attendance-export` ở một điểm: ở đây **có phải đảo thứ tự**, nhưng không phải đảo truy vấn như lo ngại ban đầu. Hai truy vấn (`signature_logs`, `management_signatures`) nay chạy liền nhau **trước** khi dựng sheet, thay vì kẹp `dataRows` ở giữa. An toàn vì `dataRows` cần `signatureLogsMap` nhưng không cần `managementSignatures`, và chiều ngược lại cũng không — hai thứ độc lập. `book_new()` cũng dời xuống sau, đó là thao tác thuần bộ nhớ.
+
+  Cùng lúc gỡ 2 biến `departmentName`/`monthName` bị dùng ở **cả** phần tên sheet lẫn phần tên file; nay mỗi bên tự tính, builder không phải trả thêm gì cho route
+
+- [~] 16.3 **Chưa dùng repository cho 2 route export.** `attendance-export` truy vấn `attendance_monthly`/`attendance_daily` — hai bảng chưa có repository nào, và tạo repository mới cho chúng nằm ngoài phạm vi nhóm 15 (payroll + bonus + employee). `payroll-export` thì còn `select("*")` ở nhánh fallback (task 14.4), chuyển sang repository lúc này sẽ khoá cứng hình dạng đang cần sửa. Để lại cùng 14.4
 - [x] 16.4 Tách phần **thuần tuý** ra trước, không đụng phần dựng sheet: `lib/attendance/daily-records.ts` (84 dòng) gồm `formatTimeHHmm`, `parseNumericValue`, `normalizeDailyRecords` + type `DailyExportRecord`. Route 697 → **602 dòng**.
 
   Đây là chỗ đáng tách nhất trong cả nhóm 16 và không có rủi ro nào: hàm thuần, không chạm DB, không chạm XLSX. `normalizeDailyRecords` là ~60 dòng logic thật — nó đọc cột `daily_records_json` vốn có thể là **text hoặc JSON**, chịu được **hai quy ước đặt tên** (`day`/`work_day`, `checkIn`/`check_in_time`, `workingUnits`/`working_units`) và JSON hỏng. Bug ở đây làm **mất ngày công một cách âm thầm**, mà trước giờ không có test nào.
@@ -345,7 +350,7 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   **Chưa test workbook** (số sheet / header / số dòng) vì phần dựng sheet chưa tách — xem 16.1/16.2
 
-- [ ] 16.6 Mỗi route 1 PR ← (verify: tải file export từ UI, mở bằng Excel, so với file xuất từ bản trước: giống hệt về sheet/header/định dạng số)
+- [x] 16.6 Hai route thành **2 commit riêng** (`c846152` attendance, và commit này cho payroll) thay vì 2 PR — cả đợt đã gộp commit theo task 9.5 ← (verify: `npm run build` xanh; 291 test pass, gồm 17 test cấu trúc workbook cho cả hai builder. **Chưa mở file XLSX so với bản cũ** — người dùng đã chấp nhận rủi ro này khi duyệt)
 
 ## 17. Chốt phase 1
 
