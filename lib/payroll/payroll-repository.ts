@@ -88,10 +88,6 @@ const AUDIT_SUMMARY_SELECT = `
 
 const AUDIT_SUMMARY_LIMIT = 100;
 
-export function buildPayrollListQuery(supabase: SupabaseServiceClient) {
-  return supabase.from("payrolls").select("*");
-}
-
 export async function probePayrollAuditTable(supabase: SupabaseServiceClient) {
   return supabase.from("payroll_audit_logs").select("id").limit(1);
 }

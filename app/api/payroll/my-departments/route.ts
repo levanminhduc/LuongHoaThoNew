@@ -2,10 +2,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
-import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
-import { PAYROLL_WITH_EMPLOYEE_SELECT } from "@/lib/payroll/payroll-list-query";
+import {
+  PAYROLL_WITH_EMPLOYEE_SELECT,
+  applyPayrollFilters,
+} from "@/lib/payroll/payroll-list-query";
 import {
   parseSchema,
   createValidationErrorResponse,
@@ -74,38 +76,27 @@ export async function GET(request: NextRequest) {
     // Monthly: salary_month = 'YYYY-MM' (e.g., '2025-01')
     const salaryMonthFilter = payrollType === "t13" ? `${year}-13` : month;
 
+    const listFilters = { salaryMonth: salaryMonthFilter, search };
+    const selectedDepartment =
+      department && allowedDepartments.includes(department) ? department : null;
+
     let query = supabase
       .from("payrolls")
       .select(PAYROLL_WITH_EMPLOYEE_SELECT)
       .in("employees.department", allowedDepartments);
 
-    // Apply salary_month filter
-    if (salaryMonthFilter) {
-      query = query.eq("salary_month", salaryMonthFilter);
-    }
-
-    if (search) {
-      const safeSearch = sanitizePostgrestValue(search);
-      if (safeSearch) {
-        query = query.or(
-          `employee_id.ilike.%${safeSearch}%,employees.full_name.ilike.%${safeSearch}%`,
-        );
-      }
-    }
-
-    if (department && allowedDepartments.includes(department)) {
-      query = query.eq("employees.department", department);
-    }
-
-    // Count query with same salary_month filter
     let countQuery = supabase
       .from("payrolls")
-      .select("*", { count: "exact", head: true })
+      .select(PAYROLL_WITH_EMPLOYEE_SELECT, { count: "exact", head: true })
       .in("employees.department", allowedDepartments);
 
-    if (salaryMonthFilter) {
-      countQuery = countQuery.eq("salary_month", salaryMonthFilter);
+    if (selectedDepartment) {
+      query = query.eq("employees.department", selectedDepartment);
+      countQuery = countQuery.eq("employees.department", selectedDepartment);
     }
+
+    query = applyPayrollFilters(query, listFilters);
+    countQuery = applyPayrollFilters(countQuery, listFilters);
 
     const { count } = await countQuery;
 

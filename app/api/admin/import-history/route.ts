@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { verifyToken } from "@/lib/auth-middleware";
+import { authorizeRoles } from "@/lib/auth-middleware";
 import {
   parseSchema,
   createValidationErrorResponse,
@@ -12,6 +12,8 @@ import {
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 
+const IMPORT_MANAGEMENT_ROLES = ["admin", "van_phong", "nguoi_lap_bieu"];
+
 const ImportHistoryListQuerySchema = pageQuerySchema(20);
 
 // POST - Create new import history record
@@ -19,9 +21,12 @@ export async function POST(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    const auth = verifyToken(request);
+    const auth = authorizeRoles(request, IMPORT_MANAGEMENT_ROLES);
     if (!auth) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Không có quyền truy cập chức năng này" },
+        { status: 403 },
+      );
     }
 
     const parsed = parseSchema(
@@ -74,8 +79,11 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve import history with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
-    if (!verifyToken(request)) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    if (!authorizeRoles(request, IMPORT_MANAGEMENT_ROLES)) {
+      return NextResponse.json(
+        { error: "Không có quyền truy cập chức năng này" },
+        { status: 403 },
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -218,8 +226,11 @@ export async function DELETE(request: NextRequest) {
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    if (!verifyToken(request)) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    if (!authorizeRoles(request, IMPORT_MANAGEMENT_ROLES)) {
+      return NextResponse.json(
+        { error: "Không có quyền truy cập chức năng này" },
+        { status: 403 },
+      );
     }
 
     const { searchParams } = new URL(request.url);

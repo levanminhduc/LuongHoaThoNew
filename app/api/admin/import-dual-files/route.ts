@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import * as XLSX from "xlsx";
 import { csrfProtection } from "@/lib/security-middleware";
-import { verifyToken } from "@/lib/auth-middleware";
+import { authorizeRoles } from "@/lib/auth-middleware";
 import { ApiErrorHandler, type ApiError } from "@/lib/api-error-handler";
 import { PayrollValidator } from "@/lib/payroll/payroll-validation";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
@@ -13,6 +13,8 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+
+const IMPORT_MANAGEMENT_ROLES = ["admin", "van_phong", "nguoi_lap_bieu"];
 
 interface ColumnMapping {
   excel_column_name: string;
@@ -94,15 +96,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!verifyToken(request)) {
+    if (!authorizeRoles(request, IMPORT_MANAGEMENT_ROLES)) {
       const apiError = ApiErrorHandler.createError(
-        ApiErrorHandler.ErrorCodes.INVALID_TOKEN,
-        ApiErrorHandler.getUserFriendlyMessage(
-          ApiErrorHandler.ErrorCodes.INVALID_TOKEN,
-        ),
+        ApiErrorHandler.ErrorCodes.ACCESS_DENIED,
+        "Không có quyền truy cập chức năng này",
       );
       return NextResponse.json(ApiErrorHandler.createErrorResponse(apiError), {
-        status: 401,
+        status: 403,
       });
     }
 

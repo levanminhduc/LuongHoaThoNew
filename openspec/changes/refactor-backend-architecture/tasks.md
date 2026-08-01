@@ -47,7 +47,9 @@ Quy ước: mỗi nhóm = **1 PR**. Trước khi mở PR chạy `npm run format 
 - [x] 4.4 **Audit bỏ sót 3 file nữa** cũng verify inline, grep bắt được: `app/api/admin/import-history/route.ts` (3 chỗ), `app/api/admin/import-dual-files/route.ts` (1 chỗ), `app/api/api-docs/openapi/route.ts` (1 chỗ)
 - [x] 4.5 `import-history` + `import-dual-files` → chuyển sang `verifyToken()`. **Cố ý dùng `verifyToken` chứ không phải `verifyAdminAccess`**: cả 4 chỗ này hiện **chỉ verify chữ ký, không hề check role** dù nằm dưới `app/api/admin/`. Đổi sang `verifyAdminAccess` là siết quyền — đúng về bảo mật nhưng là đổi hành vi, vượt phạm vi "bỏ copy-paste". Xem 4.7
 - [x] 4.6 **Ngoại lệ có chủ đích**: `app/api/api-docs/openapi/route.ts:22` giữ nguyên `jwt.verify`. Lý do: hàm `verifyApiDocsAccess` ở đây đọc token từ **cookie `auth_token`** ngoài header, còn `verifyToken()` chỉ đọc header → chuyển sang sẽ làm trang API docs mở bằng trình duyệt mất quyền truy cập. Muốn dọn nốt thì phải mở rộng `verifyToken` đọc cookie, việc đó chạm 57 route nên phải là task riêng
-- [ ] 4.7 **Phát hiện mới, chưa vá — cần bạn quyết**: 4 handler dưới `app/api/admin/` (`import-history` GET/POST/DELETE, `import-dual-files` POST) chấp nhận **token hợp lệ của bất kỳ role nào**, kể cả nhân viên thường. Comment trong code ghi "Verify admin authentication" nhưng không có dòng nào check role. Vá = đổi `verifyToken` → `verifyAdminAccess` (4 dòng), rủi ro là chặn nhầm role đang dùng thật (`van_phong`? `nguoi_lap_bieu`?) ← (verify: `grep -rn "jwt.verify" app/api` chỉ còn đúng 1 dòng ở `api-docs/openapi`; `npm run build` xanh; typecheck + lint sạch; 87 test pass)
+- [x] 4.7 **Đã vá theo quyết định của bạn: `admin` + `van_phong` + `nguoi_lap_bieu`.** 4 handler (`import-history` GET/POST/DELETE, `import-dual-files` POST) chuyển từ `verifyToken` sang `authorizeRoles(request, IMPORT_MANAGEMENT_ROLES)`.
+
+  Đổi hành vi có chủ đích: token hợp lệ nhưng sai role nay nhận **403** kèm thông báo tiếng Việt, thay vì 401 "Invalid token" (sai nghĩa — token có hợp lệ, chỉ là không đủ quyền). Client nhận 403 sẽ không xoá session oan như với 401
 
 ## 5. Zod hóa 11 route mutate đang thiếu validate
 
@@ -103,7 +105,7 @@ Danh sách xác minh 2026-08-01: 17 route đọc `request.json()` không import 
 - [x] 7.3 `admin/login:43` — đã có sẵn `rateLimit("login")` ngay đầu `POST`, không cần sửa
 - [x] 7.4 Bỏ nhánh 404: mã NV không tồn tại giờ trả **cùng status 200 và cùng tập field** với nhân viên chưa đổi mật khẩu (`hasPassword: false` → giao diện hỏi CCCD). Không còn cách nào dò được mã NV nào tồn tại
 - [x] 7.5 **Giả định của kế hoạch sai**: grep toàn repo (kể cả `lib/api/endpoints.ts`) → **không có caller nào** gọi `check-password-status`. Endpoint này đang là dead code, nên không cần sửa client
-- [ ] 7.7 **Cần bạn quyết**: vì `check-password-status` không có caller, cách sạch nhất là **xoá hẳn route** thay vì chỉ vá — bỏ luôn một endpoint không auth chạm bảng `employees`. Tôi không tự xoá vì có thể có caller ngoài repo (app mobile, script nội bộ). Quyết định D5 trong `design.md` viết "không bỏ endpoint vì đang được dùng thật" — tiền đề đó đã được chứng minh là sai
+- [x] 7.7 **Đã xoá theo quyết định của bạn.** `app/api/employee/check-password-status/` bị xoá hẳn — bỏ được một endpoint **không auth** chạm bảng `employees`. Kiểm trước khi xoá: `grep "check-password-status\|checkPasswordStatus"` toàn repo (trừ `openspec/`, `docs/`) trả **rỗng**. Quyết định D5 trong `design.md` ("không bỏ endpoint vì đang được dùng thật") dựa trên tiền đề sai, nay đã đảo
 - [x] 7.6 Ghi vào PR giới hạn đã biết: `rateLimitStore` là `Map` in-memory, reset khi deploy và không chia sẻ giữa instance; ngưỡng `login` để 100/15 phút vì công ty dùng IP chung — **không** đổi ngưỡng trong PR này ← (verify: gửi vượt ngưỡng → 429 kèm `Retry-After`; POST mã NV không tồn tại và mã tồn tại → status và tập field giống hệt nhau; luồng quên mật khẩu trên UI vẫn chạy)
 
 ## 8. Phủ CSRF cho route mutate còn thiếu
@@ -218,7 +220,7 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   Sửa kèm: `currentData[field]` với `field: string` không index được vào kiểu cụ thể (`TS7053`). Thay bằng `Set<string>` cho phép kiểm tra và một `Record<string, unknown>` tường minh — đọc rõ hơn `Array.includes` cũ, và tra Set nhanh hơn duyệt mảng 40 phần tử mỗi vòng lặp
 
-- [~] 14.3 `app/api/admin/payrolls` — **không đổi select, vì phát hiện endpoint này không có caller nào.** Không nằm trong `lib/api/endpoints.ts`, và `grep "admin/payrolls"` toàn repo ngoài chính file route trả về **rỗng**.
+- [x] 14.3 **Đã xoá theo quyết định của bạn.** `app/api/admin/payrolls/` bị xoá cùng `buildPayrollListQuery` trong repository — đó là chỗ `select("*")` cuối cùng của nhóm 14 ngoài `payroll-export`. Endpoint này không nằm trong `lib/api/endpoints.ts` và `grep "admin/payrolls"` toàn repo trả rỗng
 
   Đây là trường hợp thứ hai giống `check-password-status` (7.7) và `generate-alias-template` (đã xoá): endpoint mồ côi. Không tự xoá vì có thể có caller ngoài repo. **Cần bạn quyết cùng lượt với 7.7** — nếu bỏ thì `select("*")` ở đây biến mất theo, khỏi phải liệt kê cột cho một endpoint không ai gọi
 
@@ -287,10 +289,17 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
 - [x] 15.1 Làm phần **an toàn**: `lib/payroll/payroll-list-query.ts` — hằng `PAYROLL_WITH_EMPLOYEE_SELECT` (chuỗi select kèm join `employees`, trước đây copy nguyên si ở 3 route) + `applyPayrollFilters(query, {salaryMonth, payrollType, search})`. 8 test. Đây cũng chính là **một chỗ duy nhất** để nhóm 14 sau này thay `*` bằng danh sách cột, thay vì sửa 3 nơi
 - [x] 15.2 Ba route `payroll/my-*` dùng hằng chung. `applyPayrollFilters` mới áp cho `my-data` (bộ lọc trùng khớp hoàn toàn); hai route phòng ban **cố ý chưa áp** vì bộ lọc của chúng khác (xem 15.8), áp vào là đổi hành vi
-- [ ] 15.8 **BUG tìm được khi đọc, chưa vá — cần bạn quyết**: ở `payroll/my-department` và `payroll/my-departments`, **count query không áp cùng bộ lọc với list query**:
+- [x] 15.8 **Đã vá theo quyết định của bạn.** Nguyên nhân đúng như nghi ngờ khi đọc: count query dùng `.select("*", {count, head})` **không có embed `employees`** nhưng lại lọc `.eq("employees.department", ...)`. PostgREST cần embed mới lọc được cột của bảng nhúng, nên bộ lọc phòng ban **không có tác dụng** — `total` đang là tổng số bản ghi `payrolls` của toàn công ty.
+
+  Cách vá không chỉ thêm embed mà **bỏ luôn khả năng lệch lại**: cả list query lẫn count query nay dựng từ cùng `PAYROLL_WITH_EMPLOYEE_SELECT` (đã có `!inner`) và cùng đi qua `applyPayrollFilters(query, listFilters)` với **cùng một object filter**. Trước đây hai truy vấn được viết tay riêng nên `search` và `department` bị sót ở bản count.
+
+  **Người dùng sẽ thấy số đổi**: `total` và số trang ở màn hình lương phòng ban sẽ nhỏ lại (đúng), và khi tìm kiếm thì không còn trang rỗng thừa. Cần báo trước cho họ.
+
+  Dọn kèm: `sanitizePostgrestValue` không còn được gọi trực tiếp ở 2 route (đã nằm trong `applyPayrollFilters`), bỏ import thừa
   - thiếu bộ lọc `search` → khi người dùng tìm kiếm, `total` và `totalPages` vẫn tính trên toàn bộ tập, phân trang hiện thừa trang rỗng;
   - thiếu bộ lọc `department` cụ thể ở `my-departments:93-95`;
   - và đáng ngờ nhất: count query dùng `.select("*", {count:"exact", head:true})` **không có embed `employees`** nhưng lại lọc `.eq("employees.department", ...)` — PostgREST cần embed mới lọc được cột của bảng nhúng, nên nhiều khả năng bộ lọc phòng ban **không có tác dụng** và `total` đang là tổng số bản ghi `payrolls` của toàn công ty. Cần xác nhận trên DB thật rồi mới sửa; sửa xong `total` sẽ đổi giá trị nên phải báo người dùng
+
 - [~] 15.3 Tạo `lib/payroll/payroll-repository.ts` và chuyển **4/9 file** dưới `app/api/admin/payroll*/**` về **0 chỗ gọi `.from()`**: `payroll/[id]`, `payroll/audit/[id]`, `payroll-preview`, `payrolls`.
 
   **Đây là phép dời thuần, không phải viết lại**: mỗi chuỗi select được đưa nguyên si vào hằng trong repository. Đã đối chiếu chuỗi cũ (`git show HEAD:<file>`) với hằng mới sau khi bỏ khoảng trắng — **giống hệt từng ký tự**. Với query bị bồi thêm bộ lọc phía sau (`payroll/[id]:56`, `payrolls:21`, audit summary) thì repository trả về **query builder** chứ không trả dữ liệu, để phần lọc theo role ở route giữ nguyên vị trí. Một điều chỉnh kiểu: `payrollId` trong `payroll/[id]` là `number` chứ không phải `string`, nên tham số repository khai `string | number`.
