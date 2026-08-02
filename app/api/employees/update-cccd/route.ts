@@ -3,7 +3,6 @@ import { createServiceClient } from "@/utils/supabase/server";
 import bcrypt from "bcryptjs";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { csrfProtection } from "@/lib/security-middleware";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import {
@@ -12,6 +11,11 @@ import {
   UpdateCccdRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findEmployeeForCccdUpdate,
+  searchActiveEmployees,
+  updateEmployeeCredentials,
+} from "@/lib/employee/employee-auth-repository";
 
 async function hashCCCD(cccd: string): Promise<string> {
   return await bcrypt.hash(cccd, BCRYPT_ROUNDS);
@@ -36,11 +40,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: employee, error: findError } = await supabase
-      .from("employees")
-      .select("id, employee_id, full_name, cccd_hash")
-      .eq("employee_id", employee_id)
-      .single();
+    const { data: employee, error: findError } =
+      await findEmployeeForCccdUpdate(supabase, employee_id);
 
     if (findError || !employee) {
       return NextResponse.json(
@@ -51,13 +52,14 @@ export async function POST(request: NextRequest) {
 
     const newCccdHash = await hashCCCD(new_cccd);
 
-    const { error: updateError } = await supabase
-      .from("employees")
-      .update({
+    const { error: updateError } = await updateEmployeeCredentials(
+      supabase,
+      employee_id,
+      {
         cccd_hash: newCccdHash,
         updated_at: getVietnamTimestamp(),
-      })
-      .eq("employee_id", employee_id);
+      },
+    );
 
     if (updateError) {
       console.error("Error updating CCCD:", updateError);
@@ -107,15 +109,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: employees, error } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu, is_active")
-      .or(
-        `employee_id.ilike.%${sanitizePostgrestValue(query)}%,full_name.ilike.%${sanitizePostgrestValue(query)}%`,
-      )
-      .eq("is_active", true)
-      .order("full_name")
-      .limit(20);
+    const { data: employees, error } = await searchActiveEmployees(
+      supabase,
+      query,
+    );
 
     if (error) {
       console.error("Error searching employees:", error);

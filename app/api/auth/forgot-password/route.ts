@@ -12,6 +12,7 @@ import {
   ForgotPasswordRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findEmployeeForForgotPassword } from "@/lib/employee/employee-auth-repository";
 import {
   insertEmployeeSecurityEvent,
   insertSecurityLog,
@@ -90,13 +91,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: employee, error: employeeError } = await supabase
-      .from("employees")
-      .select(
-        "employee_id, cccd_hash, last_password_change_at, recovery_locked_until, recovery_fail_count",
-      )
-      .eq("employee_id", employee_code.trim())
-      .single();
+    const { data: employee, error: employeeError } =
+      await findEmployeeForForgotPassword(supabase, employee_code.trim());
 
     if (employeeError || !employee) {
       await logSecurityEvent(

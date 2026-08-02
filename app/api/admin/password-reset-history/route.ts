@@ -7,6 +7,7 @@ import {
   pageQuerySchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findEmployeeNamesByIds } from "@/lib/employee/employee-auth-repository";
 import { buildPasswordResetHistoryQuery } from "@/lib/audit/audit-log-repository";
 
 const PasswordResetHistoryQuerySchema = pageQuerySchema(50);
@@ -93,10 +94,10 @@ export async function GET(request: NextRequest) {
       {};
 
     if (employeeIds && employeeIds.length > 0) {
-      const { data: employees } = await supabase
-        .from("employees")
-        .select("employee_id, full_name, department")
-        .in("employee_id", employeeIds);
+      const { data: employees } = await findEmployeeNamesByIds(
+        supabase,
+        employeeIds,
+      );
 
       if (employees) {
         employeeMap = employees.reduce(

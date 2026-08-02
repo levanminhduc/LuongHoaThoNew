@@ -17,6 +17,10 @@ import {
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import {
+  findEmployeeForPasswordRecovery,
+  findEmployeePasswordState,
+} from "@/lib/employee/employee-auth-repository";
+import {
   insertEmployeeSecurityEvent,
   type SupabaseServiceClient,
 } from "@/lib/audit/audit-log-repository";
@@ -93,13 +97,8 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
 
     // Step 1: Get employee with necessary fields only
-    const { data: employee, error: employeeError } = await supabase
-      .from("employees")
-      .select(
-        "employee_id, cccd_hash, password_hash, recovery_locked_until, recovery_fail_count, last_password_change_at",
-      )
-      .eq("employee_id", employee_code.trim())
-      .single();
+    const { data: employee, error: employeeError } =
+      await findEmployeeForPasswordRecovery(supabase, employee_code.trim());
 
     // Don't reveal if user exists or not
     if (employeeError || !employee) {
@@ -245,13 +244,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: employee, error } = await supabase
-      .from("employees")
-      .select(
-        "password_hash, cccd_hash, last_password_change_at, password_version",
-      )
-      .eq("employee_id", employeeCode)
-      .single();
+    const { data: employee, error } = await findEmployeePasswordState(
+      supabase,
+      employeeCode,
+    );
 
     if (error || !employee) {
       return NextResponse.json(

@@ -13,6 +13,11 @@ import {
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import {
+  findEmployeeForPasswordChange,
+  findEmployeePasswordFlags,
+  updateEmployeeCredentials,
+} from "@/lib/employee/employee-auth-repository";
+import {
   insertSecurityLog,
   type SupabaseServiceClient,
 } from "@/lib/audit/audit-log-repository";
@@ -63,13 +68,8 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
 
     // Step 1: Get employee and check if account is locked
-    const { data: employee, error: employeeError } = await supabase
-      .from("employees")
-      .select(
-        "employee_id, cccd_hash, password_hash, last_password_change_at, locked_until, failed_login_attempts, must_change_password, password_changed_at",
-      )
-      .eq("employee_id", employee_id.trim())
-      .single();
+    const { data: employee, error: employeeError } =
+      await findEmployeeForPasswordChange(supabase, employee_id.trim());
 
     if (employeeError || !employee) {
       await logSecurityEvent(
@@ -143,10 +143,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        await supabase
-          .from("employees")
-          .update(updateData)
-          .eq("employee_id", employee_id);
+        await updateEmployeeCredentials(supabase, employee_id, updateData);
 
         await logSecurityEvent(
           supabase,
@@ -205,10 +202,11 @@ export async function POST(request: NextRequest) {
       updateData.locked_until = null;
     }
 
-    const { error: updateError } = await supabase
-      .from("employees")
-      .update(updateData)
-      .eq("employee_id", employee_id);
+    const { error: updateError } = await updateEmployeeCredentials(
+      supabase,
+      employee_id,
+      updateData,
+    );
 
     if (updateError) {
       console.error("Password update error:", updateError);
@@ -274,11 +272,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: employee, error } = await supabase
-      .from("employees")
-      .select("must_change_password, password_changed_at")
-      .eq("employee_id", employeeId)
-      .single();
+    const { data: employee, error } = await findEmployeePasswordFlags(
+      supabase,
+      employeeId,
+    );
 
     if (error || !employee) {
       return NextResponse.json(
