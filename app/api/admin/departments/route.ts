@@ -10,6 +10,7 @@ import {
 } from "@/lib/validations";
 import { getVietnamMonth, getVietnamYear } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findActiveDepartmentPermissions } from "@/lib/department/department-repository";
 
 // GET all departments with statistics
 export async function GET(request: NextRequest) {
@@ -382,23 +383,8 @@ export async function PUT(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // Get all department permissions with employee info
-    // Updated query syntax: Use exact constraint name to resolve ambiguous relationships
-    const { data: permissions, error } = await supabase
-      .from("department_permissions")
-      .select(
-        `
-        *,
-        employees!fk_dept_perm_employee(
-          employee_id,
-          full_name,
-          department,
-          chuc_vu
-        )
-      `,
-      )
-      .eq("is_active", true)
-      .order("department");
+    const { data: permissions, error } =
+      await findActiveDepartmentPermissions(supabase);
 
     if (error) {
       console.error("Permissions query error:", error);

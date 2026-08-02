@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   parseSchema,
@@ -12,6 +11,14 @@ import {
   DepartmentPermissionRevokeSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  buildDepartmentPermissionListQuery,
+  findDepartmentPermission,
+  insertDepartmentPermission,
+  reactivateDepartmentPermission,
+  revokeDepartmentPermissionByEmployeeDepartment,
+  revokeDepartmentPermissionById,
+} from "@/lib/department/department-repository";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
@@ -43,36 +50,12 @@ export async function GET(request: NextRequest) {
     const department = parsedQuery.data.department ?? null;
     const isActive = parsedQuery.data.is_active ?? null;
 
-    let query = supabase.from("department_permissions").select(`
-        *,
-        employees!fk_dept_perm_employee(
-          employee_id,
-          full_name,
-          department,
-          chuc_vu
-        ),
-        granted_by_employee:employees!department_permissions_granted_by_fkey(
-          employee_id,
-          full_name
-        )
-      `);
-
-    // Apply filters
-    if (employeeId) {
-      query = query.eq("employee_id", employeeId);
-    }
-
-    if (department) {
-      query = query.eq("department", department);
-    }
-
-    if (isActive !== null && isActive !== undefined) {
-      query = query.eq("is_active", isActive === "true");
-    }
-
-    const { data: permissions, error } = await query.order("granted_at", {
-      ascending: false,
-    });
+    const { data: permissions, error } =
+      await buildDepartmentPermissionListQuery(supabase, {
+        employeeId,
+        department,
+        isActive,
+      });
 
     if (error) {
       console.error("Database error:", error);
@@ -159,13 +142,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if permission already exists
-    const { data: existingPermission } = await supabase
-      .from("department_permissions")
-      .select("id, is_active")
-      .eq("employee_id", employee_id)
-      .eq("department", department)
-      .single();
+    const { data: existingPermission } = await findDepartmentPermission(
+      supabase,
+      employee_id,
+      department,
+    );
 
     if (existingPermission) {
       if (existingPermission.is_active) {
@@ -177,17 +158,13 @@ export async function POST(request: NextRequest) {
         );
       } else {
         // Reactivate existing permission
-        const { data: updatedPermission, error: updateError } = await supabase
-          .from("department_permissions")
-          .update({
-            is_active: true,
-            granted_by: auth.user.employee_id,
-            granted_at: getVietnamTimestamp(),
+        const { data: updatedPermission, error: updateError } =
+          await reactivateDepartmentPermission(
+            supabase,
+            existingPermission.id,
+            auth.user.employee_id,
             notes,
-          })
-          .eq("id", existingPermission.id)
-          .select()
-          .single();
+          );
 
         if (updateError) {
           return NextResponse.json(
@@ -207,27 +184,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Determine granted_by value
     const grantedBy = auth.user.employee_id || "admin";
 
-    // Debug logging for insert
-    console.log("=== DEBUG INSERT VALUES ===");
-    console.log("employee_id:", employee_id);
-    console.log("department:", department);
-    console.log("granted_by:", grantedBy);
-    console.log("notes:", notes);
-
-    // Create new permission
-    const { data: newPermission, error: insertError } = await supabase
-      .from("department_permissions")
-      .insert({
-        employee_id,
+    const { data: newPermission, error: insertError } =
+      await insertDepartmentPermission(supabase, {
+        employeeId: employee_id,
         department,
-        granted_by: grantedBy,
+        grantedBy,
         notes,
-      })
-      .select()
-      .single();
+      });
 
     if (insertError) {
       console.error("Insert error:", insertError);
@@ -327,26 +292,13 @@ export async function DELETE(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // Soft delete by setting is_active = false
-    let updateQuery;
-    if (permissionId) {
-      updateQuery = supabase
-        .from("department_permissions")
-        .update({ is_active: false })
-        .eq("id", parseInt(permissionId))
-        .select()
-        .single();
-    } else {
-      updateQuery = supabase
-        .from("department_permissions")
-        .update({ is_active: false })
-        .eq("employee_id", employeeId)
-        .eq("department", department)
-        .select()
-        .single();
-    }
-
-    const { data: revokedPermission, error } = await updateQuery;
+    const { data: revokedPermission, error } = await (permissionId
+      ? revokeDepartmentPermissionById(supabase, permissionId)
+      : revokeDepartmentPermissionByEmployeeDepartment(
+          supabase,
+          employeeId,
+          department,
+        ));
 
     if (error) {
       console.error("Revoke permission error:", error);

@@ -35,13 +35,13 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
 ## 4. department_permissions (7 lệnh)
 
-- [ ] 4.1 Liệt kê route bị chạm
-- [ ] 4.2 Fixture từ git
-- [ ] 4.3 Viết `lib/department/department-repository.ts` + `server-only`
-- [ ] 4.4 Parity test
-- [ ] 4.5 **Test phân quyền riêng**: 8 role × truy cập phòng ban; khẳng định `van_phong` vẫn bypass filter đúng như `canAccessDepartment` hiện hành
-- [ ] 4.6 Sửa route
-- [ ] 4.7 GATE
+- [x] 4.1 Liệt kê route bị chạm
+- [x] 4.2 Fixture từ git
+- [x] 4.3 Viết `lib/department/department-repository.ts` + `server-only`
+- [x] 4.4 Parity test
+- [x] 4.5 **Test phân quyền riêng**: 8 role × truy cập phòng ban; khẳng định `van_phong` vẫn bypass filter đúng như `canAccessDepartment` hiện hành
+- [x] 4.6 Sửa route
+- [x] 4.7 GATE
 
 ## 5. attendance_monthly + attendance_daily (7 lệnh)
 
