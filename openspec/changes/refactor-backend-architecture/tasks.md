@@ -123,7 +123,18 @@ Danh sách xác minh 2026-08-01: 17 route đọc `request.json()` không import 
 - [x] 9.1 `npm run format && npm run lint && npm run typecheck` — sạch
 - [x] 9.2 `npm run build` (webpack) — xanh
 - [~] 9.3 **Mới xong 1/3 luồng.** Bạn tự test trên nhánh `refactor/backend-architecture` (69 thay đổi chưa commit, không stash → dev server chạy đúng code này) và xác nhận **tra cứu lương + xem chi tiết chạy y hệt trước**. Đây là luồng được refactor nặng nhất: `lookup/route.ts` 487 → 199 dòng, tách `lookup-service` + `lookup-html` + `employee-repository`, và là luồng chạm nhiều nhất vào nhóm 10-13. **Chưa test: ký nhận, import Excel, export XLSX** — nên các nhóm phụ thuộc vẫn đóng (xem 9.3a)
-- [ ] 9.3a Ba luồng còn thiếu chặn đúng ba nhóm: **ký nhận** → chưa xác nhận 7 chỗ sửa xác thực hash (11.10-11.14); **import Excel** → chưa xác nhận nhóm 1 (chặn stack trace trong response lỗi) và nhóm 5; **export XLSX** → chặn nhóm 14 (bỏ `select("*")`) và nhóm 16 (tách builder). Nhóm 14 đặc biệt không được mở nếu chỉ "bấm qua loa": thiếu một cột trong JSON trả về là lỗi im lặng, TypeScript không bắt, mắt thường không thấy
+- [~] 9.3a **Hai trong ba luồng nay đã verify được bằng test, không cần bấm tay.**
+
+  **Export XLSX — xong.** Xem 16.6: lấy bản route trước refactor ra khỏi git rồi so buffer XLSX **theo byte** với bản mới, trên 7 kịch bản. Giống hệt. Mở khoá nhóm 14 và nhóm 16.
+
+  **Ký nhận — xong ở mức code.** Cùng kỹ thuật: `lib/auth/__fixtures__/legacy-credential-check.ts` chép nguyên văn quy tắc chọn hash trước refactor (`lib/auth.ts` tại `aa00118~1`), rồi so với `verifyEmployeeCredential` trên ma trận đầu vào. Kết quả:
+  - Mọi ca **có hash thật** → hai bản trả **giống hệt**: đúng CCCD khi chưa đổi mật khẩu, đúng mật khẩu mới khi đã đổi, sai thì false, và CCCD cũ không còn dùng được sau khi đổi mật khẩu.
+  - Ba ca **hash rỗng** → bản cũ **ném lỗi** (thành HTTP 500, đồng thời là oracle lộ trạng thái tài khoản), bản mới trả `false`. Khác **có chủ đích**, đúng bug đã vá ở 11.10-11.14.
+
+  Kiểm thêm 7 call site truyền đúng plaintext như bản cũ: `lib/auth.ts` → `password`; `sign-salary`/`sign-bonus`/`salary-history`/`change-password-with-cccd` → `cccd.trim()`; `change-password` → `current_password.trim()`; `lookup-service` → `cccd` **không trim** (giữ nguyên bản cũ, `lookup/route.ts:327`).
+
+  **Import Excel — còn lại duy nhất cần bấm tay.** Không dùng được kỹ thuật parity vì thay đổi ở đây là **thêm validate zod ở chỗ trước không có gì** — không có hành vi cũ để so. Parser (`advanced-excel-parser`, `attendance-parser`) không bị đụng
+
 - [x] 9.4 Cập nhật `docs/audit/nextjs-backend-audit.md` — thêm bảng đối chiếu trước/sau ở đầu báo cáo
 - [x] 9.7 **Tự soát lại diff trước khi commit** — lọc mọi dòng bị xoá có dính `csrfProtection|rateLimit|verifyToken|verifyAdminAccess|bcrypt|status 4xx`: không có middleware bảo mật nào bị mất mà không có thay thế. Dòng xoá chỉ gồm các `status: 400` của if-check tay (đã thay bằng zod) và 3 dòng `401 "Unauthorized"` ở `import-history` (gộp vào `verifyToken` → vẫn 401, chỉ đổi message của trường hợp thiếu header). Kiểm thêm 2 chỗ nghi siết chặt hành vi: trần `limit` 200 — client cao nhất đang gọi đúng 200 nên không vỡ; sàn năm 2020 của `attendance` — trùng với `PeriodExportRequestSchema` có sẵn trong repo, không phải tôi tự đặt
 - [x] 9.6 **Đã tách thành commit `style:` đầu tiên (`fe99866`).** Chứng minh 4 file chỉ đổi định dạng chứ không đổi logic: chạy `prettier` lên **bản HEAD** của từng file rồi so với bản hiện tại — giống hệt cả 4. Ghi lại phát hiện gốc: `main` đang đỏ CI từ trước.
