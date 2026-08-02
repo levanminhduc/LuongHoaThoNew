@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
     if (!auth.ok) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-    const admin = auth.user;
 
     const parsed = parseSchema(
       AdvancedUploadRequestSchema,
@@ -29,7 +28,7 @@ export async function POST(request: NextRequest) {
         status: 400,
       });
     }
-    const { payrollData, columnMappings, summary } = parsed.data;
+    const { payrollData } = parsed.data;
 
     const supabase = createServiceClient();
 
@@ -72,23 +71,6 @@ export async function POST(request: NextRequest) {
           `Batch ${Math.floor(i / batchSize) + 1}: ${batchError instanceof Error ? batchError.message : "Unknown error"}`,
         );
       }
-    }
-
-    // Log import activity
-    try {
-      await supabase.from("import_logs").insert({
-        batch_id: batchId,
-        admin_user: admin.username,
-        total_records: payrollData.length,
-        successful_records: insertedCount,
-        failed_records: payrollData.length - insertedCount,
-        column_mappings: columnMappings,
-        summary: summary,
-        errors: errors,
-        created_at: getVietnamTimestamp(),
-      });
-    } catch (logError) {
-      console.error("Failed to log import activity:", logError);
     }
 
     return NextResponse.json({

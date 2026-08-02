@@ -100,9 +100,6 @@ export const ENDPOINTS = {
   dataValidation: {
     list: "/api/admin/data-validation",
   },
-  importHistory: {
-    list: "/api/admin/import-history",
-  },
   auth: {
     logout: "/api/admin/logout",
   },

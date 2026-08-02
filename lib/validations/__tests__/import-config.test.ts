@@ -6,8 +6,6 @@ import {
   MappingConfigurationCreateRequestSchema,
   MappingConfigurationSaveRequestSchema,
   MappingConfigurationListQuerySchema,
-  ImportSessionHistoryCreateSchema,
-  ImportHistoryDeleteQuerySchema,
   AdvancedUploadRequestSchema,
   ImportErrorExportRequestSchema,
 } from "@/lib/validations/payroll";
@@ -180,60 +178,6 @@ describe("MappingConfigurationListQuerySchema", () => {
     if (result.success) {
       expect(result.data.limit).toBe(20);
     }
-  });
-});
-
-describe("ImportSessionHistoryCreateSchema", () => {
-  const valid = {
-    session_id: "sess-1",
-    import_type: "dual",
-    total_records: 10,
-    success_count: 9,
-    error_count: 1,
-    status: "partial",
-  };
-
-  it("dien mac dinh cho error_summary va cac mang", () => {
-    const result = ImportSessionHistoryCreateSchema.safeParse(valid);
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.error_summary.validation).toBe(0);
-      expect(result.data.auto_fixes).toEqual([]);
-      expect(result.data.file_names).toEqual([]);
-    }
-  });
-
-  it("tu choi import_type la", () => {
-    expect(
-      ImportSessionHistoryCreateSchema.safeParse({
-        ...valid,
-        import_type: "triple",
-      }).success,
-    ).toBe(false);
-  });
-
-  it("tu choi so am", () => {
-    expect(
-      ImportSessionHistoryCreateSchema.safeParse({
-        ...valid,
-        error_count: -1,
-      }).success,
-    ).toBe(false);
-  });
-});
-
-describe("ImportHistoryDeleteQuerySchema", () => {
-  it("tu choi id null", () => {
-    expect(ImportHistoryDeleteQuerySchema.safeParse({ id: null }).success).toBe(
-      false,
-    );
-  });
-
-  it("chap nhan id co noi dung", () => {
-    expect(
-      ImportHistoryDeleteQuerySchema.safeParse({ id: "hist_1" }).success,
-    ).toBe(true);
   });
 });
 

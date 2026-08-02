@@ -60,42 +60,6 @@ export const ImportHistoryCreateSchema = z.object({
   status: z.enum(["pending", "processing", "completed", "failed"]).optional(),
 });
 
-export const ImportSessionHistoryCreateSchema = z.object({
-  session_id: z.string().trim().min(1, { message: "Thiếu session_id" }),
-  import_type: z.enum(["single", "dual"], {
-    message: "Loại import phải là single hoặc dual",
-  }),
-  file_names: z.array(z.string()).default([]),
-  total_records: z.coerce.number().int().min(0),
-  success_count: z.coerce.number().int().min(0),
-  error_count: z.coerce.number().int().min(0),
-  auto_fix_count: z.coerce.number().int().min(0).default(0),
-  processing_time_ms: z.coerce.number().int().min(0).default(0),
-  error_summary: z
-    .object({
-      validation: z.coerce.number().int().min(0).default(0),
-      format: z.coerce.number().int().min(0).default(0),
-      duplicate: z.coerce.number().int().min(0).default(0),
-      database: z.coerce.number().int().min(0).default(0),
-      system: z.coerce.number().int().min(0).default(0),
-    })
-    .default({
-      validation: 0,
-      format: 0,
-      duplicate: 0,
-      database: 0,
-      system: 0,
-    }),
-  auto_fixes: z.array(z.record(z.string(), z.unknown())).default([]),
-  detailed_errors: z.array(z.record(z.string(), z.unknown())).default([]),
-  status: z.enum(["completed", "failed", "partial"], {
-    message: "Trạng thái không hợp lệ",
-  }),
-});
-export type ImportSessionHistoryCreate = z.infer<
-  typeof ImportSessionHistoryCreateSchema
->;
-
 export const AdvancedUploadRequestSchema = z.object({
   payrollData: z
     .array(z.record(z.string(), z.unknown()))
@@ -159,13 +123,6 @@ export const PayrollAuditFilterRequestSchema = z.object({
 });
 export type PayrollAuditFilterRequest = z.infer<
   typeof PayrollAuditFilterRequestSchema
->;
-
-export const ImportHistoryDeleteQuerySchema = z.object({
-  id: z.string().trim().min(1, { message: "Thiếu ID lịch sử import" }),
-});
-export type ImportHistoryDeleteQuery = z.infer<
-  typeof ImportHistoryDeleteQuerySchema
 >;
 
 export const BulkPayrollExportRequestSchema = z.object({

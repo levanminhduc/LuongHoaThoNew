@@ -11,20 +11,18 @@ Bốn gate chạy cuối mỗi nhóm, viết tắt là **GATE**: `npm run format
 - [x] 1.5 Ghi cách dùng vào `.claude/rules/api-routes.md`
 - [x] 1.6 GATE
 
-## 2. import_history + import_logs (4 lệnh sống) — ⚠️ TẠM DỪNG, CHỜ QUYẾT ĐỊNH
+## 2. import_history + import_logs — ĐỔI HƯỚNG: XOÁ CODE CHẾT
 
-Đo lại khi bắt tay: 1 trong 5 hit là dòng đã comment (`import-history/route.ts:53`), còn 4 lệnh sống.
+Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
-**Chặn:** không file nào trong 57 migration `scripts/supabase-setup/` tạo `import_history` hay `import_logs`. POST của chính route đó tự thú trong comment: "we don't have import_history table" và trả dữ liệu giả. Nhưng GET và DELETE vẫn truy vấn bảng thật, và `components/ImportHistoryViewer.tsx` gọi chúng qua `apiClient` — nghĩa là màn hình admin này luôn lỗi. `import_logs` insert nằm trong try/catch nuốt lỗi nên hỏng im lặng.
+**Lý do:** không file nào trong 57 migration `scripts/supabase-setup/` tạo `import_history` hay `import_logs`. POST của chính route tự thú trong comment "we don't have import_history table" và trả dữ liệu giả, trong khi GET/DELETE vẫn truy vấn bảng thật. `components/ImportHistoryViewer.tsx` gọi hai endpoint đó nhưng **không file nào import component này** — nó chưa từng được render, nên chưa ai gặp lỗi. Insert `import_logs` nằm trong try/catch nuốt lỗi nên hỏng im lặng.
 
-Tạo bảng sẽ vi phạm D0. Rút xuống repository thì chỉ là gói lại code chết. Cần người dùng chọn hướng trước khi làm.
-
-- [ ] 2.1 Liệt kê route bị chạm, ghi vào đầu PR
-- [ ] 2.2 Lấy code trước khi rút từ git vào `lib/import/__fixtures__/`
-- [ ] 2.3 Viết `lib/import/import-history-repository.ts` + `import "server-only"`
-- [ ] 2.4 Parity test: so chuỗi select, filter, order của từng truy vấn
-- [ ] 2.5 Sửa route gọi repository; xoá truy vấn cũ khỏi route
-- [ ] 2.6 GATE
+- [x] 2.1 Xoá `app/api/admin/import-history/` (POST giả + GET/DELETE truy vấn bảng không tồn tại)
+- [x] 2.2 Xoá `components/ImportHistoryViewer.tsx` (mồ côi, 0 nơi import)
+- [x] 2.3 Xoá entry `importHistory` khỏi `lib/api/endpoints.ts`
+- [x] 2.4 Xoá block insert `import_logs` khỏi `advanced-upload/route.ts`, dọn biến thành thừa (`admin`, `columnMappings`, `summary`) — giữ nguyên kiểm tra quyền
+- [x] 2.5 Xoá `ImportSessionHistoryCreateSchema` + `ImportHistoryDeleteQuerySchema` (chỉ route vừa xoá dùng) khỏi `lib/validations/payroll.ts`, barrel và test
+- [x] 2.6 GATE
 
 ## 3. security_logs + employee_security_events (5 lệnh)
 
