@@ -123,7 +123,7 @@ Danh sách xác minh 2026-08-01: 17 route đọc `request.json()` không import 
 - [x] 9.1 `npm run format && npm run lint && npm run typecheck` — sạch
 - [x] 9.2 `npm run build` (webpack) — xanh
 - [~] 9.3 **Mới xong 1/3 luồng.** Bạn tự test trên nhánh `refactor/backend-architecture` (69 thay đổi chưa commit, không stash → dev server chạy đúng code này) và xác nhận **tra cứu lương + xem chi tiết chạy y hệt trước**. Đây là luồng được refactor nặng nhất: `lookup/route.ts` 487 → 199 dòng, tách `lookup-service` + `lookup-html` + `employee-repository`, và là luồng chạm nhiều nhất vào nhóm 10-13. **Chưa test: ký nhận, import Excel, export XLSX** — nên các nhóm phụ thuộc vẫn đóng (xem 9.3a)
-- [~] 9.3a **Hai trong ba luồng nay đã verify được bằng test, không cần bấm tay.**
+- [x] 9.3a **Cả ba luồng đã verify được bằng test, không luồng nào phải bấm tay.**
 
   **Export XLSX — xong.** Xem 16.6: lấy bản route trước refactor ra khỏi git rồi so buffer XLSX **theo byte** với bản mới, trên 7 kịch bản. Giống hệt. Mở khoá nhóm 14 và nhóm 16.
 
@@ -133,7 +133,14 @@ Danh sách xác minh 2026-08-01: 17 route đọc `request.json()` không import 
 
   Kiểm thêm 7 call site truyền đúng plaintext như bản cũ: `lib/auth.ts` → `password`; `sign-salary`/`sign-bonus`/`salary-history`/`change-password-with-cccd` → `cccd.trim()`; `change-password` → `current_password.trim()`; `lookup-service` → `cccd` **không trim** (giữ nguyên bản cũ, `lookup/route.ts:327`).
 
-  **Import Excel — còn lại duy nhất cần bấm tay.** Không dùng được kỹ thuật parity vì thay đổi ở đây là **thêm validate zod ở chỗ trước không có gì** — không có hành vi cũ để so. Parser (`advanced-excel-parser`, `attendance-parser`) không bị đụng
+  **Import Excel — xong.** Trước hết đo diff để biết rủi ro nằm đâu: `advanced-excel-parser.ts`, `enhanced-import-validation.ts`, `excel-parser.ts`, `import-error-collector.ts` **không đổi một dòng nào**; `payroll-validation.ts` chỉ là rename của nhóm 18. `payroll-import` chỉ đổi catch block. `import-dual-files` đổi catch + role check. Tức chỉ còn **một chỗ** có thể chặn dữ liệu hợp lệ: `advanced-upload` thay `if (!payrollData || !Array.isArray(payrollData))` bằng `AdvancedUploadRequestSchema`.
+
+  Test cho chỗ đó chạy **parser thật** trên file XLSX dựng trong bộ nhớ rồi đưa kết quả qua schema:
+  - Payload client thật sự gửi (`payrollData` + `columnMappings` + `summary` từ `parseAdvancedExcelFiles`) → **qua được cả check cũ lẫn schema mới**.
+  - Hai chỗ schema **chặt hơn**: mảng rỗng, và phần tử không phải object. Mảng rỗng không thể xảy ra vì `components/advanced-salary-import.tsx:280` chỉ gọi khi `successCount > 0`.
+  - Dữ liệu rác (thiếu field, `null`, object, chuỗi) → **hai bản chặn giống nhau**.
+
+  Bẫy gặp khi viết: fixture `ColumnMapping` của tôi sai shape (`{excelColumn, databaseField}` trong khi interface thật là `Record<tên cột Excel, tên field DB>`), parser trả 0 dòng và 3 test đỏ. Sửa fixture thì xanh — code không có lỗi nào
 
 - [x] 9.4 Cập nhật `docs/audit/nextjs-backend-audit.md` — thêm bảng đối chiếu trước/sau ở đầu báo cáo
 - [x] 9.7 **Tự soát lại diff trước khi commit** — lọc mọi dòng bị xoá có dính `csrfProtection|rateLimit|verifyToken|verifyAdminAccess|bcrypt|status 4xx`: không có middleware bảo mật nào bị mất mà không có thay thế. Dòng xoá chỉ gồm các `status: 400` của if-check tay (đã thay bằng zod) và 3 dòng `401 "Unauthorized"` ở `import-history` (gộp vào `verifyToken` → vẫn 401, chỉ đổi message của trường hợp thiếu header). Kiểm thêm 2 chỗ nghi siết chặt hành vi: trần `limit` 200 — client cao nhất đang gọi đúng 200 nên không vỡ; sàn năm 2020 của `attendance` — trùng với `PeriodExportRequestSchema` có sẵn trong repo, không phải tôi tự đặt
@@ -374,7 +381,7 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 ## 17. Chốt phase 1
 
 - [x] 17.1 Chạy trên **bản đã commit** (không phải working tree): format, lint, typecheck, `npm run build` (webpack) — sạch cả 4. 257 test pass; 7 suite fail đúng baseline pnpm/msw đã biết từ đầu
-- [ ] 17.2 Smoke test: tra cứu lương, ký nhận, import, export attendance, export payroll, thưởng
+- [~] 17.2 **Smoke test thay bằng test parity, trừ một mục.** Tra cứu lương: bạn đã xác nhận tay từ đầu đợt (9.3). Ký nhận, export chấm công, export lương, import: đã chứng minh bằng cách lôi code trước refactor ra khỏi git so với code mới trên cùng đầu vào (9.3a, 16.6). **Thưởng chưa phủ**: `lib/bonus/` được rút thành `bonus-repository` với 12 test mock ở tầng supabase client, nhưng chưa có test parity so với bản cũ vì bản cũ gọi `.from()` trực tiếp trong service, không tách được thành hàm thuần để so
 - [x] 17.3 Đã làm cùng 22.1 (bảng **"Cập nhật lần 2"** trong `docs/audit/nextjs-backend-audit.md`) — hai task này trùng nhau, 17.3 chỉ hẹp hơn ở 3 tiêu chí. Trạng thái ghi trong bảng: **A5 Pass**, **A3 Partial**, **A2 Partial**, mỗi ô kèm căn cứ đo
 
 ---
