@@ -8,6 +8,11 @@ import {
   UpdateManagementSignatureDateRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findActiveSignatureId,
+  insertManagementSignature,
+  updateSignatureSignedAt,
+} from "@/lib/signature/management-signature-repository";
 
 const SIGNATURE_TYPE_LABELS: Record<string, string> = {
   giam_doc: "Giám Đốc",
@@ -43,20 +48,12 @@ export async function POST(request: NextRequest) {
     const payrollType = is_t13 ? "t13" : "monthly";
 
     if (action === "update") {
-      let query = supabase
-        .from("management_signatures")
-        .select("id")
-        .eq("salary_month", salary_month)
-        .eq("signature_type", signature_type)
-        .eq("is_active", true);
-
-      if (is_t13) {
-        query = query.eq("payroll_type", "t13");
-      } else {
-        query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-      }
-
-      const { data: existing, error: findError } = await query.single();
+      const { data: existing, error: findError } = await findActiveSignatureId(
+        supabase,
+        salary_month,
+        signature_type,
+        is_t13,
+      );
 
       if (findError || !existing) {
         return NextResponse.json(
@@ -65,10 +62,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { error: updateError } = await supabase
-        .from("management_signatures")
-        .update({ signed_at: new_signed_at })
-        .eq("id", existing.id);
+      const { error: updateError } = await updateSignatureSignedAt(
+        supabase,
+        existing.id,
+        new_signed_at,
+      );
 
       if (updateError) {
         return NextResponse.json(
@@ -85,22 +83,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "create") {
-      let existCheck = supabase
-        .from("management_signatures")
-        .select("id")
-        .eq("salary_month", salary_month)
-        .eq("signature_type", signature_type)
-        .eq("is_active", true);
-
-      if (is_t13) {
-        existCheck = existCheck.eq("payroll_type", "t13");
-      } else {
-        existCheck = existCheck.or(
-          "payroll_type.eq.monthly,payroll_type.is.null",
-        );
-      }
-
-      const { data: existingSig } = await existCheck.single();
+      const { data: existingSig } = await findActiveSignatureId(
+        supabase,
+        salary_month,
+        signature_type,
+        is_t13,
+      );
 
       if (existingSig) {
         return NextResponse.json(
@@ -131,9 +119,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { data: inserted, error: insertError } = await supabase
-        .from("management_signatures")
-        .insert({
+      const { data: inserted, error: insertError } =
+        await insertManagementSignature(supabase, {
           signature_type,
           salary_month,
           payroll_type: payrollType,
@@ -145,9 +132,7 @@ export async function POST(request: NextRequest) {
           device_info: "Admin Update Signature Date",
           notes: `Admin tạo chữ ký thay cho ${signer.full_name}`,
           is_active: true,
-        })
-        .select()
-        .single();
+        });
 
       if (insertError) {
         return NextResponse.json(

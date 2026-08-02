@@ -1,5 +1,11 @@
 import "server-only";
 import { createServiceClient } from "@/utils/supabase/server";
+import {
+  findActiveSignaturesForMonth,
+  findSignatureForEligibility,
+} from "@/lib/signature/management-signature-repository";
+
+export { MANAGEMENT_SIGNATURE_SELECT } from "@/lib/signature/signature-select";
 
 export interface EmployeeCompletion {
   total_employees: number;
@@ -29,9 +35,6 @@ export interface SignatureRecord {
   notes?: string;
   is_active: boolean;
 }
-
-export const MANAGEMENT_SIGNATURE_SELECT =
-  "id, signature_type, salary_month, signed_by_id, signed_by_name, department, signed_at, ip_address, device_info, notes, is_active";
 
 export interface MonthStatus {
   month: string;
@@ -154,13 +157,8 @@ export async function checkSignatureEligibility(
     }
 
     try {
-      const { data: existingSignature, error: existingError } = await supabase
-        .from("management_signatures")
-        .select(MANAGEMENT_SIGNATURE_SELECT)
-        .eq("salary_month", month)
-        .eq("signature_type", signatureType)
-        .eq("is_active", true)
-        .single();
+      const { data: existingSignature, error: existingError } =
+        await findSignatureForEligibility(supabase, month, signatureType);
 
       if (!existingError && existingSignature) {
         return {
@@ -203,11 +201,8 @@ export async function getManagementSignatureStatus(
 
     try {
       const supabase = createServiceClient();
-      const { data: signatures, error: sigError } = await supabase
-        .from("management_signatures")
-        .select(MANAGEMENT_SIGNATURE_SELECT)
-        .eq("salary_month", month)
-        .eq("is_active", true);
+      const { data: signatures, error: sigError } =
+        await findActiveSignaturesForMonth(supabase, month);
 
       if (!sigError && signatures) {
         signatures.forEach((sig) => {

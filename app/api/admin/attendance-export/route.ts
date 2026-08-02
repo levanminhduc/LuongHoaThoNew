@@ -23,6 +23,7 @@ import {
   buildMonthlyAttendanceExportQuery,
   findDailyAttendanceForExport,
 } from "@/lib/attendance/attendance-repository";
+import { findSignatureLogsWithMonth } from "@/lib/signature/signature-log-repository";
 
 interface ExportRequestBody {
   period_year: number;
@@ -96,10 +97,8 @@ export async function POST(request: NextRequest) {
     const signatureLogsMap = new Map<string, AttendanceSignatureLog>();
 
     try {
-      const { data: signatureLogs, error: sigLogsError } = await supabase
-        .from("signature_logs")
-        .select("employee_id, salary_month, signed_by_name, signed_at")
-        .eq("salary_month", salaryMonth);
+      const { data: signatureLogs, error: sigLogsError } =
+        await findSignatureLogsWithMonth(supabase, salaryMonth);
 
       if (!sigLogsError && signatureLogs) {
         signatureLogs.forEach((log) => {

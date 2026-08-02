@@ -21,6 +21,8 @@ import {
 } from "@/lib/excel/payroll-excel-builder";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findSignatureLogs } from "@/lib/signature/signature-log-repository";
+import { findSignatureSummaryForMonth } from "@/lib/signature/management-signature-repository";
 
 interface PayrollRecord {
   [key: string]: unknown;
@@ -270,15 +272,8 @@ export async function POST(request: NextRequest) {
     // Fetch payrolls, signature logs, and management signatures in parallel
     const [payrollResult, sigLogsResult, mgmtSigResult] = await Promise.all([
       payrollQuery,
-      supabase
-        .from("signature_logs")
-        .select("employee_id, signed_by_name, signed_at")
-        .eq("salary_month", salary_month),
-      supabase
-        .from("management_signatures")
-        .select("signature_type, signed_by_name, signed_at")
-        .eq("salary_month", salary_month)
-        .eq("is_active", true),
+      findSignatureLogs(supabase, salary_month),
+      findSignatureSummaryForMonth(supabase, salary_month),
     ]);
 
     if (payrollResult.error) {

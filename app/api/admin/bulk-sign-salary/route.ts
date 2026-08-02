@@ -10,6 +10,7 @@ import {
   BulkSignSalaryRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { insertBulkSignatureLog } from "@/lib/signature/signature-log-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -199,26 +200,24 @@ export async function POST(request: NextRequest) {
     const completedTime = Date.now();
     const duration = Math.round((completedTime - startTime) / 1000);
 
-    const { error: logError } = await supabase
-      .from("admin_bulk_signature_logs")
-      .insert({
-        bulk_batch_id: bulkBatchId,
-        admin_id: auth.user.employee_id,
-        admin_name: auth.user.username,
-        salary_month,
-        payroll_type: payrollType,
-        total_unsigned_before: unsignedCount,
-        total_processed: unsignedCount,
-        success_count: totalSuccessful,
-        error_count: totalFailed,
-        errors: allErrors,
-        ip_address: clientIP,
-        device_info: userAgent,
-        admin_note: admin_note || null,
-        started_at: new Date(startTime).toISOString(),
-        completed_at: new Date(completedTime).toISOString(),
-        duration_seconds: duration,
-      });
+    const { error: logError } = await insertBulkSignatureLog(supabase, {
+      bulk_batch_id: bulkBatchId,
+      admin_id: auth.user.employee_id,
+      admin_name: auth.user.username,
+      salary_month,
+      payroll_type: payrollType,
+      total_unsigned_before: unsignedCount,
+      total_processed: unsignedCount,
+      success_count: totalSuccessful,
+      error_count: totalFailed,
+      errors: allErrors,
+      ip_address: clientIP,
+      device_info: userAgent,
+      admin_note: admin_note || null,
+      started_at: new Date(startTime).toISOString(),
+      completed_at: new Date(completedTime).toISOString(),
+      duration_seconds: duration,
+    });
 
     if (logError) {
       console.error("Failed to insert bulk signature log:", logError);

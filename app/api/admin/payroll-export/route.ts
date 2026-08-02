@@ -5,6 +5,8 @@ import XLSX from "xlsx-js-style";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findSignatureLogsWithMonth } from "@/lib/signature/signature-log-repository";
+import { findSignatureSummaryForMonth } from "@/lib/signature/management-signature-repository";
 import {
   buildPayrollExportSheet,
   type PayrollExportRecord,
@@ -246,10 +248,8 @@ export async function GET(request: NextRequest) {
     const signatureLogsMap = new Map<string, PayrollSignatureLog>();
     if (month) {
       try {
-        const { data: signatureLogs, error: sigLogsError } = await supabase
-          .from("signature_logs")
-          .select("employee_id, salary_month, signed_by_name, signed_at")
-          .eq("salary_month", month);
+        const { data: signatureLogs, error: sigLogsError } =
+          await findSignatureLogsWithMonth(supabase, month);
 
         if (!sigLogsError && signatureLogs) {
           signatureLogs.forEach((log) => {
@@ -274,11 +274,8 @@ export async function GET(request: NextRequest) {
 
     if (month) {
       try {
-        const { data: signatures, error: sigError } = await supabase
-          .from("management_signatures")
-          .select("signature_type, signed_by_name, signed_at")
-          .eq("salary_month", month)
-          .eq("is_active", true);
+        const { data: signatures, error: sigError } =
+          await findSignatureSummaryForMonth(supabase, month);
 
         if (!sigError && signatures) {
           signatures.forEach((sig) => {

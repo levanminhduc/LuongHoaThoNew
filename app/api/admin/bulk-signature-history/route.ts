@@ -8,6 +8,7 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { buildBulkSignatureHistoryQuery } from "@/lib/signature/signature-log-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,23 +34,13 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let query = supabase
-      .from("admin_bulk_signature_logs")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (month) {
-      query = query.eq("salary_month", month);
-    }
-
-    if (payrollType === "t13") {
-      query = query.eq("payroll_type", "t13");
-    } else {
-      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-    }
-
-    const { data, error, count } = await query;
+    const { data, error, count } = await buildBulkSignatureHistoryQuery(
+      supabase,
+      month,
+      payrollType,
+      offset,
+      limit,
+    );
 
     if (error) {
       console.error("Error fetching bulk signature history:", error);

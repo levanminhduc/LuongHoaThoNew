@@ -63,13 +63,13 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
 ## 7. management_signatures + signature_logs + admin_bulk_signature_logs (18 lệnh)
 
-- [ ] 7.1 Liệt kê route bị chạm
-- [ ] 7.2 Fixture từ git
-- [ ] 7.3 Viết `lib/signature/signature-repository.ts` + `server-only`; kiểm tra chồng lấn với `lib/management-signature-utils.ts` và `lib/management-signature-auth.ts`
-- [ ] 7.4 Parity test; **đánh dấu riêng các truy vấn có embed `!inner`**, so nguyên văn chuỗi select
-- [ ] 7.5 Sửa route
-- [ ] 7.6 Chạy lại parity test ký nhận từ change trước
-- [ ] 7.7 GATE
+- [x] 7.1 Liệt kê route bị chạm
+- [x] 7.2 Fixture từ git
+- [x] 7.3 Viết `lib/signature/signature-repository.ts` + `server-only`; kiểm tra chồng lấn với `lib/management-signature-utils.ts` và `lib/management-signature-auth.ts` — tách 3 file (management/history/log) + `signature-select.ts`; utils đã gộp 2 truy vấn vào repository, `management-signature-auth.ts` không có truy vấn nào
+- [x] 7.4 Parity test; **đánh dấu riêng các truy vấn có embed `!inner`**, so nguyên văn chuỗi select — nhóm này không có `!inner` nào; trọng tâm chuyển sang nhánh lọc T13
+- [x] 7.5 Sửa route
+- [x] 7.6 Chạy lại parity test ký nhận từ change trước
+- [x] 7.7 GATE
 
 ## 8. column_aliases + mapping_configurations + configuration_field_mappings (25 lệnh)
 

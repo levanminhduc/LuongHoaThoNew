@@ -3,10 +3,12 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { verifyToken } from "@/lib/auth-middleware";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { type SignatureRecord } from "@/lib/management-signature-utils";
 import {
-  MANAGEMENT_SIGNATURE_SELECT,
-  type SignatureRecord,
-} from "@/lib/management-signature-utils";
+  buildSignatureHistoryCountQuery,
+  buildSignatureHistoryListQuery,
+  type SignatureHistoryFilters,
+} from "@/lib/signature/signature-history-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,63 +69,23 @@ export async function GET(request: NextRequest) {
     let totalCount = 0;
 
     try {
-      let query = supabase
-        .from("management_signatures")
-        .select("*", { count: "exact" })
-        .eq("is_active", true);
+      const filters: SignatureHistoryFilters = {
+        isT13,
+        months,
+        signatureType,
+        restrictToSignerId:
+          auth.user.role !== "admin" ? auth.user.employee_id : null,
+      };
 
-      if (isT13) {
-        query = query.eq("payroll_type", "t13");
-      } else {
-        query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-      }
-
-      if (months.length > 0) {
-        query = query.in("salary_month", months);
-      }
-
-      if (signatureType) {
-        query = query.eq("signature_type", signatureType);
-      }
-
-      if (auth.user.role !== "admin") {
-        query = query.eq("signed_by_id", auth.user.employee_id);
-      }
-
-      const { count } = await query;
+      const { count } = await buildSignatureHistoryCountQuery(
+        supabase,
+        filters,
+      );
 
       totalCount = count || 0;
 
-      let signatureQuery = supabase
-        .from("management_signatures")
-        .select(MANAGEMENT_SIGNATURE_SELECT)
-        .eq("is_active", true);
-
-      if (isT13) {
-        signatureQuery = signatureQuery.eq("payroll_type", "t13");
-      } else {
-        signatureQuery = signatureQuery.or(
-          "payroll_type.eq.monthly,payroll_type.is.null",
-        );
-      }
-
-      if (months.length > 0) {
-        signatureQuery = signatureQuery.in("salary_month", months);
-      }
-      if (signatureType) {
-        signatureQuery = signatureQuery.eq("signature_type", signatureType);
-      }
-      if (auth.user.role !== "admin") {
-        signatureQuery = signatureQuery.eq(
-          "signed_by_id",
-          auth.user.employee_id,
-        );
-      }
-
       const { data: signatureData, error: signatureError } =
-        await signatureQuery
-          .order("signed_at", { ascending: false })
-          .range(offset, offset + limit - 1);
+        await buildSignatureHistoryListQuery(supabase, filters, offset, limit);
 
       if (signatureError) {
         console.error("Error fetching signatures:", signatureError);

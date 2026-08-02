@@ -5,6 +5,10 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { SalaryMonthSchema } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findRecentSignaturesForMonth,
+  findSignatureProgressForMonth,
+} from "@/lib/signature/management-signature-repository";
 
 export async function GET(
   request: NextRequest,
@@ -105,12 +109,8 @@ export async function GET(
     };
 
     try {
-      const { data: managementSignatures, error: mgmtError } = await supabase
-        .from("management_signatures")
-        .select("signature_type, signed_at")
-        .eq("salary_month", month)
-        .eq("is_active", true)
-        .order("signed_at", { ascending: false });
+      const { data: managementSignatures, error: mgmtError } =
+        await findSignatureProgressForMonth(supabase, month);
 
       if (!mgmtError && managementSignatures) {
         const completedTypes = managementSignatures.map(
@@ -151,13 +151,7 @@ export async function GET(
 
     try {
       const { data: recentMgmtSignatures, error: recentMgmtError } =
-        await supabase
-          .from("management_signatures")
-          .select("signature_type, signed_by_name, signed_at")
-          .eq("salary_month", month)
-          .eq("is_active", true)
-          .order("signed_at", { ascending: false })
-          .limit(3);
+        await findRecentSignaturesForMonth(supabase, month);
 
       if (!recentMgmtError && recentMgmtSignatures) {
         recentActivity.push(

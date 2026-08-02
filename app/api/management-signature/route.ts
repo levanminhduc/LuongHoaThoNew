@@ -10,6 +10,10 @@ import {
   ManagementSignatureRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findActiveSignatureSigner,
+  insertManagementSignature,
+} from "@/lib/signature/management-signature-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -129,23 +133,13 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      let existingQuery = supabase
-        .from("management_signatures")
-        .select("signed_by_id, signed_by_name, signed_at, department")
-        .eq("salary_month", salary_month)
-        .eq("signature_type", signature_type)
-        .eq("is_active", true);
-
-      if (isT13Month) {
-        existingQuery = existingQuery.eq("payroll_type", "t13");
-      } else {
-        existingQuery = existingQuery.or(
-          "payroll_type.eq.monthly,payroll_type.is.null",
-        );
-      }
-
       const { data: existingSignature, error: existingError } =
-        await existingQuery.single();
+        await findActiveSignatureSigner(
+          supabase,
+          salary_month,
+          signature_type,
+          isT13Month,
+        );
 
       if (!existingError && existingSignature) {
         return NextResponse.json(
@@ -190,11 +184,8 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      const { data: insertedSignature, error: insertError } = await supabase
-        .from("management_signatures")
-        .insert(signatureRecord)
-        .select()
-        .single();
+      const { data: insertedSignature, error: insertError } =
+        await insertManagementSignature(supabase, signatureRecord);
 
       if (insertError) {
         console.error("Error inserting signature:", insertError);
