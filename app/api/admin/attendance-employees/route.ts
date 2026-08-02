@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
-import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import {
   parseSchema,
   createValidationErrorResponse,
@@ -12,6 +11,10 @@ import {
   findAttendancePeriods,
   findMonthlyAttendanceSummaries,
 } from "@/lib/attendance/attendance-repository";
+import {
+  buildAttendanceEmployeesQuery,
+  findAttendanceEmployeeDepartments,
+} from "@/lib/employee/employee-list-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,26 +88,11 @@ export async function GET(request: NextRequest) {
 
     const employeeIds = attendanceData.map((a) => a.employee_id);
 
-    let employeeQuery = supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu, is_active", {
-        count: "exact",
-      })
-      .in("employee_id", employeeIds)
-      .eq("is_active", true);
-
-    if (department && department !== "all") {
-      employeeQuery = employeeQuery.eq("department", department);
-    }
-
-    if (search && search.length >= 2) {
-      const safeSearch = sanitizePostgrestValue(search);
-      if (safeSearch) {
-        employeeQuery = employeeQuery.or(
-          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
-        );
-      }
-    }
+    const employeeQuery = buildAttendanceEmployeesQuery(supabase, employeeIds, {
+      search,
+      department,
+      restrictToIds: null,
+    });
 
     const {
       data: employees,
@@ -145,11 +133,10 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const { data: deptData } = await supabase
-      .from("employees")
-      .select("department")
-      .in("employee_id", employeeIds)
-      .eq("is_active", true);
+    const { data: deptData } = await findAttendanceEmployeeDepartments(
+      supabase,
+      employeeIds,
+    );
 
     const departments = [
       ...new Set((deptData || []).map((d) => d.department)),

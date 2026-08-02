@@ -12,6 +12,14 @@ import { getVietnamMonth, getVietnamYear } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findDepartmentsPayrollSummary } from "@/lib/payroll/payroll-admin-repository";
 import { findActiveDepartmentPermissions } from "@/lib/department/department-repository";
+import {
+  findActiveDepartmentNames,
+  findActiveManagersByPosition,
+  findAllDepartmentNames,
+  findDepartmentByName,
+  findDepartmentsOfEmployees,
+} from "@/lib/employee/employee-admin-repository";
+import { buildEmployeeTotalCountQuery } from "@/lib/employee/employee-list-repository";
 
 // GET all departments with statistics
 export async function GET(request: NextRequest) {
@@ -36,11 +44,8 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year") || String(getVietnamYear());
 
     // Get ALL departments (including those with only inactive employees)
-    const { data: allDepartments, error: allDeptError } = await supabase
-      .from("employees")
-      .select("department")
-      .not("department", "is", null)
-      .neq("department", "");
+    const { data: allDepartments, error: allDeptError } =
+      await findAllDepartmentNames(supabase);
 
     if (allDeptError) {
       console.error("All departments query error:", allDeptError);
@@ -51,12 +56,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get departments with ACTIVE employees only
-    const { data: activeDepartments, error: activeDeptError } = await supabase
-      .from("employees")
-      .select("department")
-      .eq("is_active", true)
-      .not("department", "is", null)
-      .neq("department", "");
+    const { data: activeDepartments, error: activeDeptError } =
+      await findActiveDepartmentNames(supabase);
 
     if (activeDeptError) {
       console.error("Active departments query error:", activeDeptError);
@@ -115,26 +116,13 @@ export async function GET(request: NextRequest) {
       allManagersResult,
       allSupervisorsResult,
     ] = await Promise.all([
-      supabase
-        .from("employees")
-        .select("department")
-        .in("department", uniqueDepartments),
+      findDepartmentsOfEmployees(supabase, uniqueDepartments),
 
       buildPayrollQuery(),
 
-      supabase
-        .from("employees")
-        .select("employee_id, full_name, department")
-        .in("department", uniqueDepartments)
-        .eq("chuc_vu", "truong_phong")
-        .eq("is_active", true),
+      findActiveManagersByPosition(supabase, uniqueDepartments, "truong_phong"),
 
-      supabase
-        .from("employees")
-        .select("employee_id, full_name, department")
-        .in("department", uniqueDepartments)
-        .eq("chuc_vu", "to_truong")
-        .eq("is_active", true),
+      findActiveManagersByPosition(supabase, uniqueDepartments, "to_truong"),
     ]);
 
     if (allEmployeesResult.error) {
@@ -245,9 +233,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate total employees across ALL employees (including inactive)
-    const { count: totalAllEmployees, error: totalEmpError } = await supabase
-      .from("employees")
-      .select("*", { count: "exact", head: true });
+    const { count: totalAllEmployees, error: totalEmpError } =
+      await buildEmployeeTotalCountQuery(supabase);
 
     if (totalEmpError) {
       console.error("Total employees count error:", totalEmpError);
@@ -317,11 +304,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
 
     // Check if department already exists
-    const { data: existingDept } = await supabase
-      .from("employees")
-      .select("department")
-      .eq("department", name)
-      .limit(1);
+    const { data: existingDept } = await findDepartmentByName(supabase, name);
 
     if (existingDept && existingDept.length > 0) {
       return NextResponse.json(

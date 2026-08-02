@@ -3,7 +3,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import {
   parseSchema,
   createValidationErrorResponse,
@@ -14,6 +13,11 @@ import {
   findPayrollSignedFlagsForMonth,
   findPayrollSummaryForEmployees,
 } from "@/lib/payroll/payroll-admin-repository";
+import {
+  buildAllEmployeesCountQuery,
+  buildAllEmployeesDepartmentStatsQuery,
+  buildAllEmployeesListQuery,
+} from "@/lib/employee/employee-list-repository";
 
 const AllEmployeesQuerySchema = pageQuerySchema(50);
 
@@ -76,33 +80,22 @@ export async function GET(request: NextRequest) {
         [];
     }
 
-    let employeeQuery = supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu, is_active")
-      .order("department")
-      .order("chuc_vu", { ascending: false })
-      .order("full_name");
+    const listFilters = {
+      search,
+      department,
+      restrictToIds:
+        unsignedOnly && unsignedEmployeeIds.length > 0
+          ? unsignedEmployeeIds
+          : null,
+    };
 
-    if (!includeInactive) {
-      employeeQuery = employeeQuery.eq("is_active", true);
-    }
+    const employeeQuery = buildAllEmployeesListQuery(
+      supabase,
+      listFilters,
+      includeInactive,
+    );
 
-    if (search && search.length >= 2) {
-      const safeSearch = sanitizePostgrestValue(search);
-      if (safeSearch) {
-        employeeQuery = employeeQuery.or(
-          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
-        );
-      }
-    }
-
-    if (department && department !== "all") {
-      employeeQuery = employeeQuery.eq("department", department);
-    }
-
-    if (unsignedOnly && unsignedEmployeeIds.length > 0) {
-      employeeQuery = employeeQuery.in("employee_id", unsignedEmployeeIds);
-    } else if (unsignedOnly && unsignedEmployeeIds.length === 0) {
+    if (unsignedOnly && unsignedEmployeeIds.length === 0) {
       return NextResponse.json({
         success: true,
         employees: [],
@@ -132,33 +125,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    let countQuery = supabase
-      .from("employees")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", includeInactive ? undefined : true);
-
-    if (search && search.length >= 2) {
-      const safeSearch = sanitizePostgrestValue(search);
-      if (safeSearch) {
-        countQuery = countQuery.or(
-          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
-        );
-      }
-    }
-
-    if (department && department !== "all") {
-      countQuery = countQuery.eq("department", department);
-    }
-
-    if (unsignedOnly && unsignedEmployeeIds.length > 0) {
-      countQuery = countQuery.in("employee_id", unsignedEmployeeIds);
-    }
+    const countQuery = buildAllEmployeesCountQuery(
+      supabase,
+      listFilters,
+      includeInactive,
+    );
 
     const { count: totalCount } = await countQuery;
 
-    employeeQuery = employeeQuery.range(offset, offset + limit - 1);
-
-    const { data: employees, error: employeeError } = await employeeQuery;
+    const { data: employees, error: employeeError } = await employeeQuery.range(
+      offset,
+      offset + limit - 1,
+    );
 
     if (employeeError) {
       console.error("Error fetching employees:", employeeError);
@@ -192,28 +170,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let deptStatsQuery = supabase.from("employees").select("department");
-
-    if (!includeInactive) {
-      deptStatsQuery = deptStatsQuery.eq("is_active", true);
-    }
-
-    if (search && search.length >= 2) {
-      const safeSearch = sanitizePostgrestValue(search);
-      if (safeSearch) {
-        deptStatsQuery = deptStatsQuery.or(
-          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
-        );
-      }
-    }
-
-    if (department && department !== "all") {
-      deptStatsQuery = deptStatsQuery.eq("department", department);
-    }
-
-    if (unsignedOnly && unsignedEmployeeIds.length > 0) {
-      deptStatsQuery = deptStatsQuery.in("employee_id", unsignedEmployeeIds);
-    }
+    const deptStatsQuery = buildAllEmployeesDepartmentStatsQuery(
+      supabase,
+      listFilters,
+      includeInactive,
+    );
 
     const { data: deptStats } = await deptStatsQuery;
 

@@ -15,6 +15,14 @@ import {
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findAnyPayrollForEmployee } from "@/lib/payroll/payroll-admin-repository";
+import {
+  deactivateEmployee,
+  deleteEmployee,
+  findAdminEmployeeRecord,
+  findEmployeeForEdit,
+  findEmployeeNameById,
+  updateEmployeeById,
+} from "@/lib/employee/employee-admin-repository";
 
 export async function PUT(
   request: NextRequest,
@@ -63,13 +71,7 @@ export async function PUT(
     const supabase = createServiceClient();
 
     // Check if current employee exists and get current data for audit
-    const { data: existing } = await supabase
-      .from("employees")
-      .select(
-        "employee_id, full_name, department, chuc_vu, phone_number, is_active",
-      )
-      .eq("employee_id", id)
-      .single();
+    const { data: existing } = await findEmployeeForEdit(supabase, id);
 
     if (!existing) {
       return NextResponse.json(
@@ -119,14 +121,8 @@ export async function PUT(
       }
 
       // Update additional fields (employee_id already updated by cascade)
-      const { data: updatedEmployee, error: updateError } = await supabase
-        .from("employees")
-        .update(updateData)
-        .eq("employee_id", employee_id) // Use new employee_id
-        .select(
-          "employee_id, full_name, department, chuc_vu, phone_number, is_active, created_at, updated_at",
-        )
-        .single();
+      const { data: updatedEmployee, error: updateError } =
+        await updateEmployeeById(supabase, employee_id, updateData);
 
       if (updateError) {
         console.error("Error updating additional fields:", updateError);
@@ -203,14 +199,11 @@ export async function PUT(
       updateData.last_password_change_at = getVietnamTimestamp();
     }
 
-    const { data: updatedEmployee, error } = await supabase
-      .from("employees")
-      .update(updateData)
-      .eq("employee_id", id)
-      .select(
-        "employee_id, full_name, department, chuc_vu, phone_number, is_active, created_at, updated_at",
-      )
-      .single();
+    const { data: updatedEmployee, error } = await updateEmployeeById(
+      supabase,
+      id,
+      updateData,
+    );
 
     if (error) {
       console.error("Error updating employee:", error);
@@ -362,11 +355,7 @@ export async function DELETE(
     const { id } = resolvedParams;
     const supabase = createServiceClient();
 
-    const { data: existing } = await supabase
-      .from("employees")
-      .select("employee_id, full_name")
-      .eq("employee_id", id)
-      .single();
+    const { data: existing } = await findEmployeeNameById(supabase, id);
 
     if (!existing) {
       return NextResponse.json(
@@ -381,10 +370,10 @@ export async function DELETE(
     );
 
     if (payrollCheck && payrollCheck.length > 0) {
-      const { error: updateError } = await supabase
-        .from("employees")
-        .update({ is_active: false, updated_at: getVietnamTimestamp() })
-        .eq("employee_id", id);
+      const { error: updateError } = await deactivateEmployee(supabase, id, {
+        is_active: false,
+        updated_at: getVietnamTimestamp(),
+      });
 
       if (updateError) {
         console.error("Error deactivating employee:", updateError);
@@ -433,10 +422,7 @@ export async function DELETE(
         { headers: CACHE_HEADERS.sensitive },
       );
     } else {
-      const { error: deleteError } = await supabase
-        .from("employees")
-        .delete()
-        .eq("employee_id", id);
+      const { error: deleteError } = await deleteEmployee(supabase, id);
 
       if (deleteError) {
         console.error("Error deleting employee:", deleteError);
@@ -508,13 +494,10 @@ export async function GET(
     const { id } = resolvedParams;
     const supabase = createServiceClient();
 
-    const { data: employee, error } = await supabase
-      .from("employees")
-      .select(
-        "employee_id, full_name, department, chuc_vu, phone_number, is_active, created_at, updated_at",
-      )
-      .eq("employee_id", id)
-      .single();
+    const { data: employee, error } = await findAdminEmployeeRecord(
+      supabase,
+      id,
+    );
 
     if (error || !employee) {
       return NextResponse.json(

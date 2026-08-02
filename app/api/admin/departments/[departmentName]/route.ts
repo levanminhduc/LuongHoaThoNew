@@ -14,6 +14,7 @@ import {
   findDepartmentPayrollHistory,
   type DepartmentHistoryPeriod,
 } from "@/lib/payroll/payroll-admin-repository";
+import { findActiveDepartmentMembers } from "@/lib/employee/employee-admin-repository";
 
 interface DepartmentDetailParams {
   params: Promise<{
@@ -88,20 +89,8 @@ export async function GET(
     }
 
     // Get department employees with their payroll data
-    const { data: employees, error: employeesError } = await supabase
-      .from("employees")
-      .select(
-        `
-        employee_id,
-        full_name,
-        chuc_vu,
-        department,
-        is_active
-      `,
-      )
-      .eq("department", departmentName)
-      .eq("is_active", true)
-      .order("full_name", { ascending: true });
+    const { data: employees, error: employeesError } =
+      await findActiveDepartmentMembers(supabase, departmentName);
 
     if (employeesError) {
       console.error("Employees query error:", employeesError);

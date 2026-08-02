@@ -6,7 +6,6 @@ import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
-import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   EmployeeListQuerySchema,
@@ -15,6 +14,12 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  buildAdminEmployeeListQuery,
+  findDistinctDepartments,
+  findEmployeeIdByCode,
+  insertEmployee,
+} from "@/lib/employee/employee-admin-repository";
 
 /**
  * @swagger
@@ -104,37 +109,16 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let query = supabase
-      .from("employees")
-      .select(
-        "employee_id, full_name, department, chuc_vu, phone_number, is_active, created_at, updated_at",
-        { count: "exact" },
-      );
-
-    if (search) {
-      const safeSearch = sanitizePostgrestValue(search);
-      if (safeSearch) {
-        query = query.or(
-          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%,phone_number.ilike.%${safeSearch}%`,
-        );
-      }
-    }
-
-    if (department) {
-      query = query.eq("department", department);
-    }
-
-    if (role) {
-      query = query.eq("chuc_vu", role);
-    }
-
     const {
       data: employees,
       error,
       count,
-    } = await query
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+    } = await buildAdminEmployeeListQuery(
+      supabase,
+      { search, department, role },
+      offset,
+      limit,
+    );
 
     if (error) {
       console.error("Error fetching employees:", error);
@@ -144,11 +128,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: departments } = await supabase
-      .from("employees")
-      .select("department")
-      .not("department", "is", null)
-      .not("department", "eq", "");
+    const { data: departments } = await findDistinctDepartments(supabase);
 
     const uniqueDepartments = [
       ...new Set(departments?.map((d) => d.department) || []),
@@ -293,11 +273,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: existing } = await supabase
-      .from("employees")
-      .select("employee_id")
-      .eq("employee_id", employee_id)
-      .single();
+    const { data: existing } = await findEmployeeIdByCode(
+      supabase,
+      employee_id,
+    );
 
     if (existing) {
       return NextResponse.json(
@@ -311,23 +290,17 @@ export async function POST(request: NextRequest) {
       ? await bcrypt.hash(password, BCRYPT_ROUNDS)
       : cccd_hash;
 
-    const { data: newEmployee, error } = await supabase
-      .from("employees")
-      .insert({
-        employee_id,
-        full_name,
-        cccd_hash,
-        password_hash,
-        last_password_change_at: getVietnamTimestamp(),
-        chuc_vu,
-        department: department || null,
-        phone_number: phone_number || null,
-        is_active,
-      })
-      .select(
-        "employee_id, full_name, department, chuc_vu, phone_number, is_active, created_at, updated_at",
-      )
-      .single();
+    const { data: newEmployee, error } = await insertEmployee(supabase, {
+      employee_id,
+      full_name,
+      cccd_hash,
+      password_hash,
+      last_password_change_at: getVietnamTimestamp(),
+      chuc_vu,
+      department: department || null,
+      phone_number: phone_number || null,
+      is_active,
+    });
 
     if (error) {
       console.error("Error creating employee:", error);

@@ -17,6 +17,8 @@ import {
   findPayrollsByEmployeeIdLike,
 } from "@/lib/payroll/payroll-search-repository";
 import { findEmployeeDirectoryByIds } from "@/lib/employee/employee-directory-repository";
+import { buildEmployeeTotalCountQuery } from "@/lib/employee/employee-list-repository";
+import { probeEmployeesTable } from "@/lib/employee/employee-directory-repository";
 
 interface EmployeeInfo {
   full_name: string | null;
@@ -62,10 +64,7 @@ export async function GET(request: NextRequest) {
 
     // Test basic database connectivity first
     try {
-      const { error: testError } = await supabase
-        .from("employees")
-        .select("employee_id")
-        .limit(1);
+      const { error: testError } = await probeEmployeesTable(supabase);
 
       if (testError) {
         console.error("Database connectivity failed:", testError?.message);
@@ -91,9 +90,8 @@ export async function GET(request: NextRequest) {
     const { count: payrollCount, error: payrollCountError } =
       await buildPayrollTotalCountQuery(supabase);
 
-    const { count: employeeCount, error: employeeCountError } = await supabase
-      .from("employees")
-      .select("*", { count: "exact", head: true });
+    const { count: employeeCount, error: employeeCountError } =
+      await buildEmployeeTotalCountQuery(supabase);
 
     // If count queries fail, try simple existence check
     if (payrollCountError || employeeCountError) {
@@ -101,7 +99,7 @@ export async function GET(request: NextRequest) {
         await findAnyPayrollId(supabase);
 
       const { data: employeeExists, error: employeeExistsError } =
-        await supabase.from("employees").select("employee_id").limit(1);
+        await probeEmployeesTable(supabase);
 
       // If existence check also fails, there's a fundamental access issue
       if (payrollExistsError || employeeExistsError) {

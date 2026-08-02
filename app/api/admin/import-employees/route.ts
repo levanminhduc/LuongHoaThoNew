@@ -9,6 +9,10 @@ import bcrypt from "bcryptjs";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findEmployeeIdByCode,
+  insertImportedEmployee,
+} from "@/lib/employee/employee-admin-repository";
 
 // Hash CCCD for security
 async function hashCCCD(cccd: string): Promise<string> {
@@ -85,11 +89,10 @@ export async function POST(request: NextRequest) {
         const cccdHash = await hashCCCD(employee.cccd);
 
         // Check if employee already exists
-        const { data: existingEmployee } = await supabase
-          .from("employees")
-          .select("employee_id")
-          .eq("employee_id", employee.employee_id)
-          .single();
+        const { data: existingEmployee } = await findEmployeeIdByCode(
+          supabase,
+          employee.employee_id,
+        );
 
         if (existingEmployee) {
           insertErrors.push({
@@ -99,19 +102,15 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const { error } = await supabase
-          .from("employees")
-          .insert({
-            employee_id: employee.employee_id,
-            full_name: employee.full_name,
-            cccd_hash: cccdHash,
-            department: employee.department,
-            chuc_vu: employee.chuc_vu,
-            phone_number: employee.phone_number || null,
-            is_active: employee.is_active,
-          })
-          .select()
-          .single();
+        const { error } = await insertImportedEmployee(supabase, {
+          employee_id: employee.employee_id,
+          full_name: employee.full_name,
+          cccd_hash: cccdHash,
+          department: employee.department,
+          chuc_vu: employee.chuc_vu,
+          phone_number: employee.phone_number || null,
+          is_active: employee.is_active,
+        });
 
         if (error) {
           console.error("Supabase insert error:", error);

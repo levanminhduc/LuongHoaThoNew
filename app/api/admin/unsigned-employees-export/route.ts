@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import * as XLSX from "xlsx";
-import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findUnsignedPayrollsForExport } from "@/lib/payroll/payroll-signature-repository";
+import { buildUnsignedEmployeesExportQuery } from "@/lib/employee/employee-list-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,27 +56,11 @@ export async function GET(request: NextRequest) {
 
     const unsignedEmployeeIds = payrollsData.map((p) => p.employee_id);
 
-    let employeeQuery = supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu")
-      .in("employee_id", unsignedEmployeeIds)
-      .eq("is_active", true)
-      .order("department")
-      .order("chuc_vu", { ascending: false })
-      .order("full_name");
-
-    if (search && search.length >= 2) {
-      const safeSearch = sanitizePostgrestValue(search);
-      if (safeSearch) {
-        employeeQuery = employeeQuery.or(
-          `employee_id.ilike.%${safeSearch}%,full_name.ilike.%${safeSearch}%`,
-        );
-      }
-    }
-
-    if (department && department !== "all") {
-      employeeQuery = employeeQuery.eq("department", department);
-    }
+    const employeeQuery = buildUnsignedEmployeesExportQuery(
+      supabase,
+      unsignedEmployeeIds,
+      { search, department, restrictToIds: null },
+    );
 
     const { data: employees, error: employeeError } = await employeeQuery;
 
