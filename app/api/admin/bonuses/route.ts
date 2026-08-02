@@ -4,33 +4,21 @@ import { csrfProtection } from "@/lib/security-middleware";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { BonusTypeSchema, BonusPeriodSchema } from "@/lib/validations/bonus";
-import type { BonusType } from "@/lib/validations/bonus";
 import { toErrorResponse } from "@/lib/errors/app-error";
-
-interface BonusPeriodTarget {
-  bonus_type: BonusType;
-  bonus_period: string;
-}
+import {
+  buildBonusDeleteQuery,
+  findBonusPeriodByImportBatch,
+} from "@/lib/bonus/bonus-repository";
+import {
+  hasActiveManagementSignature,
+  type BonusPeriodTarget,
+} from "@/lib/bonus/bonus-signature-repository";
 
 function badRequest(message: string) {
   return NextResponse.json(
     { error: message },
     { status: 400, headers: CACHE_HEADERS.sensitive },
   );
-}
-
-async function hasActiveManagementSignature(
-  supabase: ReturnType<typeof createServiceClient>,
-  target: BonusPeriodTarget,
-): Promise<boolean> {
-  const { data } = await supabase
-    .from("bonus_management_signatures")
-    .select("id")
-    .eq("bonus_type", target.bonus_type)
-    .eq("bonus_period", target.bonus_period)
-    .eq("is_active", true)
-    .limit(1);
-  return (data?.length ?? 0) > 0;
 }
 
 export async function DELETE(request: NextRequest) {
@@ -57,12 +45,8 @@ export async function DELETE(request: NextRequest) {
 
     let target: BonusPeriodTarget;
     if (importBatchId) {
-      const { data: batchRow, error: batchError } = await supabase
-        .from("employee_bonuses")
-        .select("bonus_type, bonus_period")
-        .eq("import_batch_id", importBatchId)
-        .limit(1)
-        .single();
+      const { data: batchRow, error: batchError } =
+        await findBonusPeriodByImportBatch(supabase, importBatchId);
       if (batchError || !batchRow) {
         return badRequest("Không tìm thấy dữ liệu của lần import này");
       }
@@ -79,18 +63,14 @@ export async function DELETE(request: NextRequest) {
       return badRequest("Đợt đã được ký duyệt, cần hủy chữ ký trước");
     }
 
-    let deleteQuery = supabase
-      .from("employee_bonuses")
-      .delete({ count: "exact" });
-    if (importBatchId) {
-      deleteQuery = deleteQuery.eq("import_batch_id", importBatchId);
-    } else {
-      deleteQuery = deleteQuery
-        .eq("bonus_type", target.bonus_type)
-        .eq("bonus_period", target.bonus_period);
-    }
-
-    const { count, error: deleteError } = await deleteQuery;
+    const { count, error: deleteError } = await buildBonusDeleteQuery(
+      supabase,
+      {
+        importBatchId,
+        bonusType: target.bonus_type,
+        bonusPeriod: target.bonus_period,
+      },
+    );
     if (deleteError) {
       console.error("Delete bonuses error:", deleteError);
       return NextResponse.json(

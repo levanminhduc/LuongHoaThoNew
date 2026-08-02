@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations/bonus";
 import type { BonusListRow, BonusListResponse } from "@/lib/bonus/bonus-types";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { buildBonusListQuery } from "@/lib/bonus/bonus-repository";
 
 interface BonusRowWithEmployee {
   employee_id: string;
@@ -74,21 +75,11 @@ export async function GET(request: NextRequest) {
     );
 
     const supabase = createServiceClient();
-    let query = supabase
-      .from("employee_bonuses")
-      .select(
-        "employee_id, bonus_type, bonus_period, bonus_title, amount, detail_data, is_signed, signed_at, employees!inner(full_name, department, chuc_vu)",
-      )
-      .eq("bonus_type", bonusType.data)
-      .eq("bonus_period", bonusPeriod.data);
-
-    if (allowedDepartments !== null) {
-      query = query.in("employees.department", allowedDepartments);
-    }
-
-    const { data, error } = await query.order("employee_id", {
-      ascending: true,
-    });
+    const { data, error } = await buildBonusListQuery(
+      supabase,
+      { bonusType: bonusType.data, bonusPeriod: bonusPeriod.data },
+      allowedDepartments,
+    );
 
     if (error) {
       console.error("Get bonuses error:", error);

@@ -12,6 +12,7 @@ import type {
   BonusPeriodsResponse,
 } from "@/lib/bonus/bonus-types";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { buildBonusPeriodListQuery } from "@/lib/bonus/bonus-repository";
 
 interface PeriodRow {
   bonus_type: BonusType;
@@ -53,19 +54,10 @@ export async function GET(request: NextRequest) {
     );
 
     const supabase = createServiceClient();
-    let query = supabase
-      .from("employee_bonuses")
-      .select(
-        "bonus_type, bonus_period, bonus_title, created_at, employees!inner(department)",
-      );
-
-    if (allowedDepartments !== null) {
-      query = query.in("employees.department", allowedDepartments);
-    }
-
-    const { data, error } = await query.order("created_at", {
-      ascending: false,
-    });
+    const { data, error } = await buildBonusPeriodListQuery(
+      supabase,
+      allowedDepartments,
+    );
 
     if (error) {
       console.error("Get bonus periods error:", error);

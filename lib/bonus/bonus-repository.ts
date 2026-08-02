@@ -1,33 +1,30 @@
 import "server-only";
 import type { createServiceClient } from "@/utils/supabase/server";
 import type { BonusType } from "@/lib/validations/bonus";
-import { BONUS_SIGNATURE_SELECT } from "@/lib/bonus/bonus-select";
 
 export type SupabaseServiceClient = ReturnType<typeof createServiceClient>;
 
-const SIGNER_COLUMNS = "employee_id, full_name, department, chuc_vu";
+const BONUS_PERIOD_LIST_SELECT =
+  "bonus_type, bonus_period, bonus_title, created_at, employees!inner(department)";
+
+const BONUS_LIST_SELECT =
+  "employee_id, bonus_type, bonus_period, bonus_title, amount, detail_data, is_signed, signed_at, employees!inner(full_name, department, chuc_vu)";
+
+const EMPLOYEE_BONUS_SELECT =
+  "bonus_type, bonus_period, bonus_title, amount, detail_data, is_signed, signed_at";
 
 export interface BonusSignFlag {
   employee_id: string;
   is_signed: boolean;
 }
 
-export interface BonusSignerRecord {
-  employee_id: string;
-  full_name: string;
-  department: string;
-  chuc_vu: string;
+export interface BonusPeriodKey {
+  bonusType: string;
+  bonusPeriod: string;
 }
 
-export interface BonusSignatureRow {
-  signature_type: string;
-  bonus_type: string;
-  bonus_period: string;
-  signed_by_id: string;
-  signed_by_name: string;
-  department: string | null;
-  signed_at: string;
-  notes: string | null;
+export interface BonusDeleteFilters extends BonusPeriodKey {
+  importBatchId: string | null;
 }
 
 export async function findBonusSignFlags(
@@ -48,73 +45,112 @@ export async function findBonusSignFlags(
   return (data ?? []) as BonusSignFlag[];
 }
 
-export async function findActiveSigner(
+export function findBonusByEmployeeAndPeriod(
   supabase: SupabaseServiceClient,
   employeeId: string,
-): Promise<BonusSignerRecord | null> {
-  const { data, error } = await supabase
-    .from("employees")
-    .select(SIGNER_COLUMNS)
+  key: BonusPeriodKey,
+) {
+  return supabase
+    .from("employee_bonuses")
+    .select("id")
     .eq("employee_id", employeeId)
-    .eq("is_active", true)
+    .eq("bonus_type", key.bonusType)
+    .eq("bonus_period", key.bonusPeriod)
     .single();
-
-  if (error || !data) {
-    return null;
-  }
-  return data as unknown as BonusSignerRecord;
 }
 
-export async function findActiveBonusSignatures(
+export function updateBonusById(
   supabase: SupabaseServiceClient,
-  bonusType: BonusType,
-  bonusPeriod: string,
-): Promise<BonusSignatureRow[] | null> {
-  const { data, error } = await supabase
-    .from("bonus_management_signatures")
-    .select(BONUS_SIGNATURE_SELECT)
-    .eq("bonus_type", bonusType)
-    .eq("bonus_period", bonusPeriod)
-    .eq("is_active", true);
-
-  if (error) {
-    console.error("Error fetching bonus signatures:", error);
-    return null;
-  }
-  return (data ?? []) as unknown as BonusSignatureRow[];
+  bonusId: number,
+  bonusRecord: Record<string, unknown>,
+) {
+  return supabase
+    .from("employee_bonuses")
+    .update(bonusRecord)
+    .eq("id", bonusId);
 }
 
-export async function findActiveBonusSignatureByType(
+export function insertBonus(
   supabase: SupabaseServiceClient,
-  bonusType: BonusType,
-  bonusPeriod: string,
-  signatureType: string,
-): Promise<BonusSignatureRow | null> {
-  const { data } = await supabase
-    .from("bonus_management_signatures")
-    .select(BONUS_SIGNATURE_SELECT)
-    .eq("bonus_type", bonusType)
-    .eq("bonus_period", bonusPeriod)
-    .eq("signature_type", signatureType)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  return (data as unknown as BonusSignatureRow) ?? null;
+  bonusRecord: Record<string, unknown>,
+  createdAt: string,
+) {
+  return supabase
+    .from("employee_bonuses")
+    .insert({ ...bonusRecord, created_at: createdAt });
 }
 
-export async function insertBonusSignature(
+export function findBonusPeriodByImportBatch(
   supabase: SupabaseServiceClient,
-  record: Record<string, unknown>,
-): Promise<BonusSignatureRow | null> {
-  const { data, error } = await supabase
-    .from("bonus_management_signatures")
-    .insert(record)
-    .select(BONUS_SIGNATURE_SELECT)
+  importBatchId: string,
+) {
+  return supabase
+    .from("employee_bonuses")
+    .select("bonus_type, bonus_period")
+    .eq("import_batch_id", importBatchId)
+    .limit(1)
     .single();
+}
 
-  if (error || !data) {
-    console.error("Error inserting bonus signature:", error);
-    return null;
+export function buildBonusDeleteQuery(
+  supabase: SupabaseServiceClient,
+  filters: BonusDeleteFilters,
+) {
+  const deleteQuery = supabase
+    .from("employee_bonuses")
+    .delete({ count: "exact" });
+
+  if (filters.importBatchId) {
+    return deleteQuery.eq("import_batch_id", filters.importBatchId);
   }
-  return data as unknown as BonusSignatureRow;
+
+  return deleteQuery
+    .eq("bonus_type", filters.bonusType)
+    .eq("bonus_period", filters.bonusPeriod);
+}
+
+export function buildBonusPeriodListQuery(
+  supabase: SupabaseServiceClient,
+  allowedDepartments: string[] | null,
+) {
+  const query = supabase
+    .from("employee_bonuses")
+    .select(BONUS_PERIOD_LIST_SELECT);
+
+  const scoped =
+    allowedDepartments === null
+      ? query
+      : query.in("employees.department", allowedDepartments);
+
+  return scoped.order("created_at", { ascending: false });
+}
+
+export function buildBonusListQuery(
+  supabase: SupabaseServiceClient,
+  key: BonusPeriodKey,
+  allowedDepartments: string[] | null,
+) {
+  const query = supabase
+    .from("employee_bonuses")
+    .select(BONUS_LIST_SELECT)
+    .eq("bonus_type", key.bonusType)
+    .eq("bonus_period", key.bonusPeriod);
+
+  const scoped =
+    allowedDepartments === null
+      ? query
+      : query.in("employees.department", allowedDepartments);
+
+  return scoped.order("employee_id", { ascending: true });
+}
+
+export function findEmployeeBonuses(
+  supabase: SupabaseServiceClient,
+  employeeId: string,
+) {
+  return supabase
+    .from("employee_bonuses")
+    .select(EMPLOYEE_BONUS_SELECT)
+    .eq("employee_id", employeeId)
+    .order("created_at", { ascending: false });
 }

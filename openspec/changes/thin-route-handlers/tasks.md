@@ -54,12 +54,12 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
 ## 6. employee_bonuses + bonus_management_signatures (9 lệnh)
 
-- [ ] 6.1 Liệt kê route bị chạm
-- [ ] 6.2 Fixture từ git
-- [ ] 6.3 Mở rộng `lib/bonus/bonus-repository.ts`; tách file nếu vượt 200 dòng
-- [ ] 6.4 Parity test
-- [ ] 6.5 Sửa route
-- [ ] 6.6 GATE
+- [x] 6.1 Liệt kê route bị chạm
+- [x] 6.2 Fixture từ git
+- [x] 6.3 Mở rộng `lib/bonus/bonus-repository.ts`; tách file nếu vượt 200 dòng — đã tách `bonus-signature-repository.ts` (156 + 123 dòng)
+- [x] 6.4 Parity test
+- [x] 6.5 Sửa route
+- [x] 6.6 GATE
 
 ## 7. management_signatures + signature_logs + admin_bulk_signature_logs (18 lệnh)
 

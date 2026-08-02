@@ -13,7 +13,7 @@ import {
   findActiveBonusSignatureByType,
   findActiveSigner,
   insertBonusSignature,
-} from "@/lib/bonus/bonus-repository";
+} from "@/lib/bonus/bonus-signature-repository";
 
 export async function createBonusManagementSignature(
   supabase: SupabaseServiceClient,

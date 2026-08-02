@@ -18,6 +18,11 @@ import {
   findColumnIndex,
   parseBonusRows,
 } from "@/lib/bonus/bonus-import-parser";
+import {
+  findBonusByEmployeeAndPeriod,
+  insertBonus,
+  updateBonusById,
+} from "@/lib/bonus/bonus-repository";
 import type { BonusImportResult } from "@/lib/bonus/bonus-types";
 import {
   type ImportErrorRecord,
@@ -188,13 +193,11 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const { data: existingBonus, error: checkError } = await supabase
-          .from("employee_bonuses")
-          .select("id")
-          .eq("employee_id", parsedRow.employee_id)
-          .eq("bonus_type", meta.bonus_type)
-          .eq("bonus_period", meta.bonus_period)
-          .single();
+        const { data: existingBonus, error: checkError } =
+          await findBonusByEmployeeAndPeriod(supabase, parsedRow.employee_id, {
+            bonusType: meta.bonus_type,
+            bonusPeriod: meta.bonus_period,
+          });
 
         if (checkError && checkError.code !== "PGRST116") {
           errors.push({
@@ -220,10 +223,11 @@ export async function POST(request: NextRequest) {
         };
 
         if (existingBonus) {
-          const { error: updateError } = await supabase
-            .from("employee_bonuses")
-            .update(bonusRecord)
-            .eq("id", existingBonus.id);
+          const { error: updateError } = await updateBonusById(
+            supabase,
+            existingBonus.id,
+            bonusRecord,
+          );
           if (updateError) {
             errors.push({
               row: rowNumber,
@@ -237,9 +241,11 @@ export async function POST(request: NextRequest) {
             successCount++;
           }
         } else {
-          const { error: insertError } = await supabase
-            .from("employee_bonuses")
-            .insert({ ...bonusRecord, created_at: getVietnamTimestamp() });
+          const { error: insertError } = await insertBonus(
+            supabase,
+            bonusRecord,
+            getVietnamTimestamp(),
+          );
           if (insertError) {
             errors.push({
               row: rowNumber,

@@ -10,6 +10,7 @@ import type {
   EmployeeBonusesResponse,
 } from "@/lib/bonus/bonus-types";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findEmployeeBonuses } from "@/lib/bonus/bonus-repository";
 
 interface EmployeeBonusRow {
   bonus_type: BonusType;
@@ -56,13 +57,10 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    const { data, error } = await supabase
-      .from("employee_bonuses")
-      .select(
-        "bonus_type, bonus_period, bonus_title, amount, detail_data, is_signed, signed_at",
-      )
-      .eq("employee_id", session.employee_id)
-      .order("created_at", { ascending: false });
+    const { data, error } = await findEmployeeBonuses(
+      supabase,
+      session.employee_id,
+    );
 
     if (error) {
       console.error("Employee bonuses error:", error);

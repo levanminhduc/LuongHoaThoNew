@@ -9,11 +9,11 @@ import type {
   BonusEmployeeSignProgress,
   BonusManagementSignatureStatus,
 } from "@/lib/bonus/bonus-types";
+import { findBonusSignFlags } from "@/lib/bonus/bonus-repository";
 import {
   findActiveBonusSignatures,
-  findBonusSignFlags,
   type BonusSignatureRow,
-} from "@/lib/bonus/bonus-repository";
+} from "@/lib/bonus/bonus-signature-repository";
 
 export const BONUS_SIGNER_ROLES = [
   "admin",

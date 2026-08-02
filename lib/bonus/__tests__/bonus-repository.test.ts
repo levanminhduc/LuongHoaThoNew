@@ -1,10 +1,10 @@
+import { findBonusSignFlags } from "../bonus-repository";
 import {
   findActiveBonusSignatureByType,
   findActiveBonusSignatures,
   findActiveSigner,
-  findBonusSignFlags,
   insertBonusSignature,
-} from "../bonus-repository";
+} from "../bonus-signature-repository";
 import type { SupabaseServiceClient } from "../bonus-repository";
 
 type QueryResult = { data: unknown; error: unknown };
