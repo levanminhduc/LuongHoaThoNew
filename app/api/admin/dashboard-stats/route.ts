@@ -9,6 +9,7 @@ import {
 } from "@/lib/validations";
 import { getVietnamMonth } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { buildRecentPayrollsQuery } from "@/lib/payroll/payroll-admin-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,31 +34,8 @@ export async function GET(request: NextRequest) {
     }
     const payrollType = parsed.data.payroll_type;
 
-    let query = supabase
-      .from("payrolls")
-      .select(
-        `
-        id,
-        employee_id,
-        salary_month,
-        payroll_type,
-        tien_luong_thuc_nhan_cuoi_ky,
-        source_file,
-        import_batch_id,
-        import_status,
-        created_at
-      `,
-      )
-      .order("created_at", { ascending: false })
-      .limit(100);
-
-    if (payrollType === "t13") {
-      query = query.eq("payroll_type", "t13");
-    } else {
-      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-    }
-
-    const { data: payrolls, error: payrollsError } = await query;
+    const { data: payrolls, error: payrollsError } =
+      await buildRecentPayrollsQuery(supabase, payrollType === "t13");
 
     if (payrollsError) {
       console.error("Error fetching payrolls:", payrollsError);

@@ -5,6 +5,7 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamMonth } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findPayrollEmployeeIdsForMonth } from "@/lib/payroll/payroll-admin-repository";
 
 interface ValidationStats {
   totalEmployees: number;
@@ -108,10 +109,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get employees who have payroll data for the selected month
-    const { data: employeesWithPayroll, error: payrollError } = await supabase
-      .from("payrolls")
-      .select("employee_id")
-      .eq("salary_month", month);
+    const { data: employeesWithPayroll, error: payrollError } =
+      await findPayrollEmployeeIdsForMonth(supabase, month);
 
     if (payrollError) {
       console.error("Error fetching payroll data:", payrollError);

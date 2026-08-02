@@ -4,6 +4,7 @@ import { parseExcelFile, type PayrollData } from "@/lib/excel-parser";
 import { csrfProtection } from "@/lib/security-middleware";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { insertPayrollBatch } from "@/lib/payroll/payroll-import-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,11 +61,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert data into Supabase
-    const { data, error } = await supabase
-      .from("payrolls")
-      .insert(allPayrollData)
-      .select();
+    const { data, error } = await insertPayrollBatch(supabase, allPayrollData);
 
     if (error) {
       console.error("Supabase insert error:", error);

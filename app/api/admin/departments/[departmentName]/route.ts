@@ -9,6 +9,11 @@ import {
   getVietnamYear,
 } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findDepartmentPayrollDetails,
+  findDepartmentPayrollHistory,
+  type DepartmentHistoryPeriod,
+} from "@/lib/payroll/payroll-admin-repository";
 
 interface DepartmentDetailParams {
   params: Promise<{
@@ -115,98 +120,12 @@ export async function GET(
     // Monthly: salary_month = 'YYYY-MM' (e.g., '2025-01')
     const salaryMonthFilter = payrollType === "t13" ? `${year}-13` : month;
 
-    const payrollQuery = supabase
-      .from("payrolls")
-      .select(
-        `
-        id,
-        employee_id,
-        salary_month,
-        payroll_type,
-        source_file,
-        import_batch_id,
-        import_status,
-        he_so_lam_viec,
-        he_so_phu_cap_ket_qua,
-        he_so_luong_co_ban,
-        luong_toi_thieu_cty,
-        ngay_cong_trong_gio,
-        gio_cong_tang_ca,
-        gio_an_ca,
-        tong_gio_lam_viec,
-        tong_he_so_quy_doi,
-        ngay_cong_chu_nhat,
-        tong_luong_san_pham_cong_doan,
-        don_gia_tien_luong_tren_gio,
-        tien_luong_san_pham_trong_gio,
-        tien_luong_tang_ca,
-        tien_luong_30p_an_ca,
-        tien_khen_thuong_chuyen_can,
-        luong_hoc_viec_pc_luong,
-        tong_cong_tien_luong_san_pham,
-        ho_tro_thoi_tiet_nong,
-        bo_sung_luong,
-        pc_luong_cho_viec,
-        tien_luong_chu_nhat,
-        luong_cnkcp_vuot,
-        tien_tang_ca_vuot,
-        bhxh_21_5_percent,
-        pc_cdcs_pccc_atvsv,
-        luong_phu_nu_hanh_kinh,
-        tien_con_bu_thai_7_thang,
-        ho_tro_gui_con_nha_tre,
-        ngay_cong_phep_le,
-        tien_phep_le,
-        tong_cong_tien_luong,
-        tien_boc_vac,
-        ho_tro_xang_xe,
-        thue_tncn_nam_2024,
-        tam_ung,
-        thue_tncn,
-        bhxh_bhtn_bhyt_total,
-        truy_thu_the_bhyt,
-        tien_luong_thuc_nhan_cuoi_ky,
-        is_signed,
-        signed_at,
-        signed_by_name,
-        signature_ip,
-        signature_device,
-        created_at,
-        updated_at,
-        chi_dot_1_13,
-        chi_dot_2_13,
-        tong_luong_13,
-        so_thang_chia_13,
-        tong_sp_12_thang,
-        t13_thang_01,
-        t13_thang_02,
-        t13_thang_03,
-        t13_thang_04,
-        t13_thang_05,
-        t13_thang_06,
-        t13_thang_07,
-        t13_thang_08,
-        t13_thang_09,
-        t13_thang_10,
-        t13_thang_11,
-        t13_thang_12,
-        employees!payrolls_employee_id_fkey!inner(
-          employee_id,
-          full_name,
-          department,
-          chuc_vu
-        )
-      `,
-      )
-      .eq("employees.department", departmentName)
-      .eq("salary_month", salaryMonthFilter);
-
-    // Note: We no longer filter by payroll_type since T13 is identified by salary_month = 'YYYY-13'
-
-    const { data: payrolls, error: payrollsError } = await payrollQuery.order(
-      "created_at",
-      { ascending: false },
-    );
+    const { data: payrolls, error: payrollsError } =
+      await findDepartmentPayrollDetails(
+        supabase,
+        departmentName,
+        salaryMonthFilter,
+      );
 
     if (payrollsError) {
       console.error("Payrolls query error:", payrollsError);
@@ -228,37 +147,23 @@ export async function GET(
     // Get historical payroll data for trends
     // For T13: Get last 5 years of T13 data (YYYY-13)
     // For monthly: Get last 6 months of data
-    let historicalQuery = supabase
-      .from("payrolls")
-      .select(
-        `
-        salary_month,
-        tien_luong_thuc_nhan_cuoi_ky,
-        is_signed,
-        payroll_type,
-        employees!payrolls_employee_id_fkey!inner(department)
-      `,
-      )
-      .eq("employees.department", departmentName);
-
-    if (payrollType === "t13") {
-      // For T13: Get data for last 5 years (e.g., 2021-13, 2022-13, 2023-13, 2024-13, 2025-13)
-      const currentYear = parseInt(year);
-      const t13Months = [];
-      for (let i = 0; i < 5; i++) {
-        t13Months.push(`${currentYear - i}-13`);
-      }
-      historicalQuery = historicalQuery.in("salary_month", t13Months);
-    } else {
-      // For monthly: Get last 6 months
-      const startMonth = getVietnamMonthsAgo(6);
-      historicalQuery = historicalQuery
-        .gte("salary_month", startMonth)
-        .not("salary_month", "like", "%-13"); // Exclude T13 records
-    }
+    const historyPeriod: DepartmentHistoryPeriod =
+      payrollType === "t13"
+        ? {
+            kind: "t13",
+            months: Array.from(
+              { length: 5 },
+              (_, index) => `${parseInt(year) - index}-13`,
+            ),
+          }
+        : { kind: "monthly", startMonth: getVietnamMonthsAgo(6) };
 
     const { data: historicalPayrolls, error: historicalError } =
-      await historicalQuery.order("salary_month", { ascending: true });
+      await findDepartmentPayrollHistory(
+        supabase,
+        departmentName,
+        historyPeriod,
+      );
 
     if (historicalError) {
       console.error("Historical payrolls query error:", historicalError);

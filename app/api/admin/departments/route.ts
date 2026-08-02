@@ -10,6 +10,7 @@ import {
 } from "@/lib/validations";
 import { getVietnamMonth, getVietnamYear } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findDepartmentsPayrollSummary } from "@/lib/payroll/payroll-admin-repository";
 import { findActiveDepartmentPermissions } from "@/lib/department/department-repository";
 
 // GET all departments with statistics
@@ -101,27 +102,12 @@ export async function GET(request: NextRequest) {
     // Build payroll query with salary_month filter
     // T13: salary_month = 'YYYY-13' (e.g., '2025-13')
     // Monthly: salary_month = 'YYYY-MM' (e.g., '2025-01')
-    const buildPayrollQuery = () => {
-      const salaryMonthFilter = payrollType === "t13" ? `${year}-13` : month;
-
-      const query = supabase
-        .from("payrolls")
-        .select(
-          `
-          tien_luong_thuc_nhan_cuoi_ky,
-          tong_luong_13,
-          is_signed,
-          payroll_type,
-          salary_month,
-          employees!payrolls_employee_id_fkey!inner(department)
-        `,
-        )
-        .in("employees.department", uniqueDepartments)
-        .eq("salary_month", salaryMonthFilter);
-
-      // Note: We no longer filter by payroll_type since T13 is identified by salary_month = 'YYYY-13'
-      return query;
-    };
+    const buildPayrollQuery = () =>
+      findDepartmentsPayrollSummary(
+        supabase,
+        uniqueDepartments,
+        payrollType === "t13" ? `${year}-13` : month,
+      );
 
     const [
       allEmployeesResult,

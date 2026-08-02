@@ -9,6 +9,7 @@ import {
   AdvancedUploadRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { insertPayrollBatch } from "@/lib/payroll/payroll-import-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,10 +53,7 @@ export async function POST(request: NextRequest) {
       const batch = dbRecords.slice(i, i + batchSize);
 
       try {
-        const { data, error } = await supabase
-          .from("payrolls")
-          .insert(batch)
-          .select();
+        const { data, error } = await insertPayrollBatch(supabase, batch);
 
         if (error) {
           console.error("Batch insert error:", error);

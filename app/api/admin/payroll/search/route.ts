@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { csrfProtection } from "@/lib/security-middleware";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
-import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   PayrollSearchQuerySchema,
@@ -10,6 +9,13 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  buildPayrollSearchQuery,
+  buildPayrollTotalCountQuery,
+  findAllSalaryMonths,
+  findAnyPayrollId,
+  findPayrollsByEmployeeIdLike,
+} from "@/lib/payroll/payroll-search-repository";
 
 interface EmployeeInfo {
   full_name: string | null;
@@ -81,9 +87,8 @@ export async function GET(request: NextRequest) {
     }
 
     // First, check if tables have data using correct Supabase syntax
-    const { count: payrollCount, error: payrollCountError } = await supabase
-      .from("payrolls")
-      .select("*", { count: "exact", head: true });
+    const { count: payrollCount, error: payrollCountError } =
+      await buildPayrollTotalCountQuery(supabase);
 
     const { count: employeeCount, error: employeeCountError } = await supabase
       .from("employees")
@@ -91,10 +96,8 @@ export async function GET(request: NextRequest) {
 
     // If count queries fail, try simple existence check
     if (payrollCountError || employeeCountError) {
-      const { data: payrollExists, error: payrollExistsError } = await supabase
-        .from("payrolls")
-        .select("id")
-        .limit(1);
+      const { data: payrollExists, error: payrollExistsError } =
+        await findAnyPayrollId(supabase);
 
       const { data: employeeExists, error: employeeExistsError } =
         await supabase.from("employees").select("employee_id").limit(1);
@@ -165,56 +168,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let payrollQuery = supabase
-      .from("payrolls")
-      .select(
-        `
-        id,
-        employee_id,
-        salary_month,
-        payroll_type,
-        tien_luong_thuc_nhan_cuoi_ky,
-        source_file,
-        created_at,
-        employees(
-          employee_id,
-          full_name,
-          department,
-          chuc_vu,
-          is_active
-        )
-      `,
-      )
-      .not("employees.is_active", "is", null)
-      .eq("employees.is_active", true)
-      .or(`employee_id.ilike.%${sanitizePostgrestValue(query)}%`)
-      .order("created_at", { ascending: false });
-
-    if (payrollType === "t13") {
-      payrollQuery = payrollQuery.eq("payroll_type", "t13");
-    } else {
-      payrollQuery = payrollQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    if (salaryMonth) {
-      payrollQuery = payrollQuery.eq("salary_month", salaryMonth);
-    }
-
     const { data: payrollData, error: payrollError } =
-      await payrollQuery.limit(limit);
+      await buildPayrollSearchQuery(
+        supabase,
+        query,
+        payrollType === "t13",
+        salaryMonth,
+        limit,
+      );
 
     // If main query fails, try alternative approach
     if (payrollError) {
       // Try simple query without join first
-      const { data: simpleData, error: simpleError } = await supabase
-        .from("payrolls")
-        .select(
-          "id, employee_id, salary_month, tien_luong_thuc_nhan_cuoi_ky, source_file, created_at",
-        )
-        .ilike("employee_id", `%${sanitizePostgrestValue(query)}%`)
-        .limit(limit);
+      const { data: simpleData, error: simpleError } =
+        await findPayrollsByEmployeeIdLike(supabase, query, limit);
 
       if (simpleError) {
         console.error("Simple query also failed:", simpleError?.message);
@@ -376,10 +343,8 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
 
     // Get distinct salary months
-    const { data: monthsData, error: monthsError } = await supabase
-      .from("payrolls")
-      .select("salary_month")
-      .order("salary_month", { ascending: false });
+    const { data: monthsData, error: monthsError } =
+      await findAllSalaryMonths(supabase);
 
     if (monthsError) {
       console.error("Salary months fetch error:", monthsError?.message);

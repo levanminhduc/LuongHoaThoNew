@@ -83,20 +83,20 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
 ## 9. Đo lại trước hai nhóm lớn
 
-- [ ] 9.1 Đếm lại số lệnh `.from()` còn trong `app/api/**`, so với ước tính ban đầu
-- [ ] 9.2 Đếm số dòng đã giảm, số test đã thêm
-- [ ] 9.3 Báo cáo kết quả và xác nhận có đi tiếp nhóm 10–11 hay dừng
+- [x] 9.1 Đếm lại số lệnh `.from()` còn trong `app/api/**` — còn 111 / 45 route, đúng bằng `employees` 62 + `payrolls` 49 của ước tính ban đầu; mọi bảng khác đã sạch
+- [x] 9.2 Đếm số dòng đã giảm, số test đã thêm — `app/api` giảm ròng 2240 dòng (74 file), test từ 327 lên 494
+- [x] 9.3 Báo cáo kết quả và xác nhận có đi tiếp nhóm 10–11 hay dừng — user đã chốt đi hết các nhóm còn lại
 
 ## 10. payrolls (49 lệnh)
 
-- [ ] 10.1 Liệt kê route bị chạm; chia nhỏ thành 2–3 PR nếu vượt 15 route
-- [ ] 10.2 Fixture từ git
-- [ ] 10.3 Mở rộng `lib/payroll/payroll-repository.ts`; tách file khi vượt 200 dòng
-- [ ] 10.4 Parity test; **so cặp `{ count, head }` cho mọi truy vấn đếm** — bug đếm ở `my-department` từ change trước là tiền lệ
-- [ ] 10.5 Giữ nguyên `select("*")` ở nơi đang dùng, không viết tường minh
-- [ ] 10.6 Sửa route
-- [ ] 10.7 Chạy lại parity test export lương từ change trước
-- [ ] 10.8 GATE
+- [x] 10.1 Liệt kê route bị chạm; chia nhỏ thành 2–3 PR nếu vượt 15 route — 28 route, chia 3 commit: tra cứu (7), ký/thống kê (7), import-export-quản trị (14)
+- [x] 10.2 Fixture từ git
+- [x] 10.3 Mở rộng `lib/payroll/payroll-repository.ts`; tách file khi vượt 200 dòng — thêm 6 file theo phạm vi: self / department / signature / import / export / search / admin
+- [x] 10.4 Parity test; **so cặp `{ count, head }` cho mọi truy vấn đếm** — 96 test. Phát hiện bất đối xứng còn tồn tại: đếm của `/api/payroll/my-data` không lọc theo tháng trong khi danh sách có lọc → tổng số trang sai khi chọn tháng. Giữ nguyên hành vi, đã chốt bằng test, cần sửa ở change riêng
+- [x] 10.5 Giữ nguyên `select("*")` ở nơi đang dùng, không viết tường minh
+- [x] 10.6 Sửa route
+- [x] 10.7 Chạy lại parity test export lương từ change trước
+- [x] 10.8 GATE
 
 ## 11. employees (62 lệnh)
 

@@ -17,6 +17,11 @@ import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findActiveAliases } from "@/lib/import/column-alias-repository";
 import { findActiveConfigHeaderMappings } from "@/lib/import/mapping-config-repository";
+import {
+  findPayrollIdForMonth,
+  insertPayrollRecord,
+  updatePayrollForMonth,
+} from "@/lib/payroll/payroll-import-repository";
 
 // Type definitions for mapping
 interface ColumnAlias {
@@ -321,12 +326,12 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        const { data: existingRecord, error: checkError } = await supabase
-          .from("payrolls")
-          .select("id")
-          .eq("employee_id", recordData.employee_id as string)
-          .eq("salary_month", recordData.salary_month as string)
-          .single();
+        const { data: existingRecord, error: checkError } =
+          await findPayrollIdForMonth(
+            supabase,
+            recordData.employee_id as string,
+            recordData.salary_month as string,
+          );
 
         if (checkError && checkError.code !== "PGRST116") {
           errors.push({
@@ -345,11 +350,12 @@ export async function POST(request: NextRequest) {
             ...recordData,
             updated_at: getVietnamTimestamp(),
           };
-          const { error: updateError } = await supabase
-            .from("payrolls")
-            .update(updateData)
-            .eq("employee_id", employeeId)
-            .eq("salary_month", salaryMonth);
+          const { error: updateError } = await updatePayrollForMonth(
+            supabase,
+            employeeId,
+            salaryMonth,
+            updateData,
+          );
 
           if (updateError) {
             errors.push({
@@ -370,9 +376,10 @@ export async function POST(request: NextRequest) {
             created_at: getVietnamTimestamp(),
             updated_at: getVietnamTimestamp(),
           };
-          const { error: insertError } = await supabase
-            .from("payrolls")
-            .insert(insertData);
+          const { error: insertError } = await insertPayrollRecord(
+            supabase,
+            insertData,
+          );
 
           if (insertError) {
             errors.push({

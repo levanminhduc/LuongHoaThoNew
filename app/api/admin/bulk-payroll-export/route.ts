@@ -23,6 +23,7 @@ import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findSignatureLogs } from "@/lib/signature/signature-log-repository";
 import { findSignatureSummaryForMonth } from "@/lib/signature/management-signature-repository";
+import { findPayrollsForBulkExport } from "@/lib/payroll/payroll-export-repository";
 
 interface PayrollRecord {
   [key: string]: unknown;
@@ -252,26 +253,8 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
     const isT13 = payroll_type === "t13";
 
-    // Single DB query for all payrolls
-    let payrollQuery = supabase
-      .from("payrolls")
-      .select(
-        `*, employees!payrolls_employee_id_fkey!inner(full_name, department)`,
-      )
-      .eq("salary_month", salary_month)
-      .order("employee_id");
-
-    if (isT13) {
-      payrollQuery = payrollQuery.eq("payroll_type", "t13");
-    } else {
-      payrollQuery = payrollQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    // Fetch payrolls, signature logs, and management signatures in parallel
     const [payrollResult, sigLogsResult, mgmtSigResult] = await Promise.all([
-      payrollQuery,
+      findPayrollsForBulkExport(supabase, salary_month, isT13),
       findSignatureLogs(supabase, salary_month),
       findSignatureSummaryForMonth(supabase, salary_month),
     ]);

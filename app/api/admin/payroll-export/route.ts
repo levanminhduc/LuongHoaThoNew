@@ -8,6 +8,12 @@ import { toErrorResponse } from "@/lib/errors/app-error";
 import { findSignatureLogsWithMonth } from "@/lib/signature/signature-log-repository";
 import { findSignatureSummaryForMonth } from "@/lib/signature/management-signature-repository";
 import {
+  buildPayrollExportFallbackQuery,
+  buildPayrollExportQuery,
+  findAvailableSalaryMonths,
+  type PayrollExportScope,
+} from "@/lib/payroll/payroll-export-repository";
+import {
   buildPayrollExportSheet,
   type PayrollExportRecord,
   type PayrollManagementSignature,
@@ -49,36 +55,16 @@ export async function GET(request: NextRequest) {
     const payrollType = searchParams.get("payroll_type") || "monthly";
     const isT13 = payrollType === "t13";
 
-    let query = supabase
-      .from("payrolls")
-      .select(
-        `
-        *,
-        employees!payrolls_employee_id_fkey!inner(
-          full_name,
-          department
-        )
-      `,
-      )
-      .order("employee_id");
+    const scope: PayrollExportScope = {
+      allowedDepartments: null,
+      department: null,
+    };
 
-    if (isT13) {
-      query = query.eq("payroll_type", "t13");
-    } else {
-      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-    }
-
-    if (month) {
-      query = query.eq("salary_month", month);
-    }
-
-    // Apply role-based department filtering
     if (
       ["giam_doc", "ke_toan", "nguoi_lap_bieu", "truong_phong"].includes(
         auth.user.role,
       )
     ) {
-      // Management roles can only access allowed departments
       const allowedDepartments = auth.user.allowed_departments || [];
       if (allowedDepartments.length === 0) {
         return NextResponse.json(
@@ -88,9 +74,7 @@ export async function GET(request: NextRequest) {
           { status: 403, headers: CACHE_HEADERS.sensitive },
         );
       }
-      query = query.in("employees.department", allowedDepartments);
 
-      // If specific department requested, check permission
       if (department && !allowedDepartments.includes(department)) {
         return NextResponse.json(
           {
@@ -100,20 +84,20 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      if (department) {
-        query = query.eq("employees.department", department);
-      }
+      scope.allowedDepartments = allowedDepartments;
+      scope.department = department;
     } else if (auth.user.role === "to_truong") {
-      // Supervisor can only access own department
-      query = query.eq("employees.department", auth.user.department);
+      scope.department = auth.user.department;
     } else if (auth.user.role === "admin") {
-      // Admin can access all, apply department filter if specified
-      if (department) {
-        query = query.eq("employees.department", department);
-      }
+      scope.department = department;
     }
 
-    const queryResult = await query;
+    const queryResult = await buildPayrollExportQuery(
+      supabase,
+      month,
+      isT13,
+      scope,
+    );
     let payrollData = queryResult.data;
     const error = queryResult.error;
 
@@ -136,28 +120,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (!payrollData || payrollData.length === 0) {
-      // Try fallback query without join
-      let fallbackQuery = supabase
-        .from("payrolls")
-        .select("*")
-        .order("employee_id");
-
-      // Apply same filters
-      if (month) {
-        fallbackQuery = fallbackQuery.eq("salary_month", month);
-      }
-
-      // Skip role-based filtering in fallback for now
-
-      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+      const { data: fallbackData, error: fallbackError } =
+        await buildPayrollExportFallbackQuery(supabase, month);
 
       if (fallbackError || !fallbackData || fallbackData.length === 0) {
-        // Check what months are available
-        const { data: availableMonths } = await supabase
-          .from("payrolls")
-          .select("salary_month")
-          .order("salary_month", { ascending: false })
-          .limit(10);
+        const { data: availableMonths } =
+          await findAvailableSalaryMonths(supabase);
 
         const uniqueMonths = [
           ...new Set(availableMonths?.map((p) => p.salary_month) || []),

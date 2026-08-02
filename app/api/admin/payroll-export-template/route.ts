@@ -12,6 +12,7 @@ import {
   findActiveConfigForTemplate,
   findLatestConfigUpdatedAt,
 } from "@/lib/import/mapping-config-repository";
+import { buildTemplateDataQuery } from "@/lib/payroll/payroll-export-repository";
 
 // Mapping database fields to user-friendly Vietnamese headers
 const FIELD_HEADERS: Record<string, string> = {
@@ -241,19 +242,12 @@ export async function GET(request: NextRequest) {
     let dataRows: unknown[][] = [];
 
     if (includeData) {
-      // Get sample data or specific month data
-      let query = supabase
-        .from("payrolls")
-        .select(activeFields.join(","))
-        .order("created_at", { ascending: false });
-
-      if (salaryMonth) {
-        query = query.eq("salary_month", salaryMonth);
-      } else {
-        query = query.limit(100); // Limit to 100 records for template
-      }
-
-      const { data: payrollData, error: dataError } = await query;
+      const { data: payrollData, error: dataError } =
+        await buildTemplateDataQuery(
+          supabase,
+          activeFields.join(","),
+          salaryMonth,
+        );
 
       if (!dataError && payrollData) {
         dataRows = payrollData.map((record) =>

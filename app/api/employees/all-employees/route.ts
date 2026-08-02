@@ -10,6 +10,10 @@ import {
   pageQuerySchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findPayrollSignedFlagsForMonth,
+  findPayrollSummaryForEmployees,
+} from "@/lib/payroll/payroll-admin-repository";
 
 const AllEmployeesQuerySchema = pageQuerySchema(50);
 
@@ -62,10 +66,10 @@ export async function GET(request: NextRequest) {
 
     let unsignedEmployeeIds: string[] = [];
     if (unsignedOnly && month) {
-      const { data: payrollsData } = await supabase
-        .from("payrolls")
-        .select("employee_id, is_signed")
-        .eq("salary_month", month);
+      const { data: payrollsData } = await findPayrollSignedFlagsForMonth(
+        supabase,
+        month,
+      );
 
       unsignedEmployeeIds =
         payrollsData?.filter((p) => !p.is_signed).map((p) => p.employee_id) ||
@@ -169,13 +173,8 @@ export async function GET(request: NextRequest) {
     if (includePayrollData && month && employees?.length) {
       const employeeIds = employees.map((emp) => emp.employee_id);
 
-      const { data: payrollData, error: payrollError } = await supabase
-        .from("payrolls")
-        .select(
-          "employee_id, salary_month, tien_luong_thuc_nhan_cuoi_ky, import_status, created_at",
-        )
-        .eq("salary_month", month)
-        .in("employee_id", employeeIds);
+      const { data: payrollData, error: payrollError } =
+        await findPayrollSummaryForEmployees(supabase, month, employeeIds);
 
       if (!payrollError && payrollData) {
         employeesWithPayroll = employees.map((emp) => {

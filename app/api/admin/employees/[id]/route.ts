@@ -14,6 +14,7 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findAnyPayrollForEmployee } from "@/lib/payroll/payroll-admin-repository";
 
 export async function PUT(
   request: NextRequest,
@@ -374,11 +375,10 @@ export async function DELETE(
       );
     }
 
-    const { data: payrollCheck } = await supabase
-      .from("payrolls")
-      .select("id")
-      .eq("employee_id", id)
-      .limit(1);
+    const { data: payrollCheck } = await findAnyPayrollForEmployee(
+      supabase,
+      id,
+    );
 
     if (payrollCheck && payrollCheck.length > 0) {
       const { error: updateError } = await supabase
