@@ -352,7 +352,13 @@ Danh sách xác minh 2026-08-01 — 21 call site:
 
   **Chưa test workbook** (số sheet / header / số dòng) vì phần dựng sheet chưa tách — xem 16.1/16.2
 
-- [x] 16.6 Hai route thành **2 commit riêng** (`c846152` attendance, và commit này cho payroll) thay vì 2 PR — cả đợt đã gộp commit theo task 9.5 ← (verify: `npm run build` xanh; 291 test pass, gồm 17 test cấu trúc workbook cho cả hai builder. **Chưa mở file XLSX so với bản cũ** — người dùng đã chấp nhận rủi ro này khi duyệt)
+- [x] 16.6 Hai route thành 2 commit riêng (`c846152` attendance, `fb0650c` payroll) thay vì 2 PR — cả đợt đã gộp commit theo task 9.5.
+
+  **Đã verify được, không cần mở file XLSX bằng tay.** Cách làm: lấy bản route **trước refactor** ra khỏi git (`git show 5544b4c:...`, `git show ee3904e:...`), bóc phần dựng sheet thành module trong `lib/excel/__fixtures__/legacy-*-workbook.ts`, rồi cho **cả bản cũ lẫn bản mới chạy trên cùng một bộ dữ liệu giả** và so kết quả.
+
+  So ở 3 mức: từng ô (`v`/`t`/`s`/`z`), `!ref` + `!merges` + `!cols` + `!rows`, và cuối cùng là **buffer XLSX so theo byte**. Chấm công: 4 test. Lương: 6 kịch bản × 2 = 12 test, phủ lương tháng, T13, không phòng ban, không tháng, bảng rỗng, chưa ai ký duyệt.
+
+  **Kết quả: byte-for-byte giống hệt ở cả hai route.** Đây là bằng chứng mạnh hơn mở file so mắt thường, vì nó bắt được cả khác biệt style lẫn merge mà mắt khó thấy ← (verify: `npx jest lib/excel` — 16 test parity xanh; 307 test toàn repo)
 
 ## 17. Chốt phase 1
 
