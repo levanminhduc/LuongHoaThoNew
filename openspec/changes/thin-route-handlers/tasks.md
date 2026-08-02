@@ -11,7 +11,13 @@ Bốn gate chạy cuối mỗi nhóm, viết tắt là **GATE**: `npm run format
 - [x] 1.5 Ghi cách dùng vào `.claude/rules/api-routes.md`
 - [x] 1.6 GATE
 
-## 2. import_history + import_logs (5 lệnh)
+## 2. import_history + import_logs (4 lệnh sống) — ⚠️ TẠM DỪNG, CHỜ QUYẾT ĐỊNH
+
+Đo lại khi bắt tay: 1 trong 5 hit là dòng đã comment (`import-history/route.ts:53`), còn 4 lệnh sống.
+
+**Chặn:** không file nào trong 57 migration `scripts/supabase-setup/` tạo `import_history` hay `import_logs`. POST của chính route đó tự thú trong comment: "we don't have import_history table" và trả dữ liệu giả. Nhưng GET và DELETE vẫn truy vấn bảng thật, và `components/ImportHistoryViewer.tsx` gọi chúng qua `apiClient` — nghĩa là màn hình admin này luôn lỗi. `import_logs` insert nằm trong try/catch nuốt lỗi nên hỏng im lặng.
+
+Tạo bảng sẽ vi phạm D0. Rút xuống repository thì chỉ là gói lại code chết. Cần người dùng chọn hướng trước khi làm.
 
 - [ ] 2.1 Liệt kê route bị chạm, ghi vào đầu PR
 - [ ] 2.2 Lấy code trước khi rút từ git vào `lib/import/__fixtures__/`
@@ -22,12 +28,12 @@ Bốn gate chạy cuối mỗi nhóm, viết tắt là **GATE**: `npm run format
 
 ## 3. security_logs + employee_security_events (5 lệnh)
 
-- [ ] 3.1 Liệt kê route bị chạm
-- [ ] 3.2 Fixture từ git
-- [ ] 3.3 Viết `lib/audit/audit-log-repository.ts` + `server-only`; kiểm tra chồng lấn với `lib/audit-service.ts` đã có, gộp nếu trùng
-- [ ] 3.4 Parity test
-- [ ] 3.5 Sửa route
-- [ ] 3.6 GATE
+- [x] 3.1 Liệt kê route bị chạm
+- [x] 3.2 Fixture từ git
+- [x] 3.3 Viết `lib/audit/audit-log-repository.ts` + `server-only`; kiểm tra chồng lấn với `lib/audit-service.ts` đã có, gộp nếu trùng
+- [x] 3.4 Parity test
+- [x] 3.5 Sửa route
+- [x] 3.6 GATE
 
 ## 4. department_permissions (7 lệnh)
 

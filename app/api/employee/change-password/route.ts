@@ -12,31 +12,23 @@ import {
   EmployeeChangePasswordRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  insertSecurityLog,
+  type SupabaseServiceClient,
+} from "@/lib/audit/audit-log-repository";
 
 // Constants
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
-// Security logging helper
 async function logSecurityEvent(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseServiceClient,
   employeeId: string,
   action: string,
   ipAddress: string,
   details: string,
 ) {
-  try {
-    await supabase.from("security_logs").insert({
-      employee_id: employeeId,
-      action,
-      ip_address: ipAddress,
-      details,
-      // created_at sẽ tự động được set bởi database trigger với múi giờ Việt Nam
-    });
-  } catch (error) {
-    console.error("Failed to log security event:", error);
-    // Don't throw - logging failure shouldn't break the main flow
-  }
+  await insertSecurityLog(supabase, { employeeId, action, ipAddress, details });
 }
 
 export async function POST(request: NextRequest) {

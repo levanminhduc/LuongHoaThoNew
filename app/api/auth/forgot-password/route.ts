@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getEnv } from "@/lib/config/env";
 import { hashClientIp } from "@/lib/utils/hash-ip";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { rateLimit, csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
@@ -13,6 +12,11 @@ import {
   ForgotPasswordRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  insertEmployeeSecurityEvent,
+  insertSecurityLog,
+  type SupabaseServiceClient,
+} from "@/lib/audit/audit-log-repository";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30 * 60 * 1000;
@@ -26,46 +30,36 @@ function shrinkUA(ua: string | null): string {
 }
 
 async function logSecurityEvent(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseServiceClient,
   employeeId: string | null,
   event: string,
   ipHash: string,
   userAgent: string,
   details?: Record<string, unknown>,
 ) {
-  try {
-    await supabase.from("employee_security_events").insert({
-      employee_id: employeeId,
-      event,
-      ip_hash: ipHash,
-      user_agent: userAgent,
-      details: details || {},
-      occurred_at: getVietnamTimestamp(),
-    });
-  } catch (error) {
-    console.error("Failed to log security event:", error);
-  }
+  await insertEmployeeSecurityEvent(supabase, {
+    employeeId,
+    event,
+    ipHash,
+    userAgent,
+    details,
+  });
 }
 
 async function logToSecurityLogs(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseServiceClient,
   employeeId: string | null,
   action: string,
   ipAddress: string,
   _userAgent: string,
   details?: Record<string, unknown>,
 ) {
-  try {
-    await supabase.from("security_logs").insert({
-      employee_id: employeeId,
-      action,
-      ip_address: ipAddress,
-      details: JSON.stringify(details || {}),
-      // created_at sẽ tự động được set bởi database trigger với múi giờ Việt Nam
-    });
-  } catch (error) {
-    console.error("Failed to log to security_logs:", error);
-  }
+  await insertSecurityLog(supabase, {
+    employeeId,
+    action,
+    ipAddress,
+    details: JSON.stringify(details || {}),
+  });
 }
 
 export async function POST(request: NextRequest) {

@@ -7,6 +7,7 @@ import {
   pageQuerySchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { buildPasswordResetHistoryQuery } from "@/lib/audit/audit-log-repository";
 
 const PasswordResetHistoryQuerySchema = pageQuerySchema(50);
 
@@ -64,50 +65,15 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let query = supabase
-      .from("security_logs")
-      .select(
-        `
-        id,
-        employee_id,
-        action,
-        ip_address,
-        details,
-        created_at
-      `,
-        { count: "exact" },
-      )
-      .in("action", [
-        "forgot_password_success",
-        "forgot_password_failed",
-        "forgot_password_blocked",
-      ])
-      .order("created_at", { ascending: false });
-
-    if (employeeCode) {
-      query = query.eq("employee_id", employeeCode.trim());
-    }
-
-    if (status && status !== "all") {
-      query = query.eq("action", status);
-    }
-
-    if (startDate) {
-      query = query.gte("created_at", startDate);
-    }
-
-    if (endDate) {
-      const endDateTime = new Date(endDate);
-      endDateTime.setHours(23, 59, 59, 999);
-      query = query.lte("created_at", endDateTime.toISOString());
-    }
-
-    if (ipAddress) {
-      query = query.ilike("ip_address", `${ipAddress.trim()}%`);
-    }
-
-    const offset = (page - 1) * limit;
-    query = query.range(offset, offset + limit - 1);
+    const query = buildPasswordResetHistoryQuery(supabase, {
+      employeeCode,
+      status,
+      startDate,
+      endDate,
+      ipAddress,
+      page,
+      limit,
+    });
 
     const { data: logs, error: logsError, count } = await query;
 
