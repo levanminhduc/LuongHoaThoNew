@@ -9,6 +9,7 @@ import { type PayrollRecord } from "@/lib/payroll/payroll-select";
 import { findLatestEmployeePayroll } from "@/lib/payroll/payroll-self-repository";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findEmployeeProfile } from "@/lib/employee/employee-directory-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,11 +35,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data: employee, error: employeeError } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu")
-      .eq("employee_id", session.employee_id)
-      .single();
+    const { data: employee, error: employeeError } = await findEmployeeProfile(
+      supabase,
+      session.employee_id,
+    );
 
     if (employeeError || !employee) {
       return NextResponse.json(

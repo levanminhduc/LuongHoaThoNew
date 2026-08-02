@@ -24,6 +24,7 @@ import {
   findDailyAttendanceForExport,
 } from "@/lib/attendance/attendance-repository";
 import { findSignatureLogsWithMonth } from "@/lib/signature/signature-log-repository";
+import { findEmployeeProfilesByIds } from "@/lib/employee/employee-directory-repository";
 
 interface ExportRequestBody {
   period_year: number;
@@ -84,10 +85,10 @@ export async function POST(request: NextRequest) {
 
     const employeeIds = monthlyData.map((m) => m.employee_id);
 
-    const { data: employees } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu")
-      .in("employee_id", employeeIds);
+    const { data: employees } = await findEmployeeProfilesByIds(
+      supabase,
+      employeeIds,
+    );
 
     const employeeMap = new Map(
       (employees || []).map((e) => [e.employee_id, e]),

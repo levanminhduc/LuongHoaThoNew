@@ -14,6 +14,7 @@ import {
   findDailyCheckOutTimes,
   findMonthlyDailyRecords,
 } from "@/lib/attendance/attendance-repository";
+import { findEmployeeNamesByIds } from "@/lib/employee/employee-auth-repository";
 
 interface DailyExportRecord {
   day: number;
@@ -345,10 +346,10 @@ export async function POST(request: NextRequest) {
     }
 
     const employeeIds = monthlyData.map((m) => m.employee_id);
-    const { data: employees } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department")
-      .in("employee_id", employeeIds);
+    const { data: employees } = await findEmployeeNamesByIds(
+      supabase,
+      employeeIds,
+    );
 
     const employeeMap = new Map(
       (employees || []).map((e) => [e.employee_id, e]),

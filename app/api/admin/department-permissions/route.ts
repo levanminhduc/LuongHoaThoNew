@@ -19,6 +19,7 @@ import {
   revokeDepartmentPermissionByEmployeeDepartment,
   revokeDepartmentPermissionById,
 } from "@/lib/department/department-repository";
+import { findActiveEmployeeForPermission } from "@/lib/employee/employee-directory-repository";
 
 // GET all department permissions or permissions for specific employee
 export async function GET(request: NextRequest) {
@@ -108,12 +109,8 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
 
     // Verify employee exists and is truong_phong
-    const { data: employee, error: employeeError } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, chuc_vu")
-      .eq("employee_id", employee_id)
-      .eq("is_active", true)
-      .single();
+    const { data: employee, error: employeeError } =
+      await findActiveEmployeeForPermission(supabase, employee_id);
 
     if (employeeError || !employee) {
       return NextResponse.json(

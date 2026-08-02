@@ -15,6 +15,7 @@ import {
   insertManagementSignature,
 } from "@/lib/signature/management-signature-repository";
 import { findPayrollSignatureCounts } from "@/lib/payroll/payroll-signature-repository";
+import { findActiveEmployeeProfile } from "@/lib/employee/employee-directory-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -100,12 +101,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: employee, error: empError } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu")
-      .eq("employee_id", auth.user.employee_id)
-      .eq("is_active", true)
-      .single();
+    const { data: employee, error: empError } = await findActiveEmployeeProfile(
+      supabase,
+      auth.user.employee_id,
+    );
 
     if (empError || !employee) {
       return NextResponse.json(

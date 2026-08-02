@@ -22,6 +22,7 @@ import {
   insertPayrollRecord,
   updatePayrollForMonth,
 } from "@/lib/payroll/payroll-import-repository";
+import { findAllEmployeeIds } from "@/lib/employee/employee-directory-repository";
 
 // Type definitions for mapping
 interface ColumnAlias {
@@ -220,9 +221,8 @@ export async function POST(request: NextRequest) {
     let overwriteCount = 0;
     let skippedCount = 0;
 
-    const { data: employees, error: employeesError } = await supabase
-      .from("employees")
-      .select("employee_id");
+    const { data: employees, error: employeesError } =
+      await findAllEmployeeIds(supabase);
 
     if (employeesError) {
       console.error("❌ Database error loading employees:", employeesError);

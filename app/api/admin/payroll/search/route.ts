@@ -16,6 +16,7 @@ import {
   findAnyPayrollId,
   findPayrollsByEmployeeIdLike,
 } from "@/lib/payroll/payroll-search-repository";
+import { findEmployeeDirectoryByIds } from "@/lib/employee/employee-directory-repository";
 
 interface EmployeeInfo {
   full_name: string | null;
@@ -190,10 +191,10 @@ export async function GET(request: NextRequest) {
         if (simpleData && simpleData.length > 0) {
           // Get employee data separately
           const employeeIds = simpleData.map((p) => p.employee_id);
-          const { data: employeeData } = await supabase
-            .from("employees")
-            .select("employee_id, full_name, department, chuc_vu, is_active")
-            .in("employee_id", employeeIds);
+          const { data: employeeData } = await findEmployeeDirectoryByIds(
+            supabase,
+            employeeIds,
+          );
 
           // Manually join the data with proper typing
           const joinedData = simpleData.map((payroll) => ({

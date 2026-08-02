@@ -5,6 +5,7 @@ import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { getVietnamDate, getVietnamMonth } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findSamplePayrolls } from "@/lib/payroll/payroll-export-repository";
+import { findSampleActiveEmployees } from "@/lib/employee/employee-directory-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,11 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get available employees for realistic template
-    const { data: employees } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department")
-      .eq("is_active", true)
-      .limit(5);
+    const { data: employees } = await findSampleActiveEmployees(supabase);
 
     // Create template based on current database structure
     const templateData = [

@@ -30,6 +30,7 @@ import {
   validateEmployeeExists,
 } from "@/lib/import-error-collector";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findAllEmployeeIds } from "@/lib/employee/employee-directory-repository";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -119,9 +120,8 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    const { data: employees, error: employeesError } = await supabase
-      .from("employees")
-      .select("employee_id");
+    const { data: employees, error: employeesError } =
+      await findAllEmployeeIds(supabase);
     if (employeesError) {
       const error = ApiErrorHandler.createDatabaseError(
         "lấy danh sách nhân viên",

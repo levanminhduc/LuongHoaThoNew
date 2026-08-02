@@ -13,6 +13,7 @@ import {
   insertManagementSignature,
   updateSignatureSignedAt,
 } from "@/lib/signature/management-signature-repository";
+import { findFirstActiveSignerByPosition } from "@/lib/employee/employee-directory-repository";
 
 const SIGNATURE_TYPE_LABELS: Record<string, string> = {
   giam_doc: "Giám Đốc",
@@ -100,14 +101,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { data: signer, error: signerError } = await supabase
-        .from("employees")
-        .select("employee_id, full_name, department")
-        .eq("chuc_vu", signature_type)
-        .eq("is_active", true)
-        .order("employee_id", { ascending: true })
-        .limit(1)
-        .single();
+      const { data: signer, error: signerError } =
+        await findFirstActiveSignerByPosition(supabase, signature_type);
 
       if (signerError || !signer) {
         return NextResponse.json(

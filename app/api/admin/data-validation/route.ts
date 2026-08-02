@@ -6,6 +6,7 @@ import { csrfProtection } from "@/lib/security-middleware";
 import { getVietnamMonth } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findPayrollEmployeeIdsForMonth } from "@/lib/payroll/payroll-admin-repository";
+import { findAllActiveEmployees } from "@/lib/employee/employee-directory-repository";
 
 interface ValidationStats {
   totalEmployees: number;
@@ -91,12 +92,8 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
 
     // Get all active employees
-    const { data: allEmployees, error: employeesError } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu, is_active")
-      .eq("is_active", true)
-      .order("department")
-      .order("full_name");
+    const { data: allEmployees, error: employeesError } =
+      await findAllActiveEmployees(supabase);
 
     if (employeesError) {
       console.error("Error fetching employees:", employeesError);

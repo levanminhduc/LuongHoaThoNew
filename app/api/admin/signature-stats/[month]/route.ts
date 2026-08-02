@@ -9,6 +9,7 @@ import {
   buildMonthPayrollCountQuery,
   findSignedEmployeeIds,
 } from "@/lib/payroll/payroll-signature-repository";
+import { findActiveEmployeeNamesByIds } from "@/lib/employee/employee-directory-repository";
 
 export async function GET(
   request: NextRequest,
@@ -79,12 +80,10 @@ export async function GET(
       const ids = signedPayrolls?.map((p) => p.employee_id) || [];
 
       if (ids.length > 0) {
-        const { data: empData } = await supabase
-          .from("employees")
-          .select("employee_id, full_name, department")
-          .in("employee_id", ids)
-          .eq("is_active", true)
-          .order("employee_id");
+        const { data: empData } = await findActiveEmployeeNamesByIds(
+          supabase,
+          ids,
+        );
         signedEmployees = empData || [];
       }
     }

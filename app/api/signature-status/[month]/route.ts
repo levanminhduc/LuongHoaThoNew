@@ -7,6 +7,7 @@ import { SalaryMonthSchema } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findSignatureStatusForMonth } from "@/lib/signature/management-signature-repository";
 import { findPayrollSignatureStatus } from "@/lib/payroll/payroll-signature-repository";
+import { findUnsignedEmployeePreview } from "@/lib/employee/employee-directory-repository";
 
 export async function GET(
   request: NextRequest,
@@ -87,12 +88,8 @@ export async function GET(
     }> = [];
 
     if (unsignedEmployeeIds.length > 0) {
-      const { data: unsignedData, error: unsignedError } = await supabase
-        .from("employees")
-        .select("employee_id, full_name, department, chuc_vu")
-        .eq("is_active", true)
-        .in("employee_id", unsignedEmployeeIds)
-        .limit(10);
+      const { data: unsignedData, error: unsignedError } =
+        await findUnsignedEmployeePreview(supabase, unsignedEmployeeIds);
 
       if (unsignedError) {
         console.error("Error fetching unsigned employees:", unsignedError);

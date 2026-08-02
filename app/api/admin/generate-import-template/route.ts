@@ -8,6 +8,7 @@ import {
 import * as XLSX from "xlsx";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findActiveConfigForTemplate } from "@/lib/import/mapping-config-repository";
+import { findSampleEmployeeIds } from "@/lib/employee/employee-directory-repository";
 
 interface FieldMapping {
   database_field: string;
@@ -55,10 +56,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get real employee IDs from database for sample data
-    const { data: employees, error: employeeError } = await supabase
-      .from("employees")
-      .select("employee_id")
-      .limit(3);
+    const { data: employees, error: employeeError } =
+      await findSampleEmployeeIds(supabase);
 
     if (employeeError) {
       console.warn(

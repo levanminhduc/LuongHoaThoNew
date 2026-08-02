@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { probeEmployeesTable } from "@/lib/employee/employee-directory-repository";
 
 export async function GET() {
   const checks = {
@@ -10,10 +11,7 @@ export async function GET() {
 
   try {
     const supabase = createServiceClient();
-    const { error } = await supabase
-      .from("employees")
-      .select("employee_id")
-      .limit(1);
+    const { error } = await probeEmployeesTable(supabase);
 
     if (!error) {
       checks.database = true;

@@ -10,6 +10,7 @@ import {
 import { getVietnamYear } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findSignedPayrollsForDateUpdate } from "@/lib/payroll/payroll-signature-repository";
+import { findEmployeeNamesByIdsOrdered } from "@/lib/employee/employee-directory-repository";
 
 const BATCH_SIZE = 200;
 
@@ -229,11 +230,10 @@ export async function GET(request: NextRequest) {
       const BATCH_SIZE = 200;
       for (let i = 0; i < ids.length; i += BATCH_SIZE) {
         const batch = ids.slice(i, i + BATCH_SIZE);
-        const { data: empBatch } = await supabase
-          .from("employees")
-          .select("employee_id, full_name, department")
-          .in("employee_id", batch)
-          .order("employee_id");
+        const { data: empBatch } = await findEmployeeNamesByIdsOrdered(
+          supabase,
+          batch,
+        );
         if (empBatch) signedEmployees.push(...empBatch);
       }
 

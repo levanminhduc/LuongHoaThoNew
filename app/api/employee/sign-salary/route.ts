@@ -17,6 +17,7 @@ import {
   EmployeeSignSalaryRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findEmployeeCredentialProfile } from "@/lib/employee/employee-directory-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,13 +74,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { data: employee, error: employeeError } = await supabase
-        .from("employees")
-        .select(
-          "employee_id, full_name, cccd_hash, password_hash, last_password_change_at",
-        )
-        .eq("employee_id", bodyEmployeeId.trim())
-        .single();
+      const { data: employee, error: employeeError } =
+        await findEmployeeCredentialProfile(supabase, bodyEmployeeId.trim());
 
       if (employeeError || !employee) {
         return NextResponse.json(

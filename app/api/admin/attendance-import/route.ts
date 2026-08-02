@@ -7,6 +7,7 @@ import type { AttendanceImportError } from "@/types/attendance";
 import { randomUUID } from "crypto";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { upsertMonthlyAttendance } from "@/lib/attendance/attendance-repository";
+import { findEmployeeIdsIn } from "@/lib/employee/employee-directory-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,10 +71,10 @@ export async function POST(request: NextRequest) {
     const employeeIds = [
       ...new Set(parseResult.records.map((r) => r.employeeId)),
     ];
-    const { data: existingEmployees } = await supabase
-      .from("employees")
-      .select("employee_id")
-      .in("employee_id", employeeIds);
+    const { data: existingEmployees } = await findEmployeeIdsIn(
+      supabase,
+      employeeIds,
+    );
 
     const existingEmployeeIds = new Set(
       existingEmployees?.map((e) => e.employee_id) || [],

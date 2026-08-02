@@ -19,6 +19,7 @@ import {
   type PayrollManagementSignature,
   type PayrollSignatureLog,
 } from "@/lib/excel/payroll-export-sheet";
+import { findAllEmployeeNames } from "@/lib/employee/employee-directory-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -148,9 +149,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Get employee data separately
-      const { data: employeesData } = await supabase
-        .from("employees")
-        .select("employee_id, full_name, department");
+      const { data: employeesData } = await findAllEmployeeNames(supabase);
 
       // Merge data manually
       const mergedData = fallbackData.map((payroll) => {

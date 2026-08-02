@@ -19,6 +19,10 @@ import {
   SalaryHistoryActionRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findEmployeeLookupRecord,
+  findEmployeeProfile,
+} from "@/lib/employee/employee-directory-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,13 +65,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { data: empData, error: empError } = await supabase
-        .from("employees")
-        .select(
-          "employee_id, full_name, department, chuc_vu, cccd_hash, password_hash, last_password_change_at",
-        )
-        .eq("employee_id", employee_id.trim())
-        .single();
+      const { data: empData, error: empError } = await findEmployeeLookupRecord(
+        supabase,
+        employee_id.trim(),
+      );
 
       if (empError || !empData) {
         return NextResponse.json(
@@ -90,11 +91,10 @@ export async function POST(request: NextRequest) {
       authenticatedEmployeeId = employee_id.trim();
     }
 
-    const { data: employee, error: employeeError } = await supabase
-      .from("employees")
-      .select("employee_id, full_name, department, chuc_vu")
-      .eq("employee_id", authenticatedEmployeeId)
-      .single();
+    const { data: employee, error: employeeError } = await findEmployeeProfile(
+      supabase,
+      authenticatedEmployeeId,
+    );
 
     if (employeeError || !employee) {
       return NextResponse.json(
