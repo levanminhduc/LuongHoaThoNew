@@ -272,3 +272,17 @@ Khác với mục "Không đề xuất" ở trên (những thứ **không nên**
 - **Nhóm 14 còn 12 mục** — các query mà kết quả đổ thẳng vào response cho UI (payroll detail, payroll export, signature history). Liệt kê cột đòi biết chính xác UI đọc gì; thiếu một cột là lỗi im lặng mà TypeScript lẫn test đều không bắt được.
 - **Nhóm 16 (tách builder XLSX) — cả 2 route đều dính cùng một bẫy.** Kế hoạch ban đầu chỉ ghi nhận `attendance-export`; kiểm lại thì `payroll-export` giống hệt: workbook tạo ở dòng 251, worksheet ráp ở dòng 491, nhưng **giữa hai mốc đó có 2 truy vấn DB** (`signature_logs` dòng 289, `management_signatures` dòng 357). Rút builder thành hàm thuần đòi kéo phần fetch ra trước, tức đổi thứ tự truy vấn — không còn là rút hàm cơ học. Cộng thêm: đúng/sai chỉ chứng minh được bằng cách mở file XLSX xuất ra so với bản cũ.
 - **Task 15.3** (repository cho `app/api/admin/payroll*/**`) — đụng thẳng vào luồng export chưa được smoke test.
+
+### Phần cố ý dừng lại giữa chừng (đã đóng task, không phải bỏ quên)
+
+7 task được đóng ở trạng thái "làm một phần có chủ đích". Ghi ra đây để người đọc sau không tưởng là đã làm trọn:
+
+| Task | Làm được | Cố ý dừng ở đâu, vì sao |
+|---|---|---|
+| 14.4 | `management_signatures` → 3 cột | 2 truy vấn `payrolls` giữ `select("*")`: select tường minh làm `tsc` lộ ra hai nhánh của route trả **hình dạng khác nhau** (`employees` là embed PostgREST ở nhánh chính, object ghép tay ở nhánh fallback). Việc cần làm trước là cho hai nhánh cùng hình dạng, không phải bỏ `select("*")` |
+| 15.3 | 4/9 file `payroll*` về 0 chỗ gọi `.from()` | 5 file còn lại nằm trong luồng import/export; `payroll/search` còn dính `sanitizePostgrestValue` và nhánh fallback phức tạp |
+| 15.7 | Đếm lại: 72 file | Chỉ số này **đo sai thứ** — xem mục "Chỉ số đo sai" ở trên. Không đuổi theo nữa |
+| 16.3 | — | 2 route export chưa dùng repository: `attendance_monthly`/`attendance_daily` chưa có repository nào, và tạo mới cho chúng nằm ngoài phạm vi nhóm 15 |
+| 9.3 / 9.5 / 17.2 | — | Ghi lại bối cảnh lịch sử (1/3 luồng lúc đó, 3 commit thay vì 22, luồng thưởng chưa có test parity) |
+
+**Khoảng trống kiểm chứng duy nhất còn lại**: luồng **thưởng**. `lib/bonus/` đã rút thành `bonus-repository` với 12 test mock ở tầng supabase client, nhưng **không có test parity so với bản cũ** — bản cũ gọi `.from()` trực tiếp trong service nên không tách thành hàm thuần để so được. Bốn luồng còn lại (tra cứu, ký nhận, import, export) đều đã chứng minh bằng cách lôi code trước refactor ra khỏi git so với code mới trên cùng đầu vào.
