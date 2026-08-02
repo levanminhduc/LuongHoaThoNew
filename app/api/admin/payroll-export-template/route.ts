@@ -8,6 +8,10 @@ import * as XLSX from "xlsx";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findActiveConfigForTemplate,
+  findLatestConfigUpdatedAt,
+} from "@/lib/import/mapping-config-repository";
 
 // Mapping database fields to user-friendly Vietnamese headers
 const FIELD_HEADERS: Record<string, string> = {
@@ -140,12 +144,7 @@ export async function GET(request: NextRequest) {
 
     // Handle timestamp-only request for sync checking
     if (timestampOnly) {
-      const { data: lastUpdated } = await supabase
-        .from("mapping_configurations")
-        .select("updated_at")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .single();
+      const { data: lastUpdated } = await findLatestConfigUpdatedAt(supabase);
 
       return NextResponse.json(
         {
@@ -162,22 +161,8 @@ export async function GET(request: NextRequest) {
     const customHeaders: Record<string, string> = {};
 
     if (configId) {
-      const { data: config, error: configError } = await supabase
-        .from("mapping_configurations")
-        .select(
-          `
-          *,
-          configuration_field_mappings (
-            database_field,
-            excel_column_name,
-            confidence_score,
-            mapping_type
-          )
-        `,
-        )
-        .eq("id", configId)
-        .eq("is_active", true)
-        .single();
+      const { data: config, error: configError } =
+        await findActiveConfigForTemplate(supabase, configId);
 
       if (!configError && config) {
         mappingConfig = config;

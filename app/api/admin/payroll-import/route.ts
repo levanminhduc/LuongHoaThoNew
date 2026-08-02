@@ -15,6 +15,8 @@ import {
 } from "@/lib/import-error-collector";
 import { verifyAdminAccess } from "@/lib/auth-middleware";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findActiveAliases } from "@/lib/import/column-alias-repository";
+import { findActiveConfigHeaderMappings } from "@/lib/import/mapping-config-repository";
 
 // Type definitions for mapping
 interface ColumnAlias {
@@ -51,10 +53,7 @@ async function createHeaderToFieldMapping(
 
   // 3. Load and add aliases from database
   try {
-    const { data: aliases, error } = await supabase
-      .from("column_aliases")
-      .select("database_field, alias_name")
-      .eq("is_active", true);
+    const { data: aliases, error } = await findActiveAliases(supabase);
 
     if (!error && aliases) {
       (aliases as ColumnAlias[]).forEach((alias) => {
@@ -68,17 +67,8 @@ async function createHeaderToFieldMapping(
 
   // 4. Load and add mapping configurations
   try {
-    const { data: configs, error } = await supabase
-      .from("mapping_configurations")
-      .select(
-        `
-        configuration_field_mappings (
-          database_field,
-          excel_column_name
-        )
-      `,
-      )
-      .eq("is_active", true);
+    const { data: configs, error } =
+      await findActiveConfigHeaderMappings(supabase);
 
     if (!error && configs) {
       (configs as MappingConfig[]).forEach((config) => {

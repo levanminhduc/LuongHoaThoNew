@@ -73,13 +73,13 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
 ## 8. column_aliases + mapping_configurations + configuration_field_mappings (25 lệnh)
 
-- [ ] 8.1 Liệt kê route bị chạm
-- [ ] 8.2 Fixture từ git
-- [ ] 8.3 Viết `lib/import/import-config-repository.ts` + `server-only`
-- [ ] 8.4 Parity test
-- [ ] 8.5 Sửa route; giữ nguyên hành vi cache của `lib/stores/mapping-config-store.ts`
-- [ ] 8.6 Chạy lại parity test import Excel từ change trước
-- [ ] 8.7 GATE
+- [x] 8.1 Liệt kê route bị chạm — 6 route: `column-aliases`, `column-aliases/[id]`, `mapping-configurations`, `payroll-import`, `payroll-export-template`, `generate-import-template`
+- [x] 8.2 Fixture từ git
+- [x] 8.3 Viết `lib/import/import-config-repository.ts` + `server-only` — tách 2 file theo bảng: `column-alias-repository.ts` (170 dòng) + `mapping-config-repository.ts` (136 dòng)
+- [x] 8.4 Parity test — 35 test; embed lồng nhau viết lại thành chuỗi một dòng nên so select bỏ khoảng trắng bằng `withoutSelectWhitespace()`, kèm test chốt tập cột của từng dạng embed
+- [x] 8.5 Sửa route; giữ nguyên hành vi cache của `lib/stores/mapping-config-store.ts` — store gọi qua `apiClient`, không chạm
+- [x] 8.6 Chạy lại parity test import Excel từ change trước — 8 suite / 101 test xanh
+- [x] 8.7 GATE
 
 ## 9. Đo lại trước hai nhóm lớn
 

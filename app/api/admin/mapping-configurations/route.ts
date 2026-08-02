@@ -16,6 +16,15 @@ import {
   MappingConfigurationListQuerySchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  buildMappingConfigListQuery,
+  deleteMappingConfig,
+  findConfigByName,
+  findConfigWithMappings,
+  insertConfigFieldMappings,
+  insertMappingConfig,
+  unsetDefaultConfigs,
+} from "@/lib/import/mapping-config-repository";
 
 // GET: Fetch mapping configurations
 export async function GET(request: NextRequest) {
@@ -46,43 +55,11 @@ export async function GET(request: NextRequest) {
     };
 
     const supabase = createServiceClient();
-    let query = supabase.from("mapping_configurations").select(
-      `
-        *,
-        configuration_field_mappings (
-          id,
-          database_field,
-          excel_column_name,
-          confidence_score,
-          mapping_type,
-          validation_passed
-        )
-      `,
-      { count: "exact" },
-    );
-
-    // Apply filters
-    if (params.config_name) {
-      query = query.ilike("config_name", `%${params.config_name}%`);
-    }
-    if (params.is_active !== undefined) {
-      query = query.eq("is_active", params.is_active);
-    }
-    if (params.is_default !== undefined) {
-      query = query.eq("is_default", params.is_default);
-    }
-    if (params.created_by) {
-      query = query.eq("created_by", params.created_by);
-    }
-
-    // Apply sorting and pagination
-    query = query.order("created_at", { ascending: false });
-
-    const from = ((params.page || 1) - 1) * (params.limit || 20);
-    const to = from + (params.limit || 20) - 1;
-    query = query.range(from, to);
-
-    const { data: configurations, error, count } = await query;
+    const {
+      data: configurations,
+      error,
+      count,
+    } = await buildMappingConfigListQuery(supabase, params);
 
     if (error) {
       console.error("Error fetching mapping configurations:", error);
@@ -139,12 +116,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // Check for duplicate config name
-    const { data: existing } = await supabase
-      .from("mapping_configurations")
-      .select("id")
-      .eq("config_name", config_name)
-      .single();
+    const { data: existing } = await findConfigByName(supabase, config_name);
 
     if (existing) {
       return NextResponse.json(
@@ -153,26 +125,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If setting as default, unset other defaults
     if (is_default) {
-      await supabase
-        .from("mapping_configurations")
-        .update({ is_default: false })
-        .eq("is_default", true);
+      await unsetDefaultConfigs(supabase);
     }
 
-    // Create configuration
-    const { data: newConfig, error: configError } = await supabase
-      .from("mapping_configurations")
-      .insert({
+    const { data: newConfig, error: configError } = await insertMappingConfig(
+      supabase,
+      {
         config_name: config_name.trim(),
         description: description?.trim(),
         is_default,
         is_active: true,
         created_by: adminUser.username,
-      })
-      .select()
-      .single();
+      },
+    );
 
     if (configError) {
       console.error("Error creating mapping configuration:", configError);
@@ -193,17 +159,14 @@ export async function POST(request: NextRequest) {
         validation_passed: mapping.validation_passed !== false,
       }));
 
-      const { error: mappingsError } = await supabase
-        .from("configuration_field_mappings")
-        .insert(mappingsToInsert);
+      const { error: mappingsError } = await insertConfigFieldMappings(
+        supabase,
+        mappingsToInsert,
+      );
 
       if (mappingsError) {
         console.error("Error creating field mappings:", mappingsError);
-        // Rollback configuration creation
-        await supabase
-          .from("mapping_configurations")
-          .delete()
-          .eq("id", newConfig.id);
+        await deleteMappingConfig(supabase, newConfig.id);
 
         return NextResponse.json(
           { success: false, message: "Lỗi khi tạo field mappings" },
@@ -212,24 +175,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch complete configuration with mappings
-    const { data: completeConfig } = await supabase
-      .from("mapping_configurations")
-      .select(
-        `
-        *,
-        configuration_field_mappings (
-          id,
-          database_field,
-          excel_column_name,
-          confidence_score,
-          mapping_type,
-          validation_passed
-        )
-      `,
-      )
-      .eq("id", newConfig.id)
-      .single();
+    const { data: completeConfig } = await findConfigWithMappings(
+      supabase,
+      newConfig.id,
+    );
 
     const response: ApiResponse<MappingConfiguration> = {
       success: true,
@@ -279,18 +228,16 @@ export async function PUT(request: NextRequest) {
       ? `Auto-saved ${file_name || "mapping"} - ${timestamp}`
       : `Manual mapping - ${timestamp}`;
 
-    // Create configuration
-    const { data: newConfig, error: configError } = await supabase
-      .from("mapping_configurations")
-      .insert({
+    const { data: newConfig, error: configError } = await insertMappingConfig(
+      supabase,
+      {
         config_name: configName,
         description: `Tự động lưu từ import thành công - ${file_name || "Unknown file"}`,
         is_default: false,
         is_active: true,
         created_by: adminUser.username,
-      })
-      .select()
-      .single();
+      },
+    );
 
     if (configError) {
       console.error("Error creating auto-saved configuration:", configError);
@@ -319,9 +266,10 @@ export async function PUT(request: NextRequest) {
       validation_passed: config.validation_status === "valid",
     }));
 
-    const { error: mappingsError } = await supabase
-      .from("configuration_field_mappings")
-      .insert(mappingsToInsert);
+    const { error: mappingsError } = await insertConfigFieldMappings(
+      supabase,
+      mappingsToInsert,
+    );
 
     if (mappingsError) {
       console.error("Error creating auto-saved mappings:", mappingsError);

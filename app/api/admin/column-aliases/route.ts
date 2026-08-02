@@ -15,6 +15,13 @@ import {
   ColumnAliasListQuerySchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  buildColumnAliasListQuery,
+  findAliasByDuplicateKey,
+  findAliasByFieldAndName,
+  insertColumnAlias,
+  insertColumnAliasWithoutReturn,
+} from "@/lib/import/column-alias-repository";
 
 // GET: Fetch column aliases with search/filter
 export async function GET(request: NextRequest) {
@@ -48,39 +55,11 @@ export async function GET(request: NextRequest) {
     };
 
     const supabase = createServiceClient();
-    let query = supabase.from("column_aliases").select("*", { count: "exact" });
-
-    // Apply filters
-    if (params.database_field) {
-      query = query.eq("database_field", params.database_field);
-    }
-    if (params.alias_name) {
-      query = query.ilike("alias_name", `%${params.alias_name}%`);
-    }
-    if (params.is_active !== undefined) {
-      query = query.eq("is_active", params.is_active);
-    }
-    if (params.created_by) {
-      query = query.eq("created_by", params.created_by);
-    }
-    if (params.confidence_min !== undefined) {
-      query = query.gte("confidence_score", params.confidence_min);
-    }
-    if (params.confidence_max !== undefined) {
-      query = query.lte("confidence_score", params.confidence_max);
-    }
-
-    // Apply sorting
-    query = query.order(params.sort_by!, {
-      ascending: params.sort_order === "asc",
-    });
-
-    // Apply pagination
-    const from = ((params.page || 1) - 1) * (params.limit || 50);
-    const to = from + (params.limit || 50) - 1;
-    query = query.range(from, to);
-
-    const { data: aliases, error, count } = await query;
+    const {
+      data: aliases,
+      error,
+      count,
+    } = await buildColumnAliasListQuery(supabase, params);
 
     if (error) {
       console.error("Error fetching column aliases:", error);
@@ -137,20 +116,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // Check for duplicate alias (considering config_id)
-    let duplicateQuery = supabase
-      .from("column_aliases")
-      .select("id")
-      .eq("database_field", database_field)
-      .eq("alias_name", alias_name);
-
-    if (config_id) {
-      duplicateQuery = duplicateQuery.eq("config_id", config_id);
-    } else {
-      duplicateQuery = duplicateQuery.is("config_id", null);
-    }
-
-    const { data: existing } = await duplicateQuery.single();
+    const { data: existing } = await findAliasByDuplicateKey(supabase, {
+      database_field,
+      alias_name,
+      config_id,
+    });
 
     if (existing) {
       return NextResponse.json(
@@ -175,11 +145,10 @@ export async function POST(request: NextRequest) {
       aliasData.config_id = config_id;
     }
 
-    const { data: newAlias, error } = await supabase
-      .from("column_aliases")
-      .insert(aliasData)
-      .select()
-      .single();
+    const { data: newAlias, error } = await insertColumnAlias(
+      supabase,
+      aliasData,
+    );
 
     if (error) {
       console.error("Error creating column alias:", error);
@@ -246,21 +215,18 @@ export async function PUT(request: NextRequest) {
           continue;
         }
 
-        // Check for duplicate
-        const { data: existing } = await supabase
-          .from("column_aliases")
-          .select("id")
-          .eq("database_field", database_field)
-          .eq("alias_name", alias_name)
-          .single();
+        const { data: existing } = await findAliasByFieldAndName(
+          supabase,
+          database_field,
+          alias_name,
+        );
 
         if (existing) {
           results.skipped++;
           continue;
         }
 
-        // Create alias
-        const { error } = await supabase.from("column_aliases").insert({
+        const { error } = await insertColumnAliasWithoutReturn(supabase, {
           database_field,
           alias_name: alias_name.trim(),
           confidence_score,

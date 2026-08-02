@@ -7,6 +7,7 @@ import {
 } from "@/lib/utils/vietnam-timezone";
 import * as XLSX from "xlsx";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findActiveConfigForTemplate } from "@/lib/import/mapping-config-repository";
 
 interface FieldMapping {
   database_field: string;
@@ -33,22 +34,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: config, error: configError } = await supabase
-      .from("mapping_configurations")
-      .select(
-        `
-        *,
-        configuration_field_mappings (
-          database_field,
-          excel_column_name,
-          confidence_score,
-          mapping_type
-        )
-      `,
-      )
-      .eq("id", configId)
-      .eq("is_active", true)
-      .single();
+    const { data: config, error: configError } =
+      await findActiveConfigForTemplate(supabase, configId);
 
     if (configError || !config) {
       return NextResponse.json(

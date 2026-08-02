@@ -72,6 +72,13 @@ function resolve(scripted: ScriptedResult | undefined): ResolvedResult {
   };
 }
 
+export function withoutSelectWhitespace(calls: RecordedCall[]) {
+  return calls.map((call) => ({
+    ...call,
+    select: call.select?.replace(/\s+/g, ""),
+  }));
+}
+
 export function createQueryRecorder(
   scripted: ScriptedResult[] = [],
 ): QueryRecorder {

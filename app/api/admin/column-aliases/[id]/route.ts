@@ -10,9 +10,14 @@ import {
   ColumnAliasUpdateRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
-
-const COLUMN_ALIAS_SELECT =
-  "id, database_field, alias_name, confidence_score, is_active, created_by, created_at, updated_at, config_id";
+import {
+  deleteColumnAlias,
+  findAliasByFieldAndNameExcluding,
+  findAliasDatabaseField,
+  findAliasName,
+  findColumnAliasById,
+  updateColumnAlias,
+} from "@/lib/import/column-alias-repository";
 
 // GET: Fetch specific column alias
 export async function GET(
@@ -38,11 +43,7 @@ export async function GET(
     }
 
     const supabase = createServiceClient();
-    const { data: alias, error } = await supabase
-      .from("column_aliases")
-      .select(COLUMN_ALIAS_SELECT)
-      .eq("id", aliasId)
-      .single();
+    const { data: alias, error } = await findColumnAliasById(supabase, aliasId);
 
     if (error || !alias) {
       return NextResponse.json(
@@ -103,12 +104,7 @@ export async function PUT(
 
     const supabase = createServiceClient();
 
-    // Check if alias exists
-    const { data: existing } = await supabase
-      .from("column_aliases")
-      .select("database_field")
-      .eq("id", aliasId)
-      .single();
+    const { data: existing } = await findAliasDatabaseField(supabase, aliasId);
 
     if (!existing) {
       return NextResponse.json(
@@ -117,14 +113,12 @@ export async function PUT(
       );
     }
 
-    // Check for duplicate alias name (excluding current record)
-    const { data: duplicate } = await supabase
-      .from("column_aliases")
-      .select("id")
-      .eq("database_field", existing.database_field)
-      .eq("alias_name", alias_name.trim())
-      .neq("id", aliasId)
-      .single();
+    const { data: duplicate } = await findAliasByFieldAndNameExcluding(
+      supabase,
+      existing.database_field,
+      alias_name.trim(),
+      aliasId,
+    );
 
     if (duplicate) {
       return NextResponse.json(
@@ -149,12 +143,11 @@ export async function PUT(
       updateData.is_active = is_active;
     }
 
-    const { data: updatedAlias, error } = await supabase
-      .from("column_aliases")
-      .update(updateData)
-      .eq("id", aliasId)
-      .select()
-      .single();
+    const { data: updatedAlias, error } = await updateColumnAlias(
+      supabase,
+      aliasId,
+      updateData,
+    );
 
     if (error) {
       console.error("Error updating column alias:", error);
@@ -206,12 +199,7 @@ export async function DELETE(
 
     const supabase = createServiceClient();
 
-    // Check if alias exists
-    const { data: existing } = await supabase
-      .from("column_aliases")
-      .select("id, alias_name")
-      .eq("id", aliasId)
-      .single();
+    const { data: existing } = await findAliasName(supabase, aliasId);
 
     if (!existing) {
       return NextResponse.json(
@@ -220,11 +208,7 @@ export async function DELETE(
       );
     }
 
-    // Delete alias
-    const { error } = await supabase
-      .from("column_aliases")
-      .delete()
-      .eq("id", aliasId);
+    const { error } = await deleteColumnAlias(supabase, aliasId);
 
     if (error) {
       console.error("Error deleting column alias:", error);
