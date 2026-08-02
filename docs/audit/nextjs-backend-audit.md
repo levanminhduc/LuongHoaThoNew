@@ -30,13 +30,13 @@ Công cụ: `codebase-retrieval` (context-engine MCP) + Grep/Glob. Lưu ý: MCP 
 > | **Q2** ESLint boundaries | Fail | **Pass** | `no-restricted-imports` chặn `components/**` + `app/**/*.tsx` import `@/utils/supabase/server` và `*-repository`; 0 vòng import (audit gốc chưa đo được vì thiếu công cụ) |
 > | **Q3** Env validate | Partial (lazy) | **Pass** | `instrumentation.ts` — verify thật: `JWT_SECRET` sai → server **chết lúc boot**, không phải lúc gọi API đầu tiên |
 > | **Q1** Bounded contexts | Fail | **Partial** | `lib/` đã gom theo domain (`payroll/`, `employee/`, `attendance/`, `bonus/`, `excel/`, `validations/`, `errors/`); vẫn layer-first ở cấp trên, **cố ý** theo D3 |
-> | **Q4** Testability | Partial (22 file) | **Partial** | **39 test file / 257 test** (audit gốc 22 file). Logic trong route handler vẫn chưa test được — đúng như audit gốc nói |
-> | **A3** Repository | Fail | **Partial** | 3 repository (`employee`, `payroll`, `bonus`); `lib/bonus/` và `lib/employee/` còn **0** chỗ gọi `.from()` ngoài repository. `app/api/admin/payroll*/**` chưa chuyển (task 15.3) |
-> | **A2** Controller mỏng | Fail (TB 236 dòng) | **Partial** (TB **230**) | 17.754 dòng / 77 route. `lookup` 487→199, nhưng 10 route vẫn >400 dòng — hầu hết là route export XLSX, thuộc nhóm 16 chưa làm |
+> | **Q4** Testability | Partial (22 file) | **Partial** | **57 test file / 671 test** (audit gốc 22 file). Mọi truy vấn DB giờ test được qua parity test; logic còn lại trong route handler vẫn chưa test được — đúng như audit gốc nói |
+> | **A3** Repository | Fail | **Pass** | 23 file `*-repository.ts` theo domain, tất cả có `import "server-only"`; `grep '\.from("' app/api` = **0 hit** (baseline 187). Rule ESLint `no-restricted-syntax` chặn tái phạm |
+> | **A2** Controller mỏng | Fail (TB 236 dòng) | **Partial** (TB **210**) | 15.538 dòng / 74 route. Route không còn chuỗi select hay tên cột DB, nhưng chưa đạt ngưỡng 100 dòng của CLAUDE.md — phần còn lại là orchestration nhiều bước và builder XLSX, thuộc nhóm 16 chưa làm |
 > | **A4** ORM singleton | Fail | **Không áp dụng** | Xem task 15.7: chỉ số này đo sai thứ. Theo D2 repository *nhận* `supabase` qua tham số nên route vẫn phải tạo client — 72 file, không giảm và sẽ không giảm. Đóng A4 thật đòi đổi D2 sang singleton, mà D2 đã bác bỏ (supabase-js là HTTP client stateless) |
 > | **S1 · S3 · S4** | Fail/Partial | **Pass** | giữ nguyên kết luận lần cập nhật 1 |
 >
-> Còn **Fail: không còn tiêu chí nào**. Còn **Partial: 4** (A2, A3, Q1, Q4) — cả 4 đều đang bị chặn bởi nhóm 14/16 (bỏ `select("*")` và tách builder XLSX), mà hai nhóm đó cần smoke test luồng export bằng dữ liệu thật mới làm được.
+> Còn **Fail: không còn tiêu chí nào**. Còn **Partial: 3** (A2, Q1, Q4) — cả ba bị chặn bởi nhóm 14/16 (bỏ `select("*")` và tách builder XLSX), mà hai nhóm đó cần smoke test luồng export bằng dữ liệu thật mới làm được.
 
 ## ⚠️ BLOCKERS
 

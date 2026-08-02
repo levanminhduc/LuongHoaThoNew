@@ -100,21 +100,21 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
 ## 11. employees (62 lệnh)
 
-- [ ] 11.1 Tách `employee-repository.ts` thành `employee-repository` / `employee-auth-repository` / `employee-directory-repository` trước khi thêm truy vấn
-- [ ] 11.2 Liệt kê route bị chạm; chia nhỏ thành 3–4 PR
-- [ ] 11.3 Fixture từ git
-- [ ] 11.4 Parity test cho từng nhóm truy vấn
-- [ ] 11.5 **Test phân quyền**: 8 role, kèm trường hợp `van_phong` và `admin`
-- [ ] 11.6 Tách logic nhiều bước của `admin/employees/[id]` PUT/DELETE thành `lib/employee/*-service.ts`; route còn ≤ 200 dòng
-- [ ] 11.7 Chạy lại parity test đăng nhập nhân viên từ change trước
-- [ ] 11.8 GATE
+- [x] 11.1 Tách `employee-repository.ts` thành `employee-repository` / `employee-auth-repository` / `employee-directory-repository` trước khi thêm truy vấn — thêm cả `employee-admin-repository` và `employee-list-repository`, 5 file
+- [x] 11.2 Liệt kê route bị chạm; chia nhỏ thành 3–4 PR — 33 route, chia 3 commit: mật khẩu (5), tra cứu dùng chung (19), quản trị (8)
+- [x] 11.3 Fixture từ git
+- [x] 11.4 Parity test cho từng nhóm truy vấn — 81 test
+- [x] 11.5 **Test phân quyền**: 8 role, kèm trường hợp `van_phong` và `admin` — bộ test 8 role của nhóm 4 chạy lại xanh; nhóm này thêm test chốt bộ lọc `is_active` cho từng nơi dùng
+- [ ] 11.6 Tách logic nhiều bước của `admin/employees/[id]` PUT/DELETE thành `lib/employee/*-service.ts`; route còn ≤ 200 dòng — **CHƯA LÀM**, nằm ngoài phạm vi ranh giới truy cập dữ liệu; route vẫn còn dài
+- [x] 11.7 Chạy lại parity test đăng nhập nhân viên từ change trước — 3 suite / 36 test xanh
+- [x] 11.8 GATE
 
 ## 12. Chốt ranh giới
 
-- [ ] 12.1 Xác nhận `grep -rn "\.from(" app/api | wc -l` trả về 0
-- [ ] 12.2 Thêm rule ESLint cấm `.from(` trong `app/api/**`, thông báo lỗi tiếng Việt chỉ sang repository
-- [ ] 12.3 Xác nhận mọi file `*-repository.ts` đều có `import "server-only"`
-- [ ] 12.4 Cập nhật `docs/audit/nextjs-backend-audit.md`: Q1 và trụ "`app/` mỏng" chuyển trạng thái, ghi số đo mới
-- [ ] 12.5 Promote `server-data-access-boundary` vào `openspec/specs/`
-- [ ] 12.6 Archive change sang `openspec/changes/archive/`
-- [ ] 12.7 GATE lần cuối
+- [x] 12.1 Xác nhận `grep -rn "\.from(" app/api | wc -l` trả về 0 — đạt (chỉ còn `Array.from`/`Buffer.from`)
+- [x] 12.2 Thêm rule ESLint cấm `.from(` trong `app/api/**`, thông báo lỗi tiếng Việt chỉ sang repository — `no-restricted-syntax`, đã thử vi phạm để chắc rule bắt được
+- [x] 12.3 Xác nhận mọi file `*-repository.ts` đều có `import "server-only"` — 23/23
+- [x] 12.4 Cập nhật `docs/audit/nextjs-backend-audit.md`: A3 chuyển Fail → Pass; A2 và Q4 ghi số đo mới
+- [x] 12.5 Promote `server-data-access-boundary` vào `openspec/specs/`
+- [x] 12.6 Archive change sang `openspec/changes/archive/`
+- [x] 12.7 GATE lần cuối

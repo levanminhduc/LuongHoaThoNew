@@ -153,6 +153,20 @@ export default [
     },
   },
   {
+    files: ["app/api/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.property.name='from'][callee.object.name='supabase']",
+          message:
+            "Route không truy vấn thẳng bảng. Chuyển truy vấn xuống lib/<domain>/*-repository.ts rồi gọi hàm từ đó.",
+        },
+      ],
+    },
+  },
+  {
     ignores: [
       ".next/**",
       "node_modules/**",
