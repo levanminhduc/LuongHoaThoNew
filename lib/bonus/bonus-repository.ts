@@ -1,3 +1,4 @@
+import "server-only";
 import type { createServiceClient } from "@/utils/supabase/server";
 import type { BonusType } from "@/lib/validations/bonus";
 import { BONUS_SIGNATURE_SELECT } from "@/lib/bonus/bonus-select";

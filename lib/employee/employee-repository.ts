@@ -1,3 +1,4 @@
+import "server-only";
 import type { createServiceClient } from "@/utils/supabase/server";
 
 export type SupabaseServiceClient = ReturnType<typeof createServiceClient>;
