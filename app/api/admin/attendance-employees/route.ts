@@ -8,6 +8,10 @@ import {
   AttendanceEmployeesQuerySchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findAttendancePeriods,
+  findMonthlyAttendanceSummaries,
+} from "@/lib/attendance/attendance-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,11 +48,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const offset = (page - 1) * limit;
 
-    const { data: periodsData } = await supabase
-      .from("attendance_monthly")
-      .select("period_year, period_month")
-      .order("period_year", { ascending: false })
-      .order("period_month", { ascending: false });
+    const { data: periodsData } = await findAttendancePeriods(supabase);
 
     const uniquePeriods = Array.from(
       new Map(
@@ -59,13 +59,11 @@ export async function GET(request: NextRequest) {
       ).values(),
     );
 
-    const { data: attendanceData, error: attendanceError } = await supabase
-      .from("attendance_monthly")
-      .select(
-        "employee_id, total_hours, total_days, total_meal_ot_hours, total_ot_hours, sick_days, source_file, created_at",
-      )
-      .eq("period_year", periodYear)
-      .eq("period_month", periodMonth);
+    const { data: attendanceData, error: attendanceError } =
+      await findMonthlyAttendanceSummaries(supabase, {
+        periodYear,
+        periodMonth,
+      });
 
     if (attendanceError) {
       console.error("Attendance query error:", attendanceError);

@@ -45,12 +45,12 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 
 ## 5. attendance_monthly + attendance_daily (7 lệnh)
 
-- [ ] 5.1 Liệt kê route bị chạm
-- [ ] 5.2 Fixture từ git
-- [ ] 5.3 Viết `lib/attendance/attendance-repository.ts` + `server-only`
-- [ ] 5.4 Parity test; chú ý route export chấm công đã có parity test XLSX từ change trước — chạy lại để chắc không đụng
-- [ ] 5.5 Sửa route
-- [ ] 5.6 GATE
+- [x] 5.1 Liệt kê route bị chạm
+- [x] 5.2 Fixture từ git
+- [x] 5.3 Viết `lib/attendance/attendance-repository.ts` + `server-only`
+- [x] 5.4 Parity test; chú ý route export chấm công đã có parity test XLSX từ change trước — chạy lại để chắc không đụng
+- [x] 5.5 Sửa route
+- [x] 5.6 GATE
 
 ## 6. employee_bonuses + bonus_management_signatures (9 lệnh)
 

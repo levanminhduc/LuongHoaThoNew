@@ -6,6 +6,7 @@ import { parseAttendanceExcel } from "@/lib/attendance/attendance-parser";
 import type { AttendanceImportError } from "@/types/attendance";
 import { randomUUID } from "crypto";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { upsertMonthlyAttendance } from "@/lib/attendance/attendance-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -105,24 +106,18 @@ export async function POST(request: NextRequest) {
 
         insertedDaily += dailyRecords.length;
 
-        const { error: monthlyError } = await supabase
-          .from("attendance_monthly")
-          .upsert(
-            {
-              employee_id: record.employeeId,
-              period_year: record.periodYear,
-              period_month: record.periodMonth,
-              total_hours: record.summary.totalHours,
-              total_days: record.summary.totalDays,
-              total_meal_ot_hours: record.summary.totalMealOtHours,
-              total_ot_hours: record.summary.totalOtHours,
-              sick_days: record.summary.sickDays,
-              daily_records_json: dailyRecords,
-              source_file: file.name,
-              import_batch_id: importBatchId,
-            },
-            { onConflict: "employee_id,period_year,period_month" },
-          );
+        const { error: monthlyError } = await upsertMonthlyAttendance(
+          supabase,
+          {
+            employeeId: record.employeeId,
+            periodYear: record.periodYear,
+            periodMonth: record.periodMonth,
+            summary: record.summary,
+            dailyRecords,
+            sourceFile: file.name,
+            importBatchId,
+          },
+        );
 
         if (monthlyError) {
           errors.push({

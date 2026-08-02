@@ -10,6 +10,10 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  findDailyCheckOutTimes,
+  findMonthlyDailyRecords,
+} from "@/lib/attendance/attendance-repository";
 
 interface DailyExportRecord {
   day: number;
@@ -321,11 +325,11 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
     const daysInMonth = new Date(period_year, period_month, 0).getDate();
 
-    const { data: monthlyData, error: monthlyError } = await supabase
-      .from("attendance_monthly")
-      .select("employee_id, daily_records_json")
-      .eq("period_year", period_year)
-      .eq("period_month", period_month);
+    const { data: monthlyData, error: monthlyError } =
+      await findMonthlyDailyRecords(supabase, {
+        periodYear: period_year,
+        periodMonth: period_month,
+      });
 
     if (monthlyError) {
       return NextResponse.json(
@@ -368,12 +372,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (fallbackIds.length > 0) {
-      const { data: fallbackData } = await supabase
-        .from("attendance_daily")
-        .select("employee_id, work_date, check_out_time")
-        .eq("period_year", period_year)
-        .eq("period_month", period_month)
-        .in("employee_id", fallbackIds);
+      const { data: fallbackData } = await findDailyCheckOutTimes(supabase, {
+        periodYear: period_year,
+        periodMonth: period_month,
+        employeeIds: fallbackIds,
+      });
 
       for (const d of fallbackData || []) {
         const dayNum = new Date(d.work_date).getDate();

@@ -19,12 +19,10 @@ import {
 import { buildAttendanceDailySheet } from "@/lib/excel/attendance-daily-sheet";
 import { buildAttendanceSummarySheet } from "@/lib/excel/attendance-summary-sheet";
 import type { AttendanceSignatureLog } from "@/lib/excel/attendance-sheet-types";
-
-const ATTENDANCE_MONTHLY_SELECT =
-  "employee_id, source_file, total_days, total_hours, total_ot_hours, total_meal_ot_hours, sick_days, daily_records_json";
-
-const ATTENDANCE_DAILY_SELECT =
-  "employee_id, work_date, check_in_time, check_out_time, working_units, overtime_units";
+import {
+  buildMonthlyAttendanceExportQuery,
+  findDailyAttendanceForExport,
+} from "@/lib/attendance/attendance-repository";
 
 interface ExportRequestBody {
   period_year: number;
@@ -60,17 +58,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let monthlyQuery = supabase
-      .from("attendance_monthly")
-      .select(ATTENDANCE_MONTHLY_SELECT)
-      .eq("period_year", period_year)
-      .eq("period_month", period_month);
-
-    if (export_type === "selected" && employee_ids && employee_ids.length > 0) {
-      monthlyQuery = monthlyQuery.in("employee_id", employee_ids);
-    }
-
-    const { data: monthlyData, error: monthlyError } = await monthlyQuery;
+    const { data: monthlyData, error: monthlyError } =
+      await buildMonthlyAttendanceExportQuery(supabase, {
+        periodYear: period_year,
+        periodMonth: period_month,
+        exportType: export_type,
+        employeeIds: employee_ids,
+      });
 
     if (monthlyError) {
       console.error("Monthly query error:", monthlyError);
@@ -152,14 +146,14 @@ export async function POST(request: NextRequest) {
       }
 
       if (fallbackEmployeeIds.length > 0) {
-        const { data: fallbackDailyData } = await supabase
-          .from("attendance_daily")
-          .select(ATTENDANCE_DAILY_SELECT)
-          .eq("period_year", period_year)
-          .eq("period_month", period_month)
-          .in("employee_id", fallbackEmployeeIds)
-          .order("employee_id")
-          .order("work_date");
+        const { data: fallbackDailyData } = await findDailyAttendanceForExport(
+          supabase,
+          {
+            periodYear: period_year,
+            periodMonth: period_month,
+            employeeIds: fallbackEmployeeIds,
+          },
+        );
 
         for (const d of fallbackDailyData || []) {
           const dayNum = new Date(d.work_date).getDate();
