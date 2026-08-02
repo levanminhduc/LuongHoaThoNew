@@ -1,6 +1,6 @@
 ## Context
 
-Ba repository đã tồn tại (`payroll`, `bonus`, `employee`) đặt sẵn khuôn: hàm thuần, nhận `SupabaseServiceClient` qua tham số, test bằng client giả. Khuôn này đã có 28 test xanh. Việc còn lại là áp nó cho 164 lệnh `.from()` còn nằm trong route.
+Ba repository đã tồn tại (`payroll`, `bonus`, `employee`) đặt sẵn khuôn: hàm thuần, nhận `SupabaseServiceClient` qua tham số, test bằng client giả. Khuôn này đã có 28 test xanh. Việc còn lại là áp nó cho 172 lệnh `.from()` còn nằm trong route.
 
 Ràng buộc kế thừa từ change trước, vẫn nguyên hiệu lực:
 
@@ -75,5 +75,5 @@ Rule cấm `.from(` trong `app/api/**` chỉ có nghĩa khi lệnh cuối cùng 
 | Đổi nhầm truy vấn `{ count: "exact", head: true }` thành truy vấn trả dòng                                            | Spec ghi thành requirement riêng; parity test so cặp `{ count, head }`                                  |
 | `select("*")` bị "tiện tay" viết tường minh → rớt key khỏi JSON                                                       | Non-Goal ghi rõ; review checklist mỗi PR                                                                |
 | Rút truy vấn có phân quyền (`canAccessDepartment`, `van_phong` bypass) làm lệch quyền                                 | Nhóm `employees` và `department_permissions` bắt buộc kèm test phân quyền theo 8 role, không chỉ parity |
-| 58 route sửa trong nhiều PR, dễ trôi giữa chừng                                                                       | Mỗi nhóm tự đứng được: merge được, CI xanh, không phụ thuộc nhóm sau                                    |
+| 55 route sửa trong nhiều PR, dễ trôi giữa chừng                                                                       | Mỗi nhóm tự đứng được: merge được, CI xanh, không phụ thuộc nhóm sau                                    |
 | Tổng khối lượng lớn hơn ước tính                                                                                      | Sau nhóm 3, đo lại và báo trước khi đi tiếp hai nhóm lớn                                                |
