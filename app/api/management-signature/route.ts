@@ -14,6 +14,7 @@ import {
   findActiveSignatureSigner,
   insertManagementSignature,
 } from "@/lib/signature/management-signature-repository";
+import { findPayrollSignatureCounts } from "@/lib/payroll/payroll-signature-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,20 +67,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let payrollQuery = supabase
-      .from("payrolls")
-      .select("employee_id, is_signed", { count: "exact" })
-      .eq("salary_month", salary_month);
-
-    if (isT13Month) {
-      payrollQuery = payrollQuery.eq("payroll_type", "t13");
-    } else {
-      payrollQuery = payrollQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    const { data: payrolls, error: payrollError } = await payrollQuery;
+    const { data: payrolls, error: payrollError } =
+      await findPayrollSignatureCounts(supabase, salary_month, isT13Month);
 
     if (payrollError) {
       console.error("Error fetching payrolls:", payrollError);

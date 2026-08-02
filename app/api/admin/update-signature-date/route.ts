@@ -9,6 +9,7 @@ import {
 } from "@/lib/validations";
 import { getVietnamYear } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findSignedPayrollsForDateUpdate } from "@/lib/payroll/payroll-signature-repository";
 
 const BATCH_SIZE = 200;
 
@@ -43,26 +44,13 @@ export async function POST(request: NextRequest) {
     } = parsed.data;
 
     const supabase = createServiceClient();
-    let payrollQuery = supabase
-      .from("payrolls")
-      .select("employee_id")
-      .eq("salary_month", salary_month)
-      .eq("is_signed", true);
-
-    if (is_t13) {
-      payrollQuery = payrollQuery.eq("payroll_type", "t13");
-    } else {
-      payrollQuery = payrollQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    if (scope === "selected" && employee_ids) {
-      payrollQuery = payrollQuery.in("employee_id", employee_ids);
-    }
-
     const { data: signedPayrolls, error: fetchError } =
-      await payrollQuery.order("employee_id");
+      await findSignedPayrollsForDateUpdate(
+        supabase,
+        salary_month,
+        is_t13,
+        scope === "selected" ? (employee_ids ?? null) : null,
+      );
 
     if (fetchError) {
       return NextResponse.json(
@@ -219,22 +207,8 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
 
     if (month) {
-      let payrollQuery = supabase
-        .from("payrolls")
-        .select("employee_id")
-        .eq("salary_month", month)
-        .eq("is_signed", true);
-
-      if (isT13) {
-        payrollQuery = payrollQuery.eq("payroll_type", "t13");
-      } else {
-        payrollQuery = payrollQuery.or(
-          "payroll_type.eq.monthly,payroll_type.is.null",
-        );
-      }
-
       const { data: signedPayrolls, error: fetchError } =
-        await payrollQuery.order("employee_id");
+        await findSignedPayrollsForDateUpdate(supabase, month, isT13, null);
 
       if (fetchError) {
         console.error("Error fetching signed payrolls:", fetchError);

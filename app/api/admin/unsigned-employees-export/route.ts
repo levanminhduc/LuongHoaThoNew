@@ -6,6 +6,7 @@ import { sanitizePostgrestValue } from "@/lib/utils/postgrest-sanitize";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { getVietnamDate } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findUnsignedPayrollsForExport } from "@/lib/payroll/payroll-signature-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,21 +41,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let payrollQuery = supabase
-      .from("payrolls")
-      .select("employee_id, is_signed, tien_luong_thuc_nhan_cuoi_ky")
-      .eq("salary_month", month)
-      .eq("is_signed", false);
-
-    if (isT13) {
-      payrollQuery = payrollQuery.eq("payroll_type", "t13");
-    } else {
-      payrollQuery = payrollQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    const { data: payrollsData } = await payrollQuery;
+    const { data: payrollsData } = await findUnsignedPayrollsForExport(
+      supabase,
+      month,
+      isT13,
+    );
 
     if (!payrollsData || payrollsData.length === 0) {
       return NextResponse.json(

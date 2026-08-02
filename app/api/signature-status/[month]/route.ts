@@ -6,6 +6,7 @@ import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { SalaryMonthSchema } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findSignatureStatusForMonth } from "@/lib/signature/management-signature-repository";
+import { findPayrollSignatureStatus } from "@/lib/payroll/payroll-signature-repository";
 
 export async function GET(
   request: NextRequest,
@@ -56,20 +57,8 @@ export async function GET(
 
     const supabase = createServiceClient();
 
-    let payrollQuery = supabase
-      .from("payrolls")
-      .select("employee_id, is_signed")
-      .eq("salary_month", month);
-
-    if (isT13) {
-      payrollQuery = payrollQuery.eq("payroll_type", "t13");
-    } else {
-      payrollQuery = payrollQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    const { data: payrolls, error: payrollError } = await payrollQuery;
+    const { data: payrolls, error: payrollError } =
+      await findPayrollSignatureStatus(supabase, month, isT13);
 
     if (payrollError) {
       console.error("Error fetching payrolls:", payrollError);

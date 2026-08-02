@@ -4,6 +4,11 @@ import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { SalaryMonthSchema } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import {
+  buildMonthPayrollCountBySignedQuery,
+  buildMonthPayrollCountQuery,
+  findSignedEmployeeIds,
+} from "@/lib/payroll/payroll-signature-repository";
 
 export async function GET(
   request: NextRequest,
@@ -49,37 +54,10 @@ export async function GET(
 
     const supabase = createServiceClient();
 
-    const buildQuery = () => {
-      let q = supabase
-        .from("payrolls")
-        .select("*", { count: "exact", head: true })
-        .eq("salary_month", month);
-      if (isT13) {
-        q = q.eq("payroll_type", "t13");
-      } else {
-        q = q.or("payroll_type.eq.monthly,payroll_type.is.null");
-      }
-      return q;
-    };
-
-    const buildSignedQuery = (signed: boolean) => {
-      let q = supabase
-        .from("payrolls")
-        .select("*", { count: "exact", head: true })
-        .eq("salary_month", month)
-        .eq("is_signed", signed);
-      if (isT13) {
-        q = q.eq("payroll_type", "t13");
-      } else {
-        q = q.or("payroll_type.eq.monthly,payroll_type.is.null");
-      }
-      return q;
-    };
-
     const [totalResult, signedResult, unsignedResult] = await Promise.all([
-      buildQuery(),
-      buildSignedQuery(true),
-      buildSignedQuery(false),
+      buildMonthPayrollCountQuery(supabase, month, isT13),
+      buildMonthPayrollCountBySignedQuery(supabase, month, isT13, true),
+      buildMonthPayrollCountBySignedQuery(supabase, month, isT13, false),
     ]);
 
     const totalCount = totalResult.count || 0;
@@ -93,19 +71,11 @@ export async function GET(
     }> = [];
 
     if (searchParams.get("include_signed_employees") === "true") {
-      let signedQuery = supabase
-        .from("payrolls")
-        .select("employee_id")
-        .eq("salary_month", month)
-        .eq("is_signed", true);
-      if (isT13) {
-        signedQuery = signedQuery.eq("payroll_type", "t13");
-      } else {
-        signedQuery = signedQuery.or(
-          "payroll_type.eq.monthly,payroll_type.is.null",
-        );
-      }
-      const { data: signedPayrolls } = await signedQuery.order("employee_id");
+      const { data: signedPayrolls } = await findSignedEmployeeIds(
+        supabase,
+        month,
+        isT13,
+      );
       const ids = signedPayrolls?.map((p) => p.employee_id) || [];
 
       if (ids.length > 0) {

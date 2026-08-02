@@ -11,6 +11,10 @@ import {
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { insertBulkSignatureLog } from "@/lib/signature/signature-log-repository";
+import {
+  buildMonthPayrollCountQuery,
+  findUnsignedEmployeeIds,
+} from "@/lib/payroll/payroll-signature-repository";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,22 +54,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    let unsignedQuery = supabase
-      .from("payrolls")
-      .select("employee_id")
-      .eq("salary_month", salary_month)
-      .eq("is_signed", false);
-
-    if (isT13Month) {
-      unsignedQuery = unsignedQuery.eq("payroll_type", "t13");
-    } else {
-      unsignedQuery = unsignedQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
     const { data: unsignedPayrolls, error: fetchError } =
-      await unsignedQuery.order("employee_id");
+      await findUnsignedEmployeeIds(supabase, salary_month, isT13Month);
 
     if (fetchError) {
       console.error("Error fetching unsigned payrolls:", fetchError);
@@ -99,20 +89,11 @@ export async function POST(request: NextRequest) {
     const unsignedCount = unsignedPayrolls.length;
     const employeeIds = unsignedPayrolls.map((p) => p.employee_id);
 
-    let totalQuery = supabase
-      .from("payrolls")
-      .select("*", { count: "exact", head: true })
-      .eq("salary_month", salary_month);
-
-    if (isT13Month) {
-      totalQuery = totalQuery.eq("payroll_type", "t13");
-    } else {
-      totalQuery = totalQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    const { count: totalCount } = await totalQuery;
+    const { count: totalCount } = await buildMonthPayrollCountQuery(
+      supabase,
+      salary_month,
+      isT13Month,
+    );
 
     const alreadySignedCount = (totalCount || 0) - unsignedCount;
 

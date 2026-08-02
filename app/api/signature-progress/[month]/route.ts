@@ -9,6 +9,7 @@ import {
   findRecentSignaturesForMonth,
   findSignatureProgressForMonth,
 } from "@/lib/signature/management-signature-repository";
+import { findPayrollSignatureProgress } from "@/lib/payroll/payroll-signature-repository";
 
 export async function GET(
   request: NextRequest,
@@ -59,20 +60,8 @@ export async function GET(
 
     const supabase = createServiceClient();
 
-    let payrollQuery = supabase
-      .from("payrolls")
-      .select("employee_id, is_signed, signed_at", { count: "exact" })
-      .eq("salary_month", month);
-
-    if (isT13) {
-      payrollQuery = payrollQuery.eq("payroll_type", "t13");
-    } else {
-      payrollQuery = payrollQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    const { data: payrolls, error: payrollError } = await payrollQuery;
+    const { data: payrolls, error: payrollError } =
+      await findPayrollSignatureProgress(supabase, month, isT13);
 
     if (payrollError) {
       console.error("Error fetching payrolls:", payrollError);
