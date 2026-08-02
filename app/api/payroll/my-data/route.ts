@@ -5,9 +5,10 @@ import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
-  PAYROLL_WITH_EMPLOYEE_SELECT,
-  applyPayrollFilters,
-} from "@/lib/payroll/payroll-list-query";
+  buildMyPayrollCountQuery,
+  buildMyPayrollListQuery,
+  findMyYearlySummary,
+} from "@/lib/payroll/payroll-self-repository";
 import {
   parseSchema,
   createValidationErrorResponse,
@@ -58,35 +59,19 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    let query = supabase
-      .from("payrolls")
-      .select(PAYROLL_WITH_EMPLOYEE_SELECT)
-      .eq("employee_id", auth.user.employee_id);
+    const { count } = await buildMyPayrollCountQuery(
+      supabase,
+      auth.user.employee_id,
+      payrollType === "t13",
+    );
 
-    query = applyPayrollFilters(query, {
-      payrollType,
-      salaryMonth: month,
-    });
-
-    let countQuery = supabase
-      .from("payrolls")
-      .select("*", { count: "exact", head: true })
-      .eq("employee_id", auth.user.employee_id);
-
-    if (payrollType === "t13") {
-      countQuery = countQuery.eq("payroll_type", "t13");
-    } else {
-      countQuery = countQuery.or(
-        "payroll_type.eq.monthly,payroll_type.is.null",
-      );
-    }
-
-    const { count } = await countQuery;
-
-    // Get paginated data
-    const { data: payrolls, error } = await query
-      .order("salary_month", { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { data: payrolls, error } = await buildMyPayrollListQuery(
+      supabase,
+      auth.user.employee_id,
+      { payrollType, salaryMonth: month },
+      offset,
+      limit,
+    );
 
     if (error) {
       console.error("Database error:", error);
@@ -166,23 +151,11 @@ export async function POST(request: NextRequest) {
     const currentYear = parsedBody.data.year ?? getVietnamYear();
     const supabase = createServiceClient();
 
-    // Get yearly summary for the employee
-    const { data: yearlyData, error } = await supabase
-      .from("payrolls")
-      .select(
-        `
-        salary_month,
-        tien_luong_thuc_nhan_cuoi_ky,
-        is_signed,
-        signed_at,
-        tong_cong_tien_luong,
-        thue_tncn,
-        bhxh_bhtn_bhyt_total
-      `,
-      )
-      .eq("employee_id", auth.user.employee_id)
-      .like("salary_month", `${currentYear}-%`)
-      .order("salary_month", { ascending: true });
+    const { data: yearlyData, error } = await findMyYearlySummary(
+      supabase,
+      auth.user.employee_id,
+      currentYear,
+    );
 
     if (error) {
       return NextResponse.json(

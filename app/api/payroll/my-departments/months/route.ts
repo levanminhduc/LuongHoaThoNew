@@ -4,6 +4,7 @@ import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { toErrorResponse } from "@/lib/errors/app-error";
+import { findAllowedDepartmentsSalaryMonths } from "@/lib/payroll/payroll-department-repository";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,13 +32,10 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    const { data, error } = await supabase
-      .from("payrolls")
-      .select(
-        "salary_month, employees!payrolls_employee_id_fkey!inner(department)",
-      )
-      .in("employees.department", allowedDepartments)
-      .order("salary_month", { ascending: false });
+    const { data, error } = await findAllowedDepartmentsSalaryMonths(
+      supabase,
+      allowedDepartments,
+    );
 
     if (error) {
       console.error("My departments months fetch error:", error.message);

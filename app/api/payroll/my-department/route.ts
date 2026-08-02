@@ -5,9 +5,10 @@ import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
-  PAYROLL_WITH_EMPLOYEE_SELECT,
-  applyPayrollFilters,
-} from "@/lib/payroll/payroll-list-query";
+  buildDepartmentPayrollCountQuery,
+  buildDepartmentPayrollListQuery,
+  findDepartmentPayrollStats,
+} from "@/lib/payroll/payroll-department-repository";
 import {
   parseSchema,
   createValidationErrorResponse,
@@ -67,28 +68,19 @@ export async function GET(request: NextRequest) {
 
     const listFilters = { salaryMonth: salaryMonthFilter, search };
 
-    const query = applyPayrollFilters(
-      supabase
-        .from("payrolls")
-        .select(PAYROLL_WITH_EMPLOYEE_SELECT)
-        .eq("employees.department", auth.user.department),
+    const { count } = await buildDepartmentPayrollCountQuery(
+      supabase,
+      auth.user.department,
       listFilters,
     );
 
-    const countQuery = applyPayrollFilters(
-      supabase
-        .from("payrolls")
-        .select(PAYROLL_WITH_EMPLOYEE_SELECT, { count: "exact", head: true })
-        .eq("employees.department", auth.user.department),
+    const { data: payrolls, error } = await buildDepartmentPayrollListQuery(
+      supabase,
+      auth.user.department,
       listFilters,
+      offset,
+      limit,
     );
-
-    const { count } = await countQuery;
-
-    // Get paginated data
-    const { data: payrolls, error } = await query
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
 
     if (error) {
       console.error("Database error:", error);
@@ -166,18 +158,11 @@ export async function POST(request: NextRequest) {
     const isT13 = month?.endsWith("-13");
     const salaryMonthFilter = month || getVietnamMonth();
 
-    const { data: stats, error } = await supabase
-      .from("payrolls")
-      .select(
-        `
-        tien_luong_thuc_nhan_cuoi_ky,
-        tong_luong_13,
-        is_signed,
-        employees!payrolls_employee_id_fkey!inner(department)
-      `,
-      )
-      .eq("employees.department", auth.user.department)
-      .eq("salary_month", salaryMonthFilter);
+    const { data: stats, error } = await findDepartmentPayrollStats(
+      supabase,
+      auth.user.department,
+      salaryMonthFilter,
+    );
 
     if (error) {
       return NextResponse.json(

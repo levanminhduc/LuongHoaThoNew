@@ -5,10 +5,11 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
+import { type PayrollRecord } from "@/lib/payroll/payroll-select";
 import {
-  getPayrollSelect,
-  type PayrollRecord,
-} from "@/lib/payroll/payroll-select";
+  findEmployeePayrollForMonth,
+  findEmployeeSalaryMonths,
+} from "@/lib/payroll/payroll-self-repository";
 import { verifyEmployeeSession } from "@/lib/employee-session";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
@@ -103,23 +104,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "list_months") {
-      let listQuery = supabase
-        .from("payrolls")
-        .select("salary_month, payroll_type")
-        .eq("employee_id", authenticatedEmployeeId);
-
-      if (is_t13) {
-        listQuery = listQuery.eq("payroll_type", "t13");
-      } else {
-        listQuery = listQuery.or(
-          "payroll_type.eq.monthly,payroll_type.is.null",
+      const { data: payrolls, error: payrollsError } =
+        await findEmployeeSalaryMonths(
+          supabase,
+          authenticatedEmployeeId,
+          is_t13,
         );
-      }
-
-      const { data: payrolls, error: payrollsError } = await listQuery.order(
-        "salary_month",
-        { ascending: false },
-      );
 
       if (payrollsError) {
         return NextResponse.json(
@@ -144,22 +134,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      let payrollQuery = supabase
-        .from("payrolls")
-        .select(getPayrollSelect(is_t13))
-        .eq("employee_id", authenticatedEmployeeId)
-        .eq("salary_month", salary_month.trim());
-
-      if (is_t13) {
-        payrollQuery = payrollQuery.eq("payroll_type", "t13");
-      } else {
-        payrollQuery = payrollQuery.or(
-          "payroll_type.eq.monthly,payroll_type.is.null",
-        );
-      }
-
       const { data: payrollData, error: payrollError } =
-        await payrollQuery.single();
+        await findEmployeePayrollForMonth(
+          supabase,
+          authenticatedEmployeeId,
+          salary_month.trim(),
+          is_t13,
+        );
 
       const payroll = payrollData as PayrollRecord | null;
 

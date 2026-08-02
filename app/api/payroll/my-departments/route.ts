@@ -5,9 +5,10 @@ import { verifyToken, getAuditInfo } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
-  PAYROLL_WITH_EMPLOYEE_SELECT,
-  applyPayrollFilters,
-} from "@/lib/payroll/payroll-list-query";
+  buildAllowedDepartmentsPayrollCountQuery,
+  buildAllowedDepartmentsPayrollListQuery,
+  findAllowedDepartmentsPayrollStats,
+} from "@/lib/payroll/payroll-department-repository";
 import {
   parseSchema,
   createValidationErrorResponse,
@@ -80,30 +81,22 @@ export async function GET(request: NextRequest) {
     const selectedDepartment =
       department && allowedDepartments.includes(department) ? department : null;
 
-    let query = supabase
-      .from("payrolls")
-      .select(PAYROLL_WITH_EMPLOYEE_SELECT)
-      .in("employees.department", allowedDepartments);
+    const { count } = await buildAllowedDepartmentsPayrollCountQuery(
+      supabase,
+      allowedDepartments,
+      selectedDepartment,
+      listFilters,
+    );
 
-    let countQuery = supabase
-      .from("payrolls")
-      .select(PAYROLL_WITH_EMPLOYEE_SELECT, { count: "exact", head: true })
-      .in("employees.department", allowedDepartments);
-
-    if (selectedDepartment) {
-      query = query.eq("employees.department", selectedDepartment);
-      countQuery = countQuery.eq("employees.department", selectedDepartment);
-    }
-
-    query = applyPayrollFilters(query, listFilters);
-    countQuery = applyPayrollFilters(countQuery, listFilters);
-
-    const { count } = await countQuery;
-
-    // Get paginated data
-    const { data: payrolls, error } = await query
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { data: payrolls, error } =
+      await buildAllowedDepartmentsPayrollListQuery(
+        supabase,
+        allowedDepartments,
+        selectedDepartment,
+        listFilters,
+        offset,
+        limit,
+      );
 
     if (error) {
       console.error("Database error:", error);
@@ -190,17 +183,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get statistics for all assigned departments
-    const { data: stats, error } = await supabase
-      .from("payrolls")
-      .select(
-        `
-        tien_luong_thuc_nhan_cuoi_ky,
-        is_signed,
-        employees!inner(department)
-      `,
-      )
-      .in("employees.department", allowedDepartments)
-      .eq("salary_month", month || getVietnamMonth());
+    const { data: stats, error } = await findAllowedDepartmentsPayrollStats(
+      supabase,
+      allowedDepartments,
+      month || getVietnamMonth(),
+    );
 
     if (error) {
       return NextResponse.json(

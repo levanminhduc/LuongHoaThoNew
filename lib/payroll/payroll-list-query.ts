@@ -10,6 +10,9 @@ export const PAYROLL_WITH_EMPLOYEE_SELECT = `
         )
       `;
 
+export const MONTHLY_PAYROLL_TYPE_FILTER =
+  "payroll_type.eq.monthly,payroll_type.is.null";
+
 export interface PayrollListFilters {
   salaryMonth?: string | null;
   payrollType?: string | null;
@@ -34,7 +37,7 @@ export function applyPayrollFilters<T extends FilterableQuery<T>>(
   if (filters.payrollType === "t13") {
     filtered = filtered.eq("payroll_type", "t13");
   } else if (filters.payrollType) {
-    filtered = filtered.or("payroll_type.eq.monthly,payroll_type.is.null");
+    filtered = filtered.or(MONTHLY_PAYROLL_TYPE_FILTER);
   }
 
   if (filters.search) {

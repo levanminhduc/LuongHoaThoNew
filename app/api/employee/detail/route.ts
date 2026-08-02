@@ -5,10 +5,8 @@ import {
   formatSalaryMonth,
   formatSignatureTime,
 } from "@/lib/utils/date-formatter";
-import {
-  getPayrollSelect,
-  type PayrollRecord,
-} from "@/lib/payroll/payroll-select";
+import { type PayrollRecord } from "@/lib/payroll/payroll-select";
+import { findLatestEmployeePayroll } from "@/lib/payroll/payroll-self-repository";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import { toErrorResponse } from "@/lib/errors/app-error";
 
@@ -49,21 +47,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query = supabase
-      .from("payrolls")
-      .select(getPayrollSelect(is_t13))
-      .eq("employee_id", session.employee_id);
-
-    if (is_t13) {
-      query = query.eq("payroll_type", "t13");
-    } else {
-      query = query.or("payroll_type.eq.monthly,payroll_type.is.null");
-    }
-
-    const { data: payrollData, error: payrollError } = await query
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    const { data: payrollData, error: payrollError } =
+      await findLatestEmployeePayroll(supabase, session.employee_id, is_t13);
 
     const payroll = payrollData as PayrollRecord | null;
 
