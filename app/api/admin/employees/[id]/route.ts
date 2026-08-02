@@ -2,11 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
-import { cascadeUpdateEmployeeId } from "@/lib/employee/cascade-update-employee";
-import { auditService } from "@/lib/audit-service";
-import bcrypt from "bcryptjs";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
-import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   EmployeeUpdateRequestSchema,
@@ -14,15 +9,31 @@ import {
   createValidationErrorResponse,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
-import { findAnyPayrollForEmployee } from "@/lib/payroll/payroll-admin-repository";
-import {
-  deactivateEmployee,
-  deleteEmployee,
-  findAdminEmployeeRecord,
-  findEmployeeForEdit,
-  findEmployeeNameById,
-  updateEmployeeById,
-} from "@/lib/employee/employee-admin-repository";
+import { findAdminEmployeeRecord } from "@/lib/employee/employee-admin-repository";
+import { updateEmployee } from "@/lib/employee/employee-update-service";
+import { removeEmployee } from "@/lib/employee/employee-removal-service";
+
+const ROLES_NGUOI_LAP_BIEU_CANNOT_ASSIGN = ["admin", "giam_doc", "ke_toan"];
+
+function sensitiveJson(body: unknown, status?: number) {
+  return NextResponse.json(body, { status, headers: CACHE_HEADERS.sensitive });
+}
+
+function unauthorized() {
+  return sensitiveJson({ error: "Không có quyền truy cập" }, 401);
+}
+
+function notFound() {
+  return sensitiveJson({ error: "Nhân viên không tồn tại" }, 404);
+}
+
+function serverErrorResponse(error: unknown, context: string) {
+  console.error(context, error);
+  return toErrorResponse(error, {
+    fallbackMessage: "Lỗi server",
+    headers: CACHE_HEADERS.sensitive,
+  });
+}
 
 export async function PUT(
   request: NextRequest,
@@ -32,297 +43,68 @@ export async function PUT(
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
     const admin = verifyEmployeeManagementAccess(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+    if (!admin) return unauthorized();
 
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
-    const body = await request.json();
-    const parsedBody = parseSchema(EmployeeUpdateRequestSchema, body);
+    const { id } = await params;
+    const parsedBody = parseSchema(
+      EmployeeUpdateRequestSchema,
+      await request.json(),
+    );
     if (!parsedBody.success) {
-      return NextResponse.json(
+      return sensitiveJson(
         createValidationErrorResponse(parsedBody.errors),
-        { status: 400, headers: CACHE_HEADERS.sensitive },
+        400,
       );
     }
-    const {
-      employee_id,
-      full_name,
-      cccd,
-      password,
-      chuc_vu,
-      department,
-      phone_number,
-      is_active,
-    } = parsedBody.data;
 
-    const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
-    if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {
-      return NextResponse.json(
+    if (
+      admin.role === "nguoi_lap_bieu" &&
+      ROLES_NGUOI_LAP_BIEU_CANNOT_ASSIGN.includes(parsedBody.data.chuc_vu)
+    ) {
+      return sensitiveJson(
         { error: "Không có quyền thay đổi thành chức vụ này" },
-        { status: 403, headers: CACHE_HEADERS.sensitive },
+        403,
       );
     }
 
-    const supabase = createServiceClient();
-
-    // Check if current employee exists and get current data for audit
-    const { data: existing } = await findEmployeeForEdit(supabase, id);
-
-    if (!existing) {
-      return NextResponse.json(
-        { error: "Nhân viên không tồn tại" },
-        { status: 404, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // If employee_id is changing, use cascade update
-    if (employee_id !== id) {
-      console.log(`Employee ID changing: ${id} → ${employee_id}`);
-
-      // Perform cascade update across all related tables
-      const cascadeResult = await cascadeUpdateEmployeeId(
-        id,
-        employee_id,
-        admin.employee_id,
-        admin.full_name || admin.employee_id,
-      );
-
-      if (!cascadeResult.success) {
-        return NextResponse.json(
-          {
-            error: cascadeResult.message,
-            details: cascadeResult.error,
-          },
-          { status: 400, headers: CACHE_HEADERS.sensitive },
-        );
-      }
-
-      const updateData: Record<string, unknown> = {
-        full_name,
-        chuc_vu,
-        department: department || null,
-        phone_number: phone_number || null,
-        is_active: is_active !== undefined ? is_active : true,
-        updated_at: getVietnamTimestamp(),
-      };
-
-      if (cccd) {
-        updateData.cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
-      }
-
-      if (password) {
-        updateData.password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-        updateData.last_password_change_at = getVietnamTimestamp();
-      }
-
-      // Update additional fields (employee_id already updated by cascade)
-      const { data: updatedEmployee, error: updateError } =
-        await updateEmployeeById(supabase, employee_id, updateData);
-
-      if (updateError) {
-        console.error("Error updating additional fields:", updateError);
-        return NextResponse.json(
-          { error: "Lỗi khi cập nhật thông tin bổ sung" },
-          { status: 500, headers: CACHE_HEADERS.sensitive },
-        );
-      }
-
-      try {
-        const cascadeChanges: Array<{
-          fieldName: string;
-          oldValue: string;
-          newValue: string;
-        }> = [];
-
-        if (password) {
-          cascadeChanges.push({
-            fieldName: "password",
-            oldValue: "[HIDDEN]",
-            newValue: "[CHANGED]",
-          });
-        }
-
-        if (cccd) {
-          cascadeChanges.push({
-            fieldName: "cccd",
-            oldValue: "[HIDDEN]",
-            newValue: "[CHANGED]",
-          });
-        }
-
-        if (cascadeChanges.length > 0) {
-          await auditService.logEmployeeUpdate(
-            admin.employee_id,
-            admin.full_name || admin.employee_id,
-            employee_id,
-            updatedEmployee.full_name,
-            cascadeChanges,
-            "Sensitive fields updated during cascade operation",
-          );
-        }
-      } catch (auditError) {
-        console.error("Audit logging failed during cascade:", auditError);
-      }
-
-      return NextResponse.json(
-        {
-          success: true,
-          employee: updatedEmployee,
-          message: `Cascade update thành công! Mã nhân viên đã được thay đổi từ ${id} thành ${employee_id}. ${cascadeResult.message}`,
-          employee_id_changed: true,
-          cascade_stats: cascadeResult.affectedTables,
-        },
-        { headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    const updateData: Record<string, unknown> = {
-      full_name,
-      chuc_vu,
-      department: department || null,
-      phone_number: phone_number || null,
-      is_active: is_active !== undefined ? is_active : true,
-      updated_at: getVietnamTimestamp(),
-    };
-
-    if (cccd) {
-      updateData.cccd_hash = await bcrypt.hash(cccd, BCRYPT_ROUNDS);
-    }
-
-    if (password) {
-      updateData.password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-      updateData.last_password_change_at = getVietnamTimestamp();
-    }
-
-    const { data: updatedEmployee, error } = await updateEmployeeById(
-      supabase,
+    const result = await updateEmployee(
+      createServiceClient(),
       id,
-      updateData,
+      parsedBody.data,
+      admin,
     );
 
-    if (error) {
-      console.error("Error updating employee:", error);
+    if (result.status === "not_found") return notFound();
 
-      // Log failed update
-      try {
-        await auditService.logFailedOperation(
-          admin.employee_id,
-          admin.full_name || admin.employee_id,
-          id,
-          "UPDATE",
-          error.message,
-        );
-      } catch (auditError) {
-        console.error("Audit logging failed:", auditError);
-      }
-
-      return NextResponse.json(
-        { error: "Lỗi khi cập nhật nhân viên" },
-        { status: 500, headers: CACHE_HEADERS.sensitive },
+    if (result.status === "cascade_failed") {
+      return sensitiveJson(
+        { error: result.message, details: result.details },
+        400,
       );
     }
 
-    // Log successful update with field changes
-    try {
-      const changes: Array<{
-        fieldName: string;
-        oldValue: string;
-        newValue: string;
-      }> = [];
-
-      if (existing.full_name !== full_name) {
-        changes.push({
-          fieldName: "full_name",
-          oldValue: existing.full_name || "",
-          newValue: full_name,
-        });
-      }
-
-      if (existing.chuc_vu !== chuc_vu) {
-        changes.push({
-          fieldName: "chuc_vu",
-          oldValue: existing.chuc_vu || "",
-          newValue: chuc_vu,
-        });
-      }
-
-      if (existing.department !== (department || null)) {
-        changes.push({
-          fieldName: "department",
-          oldValue: existing.department || "",
-          newValue: department || "",
-        });
-      }
-
-      if (existing.phone_number !== (phone_number || null)) {
-        changes.push({
-          fieldName: "phone_number",
-          oldValue: existing.phone_number || "",
-          newValue: phone_number || "",
-        });
-      }
-
-      if (existing.is_active !== (is_active !== undefined ? is_active : true)) {
-        changes.push({
-          fieldName: "is_active",
-          oldValue: existing.is_active ? "true" : "false",
-          newValue: (is_active !== undefined ? is_active : true)
-            ? "true"
-            : "false",
-        });
-      }
-
-      if (password) {
-        changes.push({
-          fieldName: "password",
-          oldValue: "[HIDDEN]",
-          newValue: "[CHANGED]",
-        });
-      }
-
-      if (cccd) {
-        changes.push({
-          fieldName: "cccd",
-          oldValue: "[HIDDEN]",
-          newValue: "[CHANGED]",
-        });
-      }
-
-      if (changes.length > 0) {
-        await auditService.logEmployeeUpdate(
-          admin.employee_id,
-          admin.full_name || admin.employee_id,
-          id,
-          updatedEmployee.full_name,
-          changes,
-          "Employee information updated via admin panel",
-        );
-      }
-    } catch (auditError) {
-      console.error("Audit logging failed:", auditError);
-      // Don't fail the main operation if audit logging fails
+    if (result.status === "update_failed") {
+      return sensitiveJson({ error: "Lỗi khi cập nhật nhân viên" }, 500);
     }
 
-    return NextResponse.json(
-      {
+    if (result.status === "cascade_updated") {
+      return sensitiveJson({
         success: true,
-        employee: updatedEmployee,
-        message: "Cập nhật nhân viên thành công",
-        employee_id_changed: false,
-      },
-      { headers: CACHE_HEADERS.sensitive },
-    );
-  } catch (error) {
-    console.error("Employee PUT error:", error);
-    return toErrorResponse(error, {
-      fallbackMessage: "Lỗi server",
-      headers: CACHE_HEADERS.sensitive,
+        employee: result.employee,
+        message: `Cascade update thành công! Mã nhân viên đã được thay đổi từ ${id} thành ${parsedBody.data.employee_id}. ${result.cascadeMessage}`,
+        employee_id_changed: true,
+        cascade_stats: result.cascadeStats,
+      });
+    }
+
+    return sensitiveJson({
+      success: true,
+      employee: result.employee,
+      message: "Cập nhật nhân viên thành công",
+      employee_id_changed: false,
     });
+  } catch (error) {
+    return serverErrorResponse(error, "Employee PUT error:");
   }
 }
 
@@ -334,146 +116,40 @@ export async function DELETE(
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
     const admin = verifyEmployeeManagementAccess(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+    if (!admin) return unauthorized();
 
     if (admin.role === "nguoi_lap_bieu") {
-      return NextResponse.json(
+      return sensitiveJson(
         {
           error:
             "Không có quyền xóa nhân viên. Vui lòng vô hiệu hóa thay vì xóa.",
         },
-        { status: 403, headers: CACHE_HEADERS.sensitive },
+        403,
       );
     }
 
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
-    const supabase = createServiceClient();
+    const { id } = await params;
+    const result = await removeEmployee(createServiceClient(), id, admin);
 
-    const { data: existing } = await findEmployeeNameById(supabase, id);
+    if (result.status === "not_found") return notFound();
 
-    if (!existing) {
-      return NextResponse.json(
-        { error: "Nhân viên không tồn tại" },
-        { status: 404, headers: CACHE_HEADERS.sensitive },
-      );
+    if (result.status === "deactivate_failed") {
+      return sensitiveJson({ error: "Lỗi khi vô hiệu hóa nhân viên" }, 500);
     }
 
-    const { data: payrollCheck } = await findAnyPayrollForEmployee(
-      supabase,
-      id,
-    );
-
-    if (payrollCheck && payrollCheck.length > 0) {
-      const { error: updateError } = await deactivateEmployee(supabase, id, {
-        is_active: false,
-        updated_at: getVietnamTimestamp(),
-      });
-
-      if (updateError) {
-        console.error("Error deactivating employee:", updateError);
-
-        // Log failed deactivation
-        try {
-          await auditService.logFailedOperation(
-            admin.employee_id,
-            admin.full_name || admin.employee_id,
-            id,
-            "DEACTIVATE",
-            updateError.message,
-          );
-        } catch (auditError) {
-          console.error("Audit logging failed:", auditError);
-        }
-
-        return NextResponse.json(
-          { error: "Lỗi khi vô hiệu hóa nhân viên" },
-          { status: 500, headers: CACHE_HEADERS.sensitive },
-        );
-      }
-
-      // Log successful deactivation
-      try {
-        await auditService.logEmployeeChange({
-          adminUserId: admin.employee_id,
-          adminUserName: admin.full_name || admin.employee_id,
-          employeeId: id,
-          employeeName: existing.full_name,
-          actionType: "DEACTIVATE",
-          fieldName: "is_active",
-          oldValue: "true",
-          newValue: "false",
-          changeReason: "Employee deactivated due to existing payroll data",
-        });
-      } catch (auditError) {
-        console.error("Audit logging failed:", auditError);
-      }
-
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Nhân viên đã được vô hiệu hóa (có dữ liệu lương liên quan)",
-        },
-        { headers: CACHE_HEADERS.sensitive },
-      );
-    } else {
-      const { error: deleteError } = await deleteEmployee(supabase, id);
-
-      if (deleteError) {
-        console.error("Error deleting employee:", deleteError);
-
-        // Log failed deletion
-        try {
-          await auditService.logFailedOperation(
-            admin.employee_id,
-            admin.full_name || admin.employee_id,
-            id,
-            "DELETE",
-            deleteError.message,
-          );
-        } catch (auditError) {
-          console.error("Audit logging failed:", auditError);
-        }
-
-        return NextResponse.json(
-          { error: "Lỗi khi xóa nhân viên" },
-          { status: 500, headers: CACHE_HEADERS.sensitive },
-        );
-      }
-
-      // Log successful deletion
-      try {
-        await auditService.logEmployeeChange({
-          adminUserId: admin.employee_id,
-          adminUserName: admin.full_name || admin.employee_id,
-          employeeId: id,
-          employeeName: existing.full_name,
-          actionType: "DELETE",
-          changeReason: "Employee permanently deleted (no payroll data)",
-        });
-      } catch (auditError) {
-        console.error("Audit logging failed:", auditError);
-      }
-
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Xóa nhân viên thành công",
-        },
-        { headers: CACHE_HEADERS.sensitive },
-      );
+    if (result.status === "delete_failed") {
+      return sensitiveJson({ error: "Lỗi khi xóa nhân viên" }, 500);
     }
-  } catch (error) {
-    console.error("Employee DELETE error:", error);
-    return toErrorResponse(error, {
-      fallbackMessage: "Lỗi server",
-      headers: CACHE_HEADERS.sensitive,
+
+    return sensitiveJson({
+      success: true,
+      message:
+        result.status === "deactivated"
+          ? "Nhân viên đã được vô hiệu hóa (có dữ liệu lương liên quan)"
+          : "Xóa nhân viên thành công",
     });
+  } catch (error) {
+    return serverErrorResponse(error, "Employee DELETE error:");
   }
 }
 
@@ -483,41 +159,18 @@ export async function GET(
 ) {
   try {
     const admin = verifyEmployeeManagementAccess(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Không có quyền truy cập" },
-        { status: 401, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+    if (!admin) return unauthorized();
 
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
-    const supabase = createServiceClient();
-
+    const { id } = await params;
     const { data: employee, error } = await findAdminEmployeeRecord(
-      supabase,
+      createServiceClient(),
       id,
     );
 
-    if (error || !employee) {
-      return NextResponse.json(
-        { error: "Nhân viên không tồn tại" },
-        { status: 404, headers: CACHE_HEADERS.sensitive },
-      );
-    }
+    if (error || !employee) return notFound();
 
-    return NextResponse.json(
-      {
-        success: true,
-        employee,
-      },
-      { headers: CACHE_HEADERS.sensitive },
-    );
+    return sensitiveJson({ success: true, employee });
   } catch (error) {
-    console.error("Employee GET by ID error:", error);
-    return toErrorResponse(error, {
-      fallbackMessage: "Lỗi server",
-      headers: CACHE_HEADERS.sensitive,
-    });
+    return serverErrorResponse(error, "Employee GET by ID error:");
   }
 }

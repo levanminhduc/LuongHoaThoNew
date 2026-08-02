@@ -105,7 +105,7 @@ Không rút xuống repository nữa. Không tạo bảng (giữ D0).
 - [x] 11.3 Fixture từ git
 - [x] 11.4 Parity test cho từng nhóm truy vấn — 81 test
 - [x] 11.5 **Test phân quyền**: 8 role, kèm trường hợp `van_phong` và `admin` — bộ test 8 role của nhóm 4 chạy lại xanh; nhóm này thêm test chốt bộ lọc `is_active` cho từng nơi dùng
-- [ ] 11.6 Tách logic nhiều bước của `admin/employees/[id]` PUT/DELETE thành `lib/employee/*-service.ts`; route còn ≤ 200 dòng — **CHƯA LÀM**, nằm ngoài phạm vi ranh giới truy cập dữ liệu; route vẫn còn dài
+- [x] 11.6 Tách logic nhiều bước của `admin/employees/[id]` PUT/DELETE thành `lib/employee/*-service.ts`; route còn ≤ 200 dòng — `employee-update-service.ts` (295 dòng) + `employee-removal-service.ts` (149); route 523 → **176 dòng**. Service trả union trạng thái, route chỉ map sang response. 20 test cho nhánh cascade, băm bí mật, và nhật ký hỏng không làm hỏng thao tác chính
 - [x] 11.7 Chạy lại parity test đăng nhập nhân viên từ change trước — 3 suite / 36 test xanh
 - [x] 11.8 GATE
 
