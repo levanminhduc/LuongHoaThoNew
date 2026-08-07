@@ -39,6 +39,8 @@ import { exportAOAToExcel, getXLSX } from "@/lib/lazy/xlsx";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
+const EMPLOYEE_PAGE_SIZE = 200;
+
 const EMPLOYEE_ID_ALIASES = [
   "mã nhân viên",
   "employee_id",
@@ -74,7 +76,11 @@ async function parseEmployeeIdsFromExcel(
   if (headers.length === 1) {
     colIndex = 0;
   } else {
-    const headerStrings = headers.map((h) => String(h).toLowerCase().trim());
+    const headerStrings = Array.from(headers, (h) =>
+      String(h ?? "")
+        .toLowerCase()
+        .trim(),
+    );
     const found = headerStrings.findIndex((h) =>
       EMPLOYEE_ID_ALIASES.some((alias) => h.includes(alias)),
     );
@@ -101,15 +107,34 @@ async function parseEmployeeIdsFromExcel(
   return Array.from(ids);
 }
 
+interface EmployeeListPage {
+  employees?: { employee_id: string }[];
+  pagination?: { totalPages?: number };
+}
+
 async function fetchAllEmployeeIds(): Promise<Set<string>> {
-  const params = new URLSearchParams();
-  params.set(QUERY_PARAMS.LIMIT, "10000");
-  const data = await apiClient.get<{
-    employees: { employee_id: string }[];
-  }>(`${ENDPOINTS.employees.list}?${params}`);
-  return new Set(
-    (data.employees as { employee_id: string }[]).map((e) => e.employee_id),
-  );
+  const ids = new Set<string>();
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= totalPages) {
+    const params = new URLSearchParams();
+    params.set(QUERY_PARAMS.PAGE, String(page));
+    params.set(QUERY_PARAMS.LIMIT, String(EMPLOYEE_PAGE_SIZE));
+
+    const data = await apiClient.get<EmployeeListPage>(
+      `${ENDPOINTS.employees.list}?${params}`,
+    );
+
+    for (const employee of data.employees ?? []) {
+      ids.add(employee.employee_id);
+    }
+
+    totalPages = data.pagination?.totalPages ?? 1;
+    page += 1;
+  }
+
+  return ids;
 }
 
 async function exportMissingToExcel(missingIds: string[]) {
