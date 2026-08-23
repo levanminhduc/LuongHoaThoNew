@@ -55,7 +55,9 @@ export interface EmployeeAuditLog {
 // =====================================================
 
 export class EmployeeAuditService {
-  private supabase = createServiceClient();
+  private get supabase() {
+    return createServiceClient();
+  }
 
   /**
    * Get client IP address from request headers
