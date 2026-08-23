@@ -9,3 +9,16 @@ export function formatBonusDetailValue(item: BonusDetailItem): string {
     ? formatNumber(item.value)
     : formatCurrency(item.value);
 }
+
+export function findBonusDetailValue(
+  detailData: BonusDetailItem[],
+  labelCandidates: readonly string[],
+): string {
+  const normalized = new Set(
+    labelCandidates.map((candidate) => candidate.trim().toLowerCase()),
+  );
+  const item = detailData.find((detail) =>
+    normalized.has(detail.label.trim().toLowerCase()),
+  );
+  return item ? formatBonusDetailValue(item) : "-";
+}

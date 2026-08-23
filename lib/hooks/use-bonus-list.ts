@@ -11,14 +11,16 @@ import type {
 export function useBonusPeriodsQuery(department?: string) {
   return useQuery({
     queryKey: ["bonus-periods", department ?? "all"],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const params = new URLSearchParams();
       if (department) params.set("department", department);
       const query = params.toString();
       return apiClient.get<BonusPeriodsResponse>(
         query ? `${ENDPOINTS.bonus.periods}?${query}` : ENDPOINTS.bonus.periods,
+        { signal },
       );
     },
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -31,7 +33,7 @@ export function useBonusListQuery(params: {
   return useQuery({
     queryKey: ["bonus-list", bonusType, bonusPeriod, department ?? "all"],
     enabled: bonusType !== null && bonusPeriod !== null,
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams({
         bonus_type: bonusType as string,
         bonus_period: bonusPeriod as string,
@@ -39,8 +41,10 @@ export function useBonusListQuery(params: {
       if (department) search.set("department", department);
       return apiClient.get<BonusListResponse>(
         `${ENDPOINTS.bonus.list}?${search.toString()}`,
+        { signal },
       );
     },
+    staleTime: 60_000,
   });
 }
 

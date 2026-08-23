@@ -85,7 +85,7 @@ DECLARE
   v_employee_name VARCHAR(255);
   v_current_time TIMESTAMP;
 BEGIN
-  v_current_time := (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh');
+  v_current_time := (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh');
 
   SELECT * INTO v_bonus
   FROM employee_bonuses

@@ -46,6 +46,7 @@ import {
   useManagerPayrollQuery,
   usePayrollExportMutation,
 } from "@/lib/hooks/use-role-payroll";
+import { BonusViewButton } from "@/components/bonus/bonus-view-button";
 
 const ManagerDashboardCharts = dynamic(
   () => import("./charts/ManagerDashboardCharts"),
@@ -265,7 +266,8 @@ export default function ManagerDashboard({ user }: ManagerDashboardProps) {
             {user.allowed_departments?.length || 0} Bộ Phận
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <BonusViewButton departments={user.allowed_departments} />
           <Combobox
             aria-label="Chọn tháng lương"
             options={monthOptions}

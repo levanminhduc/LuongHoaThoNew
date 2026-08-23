@@ -36,6 +36,7 @@ import {
   useSignatureStatusQuery,
 } from "@/lib/hooks/use-dashboard";
 import BonusManagementSignatureForm from "@/components/signature/bonus-management-signature-form";
+import { BonusViewButton } from "@/components/bonus/bonus-view-button";
 
 export default function ReporterDashboard() {
   const [selectedMonth, setSelectedMonth] =
@@ -139,6 +140,10 @@ export default function ReporterDashboard() {
                 </Badge>
               )}
             </Button>
+            <BonusViewButton
+              departments={user?.allowed_departments}
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation"
+            />
             <Button
               variant="outline"
               size="sm"

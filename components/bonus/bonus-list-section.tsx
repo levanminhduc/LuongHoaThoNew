@@ -27,6 +27,11 @@ import {
   useBonusPeriodsQuery,
   useBonusListQuery,
 } from "@/lib/hooks/use-bonus-list";
+import {
+  encodeBonusPeriodKey,
+  findBonusPeriodByKey,
+  toBonusPeriodComboboxOptions,
+} from "@/lib/bonus/bonus-period-key";
 import type { BonusListRow } from "@/lib/bonus/bonus-types";
 import type { BonusType } from "@/lib/validations/bonus";
 
@@ -37,12 +42,6 @@ interface BonusListSectionProps {
 interface SelectedPeriod {
   bonusType: BonusType;
   bonusPeriod: string;
-}
-
-const PERIOD_KEY_SEPARATOR = "__";
-
-function encodePeriodKey(bonusType: string, bonusPeriod: string): string {
-  return `${bonusType}${PERIOD_KEY_SEPARATOR}${bonusPeriod}`;
 }
 
 function collectDetailLabels(rows: BonusListRow[]): string[] {
@@ -77,18 +76,12 @@ export function BonusListSection({ department }: BonusListSectionProps) {
   const rows = listQuery.data?.rows ?? [];
   const detailLabels = useMemo(() => collectDetailLabels(rows), [rows]);
   const periodOptions = useMemo(
-    () =>
-      periods.map((period) => ({
-        value: encodePeriodKey(period.bonus_type, period.bonus_period),
-        label: `${period.bonus_type_label} • ${period.bonus_period}${period.bonus_title ? ` — ${period.bonus_title}` : ""}`,
-      })),
+    () => toBonusPeriodComboboxOptions(periods),
     [periods],
   );
 
   const handleSelectPeriod = (key: string) => {
-    const period = periods.find(
-      (item) => encodePeriodKey(item.bonus_type, item.bonus_period) === key,
-    );
+    const period = findBonusPeriodByKey(periods, key);
     if (period) {
       setSelected({
         bonusType: period.bonus_type,
@@ -112,7 +105,7 @@ export function BonusListSection({ department }: BonusListSectionProps) {
           options={periodOptions}
           value={
             selected
-              ? encodePeriodKey(selected.bonusType, selected.bonusPeriod)
+              ? encodeBonusPeriodKey(selected.bonusType, selected.bonusPeriod)
               : ""
           }
           onValueChange={handleSelectPeriod}

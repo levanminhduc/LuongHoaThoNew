@@ -34,6 +34,7 @@ import {
   useSignatureStatusQuery,
 } from "@/lib/hooks/use-dashboard";
 import BonusManagementSignatureForm from "@/components/signature/bonus-management-signature-form";
+import { BonusViewButton } from "@/components/bonus/bonus-view-button";
 
 export default function DirectorDashboard() {
   const [selectedMonth, setSelectedMonth] =
@@ -132,6 +133,10 @@ export default function DirectorDashboard() {
                 </Badge>
               )}
             </Button>
+            <BonusViewButton
+              departments={user?.allowed_departments}
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-0 touch-manipulation col-span-2"
+            />
           </div>
           <Combobox
             aria-label="Chọn tháng lương"
