@@ -52,7 +52,10 @@ export function BonusDetailModal({
 }: BonusDetailModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+        closeButtonClassName="rounded-md border border-destructive p-1 text-destructive opacity-100 hover:bg-destructive hover:text-destructive-foreground"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-start gap-2 pr-6">
             <Gift className="mt-0.5 w-5 h-5 shrink-0 text-pink-600" />
