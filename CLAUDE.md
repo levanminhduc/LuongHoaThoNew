@@ -19,7 +19,19 @@ Luôn hỏi `codebase-retrieval` (context-engine MCP) trước khi mở file l�
 - **Mọi input API validate bằng zod schema** trong `lib/validations/` — dùng `parseSchema()` + `createValidationErrorResponse()`, hoặc `parseSchemaOrThrow()`. Không tự viết if-check tay.
 - **API route mới dùng `verifyToken()` / `verifyAdminAccess()` / `authorizeRoles()`** từ `lib/auth-middleware.ts` — không copy-paste block verify inline.
 - **Client gọi API qua `apiClient` + `ENDPOINTS`** (`lib/api/`), không `fetch()` trần và không hardcode đường dẫn.
-- **File code mới < 200 dòng.** Ngưỡng áp cho file bạn tạo hoặc đang sửa; vượt thì tách component/module. Repo hiện chưa đạt: `lib/advanced-excel-parser.ts` 1159 dòng, `components/payroll-import/ImportErrorModal.tsx` 1051, `app/admin/payroll-import-export/page.tsx` 1047, và hàng chục file > 500. Đó là nợ kỹ thuật đã biết — đừng lấy làm mẫu, cũng đừng tự ý refactor khi task không yêu cầu.
+- **Độ dài file theo loại — trần cứng 500 dòng.** Ngưỡng áp cho file bạn tạo hoặc đang sửa; vượt thì tách component/module.
+
+  | Loại file                                                            | Ngưỡng                                                |
+  | -------------------------------------------------------------------- | ----------------------------------------------------- |
+  | API route (`app/api/**`)                                             | 100 — route phải mỏng, logic xuống service/repository |
+  | Hook (`lib/hooks/`), zod schema (`lib/validations/`), util           | 200                                                   |
+  | React component                                                      | 300                                                   |
+  | Parser/builder tuyến tính (`lib/excel/`, `lib/attendance-parser.ts`) | 500                                                   |
+
+  Vượt ngưỡng phải **cố ý**: nói rõ lý do trong commit/PR, không im lặng cho qua. Context window lớn KHÔNG phải lý do nới — ngưỡng này tồn tại vì diff review, merge conflict, test từng phần và độ chính xác khi sửa đúng chỗ.
+
+  Repo hiện chưa đạt: `lib/advanced-excel-parser.ts` 1159 dòng, `components/payroll-import/ImportErrorModal.tsx` 1051, `app/admin/payroll-import-export/page.tsx` 1047, và hàng chục file > 500. Đó là nợ kỹ thuật đã biết — đừng lấy làm mẫu, cũng đừng tự ý refactor khi task không yêu cầu.
+
 - Type-only import: `import type { ... }`.
 - Nguyên tắc: YAGNI – KISS – DRY.
 
