@@ -97,6 +97,8 @@ export default function ColumnMappingConfigPage() {
   const refreshAliases = aliasesQuery.refetch;
   const aliases = aliasesQuery.data?.data || [];
   const configurations = configurationsQuery.data?.data || [];
+  const queryError =
+    aliasesQuery.error?.message || configurationsQuery.error?.message || "";
   const loading =
     aliasesQuery.isLoading ||
     configurationsQuery.isLoading ||
@@ -231,10 +233,10 @@ export default function ColumnMappingConfigPage() {
         )}
       </div>
 
-      {error && (
+      {(error || queryError) && (
         <Alert variant="destructive" className="mb-6">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error || queryError}</AlertDescription>
         </Alert>
       )}
 

@@ -2,7 +2,15 @@
   "mcpServers": {
     "codebase-retrieval": {
       "type": "http",
-      "url": "http://127.0.0.1:60688/mcp-repo/d__hoathodienban_luonghoathonew"
+      "url": "http://127.0.0.1:41651/mcp-repo/d__hoathodienban_luonghoathonew"
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "shadcn@latest",
+        "mcp"
+      ]
     }
   }
 }

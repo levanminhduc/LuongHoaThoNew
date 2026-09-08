@@ -162,7 +162,7 @@ export interface AliasSearchParams {
   confidence_max?: number;
   page?: number;
   limit?: number;
-  sort_by?: "alias_name" | "confidence_score" | "created_at";
+  sort_by?: "alias_name" | "confidence_score" | "created_at" | "database_field";
   sort_order?: "asc" | "desc";
 }
 

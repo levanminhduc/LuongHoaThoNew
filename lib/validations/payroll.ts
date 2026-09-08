@@ -215,7 +215,7 @@ export const ColumnAliasListQuerySchema = pageQuerySchema(50).extend({
   confidence_min: ConfidenceScoreSchema.nullish(),
   confidence_max: ConfidenceScoreSchema.nullish(),
   sort_by: z
-    .enum(["alias_name", "confidence_score", "created_at"])
+    .enum(["alias_name", "confidence_score", "created_at", "database_field"])
     .nullish()
     .transform((value) => value ?? "alias_name"),
   sort_order: z
