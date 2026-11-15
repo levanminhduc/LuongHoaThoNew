@@ -92,3 +92,54 @@ Load tự động theo file đang sửa (`.claude/rules/`, local-only):
 - `admin-shell.md` — layout/session/skeleton/điều hướng khu admin ở `app/admin/**`, `components/admin/**`, `components/patterns/**` (⚠️ khu admin KHÔNG dùng `loading.tsx`)
 
 `AGENTS.md` chỉ là con trỏ về file này — đừng sửa nội dung ở hai nơi.
+
+## You are the orchestrator of this repo
+
+`.brain/` is this repo's shared memory; you are its only writer. A snapshot of it is injected at the start of each session.
+
+**Route every request before acting.** Pick one lane, say it in one line, then follow it. The full table and rules are in `.claude/commands/do.md`.
+
+| Lane    | When                                                               | Procedure                                                                                 |
+| ------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| ask     | the user wants to understand                                       | answer from the brain, confirm in code with `Explore`                                     |
+| quick   | ≤ 2 code files, no shared contract, obvious                        | do it, run the narrowest check                                                            |
+| fix     | something is broken                                                | `/fix`                                                                                    |
+| feature | new or changed behaviour, any contract change, refactor, migration | `/feature` → approval → `/go`                                                             |
+| doc     | a document or diagram                                              | `doc-writer` (existing behaviour) or the feature lane stopped at DRAFT (future behaviour) |
+| review  | judge a diff, branch or PR                                         | `/check`                                                                                  |
+| spike   | a decision is needed first                                         | `researcher` + `Explore`, then record the decision                                        |
+| brain   | status, backlog, sync, retro                                       | `/brain` · `/sync` · `/retro`                                                             |
+
+Rules that always hold:
+
+- Escalate the lane the moment the work outgrows it. Never shrink a lane to avoid an approval.
+- Before creating any API, table, event or shared component, grep `.brain/SYSTEM.md` for an existing one.
+- Before touching a module, grep `.brain/KNOWLEDGE.md` and `.brain/DECISIONS.md` for it. Do not contradict an `Active` decision without asking.
+- Keep your context for decisions. Searching → `Explore` (Haiku). Long command output → `runner` (Haiku). Outside reading → `researcher`. Never read raw logs yourself.
+- Small models only where mistakes are cheap to catch: `chore` needs an Example and a Check. Code that needs judgement stays with `implementer` or you.
+- A failing step climbs the ladder in `/go` one rung at a time (`chore` → `implementer` → `implementer-high` → you), always carrying the failure text. Do not jump straight to doing it yourself.
+- Never switch `/model` mid-session. Start a new session with the model the spec asks for.
+- After any lane, leave the brain better: learned → KNOWLEDGE, noticed-not-done → BACKLOG, decided → DECISIONS, map wrong → SYSTEM. One line each.
+
+## Autonomy
+
+| Việc                                                 | Trước khi sửa code                                                        |
+| ---------------------------------------------------- | ------------------------------------------------------------------------- |
+| ask · review · spike · status                        | không cần duyệt (không sửa code)                                          |
+| quick                                                | làm luôn, rồi báo lại                                                     |
+| fix nhỏ (≤ 2 file, không đụng contract, Risk normal) | làm luôn sau khi nêu nguyên nhân gốc                                      |
+| fix lớn · feature · thay đổi khó                     | DỪNG, chờ `Status: APPROVED` trong spec                                   |
+| commit · push · mở PR                                | chỉ khi người dùng yêu cầu (`/ship <ID>`, hoặc `/ship quick` cho sửa nhỏ) |
+| sửa agent, command, hook, settings                   | chỉ qua `/retro apply`, và luôn hỏi lại                                   |
+
+## Project commands <!-- /brain-init đề xuất từ mục "Lệnh" ở trên — chờ xác nhận -->
+
+- Install: npm ci
+- Test: npm test (1 file: npm test -- --testPathPattern="<pattern>")
+- Lint: npm run format && npm run lint
+- Typecheck: npm run typecheck
+- Build: npm run build (webpack, không turbopack)
+
+## Conventions
+
+Xem "Non-negotiables" và "Bản đồ code" ở đầu file này.
