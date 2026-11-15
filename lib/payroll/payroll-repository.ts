@@ -54,6 +54,19 @@ export async function findPayrollById(
     .single();
 }
 
+export async function findPayrollForUpdate(
+  supabase: SupabaseServiceClient,
+  payrollId: string | number,
+) {
+  return supabase
+    .from("payrolls")
+    .select(
+      `${PAYROLL_EDITABLE_SELECT}, id, is_signed, employees!inner(department)`,
+    )
+    .eq("id", payrollId)
+    .single();
+}
+
 export async function updatePayrollById(
   supabase: SupabaseServiceClient,
   payrollId: string | number,
@@ -63,8 +76,9 @@ export async function updatePayrollById(
     .from("payrolls")
     .update(updates)
     .eq("id", payrollId)
+    .eq("is_signed", false)
     .select()
-    .single();
+    .maybeSingle();
 }
 
 export async function insertPayrollAuditLogs(

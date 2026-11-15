@@ -1,7 +1,6 @@
-// API endpoint for managing departments and getting department information
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
-import { verifyToken } from "@/lib/auth-middleware";
+import { authorizeRoles, verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
 import {
   parseSchema,
@@ -11,6 +10,10 @@ import {
 import { getVietnamMonth, getVietnamYear } from "@/lib/utils/vietnam-timezone";
 import { toErrorResponse } from "@/lib/errors/app-error";
 import { findDepartmentsPayrollSummary } from "@/lib/payroll/payroll-admin-repository";
+import {
+  DEPARTMENT_LIST_ROLES,
+  redactSalaryStats,
+} from "@/lib/department/department-stats-access";
 import { findActiveDepartmentPermissions } from "@/lib/department/department-repository";
 import {
   findActiveDepartmentNames,
@@ -21,15 +24,20 @@ import {
 } from "@/lib/employee/employee-admin-repository";
 import { buildEmployeeTotalCountQuery } from "@/lib/employee/employee-list-repository";
 
-// GET all departments with statistics
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
     const auth = verifyToken(request);
     if (!auth) {
       return NextResponse.json(
         { error: "Không có quyền truy cập" },
         { status: 401 },
+      );
+    }
+
+    if (!authorizeRoles(request, DEPARTMENT_LIST_ROLES)) {
+      return NextResponse.json(
+        { error: "Không có quyền truy cập" },
+        { status: 403 },
       );
     }
 
@@ -241,15 +249,6 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(
-      "🔍 Sample department stats:",
-      filteredStats
-        .slice(0, 3)
-        .map((d) =>
-          d ? { name: d.name, employeeCount: d.employeeCount } : null,
-        )
-        .filter(Boolean),
-    );
-    console.log(
       "🔍 Total ALL employees (including inactive):",
       totalAllEmployees,
     );
@@ -258,7 +257,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      departments: filteredStats,
+      departments: redactSalaryStats(auth.user.role, filteredStats),
       summary: {
         totalDepartments: activeUniqueDepartments.length, // Active departments (có ít nhất 1 employee active)
         totalEmployees: totalAllEmployees || 0, // TẤT CẢ employees (bao gồm cả inactive)

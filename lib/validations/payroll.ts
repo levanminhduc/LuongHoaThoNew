@@ -8,6 +8,10 @@ import {
   PaginationSchema,
   pageQuerySchema,
 } from "./common";
+import {
+  PAYROLL_EDITABLE_FIELDS,
+  type PayrollEditableField,
+} from "@/lib/payroll/payroll-editable-fields";
 
 export const PayrollImportRowSchema = z.object({
   employee_id: EmployeeIdSchema,
@@ -287,12 +291,20 @@ export type MappingConfigurationSaveRequest = z.infer<
   typeof MappingConfigurationSaveRequestSchema
 >;
 
+const PayrollEditableUpdatesSchema = z
+  .object(
+    Object.fromEntries(
+      PAYROLL_EDITABLE_FIELDS.map((field) => [field, z.number().finite()]),
+    ) as Record<PayrollEditableField, z.ZodNumber>,
+  )
+  .partial()
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "Chưa có trường nào cần cập nhật",
+  });
+
 export const PayrollUpdateRequestSchema = z.object({
-  updates: z
-    .record(z.string(), z.unknown())
-    .refine((value) => Object.keys(value).length > 0, {
-      message: "Chưa có trường nào cần cập nhật",
-    }),
+  updates: PayrollEditableUpdatesSchema,
   changeReason: z
     .string()
     .trim()

@@ -11,6 +11,16 @@ export const ROLES = [
   "nhan_vien",
 ] as const;
 
+export const EMPLOYEE_ROLES = [
+  "giam_doc",
+  "ke_toan",
+  "nguoi_lap_bieu",
+  "truong_phong",
+  "to_truong",
+  "van_phong",
+  "nhan_vien",
+] as const;
+
 export const SIGNATURE_TYPES = [
   "giam_doc",
   "ke_toan",
@@ -20,6 +30,10 @@ export const SIGNATURE_TYPES = [
 export const IMPORT_STRATEGIES = ["skip", "overwrite", "merge"] as const;
 
 export const RoleSchema = z.enum(ROLES, {
+  message: "Vai trò không hợp lệ",
+});
+
+export const EmployeeRoleSchema = z.enum(EMPLOYEE_ROLES, {
   message: "Vai trò không hợp lệ",
 });
 

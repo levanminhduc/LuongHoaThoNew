@@ -1,6 +1,8 @@
 import "server-only";
 import { auditService } from "@/lib/audit-service";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { ForbiddenError } from "@/lib/errors/app-error";
+import { canDeleteEmployee, type PolicyActor } from "@/lib/auth/role-policy";
 import { findAnyPayrollForEmployee } from "@/lib/payroll/payroll-admin-repository";
 import {
   deactivateEmployee,
@@ -122,11 +124,16 @@ export async function removeEmployee(
   supabase: SupabaseServiceClient,
   employeeId: string,
   admin: AdminActor,
+  actor: PolicyActor,
 ): Promise<EmployeeRemovalResult> {
   const { data: existing } = await findEmployeeNameById(supabase, employeeId);
 
   if (!existing) {
     return { status: "not_found" };
+  }
+
+  if (!canDeleteEmployee(actor, { employeeId, role: existing.chuc_vu ?? "" })) {
+    throw new ForbiddenError("Bạn không có quyền xóa nhân viên này");
   }
 
   const { data: payrollCheck } = await findAnyPayrollForEmployee(

@@ -40,6 +40,8 @@ import {
   showDeleteSuccessToast,
   showUpdateSuccessToast,
 } from "@/lib/toast-utils";
+import { useAdminSession } from "@/components/admin/admin-session-provider";
+import { canCreateEmployee, getManageableRoles } from "@/lib/auth/role-policy";
 import EmployeeForm from "./components/EmployeeForm";
 import EmployeeAuditLogs from "./components/EmployeeAuditLogs";
 import SecurityNotice from "./components/SecurityNotice";
@@ -77,6 +79,9 @@ const roleLabels = {
 };
 
 export default function EmployeeManagementPage() {
+  const { user, role } = useAdminSession();
+  const assignableRoles = getManageableRoles(role);
+  const canCreate = canCreateEmployee(role);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState("");
@@ -228,34 +233,37 @@ export default function EmployeeManagementPage() {
       width: "220px",
       cell: (employee) => (
         <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label={`Sửa nhân viên ${employee.employee_id}`}
-                onClick={() => setEditingEmployee(employee)}
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
-              <DialogHeader>
-                <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
-                <DialogDescription>
-                  Cập nhật thông tin nhân viên {employee.full_name}
-                </DialogDescription>
-              </DialogHeader>
-              <ScrollArea className="max-h-[65vh] p-1 pr-4">
-                {editingEmployee && (
-                  <EmployeeForm
-                    employee={editingEmployee}
-                    onSuccess={handleEmployeeUpdated}
-                  />
-                )}
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
+          {employee.employee_id !== user.employee_id && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-label={`Sửa nhân viên ${employee.employee_id}`}
+                  onClick={() => setEditingEmployee(employee)}
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+                <DialogHeader>
+                  <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
+                  <DialogDescription>
+                    Cập nhật thông tin nhân viên {employee.full_name}
+                  </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="max-h-[65vh] p-1 pr-4">
+                  {editingEmployee && (
+                    <EmployeeForm
+                      employee={editingEmployee}
+                      onSuccess={handleEmployeeUpdated}
+                      assignableRoles={assignableRoles}
+                    />
+                  )}
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+          )}
           <Dialog>
             <DialogTrigger asChild>
               <Button
@@ -282,28 +290,30 @@ export default function EmployeeManagementPage() {
               )}
             </DialogContent>
           </Dialog>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={deletingId === employee.employee_id}
-            onClick={() => {
-              setEmployeeToDelete(employee);
-              setShowDeleteDialog(true);
-            }}
-          >
-            {deletingId === employee.employee_id ? (
-              <Spinner
-                data-icon="inline-start"
-                size="sm"
-                variant="destructive"
-              />
-            ) : (
-              <Trash2
-                data-icon="inline-start"
-                className="w-4 h-4 text-red-600"
-              />
-            )}
-          </Button>
+          {canCreate && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={deletingId === employee.employee_id}
+              onClick={() => {
+                setEmployeeToDelete(employee);
+                setShowDeleteDialog(true);
+              }}
+            >
+              {deletingId === employee.employee_id ? (
+                <Spinner
+                  data-icon="inline-start"
+                  size="sm"
+                  variant="destructive"
+                />
+              ) : (
+                <Trash2
+                  data-icon="inline-start"
+                  className="w-4 h-4 text-red-600"
+                />
+              )}
+            </Button>
+          )}
         </div>
       ),
     },
@@ -322,25 +332,33 @@ export default function EmployeeManagementPage() {
             Quản lý thông tin nhân viên trong hệ thống
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus data-icon="inline-start" className="w-4 h-4" />
-              Thêm Nhân Viên
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
-              <DialogDescription>
-                Nhập thông tin nhân viên mới vào hệ thống
-              </DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="max-h-[65vh] p-1 pr-4">
-              <EmployeeForm onSuccess={handleEmployeeCreated} />
-            </ScrollArea>
-          </DialogContent>
-        </Dialog>
+        {canCreate && (
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={setIsCreateDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <Plus data-icon="inline-start" className="w-4 h-4" />
+                Thêm Nhân Viên
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+              <DialogHeader>
+                <DialogTitle>Thêm Nhân Viên Mới</DialogTitle>
+                <DialogDescription>
+                  Nhập thông tin nhân viên mới vào hệ thống
+                </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="max-h-[65vh] p-1 pr-4">
+                <EmployeeForm
+                  onSuccess={handleEmployeeCreated}
+                  assignableRoles={assignableRoles}
+                />
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -530,36 +548,39 @@ export default function EmployeeManagementPage() {
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEditingEmployee(employee)}
-                                className="touch-manipulation"
-                                title="Chỉnh sửa"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
-                              <DialogHeader>
-                                <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
-                                <DialogDescription>
-                                  Cập nhật thông tin nhân viên{" "}
-                                  {employee.full_name}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <ScrollArea className="max-h-[65vh] p-1 pr-4">
-                                {editingEmployee && (
-                                  <EmployeeForm
-                                    employee={editingEmployee}
-                                    onSuccess={handleEmployeeUpdated}
-                                  />
-                                )}
-                              </ScrollArea>
-                            </DialogContent>
-                          </Dialog>
+                          {employee.employee_id !== user.employee_id && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditingEmployee(employee)}
+                                  className="touch-manipulation"
+                                  title="Chỉnh sửa"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+                                <DialogHeader>
+                                  <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
+                                  <DialogDescription>
+                                    Cập nhật thông tin nhân viên{" "}
+                                    {employee.full_name}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <ScrollArea className="max-h-[65vh] p-1 pr-4">
+                                  {editingEmployee && (
+                                    <EmployeeForm
+                                      employee={editingEmployee}
+                                      onSuccess={handleEmployeeUpdated}
+                                      assignableRoles={assignableRoles}
+                                    />
+                                  )}
+                                </ScrollArea>
+                              </DialogContent>
+                            </Dialog>
+                          )}
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button
@@ -587,30 +608,32 @@ export default function EmployeeManagementPage() {
                               )}
                             </DialogContent>
                           </Dialog>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={deletingId === employee.employee_id}
-                            className="touch-manipulation"
-                            title="Xóa"
-                            onClick={() => {
-                              setEmployeeToDelete(employee);
-                              setShowDeleteDialog(true);
-                            }}
-                          >
-                            {deletingId === employee.employee_id ? (
-                              <Spinner
-                                data-icon="inline-start"
-                                size="sm"
-                                variant="destructive"
-                              />
-                            ) : (
-                              <Trash2
-                                data-icon="inline-start"
-                                className="w-4 h-4 text-red-600"
-                              />
-                            )}
-                          </Button>
+                          {canCreate && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={deletingId === employee.employee_id}
+                              className="touch-manipulation"
+                              title="Xóa"
+                              onClick={() => {
+                                setEmployeeToDelete(employee);
+                                setShowDeleteDialog(true);
+                              }}
+                            >
+                              {deletingId === employee.employee_id ? (
+                                <Spinner
+                                  data-icon="inline-start"
+                                  size="sm"
+                                  variant="destructive"
+                                />
+                              ) : (
+                                <Trash2
+                                  data-icon="inline-start"
+                                  className="w-4 h-4 text-red-600"
+                                />
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </Card>

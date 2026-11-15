@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs";
 import { auditService } from "@/lib/audit-service";
 import { BCRYPT_ROUNDS } from "@/lib/constants/security";
 import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
+import { ForbiddenError } from "@/lib/errors/app-error";
+import {
+  canAssignRole,
+  canManageEmployee,
+  type PolicyActor,
+} from "@/lib/auth/role-policy";
 import { cascadeUpdateEmployeeId } from "@/lib/employee/cascade-update-employee";
 import {
   findEmployeeForEdit,
@@ -55,6 +61,23 @@ export type EmployeeUpdateResult =
       cascadeMessage: string;
       cascadeStats: unknown;
     };
+
+function assertCanUpdate(
+  actor: PolicyActor,
+  employeeId: string,
+  currentRole: string | null,
+  newRole: string,
+) {
+  const target = { employeeId, role: currentRole ?? "" };
+
+  if (!canManageEmployee(actor, target)) {
+    throw new ForbiddenError("Bạn không có quyền chỉnh sửa nhân viên này");
+  }
+
+  if (newRole !== currentRole && !canAssignRole(actor, target, newRole)) {
+    throw new ForbiddenError("Bạn không có quyền gán chức vụ này");
+  }
+}
 
 function resolveIsActive(isActive?: boolean) {
   return isActive !== undefined ? isActive : true;
@@ -233,12 +256,15 @@ export async function updateEmployee(
   currentId: string,
   input: EmployeeUpdateInput,
   admin: AdminActor,
+  actor: PolicyActor,
 ): Promise<EmployeeUpdateResult> {
   const { data: existing } = await findEmployeeForEdit(supabase, currentId);
 
   if (!existing) {
     return { status: "not_found" };
   }
+
+  assertCanUpdate(actor, currentId, existing.chuc_vu, input.chuc_vu);
 
   if (input.employee_id !== currentId) {
     return applyCascadeRename(supabase, currentId, input, admin);

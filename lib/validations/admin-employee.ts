@@ -3,6 +3,7 @@ import {
   EmployeeIdSchema,
   DepartmentSchema,
   RoleSchema,
+  EmployeeRoleSchema,
   NotesSchema,
   SalaryMonthSchema,
 } from "./common";
@@ -19,7 +20,7 @@ export const EmployeeCreateRequestSchema = z.object({
   cccd: z
     .string()
     .regex(CCCD_REGEX, { message: "CCCD phải có đúng 12 chữ số" }),
-  chuc_vu: RoleSchema,
+  chuc_vu: EmployeeRoleSchema,
   password: z
     .string()
     .min(6, { message: "Mật khẩu phải có ít nhất 6 ký tự" })
@@ -42,7 +43,7 @@ export const EmployeeUpdateRequestSchema = z.object({
     .trim()
     .min(2, { message: "Họ tên phải có ít nhất 2 ký tự" })
     .max(100, { message: "Họ tên không được quá 100 ký tự" }),
-  chuc_vu: RoleSchema,
+  chuc_vu: EmployeeRoleSchema,
   cccd: z
     .string()
     .regex(CCCD_REGEX, { message: "CCCD phải có đúng 12 chữ số" })

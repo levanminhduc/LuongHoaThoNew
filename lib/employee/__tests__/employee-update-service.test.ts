@@ -39,6 +39,8 @@ const EXISTING = {
   is_active: true,
 };
 
+const ADMIN_ACTOR = { role: "admin", employeeId: "AD001" };
+
 function baseInput(): EmployeeUpdateInput {
   return {
     employee_id: "NV0001",
@@ -75,6 +77,7 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
       "NV0001",
       baseInput(),
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(result).toEqual({ status: "not_found" });
@@ -94,6 +97,7 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
       "NV0001",
       input,
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(result).toEqual({
@@ -114,6 +118,7 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
       "NV0001",
       { ...baseInput(), full_name: "Nguyễn Văn B" },
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     const changes = mockedAudit.logEmployeeUpdate.mock.calls[0][4];
@@ -129,7 +134,13 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
   it("không có gì đổi thì không ghi nhật ký", async () => {
     const recorded = recorder([{ data: EXISTING }, { data: updatedRow() }]);
 
-    await updateEmployee(recorded.client, "NV0001", baseInput(), ADMIN);
+    await updateEmployee(
+      recorded.client,
+      "NV0001",
+      baseInput(),
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     expect(mockedAudit.logEmployeeUpdate).not.toHaveBeenCalled();
   });
@@ -142,6 +153,7 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
       "NV0001",
       { ...baseInput(), password: "matkhau", cccd: "0123456789" },
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     const updateData = recorded.calls[1].operation?.args[0] as Record<
@@ -162,7 +174,13 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
   it("không đổi mật khẩu thì không đụng last_password_change_at", async () => {
     const recorded = recorder([{ data: EXISTING }, { data: updatedRow() }]);
 
-    await updateEmployee(recorded.client, "NV0001", baseInput(), ADMIN);
+    await updateEmployee(
+      recorded.client,
+      "NV0001",
+      baseInput(),
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     const updateData = recorded.calls[1].operation?.args[0] as Record<
       string,
@@ -177,7 +195,7 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
     const input = baseInput();
     delete input.is_active;
 
-    await updateEmployee(recorded.client, "NV0001", input, ADMIN);
+    await updateEmployee(recorded.client, "NV0001", input, ADMIN, ADMIN_ACTOR);
 
     const updateData = recorded.calls[1].operation?.args[0] as Record<
       string,
@@ -197,6 +215,7 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
       "NV0001",
       baseInput(),
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(result).toEqual({ status: "update_failed" });
@@ -224,6 +243,7 @@ describe("cập nhật nhân viên khi giữ nguyên mã", () => {
       "NV0001",
       { ...baseInput(), full_name: "Nguyễn Văn B" },
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(result.status).toBe("updated");
@@ -244,6 +264,7 @@ describe("cập nhật nhân viên khi đổi mã", () => {
       "NV0001",
       { ...baseInput(), employee_id: "NV0002" },
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(result).toEqual({
@@ -267,6 +288,7 @@ describe("cập nhật nhân viên khi đổi mã", () => {
       "NV0001",
       { ...baseInput(), employee_id: "NV0002" },
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(recorded.calls[1].filters).toContainEqual({
@@ -293,6 +315,7 @@ describe("cập nhật nhân viên khi đổi mã", () => {
       "NV0001",
       { ...baseInput(), employee_id: "NV0002" },
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(mockedAudit.logEmployeeUpdate).not.toHaveBeenCalled();
@@ -311,6 +334,7 @@ describe("cập nhật nhân viên khi đổi mã", () => {
       "NV0001",
       { ...baseInput(), employee_id: "NV0002", password: "matkhau" },
       ADMIN,
+      ADMIN_ACTOR,
     );
 
     expect(mockedAudit.logEmployeeUpdate).toHaveBeenCalledWith(

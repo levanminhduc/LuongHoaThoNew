@@ -16,6 +16,8 @@ const mockedAudit = auditService as jest.Mocked<typeof auditService>;
 const ADMIN = { employee_id: "AD001", full_name: "Quản Trị Viên" };
 const EMPLOYEE = { employee_id: "NV0001", full_name: "Nguyễn Văn A" };
 
+const ADMIN_ACTOR = { role: "admin", employeeId: "AD001" };
+
 function recorder(scripted: Parameters<typeof createQueryRecorder>[0]) {
   const recorded = createQueryRecorder(scripted);
   return {
@@ -32,7 +34,12 @@ describe("xoá nhân viên", () => {
   it("không tìm thấy thì dừng, không kiểm tra dữ liệu lương", async () => {
     const recorded = recorder([{ data: null }]);
 
-    const result = await removeEmployee(recorded.client, "NV0001", ADMIN);
+    const result = await removeEmployee(
+      recorded.client,
+      "NV0001",
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     expect(result).toEqual({ status: "not_found" });
     expect(recorded.calls).toHaveLength(1);
@@ -45,7 +52,12 @@ describe("xoá nhân viên", () => {
       { data: null },
     ]);
 
-    const result = await removeEmployee(recorded.client, "NV0001", ADMIN);
+    const result = await removeEmployee(
+      recorded.client,
+      "NV0001",
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     expect(result).toEqual({ status: "deactivated" });
     expect(recorded.calls[2].operation?.method).toBe("update");
@@ -61,7 +73,7 @@ describe("xoá nhân viên", () => {
       { data: null },
     ]);
 
-    await removeEmployee(recorded.client, "NV0001", ADMIN);
+    await removeEmployee(recorded.client, "NV0001", ADMIN, ADMIN_ACTOR);
 
     expect(mockedAudit.logEmployeeChange).toHaveBeenCalledWith({
       adminUserId: "AD001",
@@ -83,7 +95,12 @@ describe("xoá nhân viên", () => {
       { data: null },
     ]);
 
-    const result = await removeEmployee(recorded.client, "NV0001", ADMIN);
+    const result = await removeEmployee(
+      recorded.client,
+      "NV0001",
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     expect(result).toEqual({ status: "deleted" });
     expect(recorded.calls[2].operation?.method).toBe("delete");
@@ -99,7 +116,12 @@ describe("xoá nhân viên", () => {
       { error: { message: "row locked" } },
     ]);
 
-    const result = await removeEmployee(recorded.client, "NV0001", ADMIN);
+    const result = await removeEmployee(
+      recorded.client,
+      "NV0001",
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     expect(result).toEqual({ status: "deactivate_failed" });
     expect(mockedAudit.logFailedOperation).toHaveBeenCalledWith(
@@ -119,7 +141,12 @@ describe("xoá nhân viên", () => {
       { error: { message: "foreign key" } },
     ]);
 
-    const result = await removeEmployee(recorded.client, "NV0001", ADMIN);
+    const result = await removeEmployee(
+      recorded.client,
+      "NV0001",
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     expect(result).toEqual({ status: "delete_failed" });
     expect(mockedAudit.logFailedOperation).toHaveBeenCalledWith(
@@ -141,7 +168,12 @@ describe("xoá nhân viên", () => {
       { data: null },
     ]);
 
-    const result = await removeEmployee(recorded.client, "NV0001", ADMIN);
+    const result = await removeEmployee(
+      recorded.client,
+      "NV0001",
+      ADMIN,
+      ADMIN_ACTOR,
+    );
 
     expect(result).toEqual({ status: "deleted" });
   });

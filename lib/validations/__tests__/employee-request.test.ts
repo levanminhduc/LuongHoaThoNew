@@ -154,6 +154,57 @@ describe("PayrollUpdateRequestSchema", () => {
       }).success,
     ).toBe(true);
   });
+
+  it("tu choi key khong nam trong danh sach cot duoc sua", () => {
+    expect(
+      PayrollUpdateRequestSchema.safeParse({
+        updates: { tam_ung: 1000, not_a_column: 1 },
+        changeReason: "sửa sai",
+      }).success,
+    ).toBe(false);
+  });
+
+  it.each([
+    "is_signed",
+    "signed_at",
+    "employee_id",
+    "salary_month",
+    "payroll_type",
+  ])("tu choi ghi cot metadata %s", (column) => {
+    expect(
+      PayrollUpdateRequestSchema.safeParse({
+        updates: { [column]: "x" },
+        changeReason: "sửa sai",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("tu choi cot so nhan gia tri chuoi", () => {
+    expect(
+      PayrollUpdateRequestSchema.safeParse({
+        updates: { tam_ung: "1000" },
+        changeReason: "sửa sai",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("tu choi cot so nhan gia tri vo han", () => {
+    expect(
+      PayrollUpdateRequestSchema.safeParse({
+        updates: { tam_ung: Infinity },
+        changeReason: "sửa sai",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("chap nhan nhieu cot so hop le cung luc", () => {
+    expect(
+      PayrollUpdateRequestSchema.safeParse({
+        updates: { tam_ung: 1000, thue_tncn: 250.5 },
+        changeReason: "sửa sai",
+      }).success,
+    ).toBe(true);
+  });
 });
 
 describe("PayrollAuditFilterRequestSchema", () => {

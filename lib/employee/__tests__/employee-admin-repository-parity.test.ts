@@ -175,14 +175,17 @@ describe("thao tác nhân viên khu quản trị giữ nguyên sau khi rút", ()
     sameCalls(after, before);
   });
 
-  it("hồ sơ trước khi xoá chỉ lấy mã và tên", async () => {
+  it("hồ sơ trước khi xoá lấy thêm chức vụ để kiểm tra quyền xoá", async () => {
     const before = recorder();
     const after = recorder();
 
     await legacy.legacyEmployeeNameByIdQuery(before.client, EMPLOYEE_ID);
     await findEmployeeNameById(after.client, EMPLOYEE_ID);
 
-    sameCalls(after, before);
+    const legacyCallsWithChucVu = withoutSelectWhitespace(before.calls).map(
+      (call) => ({ ...call, select: "employee_id,full_name,chuc_vu" }),
+    );
+    expect(withoutSelectWhitespace(after.calls)).toEqual(legacyCallsWithChucVu);
   });
 
   it("khoá nhân viên là update, không phải delete", async () => {

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyEmployeeManagementAccess } from "@/lib/auth-middleware";
+import { canAssignRole, canCreateEmployee } from "@/lib/auth/role-policy";
 import { csrfProtection } from "@/lib/security-middleware";
 import { auditService } from "@/lib/audit-service";
 import bcrypt from "bcryptjs";
@@ -263,14 +264,16 @@ export async function POST(request: NextRequest) {
       is_active,
     } = parsedBody.data;
 
-    const restrictedRoles = ["admin", "giam_doc", "ke_toan"];
-    if (admin.role === "nguoi_lap_bieu" && restrictedRoles.includes(chuc_vu)) {
+    const actor = { role: admin.role, employeeId: admin.employee_id };
+    if (
+      !canCreateEmployee(actor.role) ||
+      !canAssignRole(actor, null, chuc_vu)
+    ) {
       return NextResponse.json(
         { error: "Không có quyền tạo nhân viên với chức vụ này" },
         { status: 403, headers: CACHE_HEADERS.sensitive },
       );
     }
-
     const supabase = createServiceClient();
 
     const { data: existing } = await findEmployeeIdByCode(
@@ -305,7 +308,6 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Error creating employee:", error);
 
-      // Log failed employee creation
       try {
         await auditService.logFailedOperation(
           admin.employee_id,
@@ -324,7 +326,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log successful employee creation
     try {
       await auditService.logEmployeeChange({
         adminUserId: admin.employee_id,
@@ -336,7 +337,6 @@ export async function POST(request: NextRequest) {
       });
     } catch (auditError) {
       console.error("Audit logging failed:", auditError);
-      // Don't fail the main operation if audit logging fails
     }
 
     return NextResponse.json(
