@@ -1,17 +1,21 @@
-/**
- * Test script for Data Validation API
- * Usage: node scripts/test-data-validation-api.js
- */
-
 const BASE_URL = "http://localhost:3001";
 
-// Mock admin credentials (replace with actual test credentials)
-const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "admin123",
-};
+function readAdminCredentials() {
+  const username = process.env.TEST_ADMIN_USERNAME;
+  const password = process.env.TEST_ADMIN_PASSWORD;
+
+  if (!username || !password) {
+    console.error(
+      "Thiếu biến môi trường TEST_ADMIN_USERNAME hoặc TEST_ADMIN_PASSWORD",
+    );
+    process.exit(1);
+  }
+
+  return { username, password };
+}
 
 async function testDataValidationAPI() {
+  const ADMIN_CREDENTIALS = readAdminCredentials();
   console.log("🧪 Testing Data Validation API...\n");
 
   try {

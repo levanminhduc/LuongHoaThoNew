@@ -177,13 +177,7 @@ WITH test_accounts AS (
         e.full_name,
         e.chuc_vu,
         e.department,
-        CASE 
-            WHEN e.chuc_vu = 'truong_phong' THEN 'truongphong123'
-            WHEN e.chuc_vu = 'to_truong' THEN 'totruong123'
-            WHEN e.chuc_vu = 'nhan_vien' THEN 'nhanvien123'
-            ELSE 'admin123'
-        END as suggested_password,
-        CASE 
+        CASE
             WHEN dp.employee_id IS NOT NULL THEN 'YES'
             ELSE 'NO'
         END as has_permissions
@@ -197,7 +191,6 @@ SELECT
     full_name,
     chuc_vu,
     department,
-    suggested_password,
     has_permissions,
     CASE 
         WHEN chuc_vu = 'truong_phong' AND has_permissions = 'YES' 

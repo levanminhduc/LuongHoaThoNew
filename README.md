@@ -205,16 +205,19 @@ Truy cập: http://localhost:3000
 
 ### Admin:
 
-1. Truy cập `/admin/login`
-2. Đăng nhập với: `admin` / `admin123`
-3. **Trong dashboard, sử dụng các tính năng quản lý:**
+1. Tạo tài khoản admin bằng `node scripts/create-admin-user.js --username <tên>`, truyền mật khẩu qua biến môi trường `ADMIN_PASSWORD` (tối thiểu 12 ký tự; username `admin` không được phép):
+   - PowerShell: `$env:ADMIN_PASSWORD = "<mật khẩu>"; node scripts/create-admin-user.js --username <tên>`
+   - bash: `ADMIN_PASSWORD="<mật khẩu>" node scripts/create-admin-user.js --username <tên>`
+2. Truy cập `/admin/login`
+3. Đăng nhập bằng tài khoản vừa tạo
+4. **Trong dashboard, sử dụng các tính năng quản lý:**
    - **Import Nhân Viên**: Upload file Excel chứa dữ liệu lương
    - **Quản Lý CCCD**: Cập nhật số CCCD cho nhân viên
    - **Import/Export Lương**: Quản lý dữ liệu lương với smart mapping
    - **🆕 Column Mapping Config**: Cấu hình aliases cho database fields
    - **🆕 Analyze File**: Phân tích Excel file trước khi import
    - **🆕 Template từ Aliases**: Generate Excel template với headers thân thiện
-4. Xem và quản lý dữ liệu
+5. Xem và quản lý dữ liệu
 
 ### Nhân Viên:
 
@@ -1596,37 +1599,25 @@ interface AuditResponse {
 
 #### **RLS Policies:**
 
-```sql
--- Service client có thể truy cập tất cả data
-CREATE POLICY "payrolls_service_client_access" ON payrolls
-  FOR ALL USING (
-    auth.jwt() IS NULL OR
-    auth.jwt() ->> 'role' = 'admin'
-  );
-
--- Audit logs cũng áp dụng tương tự
-CREATE POLICY "audit_logs_service_client_access" ON payroll_audit_logs
-  FOR ALL USING (
-    auth.jwt() IS NULL OR
-    auth.jwt() ->> 'role' = 'admin'
-  );
-```
+- Ứng dụng chỉ truy cập database qua `service_role` (`createServiceClient`), role này bypass RLS.
+- Mọi bảng trong schema `public` bật RLS và **không có policy mở**, nên `anon` và `authenticated` không đọc/ghi được gì. Các policy theo claim JWT (`auth.jwt() ->> 'role'`) còn sót từ migration cũ là code chết, an toàn khi JWT Secret của Supabase khác `JWT_SECRET` của app.
+- Không thêm policy mở như `USING (true)` hoặc policy cho phép khi không có JWT, vì sẽ mở dữ liệu cho client công khai.
+- Chạy lại `scripts/supabase-setup/38-security-hardening-functions-rls.sql` để áp dụng lại cấu hình bảo mật này.
 
 ### 🐛 Troubleshooting
 
 #### **Common Issues:**
 
-| Lỗi                              | Nguyên Nhân           | Giải Pháp                                                       |
-| -------------------------------- | --------------------- | --------------------------------------------------------------- |
-| "Lỗi khi tìm kiếm dữ liệu lương" | RLS policy block      | Chạy `scripts/fix-audit-trail-rls.sql`                          |
-| "Lỗi khi lấy lịch sử thay đổi"   | Audit table missing   | Chạy `scripts/supabase-setup/14-create-payroll-audit-table.sql` |
-| "Không có quyền truy cập"        | Token expired/invalid | Đăng nhập lại admin                                             |
-| "Chưa có dữ liệu lương"          | Empty database        | Import dữ liệu lương trước                                      |
+| Lỗi                              | Nguyên Nhân                      | Giải Pháp                                                                                                                           |
+| -------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| "Lỗi khi tìm kiếm dữ liệu lương" | Lỗi RLS (thiếu service role key) | Kiểm tra `SUPABASE_SERVICE_ROLE_KEY` đã được cấu hình; script `38-security-hardening-functions-rls.sql` chỉ là tham chiếu hardening |
+| "Lỗi khi lấy lịch sử thay đổi"   | Audit table missing              | Chạy `scripts/supabase-setup/14-create-payroll-audit-table.sql`                                                                     |
+| "Không có quyền truy cập"        | Token expired/invalid            | Đăng nhập lại admin                                                                                                                 |
+| "Chưa có dữ liệu lương"          | Empty database                   | Import dữ liệu lương trước                                                                                                          |
 
 #### **Debug Scripts:**
 
 - `scripts/debug-database-access.sql` - Kiểm tra database access
-- `scripts/fix-audit-trail-rls.sql` - Fix RLS policies
 - `scripts/test-audit-trail.sql` - Test audit functionality
 
 ### 📈 Performance Considerations

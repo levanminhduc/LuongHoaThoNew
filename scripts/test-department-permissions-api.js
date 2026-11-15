@@ -1,22 +1,30 @@
-// Script để test Department Permissions APIs
-// Chạy: node scripts/test-department-permissions-api.js
-
 const BASE_URL = "http://localhost:3001";
 
-// Test admin token - cần login admin trước để lấy token
 let ADMIN_TOKEN = "";
 
+function readAdminCredentials() {
+  const username = process.env.TEST_ADMIN_USERNAME;
+  const password = process.env.TEST_ADMIN_PASSWORD;
+
+  if (!username || !password) {
+    console.error(
+      "Thiếu biến môi trường TEST_ADMIN_USERNAME hoặc TEST_ADMIN_PASSWORD",
+    );
+    process.exit(1);
+  }
+
+  return { username, password };
+}
+
 async function loginAdmin() {
+  const adminCredentials = readAdminCredentials();
   try {
     const response = await fetch(`${BASE_URL}/api/admin/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        username: "admin",
-        password: "admin123",
-      }),
+      body: JSON.stringify(adminCredentials),
     });
 
     if (response.ok) {

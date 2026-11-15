@@ -81,3 +81,15 @@ Rejected: reset chữ ký (cần RPC); giữ chữ ký sau khi sửa (không đ�
 
 Date: 2026-11-15 · Status: Active · Scope: auth, api · From: F-012 verifier
 Why: `verifyToken()` chấp nhận mọi JWT ký bằng `JWT_SECRET`, kể cả token `employee_session` không có `role` → kiểu `isRole("nhan_vien")` bị lách. Dùng `authorizeRoles(request, [...])`. van_phong xem quân số phòng ban nhưng không thấy tiền lương (`SALARY_STATS_ROLES`).
+
+### D-014 Hardening DB quét catalog động, loại object extension, ngoại lệ khai tường minh
+
+Date: 2026-11-15 · Status: Active · Scope: db · From: F-013
+Why: DB thật có thể có hàm/bảng không nằm trong repo; danh sách tên cứng (script 36) đã sót. Script 38 lặp `pg_proc`/`pg_class`/`pg_policies` trong `public`, bỏ object có `pg_depend.deptype = 'e'`, chỉ chừa object khai trong bảng tạm `migration_38_exceptions` (mặc định rỗng); tự kiểm bằng `RAISE EXCEPTION` (không `ASSERT`) để rollback cả transaction. Chạy lại được.
+Rejected: danh sách tên cứng (bỏ sót); `ALTER DEFAULT PRIVILEGES` (người dùng chưa duyệt, BACKLOG).
+
+### D-015 RLS bật không policy — chỉ service_role truy cập DB
+
+Date: 2026-11-15 · Status: Active · Scope: db, auth · From: F-013
+Why: app chỉ dùng `createServiceClient()` (service role bypass RLS), auth JWT tự viết (D-002) nên `auth.jwt()` của Supabase không mang thông tin app. Policy `USING (true)` / `auth.jwt() IS NULL` mở dữ liệu cho anon key công khai → xoá. Không thêm policy mới; policy theo claim JWT còn sót là code chết, an toàn khi JWT Secret Supabase ≠ `JWT_SECRET`.
+Rejected: viết policy theo role app (không có JWT Supabase để dựa vào).

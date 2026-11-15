@@ -39,6 +39,10 @@ Pitfall chính (webpack build, transpilePackages, proxy.ts, pnpm làm jest fail,
 - [api] `lib/api/endpoints.ts` còn 4 đường dẫn không có route: `/api/payroll/payslip/[payrollId]`, `/api/admin/mapping-configurations/[id]`, `/api/debug/departments`, `/api/debug/count-departments`; 15 route thật chưa có trong ENDPOINTS (login, lookup, health, employee/detail…) · brain-init · 2026-11-15
 - [payroll] `lib/feature-flags.ts:1` đặt `T13_ENABLED = false` trong khi CLAUDE.md mô tả T13 tự nhận diện — cần xác nhận cờ này chặn ở đâu trước khi đụng T13 · brain-init · 2026-11-15
 - [ui] `RoleBasedRouter` không có nhánh `van_phong` và trỏ tới vài trang không tồn tại (`/director/reports`, `/accountant/payroll`…) — `components/RoleBasedRouter.tsx:77-116` · brain-init · 2026-11-15
+- [db] `CREATE OR REPLACE FUNCTION` không kèm `SET search_path` xoá search_path đã đặt → Advisor báo lại `function_search_path_mutable`; chạy lại PHẦN 2 của `scripts/supabase-setup/38-security-hardening-functions-rls.sql` · F-013 · 2026-11-15
+- [db] Chạy lại migration cũ sau 38 sẽ mở lại lỗ: 12/14/20/21/27 tạo policy `USING (true)`, 15/19 tạo policy `auth.jwt() IS NULL` → sau đó phải chạy lại 38 · F-013 verifier · 2026-11-15
+- [db] `ASSERT` trong PL/pgSQL im lặng khi `plpgsql.check_asserts = off` — khối tự kiểm của migration dùng `IF … RAISE EXCEPTION` · F-013 S3 · 2026-11-15
+- [scripts] Tạo admin: `node scripts/create-admin-user.js --username <tên>` với env `ADMIN_PASSWORD` (≥ 12 ký tự, cấm `admin`); script test API cần `TEST_ADMIN_USERNAME`/`TEST_ADMIN_PASSWORD` của tài khoản `admin_users` thật · F-013 · 2026-11-15
 
 ## Khác
 
