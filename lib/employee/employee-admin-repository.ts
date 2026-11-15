@@ -181,7 +181,7 @@ export function findEmployeeNameById(
 ) {
   return supabase
     .from("employees")
-    .select("employee_id, full_name")
+    .select("employee_id, full_name, chuc_vu")
     .eq("employee_id", employeeId)
     .single();
 }

@@ -1,16 +1,47 @@
-/**
- * Script to create admin user in admin_users table
- * Usage: node scripts/create-admin-user.js
- */
+const BCRYPT_ROUNDS = 12;
+const MIN_PASSWORD_LENGTH = 12;
+const BLOCKED_USERNAME = "admin";
 
-const { createClient } = require("@supabase/supabase-js");
-const bcrypt = require("bcryptjs");
+const USAGE = [
+  "Cách dùng:",
+  "  ADMIN_PASSWORD='<mật khẩu>' node scripts/create-admin-user.js --username <tên đăng nhập>",
+  "",
+  `Mật khẩu tối thiểu ${MIN_PASSWORD_LENGTH} ký tự, truyền qua biến môi trường ADMIN_PASSWORD.`,
+  `Tên đăng nhập "${BLOCKED_USERNAME}" bị chặn.`,
+].join("\n");
 
-// Load environment variables from .env file manually
-const fs = require("fs");
-const path = require("path");
+function failWithUsage(reason) {
+  console.error(`Lỗi: ${reason}`);
+  console.error(USAGE);
+  process.exit(1);
+}
+
+function readUsernameArgument() {
+  const flagIndex = process.argv.indexOf("--username");
+  if (flagIndex === -1) return "";
+  return (process.argv[flagIndex + 1] || "").trim();
+}
+
+function readValidatedCredentials() {
+  const username = readUsernameArgument();
+  const password = process.env.ADMIN_PASSWORD || "";
+
+  if (!username) failWithUsage("thiếu tham số --username");
+  if (!password) failWithUsage("thiếu biến môi trường ADMIN_PASSWORD");
+  if (username.toLowerCase() === BLOCKED_USERNAME) {
+    failWithUsage(`tên đăng nhập "${BLOCKED_USERNAME}" bị chặn`);
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    failWithUsage(`mật khẩu phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự`);
+  }
+
+  return { username, password };
+}
 
 function loadEnvFile() {
+  const fs = require("fs");
+  const path = require("path");
+
   try {
     const envPath = path.join(__dirname, "..", ".env");
     const envContent = fs.readFileSync(envPath, "utf8");
@@ -25,129 +56,81 @@ function loadEnvFile() {
 
     return envVars;
   } catch (error) {
-    console.error("❌ Error loading .env file:", error.message);
+    console.error("Lỗi đọc file .env:", error.message);
     return {};
   }
 }
 
-const env = loadEnvFile();
-const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+function createSupabaseClient() {
+  const { createClient } = require("@supabase/supabase-js");
+  const env = loadEnvFile();
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("❌ Missing Supabase environment variables");
-  console.error(
-    "Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY",
-  );
-  process.exit(1);
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("Thiếu biến môi trường Supabase");
+    console.error(
+      "Cần có: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY",
+    );
+    process.exit(1);
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+async function createAdminUser({ username, password }) {
+  const bcrypt = require("bcryptjs");
+  const supabase = createSupabaseClient();
 
-async function createAdminUser() {
   try {
-    console.log("🚀 Creating admin user...");
-
-    // Admin credentials (not 'admin' due to security block)
-    const adminCredentials = {
-      username: "superadmin",
-      password: "admin123",
-      role: "admin",
-    };
-
-    // Hash password
-    const password_hash = await bcrypt.hash(adminCredentials.password, 10);
-
-    // Check if admin_users table exists
     const { error: tableError } = await supabase
       .from("admin_users")
       .select("id")
       .limit(1);
 
-    if (tableError && tableError.code === "42P01") {
-      console.log("📋 Creating admin_users table...");
-
-      // Create admin_users table
-      const { error: createTableError } = await supabase.rpc("exec_sql", {
-        sql: `
-          CREATE TABLE IF NOT EXISTS admin_users (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(50) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            role VARCHAR(50) DEFAULT 'admin',
-            is_active BOOLEAN DEFAULT true,
-            last_login TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-          );
-        `,
-      });
-
-      if (createTableError) {
-        console.error("❌ Error creating admin_users table:", createTableError);
-        return false;
-      }
-      console.log("✅ admin_users table created");
-    }
-
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from("admin_users")
-      .select("username")
-      .eq("username", adminCredentials.username)
-      .single();
-
-    if (existingUser) {
-      console.log(
-        `⚠️  Admin user '${adminCredentials.username}' already exists`,
+    if (tableError) {
+      console.error(
+        "Không truy cập được bảng admin_users, hãy tạo bảng bằng scripts/create-tables.sql:",
+        tableError.message,
       );
-      return true;
-    }
-
-    // Insert new admin user
-    const { error } = await supabase
-      .from("admin_users")
-      .insert({
-        username: adminCredentials.username,
-        password_hash,
-        role: adminCredentials.role,
-        is_active: true,
-      })
-      .select();
-
-    if (error) {
-      console.error("❌ Error creating admin user:", error);
       return false;
     }
 
-    console.log("✅ Admin user created successfully!");
-    console.log("📋 Admin credentials:");
-    console.log(`   Username: ${adminCredentials.username}`);
-    console.log(`   Password: ${adminCredentials.password}`);
-    console.log(`   Role: ${adminCredentials.role}`);
-    console.log("");
-    console.log(
-      "🔐 You can now login with these credentials to access admin features",
-    );
+    const { data: existingUser } = await supabase
+      .from("admin_users")
+      .select("username")
+      .eq("username", username)
+      .maybeSingle();
 
+    if (existingUser) {
+      console.log(`Tài khoản admin '${username}' đã tồn tại`);
+      return true;
+    }
+
+    const role = "admin";
+    const password_hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+    const { error } = await supabase
+      .from("admin_users")
+      .insert({ username, password_hash, role, is_active: true });
+
+    if (error) {
+      console.error("Lỗi tạo tài khoản admin:", error.message);
+      return false;
+    }
+
+    console.log("Tạo tài khoản admin thành công");
+    console.log(`   Tên đăng nhập: ${username}`);
+    console.log(`   Vai trò: ${role}`);
     return true;
   } catch (error) {
-    console.error("❌ Unexpected error:", error);
+    console.error("Lỗi không mong muốn:", error.message);
     return false;
   }
 }
 
-// Run the script
-createAdminUser()
-  .then((success) => {
-    if (success) {
-      console.log("🎉 Admin user setup completed!");
-    } else {
-      console.log("❌ Admin user setup failed!");
-      process.exit(1);
-    }
-  })
-  .catch((error) => {
-    console.error("❌ Script error:", error);
-    process.exit(1);
-  });
+const credentials = readValidatedCredentials();
+
+createAdminUser(credentials).then((success) => {
+  if (!success) process.exit(1);
+});

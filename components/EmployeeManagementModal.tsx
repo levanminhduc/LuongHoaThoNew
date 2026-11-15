@@ -50,6 +50,7 @@ import {
 } from "@/lib/toast-utils";
 import EmployeeForm from "@/app/admin/employee-management/components/EmployeeForm";
 import EmployeeAuditLogs from "@/app/admin/employee-management/components/EmployeeAuditLogs";
+import { canCreateEmployee, getManageableRoles } from "@/lib/auth/role-policy";
 import { apiClient } from "@/lib/api/client";
 import { ENDPOINTS, QUERY_PARAMS } from "@/lib/api/endpoints";
 
@@ -121,10 +122,9 @@ export default function EmployeeManagementModal({
     null,
   );
 
-  const canCreate = userRole !== "nguoi_lap_bieu";
-  const canDelete = userRole !== "nguoi_lap_bieu";
-  const restrictedRoles =
-    userRole === "nguoi_lap_bieu" ? ["admin", "giam_doc", "ke_toan"] : [];
+  const canCreate = canCreateEmployee(userRole);
+  const canDelete = canCreateEmployee(userRole);
+  const assignableRoles = getManageableRoles(userRole);
 
   const fetchEmployees = async () => {
     try {
@@ -293,7 +293,7 @@ export default function EmployeeManagementModal({
                     <ScrollArea className="max-h-[65vh] pr-4">
                       <EmployeeForm
                         onSuccess={handleEmployeeCreated}
-                        restrictedRoles={restrictedRoles}
+                        assignableRoles={assignableRoles}
                       />
                     </ScrollArea>
                   </DialogContent>
@@ -446,7 +446,7 @@ export default function EmployeeManagementModal({
                                           <EmployeeForm
                                             employee={editingEmployee}
                                             onSuccess={handleEmployeeUpdated}
-                                            restrictedRoles={restrictedRoles}
+                                            assignableRoles={assignableRoles}
                                           />
                                         )}
                                       </ScrollArea>
@@ -676,7 +676,7 @@ export default function EmployeeManagementModal({
                                             <EmployeeForm
                                               employee={editingEmployee}
                                               onSuccess={handleEmployeeUpdated}
-                                              restrictedRoles={restrictedRoles}
+                                              assignableRoles={assignableRoles}
                                             />
                                           )}
                                         </ScrollArea>

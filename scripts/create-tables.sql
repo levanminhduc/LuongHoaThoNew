@@ -23,10 +23,11 @@ CREATE TABLE IF NOT EXISTS admin_users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  role VARCHAR(50) DEFAULT 'admin',
+  is_active BOOLEAN DEFAULT true,
+  last_login TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Thêm admin mặc định (password: admin123)
-INSERT INTO admin_users (username, password_hash) 
-VALUES ('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
-ON CONFLICT (username) DO NOTHING;
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;

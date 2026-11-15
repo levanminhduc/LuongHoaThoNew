@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/utils/supabase/server";
 import { verifyToken } from "@/lib/auth-middleware";
 import { csrfProtection } from "@/lib/security-middleware";
-import { getVietnamTimestamp } from "@/lib/utils/vietnam-timezone";
 import { CACHE_HEADERS } from "@/lib/utils/cache-headers";
 import {
   parseSchema,
@@ -10,12 +9,8 @@ import {
   PayrollUpdateRequestSchema,
 } from "@/lib/validations";
 import { toErrorResponse } from "@/lib/errors/app-error";
-import {
-  buildPayrollDetailQuery,
-  findPayrollById,
-  insertPayrollAuditLogs,
-  updatePayrollById,
-} from "@/lib/payroll/payroll-repository";
+import { buildPayrollDetailQuery } from "@/lib/payroll/payroll-repository";
+import { updatePayrollRecord } from "@/lib/payroll/payroll-update-service";
 
 // Get client IP address
 function getClientIP(request: NextRequest): string {
@@ -108,7 +103,6 @@ export async function GET(
   }
 }
 
-// PUT update payroll record
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -116,7 +110,7 @@ export async function PUT(
   try {
     const csrfResult = csrfProtection(request);
     if (csrfResult) return csrfResult;
-    // Enhanced role-based authentication
+
     const auth = verifyToken(request);
     if (!auth) {
       return NextResponse.json(
@@ -125,7 +119,6 @@ export async function PUT(
       );
     }
 
-    // Only admin and truong_phong can edit payroll data
     if (!auth.isRole("admin") && !auth.isRole("truong_phong")) {
       return NextResponse.json(
         { error: "Không có quyền chỉnh sửa dữ liệu lương" },
@@ -133,8 +126,7 @@ export async function PUT(
       );
     }
 
-    const resolvedParams = await params;
-    const payrollId = parseInt(resolvedParams.id);
+    const payrollId = parseInt((await params).id);
     if (isNaN(payrollId)) {
       return NextResponse.json(
         { error: "ID không hợp lệ" },
@@ -152,144 +144,20 @@ export async function PUT(
         headers: CACHE_HEADERS.sensitive,
       });
     }
-    const { updates, changeReason } = parsed.data;
 
-    const supabase = createServiceClient();
-    const clientIP = getClientIP(request);
-
-    // Get current payroll data for audit trail
-    const { data: currentData, error: getCurrentError } = await findPayrollById(
-      supabase,
+    const { payroll, changesCount } = await updatePayrollRecord(
+      auth,
       payrollId,
+      parsed.data,
+      { clientIp: getClientIP(request) },
     );
-
-    if (getCurrentError || !currentData) {
-      return NextResponse.json(
-        { error: "Không tìm thấy bản ghi lương" },
-        { status: 404, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Validate updates (basic validation)
-    const validatedUpdates: Record<string, unknown> = {};
-    const auditLogs: Array<Record<string, unknown>> = [];
-
-    // List of editable fields (exclude metadata)
-    const editableFields = [
-      "he_so_lam_viec",
-      "he_so_phu_cap_ket_qua",
-      "he_so_luong_co_ban",
-      "luong_toi_thieu_cty",
-      "ngay_cong_trong_gio",
-      "gio_cong_tang_ca",
-      "gio_an_ca",
-      "tong_gio_lam_viec",
-      "tong_he_so_quy_doi",
-      "ngay_cong_chu_nhat",
-      "tong_luong_san_pham_cong_doan",
-      "don_gia_tien_luong_tren_gio",
-      "tien_luong_san_pham_trong_gio",
-      "tien_luong_tang_ca",
-      "tien_luong_30p_an_ca",
-      "tien_khen_thuong_chuyen_can",
-      "luong_hoc_viec_pc_luong",
-      "tong_cong_tien_luong_san_pham",
-      "ho_tro_thoi_tiet_nong",
-      "bo_sung_luong",
-      "pc_luong_cho_viec",
-      "tien_luong_chu_nhat",
-      "luong_cnkcp_vuot",
-      "tien_tang_ca_vuot",
-      "bhxh_21_5_percent",
-      "pc_cdcs_pccc_atvsv",
-      "luong_phu_nu_hanh_kinh",
-      "tien_con_bu_thai_7_thang",
-      "ho_tro_gui_con_nha_tre",
-      "ngay_cong_phep_le",
-      "tien_phep_le",
-      "tong_cong_tien_luong",
-      "tien_boc_vac",
-      "ho_tro_xang_xe",
-      "thue_tncn_nam_2024",
-      "tam_ung",
-      "thue_tncn",
-      "bhxh_bhtn_bhyt_total",
-      "truy_thu_the_bhyt",
-      "tien_luong_thuc_nhan_cuoi_ky",
-    ];
-
-    const editableFieldSet = new Set<string>(editableFields);
-    const currentValues = currentData as Record<string, unknown>;
-
-    for (const [field, newValue] of Object.entries(updates)) {
-      if (!editableFieldSet.has(field)) {
-        continue; // Skip non-editable fields
-      }
-
-      const oldValue = currentValues[field];
-
-      // Only update if value actually changed
-      if (oldValue !== newValue) {
-        validatedUpdates[field] = newValue;
-
-        // Prepare audit log entry
-        auditLogs.push({
-          payroll_id: payrollId,
-          employee_id: currentData.employee_id,
-          salary_month: currentData.salary_month,
-          changed_by: auth.user.username,
-          change_ip: clientIP,
-          change_reason: changeReason,
-          field_name: field,
-          old_value: String(oldValue || ""),
-          new_value: String(newValue || ""),
-        });
-      }
-    }
-
-    if (Object.keys(validatedUpdates).length === 0) {
-      return NextResponse.json(
-        { error: "Không có thay đổi nào để cập nhật" },
-        { status: 400, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    validatedUpdates.updated_at = getVietnamTimestamp();
-
-    // Update payroll record
-    const { data: updatedData, error: updateError } = await updatePayrollById(
-      supabase,
-      payrollId,
-      validatedUpdates,
-    );
-
-    if (updateError) {
-      console.error("Update payroll error:", updateError);
-      return NextResponse.json(
-        { error: "Lỗi khi cập nhật dữ liệu lương" },
-        { status: 500, headers: CACHE_HEADERS.sensitive },
-      );
-    }
-
-    // Insert audit logs
-    if (auditLogs.length > 0) {
-      const { error: auditError } = await insertPayrollAuditLogs(
-        supabase,
-        auditLogs,
-      );
-
-      if (auditError) {
-        console.error("Audit log error:", auditError);
-        // Don't fail the update, just log the error
-      }
-    }
 
     return NextResponse.json(
       {
         success: true,
         message: "Cập nhật dữ liệu lương thành công",
-        payroll: updatedData,
-        changesCount: auditLogs.length,
+        payroll,
+        changesCount,
       },
       { headers: CACHE_HEADERS.sensitive },
     );

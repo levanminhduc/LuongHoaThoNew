@@ -182,8 +182,8 @@ DROP TABLE IF EXISTS temp_dept_config;
 SELECT 'NEXT STEPS:' as info;
 SELECT 'Update lib/auth.ts test accounts with the departments shown above' as instruction
 UNION ALL
-SELECT 'Test login with TP001/truongphong123 to verify manager dashboard' as instruction
+SELECT 'Test login with TP001 to verify manager dashboard' as instruction
 UNION ALL
-SELECT 'Test login with TT001/totruong123 to verify supervisor dashboard' as instruction
+SELECT 'Test login with TT001 to verify supervisor dashboard' as instruction
 UNION ALL
-SELECT 'Test login with NV001/nhanvien123 to verify employee dashboard' as instruction;
+SELECT 'Test login with NV001 to verify employee dashboard' as instruction;

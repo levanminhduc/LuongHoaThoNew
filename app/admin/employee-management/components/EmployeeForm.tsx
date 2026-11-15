@@ -45,7 +45,7 @@ interface Employee {
 interface EmployeeFormProps {
   employee?: Employee;
   onSuccess: () => void;
-  restrictedRoles?: string[];
+  assignableRoles: readonly string[];
 }
 
 const roleOptions = [
@@ -62,7 +62,7 @@ const roleOptions = [
 export default function EmployeeForm({
   employee,
   onSuccess,
-  restrictedRoles = [],
+  assignableRoles,
 }: EmployeeFormProps) {
   const [formData, setFormData] = useState({
     employee_id: employee?.employee_id || "",
@@ -82,8 +82,9 @@ export default function EmployeeForm({
   const loading = employeeMutation.isPending;
   const departments = departmentsQuery.data?.departments ?? [];
 
-  const filteredRoleOptions = roleOptions.filter(
-    (role) => !restrictedRoles.includes(role.value),
+  const visibleRoleOptions = roleOptions.filter(
+    (role) =>
+      assignableRoles.includes(role.value) || role.value === employee?.chuc_vu,
   );
 
   const validateForm = () => {
@@ -370,8 +371,12 @@ export default function EmployeeForm({
               <SelectValue placeholder="Chọn chức vụ" />
             </SelectTrigger>
             <SelectContent>
-              {filteredRoleOptions.map((role) => (
-                <SelectItem key={role.value} value={role.value}>
+              {visibleRoleOptions.map((role) => (
+                <SelectItem
+                  key={role.value}
+                  value={role.value}
+                  disabled={!assignableRoles.includes(role.value)}
+                >
                   {role.label}
                 </SelectItem>
               ))}

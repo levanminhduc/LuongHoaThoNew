@@ -161,6 +161,16 @@ export async function authenticateUser(
 
     const isPasswordValid = await verifyEmployeeCredential(employee, password);
 
+    if (employee.chuc_vu === "admin") {
+      console.warn(
+        `Blocked login of employee with admin role: ${employee.employee_id}`,
+      );
+      return {
+        success: false,
+        error: "Mật khẩu không đúng",
+      };
+    }
+
     if (!isPasswordValid) {
       return {
         success: false,

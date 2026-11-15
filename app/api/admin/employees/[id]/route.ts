@@ -13,7 +13,9 @@ import { findAdminEmployeeRecord } from "@/lib/employee/employee-admin-repositor
 import { updateEmployee } from "@/lib/employee/employee-update-service";
 import { removeEmployee } from "@/lib/employee/employee-removal-service";
 
-const ROLES_NGUOI_LAP_BIEU_CANNOT_ASSIGN = ["admin", "giam_doc", "ke_toan"];
+function actorOf(admin: { role: string; employee_id: string }) {
+  return { role: admin.role, employeeId: admin.employee_id };
+}
 
 function sensitiveJson(body: unknown, status?: number) {
   return NextResponse.json(body, { status, headers: CACHE_HEADERS.sensitive });
@@ -57,21 +59,12 @@ export async function PUT(
       );
     }
 
-    if (
-      admin.role === "nguoi_lap_bieu" &&
-      ROLES_NGUOI_LAP_BIEU_CANNOT_ASSIGN.includes(parsedBody.data.chuc_vu)
-    ) {
-      return sensitiveJson(
-        { error: "Không có quyền thay đổi thành chức vụ này" },
-        403,
-      );
-    }
-
     const result = await updateEmployee(
       createServiceClient(),
       id,
       parsedBody.data,
       admin,
+      actorOf(admin),
     );
 
     if (result.status === "not_found") return notFound();
@@ -118,18 +111,13 @@ export async function DELETE(
     const admin = verifyEmployeeManagementAccess(request);
     if (!admin) return unauthorized();
 
-    if (admin.role === "nguoi_lap_bieu") {
-      return sensitiveJson(
-        {
-          error:
-            "Không có quyền xóa nhân viên. Vui lòng vô hiệu hóa thay vì xóa.",
-        },
-        403,
-      );
-    }
-
     const { id } = await params;
-    const result = await removeEmployee(createServiceClient(), id, admin);
+    const result = await removeEmployee(
+      createServiceClient(),
+      id,
+      admin,
+      actorOf(admin),
+    );
 
     if (result.status === "not_found") return notFound();
 
